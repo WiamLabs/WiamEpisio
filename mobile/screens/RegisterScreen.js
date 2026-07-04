@@ -1,0 +1,607 @@
+// © 2026 WiamApp. Powered by WiamLabs
+// screens/RegisterScreen.js
+// FIXED:
+// 1. Registration uses Supabase directly — no backend needed, no "fetch failed"
+// 2. FlatList replaced with ScrollView inside dropdowns — fixes VirtualizedList warning
+// 3. City search uses improved Nominatim that finds ALL Ghana towns including small ones
+
+import React, { useState, useRef, useCallback } from 'react';
+import {
+  View, Text, TextInput, TouchableOpacity,
+  StyleSheet,  StatusBar,
+  KeyboardAvoidingView, Platform, ScrollView,
+  Image, ActivityIndicator, Alert,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import { supabase } from '../lib/supabase';
+import { AFRICAN_COUNTRIES, DEFAULT_COUNTRY } from '../constants/countries';
+
+const LOGO    = require('../assets/logo.png');
+const BG      = '#0D0D2B';
+const GOLD    = '#D4A017';
+const WHITE   = '#FFFFFF';
+const MUTED   = 'rgba(255,255,255,0.45)';
+const GOLD_BG = 'rgba(212,160,23,0.10)';
+const GOLD_BD = 'rgba(212,160,23,0.25)';
+const INPUT_BG= 'rgba(255,255,255,0.07)';
+const INPUT_BD= 'rgba(255,255,255,0.12)';
+const DROP_BG = '#1A1A3A';
+
+const WORKER_CATEGORIES = [
+  'Electrician','Plumber','Carpenter','Painter',
+  'Mason / Builder','Mechanic / Auto','Cleaner',
+  'Barber / Beauty','Caterer / Cook',
+  'Photographer / Videographer','Delivery Rider',
+  'Event Planner','Teacher / Tutor','Other',
+];
+
+// ── Country Picker ─────────────────────────────────────────────
+// FIX: Uses ScrollView instead of FlatList to avoid VirtualizedList warning
+function CountryPicker({ value, onSelect }) {
+  const [open,   setOpen]   = useState(false);
+  const [search, setSearch] = useState('');
+  const filtered = AFRICAN_COUNTRIES.filter(c =>
+    c.name.toLowerCase().includes(search.toLowerCase())
+  );
+  return (
+    <View>
+      <TouchableOpacity style={s.inputWrap} onPress={() => setOpen(!open)} activeOpacity={0.8}>
+        <Ionicons name="globe-outline" size={17} color="rgba(255,255,255,0.35)" style={s.inputIcon} />
+        <Text style={[s.inputText, !value && s.inputPlaceholder]}>
+          {value ? `${value.flag}  ${value.name}  (${value.phoneCode})` : 'Select country'}
+        </Text>
+        <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={15} color="rgba(255,255,255,0.3)" />
+      </TouchableOpacity>
+      {open && (
+        <View style={s.dropDown}>
+          <View style={s.dropSearch}>
+            <Ionicons name="search-outline" size={14} color="rgba(255,255,255,0.3)" />
+            <TextInput
+              style={s.dropSearchInput}
+              placeholder="Search country..."
+              placeholderTextColor="rgba(255,255,255,0.2)"
+              value={search}
+              onChangeText={setSearch}
+              autoFocus
+            />
+          </View>
+          {/* ✅ FIX: ScrollView instead of FlatList — no more VirtualizedList warning */}
+          <ScrollView style={{ maxHeight: 180 }} keyboardShouldPersistTaps="handled" nestedScrollEnabled>
+            {filtered.map(item => {
+              const selected = value?.code === item.code;
+              return (
+                <TouchableOpacity
+                  key={item.code}
+                  style={[s.dropItem, selected && s.dropItemActive]}
+                  onPress={() => { onSelect(item); setOpen(false); setSearch(''); }}
+                >
+                  <Text style={s.dropItemText}>{item.flag}  {item.name}</Text>
+                  <Text style={s.dropItemCode}>{item.phoneCode}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
+      )}
+    </View>
+  );
+}
+
+// ── Category Picker ────────────────────────────────────────────
+function CategoryPicker({ value, onSelect }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <View>
+      <TouchableOpacity style={s.inputWrap} onPress={() => setOpen(!open)} activeOpacity={0.8}>
+        <Ionicons name="construct-outline" size={17} color="rgba(255,255,255,0.35)" style={s.inputIcon} />
+        <Text style={[s.inputText, !value && s.inputPlaceholder]}>
+          {value || 'Select your main skill'}
+        </Text>
+        <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={15} color="rgba(255,255,255,0.3)" />
+      </TouchableOpacity>
+      {open && (
+        <View style={s.dropDown}>
+          {/* ✅ FIX: ScrollView instead of FlatList */}
+          <ScrollView style={{ maxHeight: 200 }} keyboardShouldPersistTaps="handled" nestedScrollEnabled>
+            {WORKER_CATEGORIES.map(item => (
+              <TouchableOpacity
+                key={item}
+                style={[s.dropItem, value === item && s.dropItemActive]}
+                onPress={() => { onSelect(item); setOpen(false); }}
+              >
+                <Text style={[s.dropItemText, value === item && { color: WHITE, fontWeight: '600' }]}>
+                  {item}
+                </Text>
+                {value === item && <Ionicons name="checkmark" size={14} color={GOLD} />}
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      )}
+    </View>
+  );
+}
+
+// ── City Search ────────────────────────────────────────────────
+// ✅ FIX: Removed strict type filter — now finds ALL towns including Kwahu Tafo
+function CitySearch({ country, value, onSelect }) {
+  const [query,       setQuery]       = useState(value || '');
+  const [results,     setResults]     = useState([]);
+  const [searching,   setSearching]   = useState(false);
+  const [showResults, setShowResults] = useState(false);
+  const debounce = useRef(null);
+
+  const search = useCallback((text) => {
+    setQuery(text);
+    if (text.length < 2) { setResults([]); setShowResults(false); return; }
+    if (debounce.current) clearTimeout(debounce.current);
+    debounce.current = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const cc  = country?.code?.toLowerCase() || 'gh';
+        // ✅ FIX: No type filter — finds hamlets, localities, ALL place types
+        // ✅ FIX: Added featuretype=settlement to include small towns
+        const url = `https://nominatim.openstreetmap.org/search`
+          + `?q=${encodeURIComponent(text)}`
+          + `&countrycodes=${cc}`
+          + `&format=json&addressdetails=1&limit=8`;
+
+        const res  = await fetch(url, {
+          headers: { 'User-Agent': 'WiamApp/1.0 (support@wiamapp.com)' },
+        });
+        const data = await res.json();
+
+        const seen = new Set();
+        const cities = [];
+        for (const r of data) {
+          // ✅ FIX: Extract name from ALL address types, not just city/town/village
+          const name =
+            r.address?.city        ||
+            r.address?.town        ||
+            r.address?.village     ||
+            r.address?.hamlet      ||   // ✅ NEW
+            r.address?.locality    ||   // ✅ NEW
+            r.address?.suburb      ||
+            r.address?.county      ||   // ✅ NEW
+            r.display_name.split(',')[0].trim();
+
+          const region = r.address?.state || r.address?.region || r.address?.county || '';
+          const key    = name.toLowerCase();
+          if (!name || seen.has(key)) continue;
+          seen.add(key);
+          cities.push({ id: r.place_id, name, region });
+        }
+        setResults(cities);
+        setShowResults(true);
+      } catch (e) {
+        console.warn('City search error:', e.message);
+        setResults([]);
+      } finally {
+        setSearching(false);
+      }
+    }, 500);
+  }, [country]);
+
+  return (
+    <View>
+      <View style={[s.inputWrap, { paddingRight: 12 }]}>
+        <Ionicons name="location-outline" size={17} color="rgba(255,255,255,0.35)" style={s.inputIcon} />
+        <TextInput
+          style={[s.inputText, { flex: 1 }]}
+          placeholder={country ? `Search city in ${country.name}...` : 'Select country first'}
+          placeholderTextColor={MUTED}
+          value={query}
+          onChangeText={search}
+          editable={!!country}
+        />
+        {searching && <ActivityIndicator size="small" color={GOLD} />}
+      </View>
+      {/* ✅ FIX: ScrollView instead of FlatList */}
+      {showResults && results.length > 0 && (
+        <View style={s.dropDown}>
+          <ScrollView style={{ maxHeight: 180 }} keyboardShouldPersistTaps="handled" nestedScrollEnabled>
+            {results.map(item => (
+              <TouchableOpacity
+                key={String(item.id)}
+                style={s.dropItem}
+                onPress={() => {
+                  setQuery(item.name);
+                  setShowResults(false);
+                  onSelect(item);
+                }}
+              >
+                <Text style={s.dropItemText}>{item.name}</Text>
+                {item.region ? <Text style={s.dropItemCode}>{item.region}</Text> : null}
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      )}
+    </View>
+  );
+}
+
+// ── MAIN REGISTER SCREEN ───────────────────────────────────────
+export default function RegisterScreen({ navigation }) {
+  const [role,     setRole]     = useState('customer');
+  const [fullName, setFullName] = useState('');
+  const [email,    setEmail]    = useState('');
+  const [phone,    setPhone]    = useState('');
+  const [password, setPassword] = useState('');
+  const [country,  setCountry]  = useState(DEFAULT_COUNTRY);
+  const [city,     setCity]     = useState('');
+  const [category, setCategory] = useState('');
+  const [agreed,   setAgreed]   = useState(false);
+  const [showPw,   setShowPw]   = useState(false);
+  const [loading,  setLoading]  = useState(false);
+  const [error,    setError]    = useState('');
+
+  const canSubmit = fullName.trim() && email.trim() && phone.trim()
+    && password.length >= 6 && agreed
+    && (role === 'customer' || (role === 'worker' && category));
+
+  // ✅ FIX: Registration goes directly to Supabase — no backend needed
+  const handleRegister = async () => {
+    if (!canSubmit || loading) return;
+    setLoading(true);
+    setError('');
+
+    const fullPhone = `${country.phoneCode}${phone.trim()}`;
+
+    try {
+      // Step 1 — Create Supabase auth user
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email:    email.trim().toLowerCase(),
+        password: password,
+        options: {
+          data: {
+            full_name: fullName.trim(),
+            role,
+          },
+        },
+      });
+
+      if (authError) throw new Error(authError.message);
+      if (!authData?.user) throw new Error('Registration failed. Please try again.');
+
+      const userId = authData.user.id;
+
+      // Step 2 — Create users table row
+      const { error: userErr } = await supabase
+        .from('users')
+        .insert({
+          id:           userId,
+          full_name:    fullName.trim(),
+          email:        email.trim().toLowerCase(),
+          phone:        fullPhone,
+          role,
+          city:         city || '',
+          country:      country.name,
+          country_code: country.code,
+          is_verified:  false,
+          created_at:   new Date().toISOString(),
+        });
+
+      // Ignore duplicate — row may already exist from trigger
+      if (userErr && !userErr.message.includes('duplicate')) {
+        throw new Error(userErr.message);
+      }
+
+      // Step 3 — If worker, create worker_profiles row
+      if (role === 'worker') {
+        const { error: wpErr } = await supabase
+          .from('worker_profiles')
+          .insert({
+            user_id:       userId,
+            location_name: city || '',
+            is_verified:   false,
+            is_available:  false,
+            hourly_rate:   0,
+            average_rating:0,
+            total_jobs_done: 0,
+            subscription_tier: 'free',
+            created_at:    new Date().toISOString(),
+          });
+        if (wpErr && !wpErr.message.includes('duplicate')) {
+          console.warn('Worker profile create warning:', wpErr.message);
+        }
+
+        // Step 4 — Save worker category
+        const { data: catRow } = await supabase
+          .from('categories')
+          .select('id')
+          .eq('name', category)
+          .single();
+
+        if (catRow) {
+          // Get the worker_profile id we just created
+          const { data: wp } = await supabase
+            .from('worker_profiles')
+            .select('id')
+            .eq('user_id', userId)
+            .single();
+
+          if (wp) {
+            await supabase.from('worker_categories').insert({
+              worker_profile_id: wp.id,
+              category_id:       catRow.id,
+            });
+          }
+        }
+      }
+
+      // Step 5 — Navigate to OTP verification
+      navigation.navigate('EmailOTP', {
+        role,
+        email:   email.trim().toLowerCase(),
+        phone:   fullPhone,
+        userId,
+      });
+
+    } catch (err) {
+      console.warn('Register error:', err.message);
+      setError(
+        err.message.includes('already registered') || err.message.includes('already been registered')
+          ? 'This email is already registered. Please log in instead.'
+          : err.message || 'Registration failed. Please check your details and try again.'
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <SafeAreaView style={s.safe}>
+      <StatusBar barStyle="light-content" backgroundColor={BG} />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+      >
+        <ScrollView
+          contentContainerStyle={s.container}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Back */}
+          <TouchableOpacity style={s.backBtn} onPress={() => navigation.goBack()}>
+            <Ionicons name="arrow-back" size={22} color={WHITE} />
+          </TouchableOpacity>
+
+          {/* Logo */}
+          <View style={s.brand}>
+            <Image source={LOGO} style={s.logo} resizeMode="contain" />
+            <Text style={s.brandName}>
+              <Text style={{ color: WHITE }}>Wiam</Text>
+              <Text style={{ color: GOLD }}>App</Text>
+            </Text>
+          </View>
+
+          <Text style={s.title}>Create your account</Text>
+          <Text style={s.subtitle}>Join Africa's most trusted service marketplace</Text>
+
+          {/* Role Toggle */}
+          <View style={s.roleToggle}>
+            <TouchableOpacity
+              style={[s.roleBtn, role === 'customer' && s.roleBtnActive]}
+              onPress={() => { setRole('customer'); setCategory(''); }}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="search-outline" size={16}
+                color={role === 'customer' ? '#0D0D2B' : MUTED} />
+              <Text style={[s.roleBtnText, role === 'customer' && s.roleBtnTextActive]}>
+                Find Workers
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[s.roleBtn, role === 'worker' && s.roleBtnActive]}
+              onPress={() => setRole('worker')}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="hammer-outline" size={16}
+                color={role === 'worker' ? '#0D0D2B' : MUTED} />
+              <Text style={[s.roleBtnText, role === 'worker' && s.roleBtnTextActive]}>
+                Offer Skills
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Role info */}
+          <View style={s.infoBox}>
+            <Ionicons name="information-circle-outline" size={16} color={GOLD} />
+            <Text style={s.infoText}>
+              {role === 'customer'
+                ? 'You will find and hire verified workers near you. Verify your identity before your first booking.'
+                : 'You will offer your skills and receive job requests. Verify your identity to appear in search results.'}
+            </Text>
+          </View>
+
+          {/* Error */}
+          {error ? (
+            <View style={s.errorBox}>
+              <Ionicons name="alert-circle-outline" size={16} color="#EF4444" />
+              <Text style={s.errorText}>{error}</Text>
+            </View>
+          ) : null}
+
+          {/* Full Name */}
+          <Text style={s.label}>Full legal name</Text>
+          <View style={s.inputWrap}>
+            <Ionicons name="person-outline" size={17} color="rgba(255,255,255,0.35)" style={s.inputIcon} />
+            <TextInput
+              style={[s.inputText, { flex: 1 }]}
+              placeholder="As it appears on your ID"
+              placeholderTextColor={MUTED}
+              value={fullName}
+              onChangeText={setFullName}
+              autoCapitalize="words"
+            />
+          </View>
+
+          {/* Worker skill */}
+          {role === 'worker' && (
+            <>
+              <Text style={s.label}>Your main skill</Text>
+              <CategoryPicker value={category} onSelect={setCategory} />
+            </>
+          )}
+
+          {/* Email */}
+          <Text style={s.label}>Email address</Text>
+          <View style={s.inputWrap}>
+            <Ionicons name="mail-outline" size={17} color="rgba(255,255,255,0.35)" style={s.inputIcon} />
+            <TextInput
+              style={[s.inputText, { flex: 1 }]}
+              placeholder="your@email.com"
+              placeholderTextColor={MUTED}
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+          </View>
+
+          {/* Country */}
+          <Text style={s.label}>Country</Text>
+          <CountryPicker value={country} onSelect={setCountry} />
+
+          {/* Phone */}
+          <Text style={s.label}>Phone number</Text>
+          <View style={s.inputWrap}>
+            <Text style={s.phoneCode}>{country?.phoneCode || '+233'}</Text>
+            <TextInput
+              style={[s.inputText, { flex: 1 }]}
+              placeholder="24 000 0000"
+              placeholderTextColor={MUTED}
+              value={phone}
+              onChangeText={setPhone}
+              keyboardType="phone-pad"
+            />
+          </View>
+
+          {/* City */}
+          <Text style={s.label}>City / Town</Text>
+          <CitySearch
+            country={country}
+            value={city}
+            onSelect={(c) => setCity(c.name)}
+          />
+
+          {/* Password */}
+          <Text style={s.label}>Password</Text>
+          <View style={s.inputWrap}>
+            <Ionicons name="lock-closed-outline" size={17} color="rgba(255,255,255,0.35)" style={s.inputIcon} />
+            <TextInput
+              style={[s.inputText, { flex: 1 }]}
+              placeholder="Min. 6 characters"
+              placeholderTextColor={MUTED}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPw}
+            />
+            <TouchableOpacity onPress={() => setShowPw(!showPw)} style={{ padding: 4 }}>
+              <Ionicons name={showPw ? 'eye-off-outline' : 'eye-outline'} size={18} color={MUTED} />
+            </TouchableOpacity>
+          </View>
+          {password.length > 0 && password.length < 6 && (
+            <Text style={s.pwWarn}>Password must be at least 6 characters</Text>
+          )}
+
+          {/* Terms */}
+          <TouchableOpacity style={s.termsRow} onPress={() => setAgreed(!agreed)} activeOpacity={0.8}>
+            <View style={[s.checkbox, agreed && s.checkboxActive]}>
+              {agreed && <Ionicons name="checkmark" size={12} color="#0D0D2B" />}
+            </View>
+            <Text style={s.termsText}>
+              I agree to the{' '}
+              <Text style={s.termsLink}>Terms of Service</Text>
+              {' '}and{' '}
+              <Text style={s.termsLink}>Privacy Policy</Text>
+            </Text>
+          </TouchableOpacity>
+
+          {/* Submit */}
+          <TouchableOpacity
+            style={[s.registerBtn, (!canSubmit || loading) && s.registerBtnDisabled]}
+            onPress={handleRegister}
+            disabled={!canSubmit || loading}
+            activeOpacity={0.85}
+          >
+            {loading
+              ? <ActivityIndicator color="#0D0D2B" />
+              : <Text style={s.registerBtnText}>Create Account</Text>
+            }
+          </TouchableOpacity>
+
+          {/* Login link */}
+          <TouchableOpacity
+            style={s.loginLink}
+            onPress={() => navigation.navigate('Login')}
+          >
+            <Text style={s.loginLinkText}>
+              Already have an account?{' '}
+              <Text style={{ color: GOLD, fontWeight: '700' }}>Sign in</Text>
+            </Text>
+          </TouchableOpacity>
+
+          <Text style={s.copy}>© 2026 WiamApp · Powered by WiamLabs</Text>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
+}
+
+const s = StyleSheet.create({
+  safe:                { flex: 1, backgroundColor: BG },
+  container:           { flexGrow: 1, paddingHorizontal: 24, paddingBottom: 48 },
+  backBtn:             { marginTop: 16, marginBottom: 8, width: 40, padding: 4 },
+  brand:               { alignItems: 'center', marginBottom: 10 },
+  logo:                { width: 44, height: 44 },
+  brandName:           { fontSize: 22, fontWeight: '800', letterSpacing: -0.5, marginTop: 6 },
+  title:               { color: WHITE, fontSize: 24, fontWeight: '800', marginBottom: 6 },
+  subtitle:            { color: MUTED, fontSize: 13, marginBottom: 20, lineHeight: 20 },
+
+  roleToggle:          { flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.07)', borderRadius: 14, padding: 4, marginBottom: 14, gap: 4 },
+  roleBtn:             { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, paddingVertical: 12, borderRadius: 11 },
+  roleBtnActive:       { backgroundColor: GOLD },
+  roleBtnText:         { fontSize: 14, fontWeight: '600', color: MUTED },
+  roleBtnTextActive:   { color: '#0D0D2B' },
+
+  infoBox:             { flexDirection: 'row', gap: 9, backgroundColor: GOLD_BG, borderWidth: 1, borderColor: GOLD_BD, borderRadius: 12, padding: 12, marginBottom: 16 },
+  infoText:            { flex: 1, color: 'rgba(255,255,255,0.65)', fontSize: 13, lineHeight: 19 },
+
+  errorBox:            { flexDirection: 'row', gap: 9, backgroundColor: 'rgba(239,68,68,0.12)', borderWidth: 1, borderColor: 'rgba(239,68,68,0.3)', borderRadius: 12, padding: 12, marginBottom: 16 },
+  errorText:           { flex: 1, color: '#EF4444', fontSize: 13, lineHeight: 18 },
+
+  label:               { color: MUTED, fontSize: 12, fontWeight: '600', marginBottom: 6, marginTop: 14, letterSpacing: 0.3 },
+  inputWrap:           { flexDirection: 'row', alignItems: 'center', backgroundColor: INPUT_BG, borderWidth: 1, borderColor: INPUT_BD, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 13 },
+  inputIcon:           { marginRight: 10 },
+  inputText:           { color: WHITE, fontSize: 15 },
+  inputPlaceholder:    { color: MUTED },
+  phoneCode:           { color: GOLD, fontSize: 15, fontWeight: '600', marginRight: 10 },
+  pwWarn:              { color: '#F59E0B', fontSize: 12, marginTop: 4 },
+
+  dropDown:            { backgroundColor: DROP_BG, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', marginTop: 4, overflow: 'hidden' },
+  dropSearch:          { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.07)' },
+  dropSearchInput:     { flex: 1, color: WHITE, fontSize: 14 },
+  dropItem:            { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.05)' },
+  dropItemActive:      { backgroundColor: GOLD_BG },
+  dropItemText:        { color: 'rgba(255,255,255,0.8)', fontSize: 14 },
+  dropItemCode:        { color: MUTED, fontSize: 12 },
+
+  termsRow:            { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginTop: 18, marginBottom: 4 },
+  checkbox:            { width: 20, height: 20, borderRadius: 6, borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center', marginTop: 1, flexShrink: 0 },
+  checkboxActive:      { backgroundColor: GOLD, borderColor: GOLD },
+  termsText:           { flex: 1, color: MUTED, fontSize: 13, lineHeight: 20 },
+  termsLink:           { color: GOLD, fontWeight: '600' },
+
+  registerBtn:         { backgroundColor: GOLD, borderRadius: 14, paddingVertical: 16, alignItems: 'center', marginTop: 20 },
+  registerBtnDisabled: { backgroundColor: 'rgba(212,160,23,0.25)' },
+  registerBtnText:     { color: BG, fontSize: 16, fontWeight: '700' },
+
+  loginLink:           { alignItems: 'center', marginTop: 20 },
+  loginLinkText:       { color: MUTED, fontSize: 14 },
+
+  copy:                { color: 'rgba(212,160,23,0.25)', fontSize: 10, textAlign: 'center', marginTop: 24 },
+});

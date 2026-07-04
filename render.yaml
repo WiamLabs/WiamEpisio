@@ -1,0 +1,138 @@
+# © 2026 WiamApp. Powered by WiamLabs
+# render.yaml — Render "Blueprint"
+#
+# What this does: one GitHub repo (WiamLabs/WiamApp), one `git push`,
+# and Render deploys all three web services automatically — each
+# from its own subfolder, on its own schedule, no more pushing three
+# separate repos by hand.
+#
+# The mobile app (mobile/) is NOT here on purpose — Expo apps don't
+# run on Render, they're built by EAS and installed on phones. It
+# still lives in this same repo for convenience, Render just ignores it.
+#
+# ONE-TIME SETUP:
+#   1. Push this whole repo to github.com/WiamLabs/WiamApp
+#   2. Render dashboard → New → Blueprint → connect the repo
+#   3. Render reads this file and creates all 3 services below
+#   4. Fill in the secret env vars for each service in the Render
+#      dashboard (anything marked sync: false below) — never commit
+#      real secrets into this file or into git
+#   5. Every future `git push` to main auto-deploys whichever
+#      service(s) actually changed — Render is smart about that
+
+services:
+  # ── BACKEND API (Express) ────────────────────────────────────
+  - type: web
+    name: wiamapp-backend
+    runtime: node
+    plan: starter
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SECRET_KEY
+        sync: false
+      - key: CRON_SECRET
+        sync: false
+      - key: PAYSTACK_SECRET_KEY
+        sync: false
+      - key: REVENUECAT_WEBHOOK_SECRET
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        value: "WiamApp <noreply@wiamapp.com>"
+      - key: CLOUDFLARE_R2_ACCESS_KEY_ID
+        sync: false
+      - key: CLOUDFLARE_R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: CLOUDFLARE_R2_BUCKET_NAME
+        sync: false
+      - key: CLOUDFLARE_R2_ENDPOINT
+        sync: false
+      - key: CLOUDFLARE_R2_PUBLIC_URL
+        sync: false
+      - key: R2_PRIVATE_ACCESS_KEY
+        sync: false
+      - key: R2_PRIVATE_SECRET_KEY
+        sync: false
+      - key: R2_PRIVATE_BUCKET_NAME
+        sync: false
+      - key: R2_PRIVATE_ENDPOINT
+        sync: false
+      - key: OPEN_EXCHANGE_RATES_APP_ID
+        sync: false
+      - key: WIAMID_SALT
+        sync: false
+      # At least ONE of these five chat-moderation keys is required
+      - key: CEREBRAS_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: MISTRAL_API_KEY
+        sync: false
+
+  # ── MARKETING SITE (Next.js, wiamapp.com) ────────────────────
+  - type: web
+    name: wiamapp-marketing
+    runtime: node
+    plan: starter
+    rootDir: marketing
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    autoDeploy: true
+    envVars:
+      - key: NEXT_PUBLIC_BACKEND_URL
+        sync: false  # set to https://wiamapp-backend.onrender.com (or api.wiamapp.com once mapped)
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        sync: false
+      - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
+        sync: false
+      - key: BUSINESS_ORIGIN
+        sync: false  # set to the wiamapp-business-web service's onrender.com URL — server-side only, powers the /business/* path proxy
+
+  # ── BUSINESS PORTAL (Next.js) — INTERNAL ONLY ────────────────
+  # Never map a public domain to this service. It's reached exclusively
+  # through wiamapp.com/business/* via the rewrite proxy configured in
+  # marketing/next.config.js — the browser never talks to this service
+  # directly, so end users never see a subdomain or a second domain.
+  - type: web
+    name: wiamapp-business-web
+    runtime: node
+    plan: starter
+    rootDir: business-web
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    autoDeploy: true
+    envVars:
+      - key: NEXT_PUBLIC_BACKEND_URL
+        sync: false  # set to https://wiamapp-backend.onrender.com (or api.wiamapp.com once mapped)
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        sync: false
+      - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
+        sync: false
+      - key: NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET
+        sync: false
+
+# ─── DOMAIN MAPPING (do this in Render dashboard → each service → Settings → Custom Domain) ───
+#   wiamapp-marketing     → wiamapp.com  +  www.wiamapp.com
+#                            (this single domain now serves EVERYTHING
+#                            a user sees, including wiamapp.com/business/*
+#                            — proxied internally to wiamapp-business-web)
+#   wiamapp-business-web  → NO public domain — internal only, see above
+#   wiamapp-backend       → api.wiamapp.com  (optional — machine-facing
+#                            only, mobile app + both web apps call this,
+#                            no human ever types this URL, so a subdomain
+#                            here is fine. The auto-generated onrender.com
+#                            URL also works fine for testing.)

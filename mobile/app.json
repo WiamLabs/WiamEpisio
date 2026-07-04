@@ -1,0 +1,85 @@
+{
+  "expo": {
+    "name": "WiamApp",
+    "slug": "wiamapp",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#08081A"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.wiamlabs.wiamapp",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSCameraUsageDescription": "WiamApp uses your camera to take your verification selfie and ID photos.",
+        "NSPhotoLibraryUsageDescription": "WiamApp needs photo access to upload your portfolio and profile picture.",
+        "NSPhotoLibraryAddUsageDescription": "WiamApp saves photos to your library when needed.",
+        "NSLocationWhenInUseUsageDescription": "WiamApp uses your location to show nearby workers and for GPS job check-in.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "WiamApp uses your location to match you with nearby workers.",
+        "NSMicrophoneUsageDescription": "WiamApp uses your microphone to send voice messages to workers and customers.",
+        "NSFaceIDUsageDescription": "WiamApp uses Face ID to keep your account secure."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#08081A"
+      },
+      "package": "com.wiamlabs.wiamapp",
+      "versionCode": 1,
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "RECORD_AUDIO",
+        "VIBRATE",
+        "RECEIVE_BOOT_COMPLETED",
+        "USE_BIOMETRIC",
+        "USE_FINGERPRINT"
+      ]
+    },
+    "plugins": [
+      "expo-asset",
+      "expo-font",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "WiamApp uses your camera to take your verification selfie and ID photos."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "WiamApp needs photo access to upload your portfolio and profile picture.",
+          "cameraPermission": "WiamApp uses your camera for profile and portfolio photos."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "WiamApp uses your location to show nearby workers and for GPS job check-in."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#D4A017",
+          "sounds": []
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "YOUR_EAS_PROJECT_ID"
+      }
+    }
+  }
+}

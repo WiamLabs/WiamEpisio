@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+
+# Environment secrets — NEVER commit real keys
+.env
+.env.local
+.env.*.local
+
+# Expo
+.expo/
+.expo-shared/
+dist/
+web-build/
+
+# Native build artifacts
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+
+# Logs
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+*.log
+
+# OS / editor junk
+.DS_Store
+.vscode/
+*.swp
+
+# Metro bundler cache
+.metro-health-check*
