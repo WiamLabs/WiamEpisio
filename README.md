@@ -1,116 +1,112 @@
-# WiamApp — Monorepo
-### © 2026 WiamApp. Powered by WiamLabs
+# WiamApp
 
-Trusted, verified home services marketplace for Ghana & West Africa.
+**Trusted, verified home services and skilled labor marketplace for Ghana and West Africa.**
 
-**Full product spec, architecture rules, and build status:**
-[`docs/MASTER_PLAN.md`](docs/MASTER_PLAN.md) — the strict blueprint every
-AI tool and developer builds against. This README is the fast path to
-running the code; the Master Plan is everything else (vision, every
-system's design, API surface, screen list, AI development rules).
+WiamApp connects customers with identity-verified electricians, cleaners, plumbers, drivers, and other skilled workers. Every booking is protected by escrow payments, in-app chat with automated moderation, and a dispute resolution system. Businesses — hotels, hospitals, offices — book and manage workers at scale through a dedicated web portal.
 
-One repo, one push, three deployed services. This replaces pushing
-`WiamAppExpo`, `WiamApp-Marketing`, and `WiamApp-Business-Web` as three
-separate repos.
+Built and maintained by **WiamLabs**.
+
+---
+
+## Product
+
+| | |
+|---|---|
+| **Consumer app** | iOS & Android, built with Expo / React Native |
+| **Marketing site** | [wiamapp.com](https://wiamapp.com) — Next.js |
+| **Business portal** | [wiamapp.com/business](https://wiamapp.com/business) — Next.js, served from a separate internal service |
+| **API** | `api.wiamapp.com` — Node.js / Express |
+| **Database** | Supabase (PostgreSQL, Auth, Realtime) |
+| **File storage** | Cloudflare R2 (public + private buckets) |
+| **Payments** | Paystack (escrow) + RevenueCat (subscriptions) |
+
+Full product specification, system design, and architecture rules live in [`docs/MASTER_PLAN.md`](docs/MASTER_PLAN.md).
+
+---
+
+## Repository structure
+
+This is a monorepo. One repository, one push, three deployed services.
 
 ```
 WiamApp/
-├── backend/          Express API — deploys to Render as wiamapp-backend
-├── database/          SQL migrations — run manually in Supabase, not deployed
-├── mobile/             Expo app — NOT deployed to Render, built via EAS instead
-├── marketing/         Next.js — deploys to Render as wiamapp-marketing (wiamapp.com)
-│                       serves EVERYTHING a browser sees, including /business/*
-├── business-web/       Next.js — deploys to Render as wiamapp-business-web
-│                       NO public domain — reached only via marketing's proxy at
-│                       wiamapp.com/business/{login,apply,dashboard}
-└── render.yaml         tells Render about all 3 web services at once
+├── backend/         Express API — deploys as the wiamapp-backend service
+├── database/        SQL migrations, run manually against Supabase
+├── mobile/          Expo application — built and distributed via EAS
+├── marketing/       Next.js — deploys as the wiamapp-marketing service
+├── business-web/    Next.js — deploys as the wiamapp-business-web service
+├── docs/            Product specification and architecture documentation
+└── render.yaml       Render Blueprint defining all deployed services
 ```
 
-**One domain, no subdomains.** `wiamapp.com/business/dashboard` looks and works
-like any other page on the site, but is transparently proxied to the separate
-`business-web` service behind the scenes (see the `rewrites()` block in
-`marketing/next.config.js`). Nobody outside the team ever needs to know two
-services are involved. The only subdomain anywhere in this setup is
-`api.wiamapp.com` for the backend — and that's fine, because it's
-machine-facing only (the mobile app and both web apps call it), no human ever
-types or sees that URL in a browser tab.
+`marketing` and `business-web` are two independently deployed services. `marketing/next.config.js` proxies `wiamapp.com/business/*` to the business-web service, so the two are indistinguishable to an end user — there is exactly one public domain.
 
-## Why I can't push this for you
+---
 
-I don't have network/GitHub access from here — I can only prepare files.
-You need to run the push yourself, once, from wherever you download
-this zip to (your laptop, or even a Codespace/Termux on your phone if
-that's easier). It's five commands.
+## Local development
 
-## One-time setup (do this once)
-
-**1. Create the repo on GitHub** (under your `WiamLabs` account)
-- Go to github.com/new
-- Owner: `WiamLabs`, Repository name: `WiamApp`, keep it **empty** (no README/license — you already have files)
-
-**2. Push this folder**
-```bash
-cd WiamApp          # this folder, after unzipping
-git init
-git add .
-git commit -m "Monorepo: backend, database, mobile, marketing, business-web"
-git branch -M main
-git remote add origin https://github.com/WiamLabs/WiamApp.git
-git push -u origin main
-```
-If prompted for a password, GitHub no longer accepts your account password —
-use a Personal Access Token instead (GitHub → Settings → Developer settings
-→ Personal access tokens → generate one, paste it in place of the password).
-
-**3. Connect Render**
-- Render dashboard → **New +** → **Blueprint**
-- Connect the `WiamLabs/WiamApp` repo
-- Render reads `render.yaml` and proposes all 3 services at once
-- Click through — it creates `wiamapp-backend`, `wiamapp-marketing`, `wiamapp-business-web`
-
-**4. Fill in secrets**
-Every env var marked `sync: false` in `render.yaml` needs its real value
-typed into the Render dashboard for that service (Render never lets
-secrets live in the git repo itself, which is correct — don't fight this).
-Use `TESTING_PLAN_CORRECTIONS.md` (in this same zip) for the full,
-accurate list of what each one is.
-
-**5. Map your domain**
-- `wiamapp-marketing` service → Settings → Custom Domain → `wiamapp.com` + `www.wiamapp.com`
-- `wiamapp-business-web` → **no custom domain** — leave it on its default `.onrender.com` URL, then paste that URL into `wiamapp-marketing`'s `BUSINESS_ORIGIN` env var so the proxy can reach it
-- `wiamapp-backend` → optional: `api.wiamapp.com` (the default `.onrender.com` URL also works fine for testing)
-
-You'll update your domain's DNS (wherever wiamapp.com is registered) to
-point at Render — Render shows you the exact CNAME/A records to add
-once you type in the domain.
-
-## Every day after that
+### Backend
 
 ```bash
-git add .
-git commit -m "whatever you changed"
-git push
+cd backend
+npm install
+cp .env.example .env      # fill in Supabase, R2, Paystack, and AI moderation keys
+npm run dev
 ```
-That's it. Render watches the repo and redeploys only the service(s)
-whose folder actually changed — backend edit redeploys just the
-backend, marketing edit redeploys just the marketing site, and so on.
-No more juggling three separate pushes.
 
-## The mobile app is different
+### Mobile
 
-`mobile/` never touches Render. To ship a new build to testers:
 ```bash
 cd mobile
-eas build --platform android --profile preview
+npm install
+cp .env.example .env      # Supabase URL/key, backend URL, R2 public URL
+npx expo start
 ```
-See `WiamApp-Testing-Build-Plan.md` (your own doc) — Phase 2–4 — for
-the full EAS flow, with the one correction noted in
-`TESTING_PLAN_CORRECTIONS.md`: the env var is `EXPO_PUBLIC_BACKEND_URL`,
-not `EXPO_PUBLIC_API_URL`.
 
-## Database migrations
+### Marketing site
 
-Still run these by hand in the Supabase SQL editor, in order, from
-`database/migrations/`. They are not part of the git deploy — Supabase
-doesn't watch your repo. Migration 035 is new this session; run it
-after 028–034 if you haven't already.
+```bash
+cd marketing
+npm install
+cp .env.example .env.local
+npm run dev
+```
+
+### Business portal
+
+```bash
+cd business-web
+npm install
+cp .env.example .env.local
+npm run dev
+```
+
+---
+
+## Deployment
+
+Backend, marketing, and business portal deploy to [Render](https://render.com) via the `render.yaml` Blueprint at the repository root.
+
+1. Push to `main` on `github.com/WiamLabs/WiamApp`
+2. Render dashboard → **New** → **Blueprint** → connect the repository
+3. Render provisions all three services from `render.yaml`
+4. Set each service's environment variables in the Render dashboard — secrets are never committed to the repository
+5. Map `wiamapp.com` to the `wiamapp-marketing` service only. `wiamapp-business-web` receives no public domain; it is reached exclusively through the marketing service's rewrite proxy
+
+Database migrations are run manually against Supabase (SQL Editor), in numeric order, from `database/migrations/`. See `docs/MASTER_PLAN.md`, Section 27, for the full run order.
+
+The mobile app is built and distributed through [EAS](https://expo.dev/eas), independent of the Render deployment cycle.
+
+---
+
+## Environment variables
+
+Each service's `.env.example` is the authoritative, current list for that service. `docs/MASTER_PLAN.md` documents the purpose of each variable in detail, including which are required versus optional for a given environment.
+
+---
+
+## License
+
+Proprietary. All rights reserved.
+
+© 2026 WiamApp. Powered by WiamLabs.
