@@ -11,6 +11,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import VerifiedBadge from '../components/VerifiedBadge';
+
+const { width } = Dimensions.get('window');
+
 const BG      = '#FFFFFF';
 const NAVY    = '#0D0D2B';
 const GOLD    = '#D4A017';
