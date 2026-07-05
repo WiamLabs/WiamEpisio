@@ -33,6 +33,8 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      - key: NODE_VERSION
+        value: "20"
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_SECRET_KEY
@@ -91,6 +93,8 @@ services:
     startCommand: npm start
     autoDeploy: true
     envVars:
+      - key: NODE_VERSION
+        value: "20"
       - key: NEXT_PUBLIC_BACKEND_URL
         sync: false  # set to https://wiamapp-backend.onrender.com (or api.wiamapp.com once mapped)
       - key: NEXT_PUBLIC_SUPABASE_URL
@@ -114,6 +118,8 @@ services:
     startCommand: npm start
     autoDeploy: true
     envVars:
+      - key: NODE_VERSION
+        value: "20"
       - key: NEXT_PUBLIC_BACKEND_URL
         sync: false  # set to https://wiamapp-backend.onrender.com (or api.wiamapp.com once mapped)
       - key: NEXT_PUBLIC_SUPABASE_URL
