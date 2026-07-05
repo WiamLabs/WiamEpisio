@@ -3,6 +3,7 @@
 
 import { Router } from 'express';
 import { supabaseAdmin, verifyUserToken } from '../lib/supabaseAdmin.js';
+import { usdToLocal } from '../lib/exchangeRates.js';
 
 const router = Router();
 
@@ -39,6 +40,7 @@ router.post('/paystack/initiate', async (req, res) => {
         currency,
         reference: `wiam_${Date.now()}_${bookingId.slice(0, 8)}`,
         metadata: {
+          app: 'wiamapp',
           booking_id: bookingId,
           custom_fields: [
             { display_name: 'App', value: 'WiamApp' },
@@ -121,67 +123,119 @@ router.get('/paystack/verify/:reference', async (req, res) => {
 router.post('/paystack/subscribe', async (req, res) => {
   try {
     const user = await verifyUserToken(req.headers.authorization);
-    const { planKey, email } = req.body;
+    const { planKey, email, currency = 'GHS' } = req.body;
 
     if (!planKey || !email) {
       return res.status(400).json({ success: false, error: 'planKey and email are required.' });
     }
 
-    const { data: planConfig, error: planErr } = await supabaseAdmin
-      .from('subscription_config')
-      .select('*')
-      .eq('plan_key', planKey)
-      .eq('is_active', true)
-      .single();
-
-    if (planErr || !planConfig) {
-      return res.status(404).json({ success: false, error: 'That plan does not exist or is not currently available.' });
-    }
-
-    const amountInKobo = Math.round(planConfig.price_usd_web * 100);
-    const reference = `wiam_sub_${Date.now()}_${user.id.slice(0, 8)}`;
-
-    const paystackRes = await fetch('https://api.paystack.co/transaction/initialize', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${PAYSTACK_SECRET}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email,
-        amount: amountInKobo,
-        currency: 'USD', // Paystack settles in USD here; the customer's card is charged the GHS-equivalent automatically by Paystack
-        reference,
-        metadata: {
-          payment_type: 'subscription',
-          user_id: user.id,
-          plan_key: planKey,
-          custom_fields: [
-            { display_name: 'App', value: 'WiamApp' },
-            { display_name: 'Plan', value: planConfig.plan_name },
-          ],
-        },
-        callback_url: 'https://wiamapp.com/billing/success',
-      }),
-    });
-
-    const result = await paystackRes.json();
-    if (!result.status) throw new Error(result.message);
-
-    await supabaseAdmin.from('audit_logs').insert({
-      user_id: user.id,
-      action: 'subscription_checkout_started',
-      metadata: { plan_key: planKey, amount_usd: planConfig.price_usd_web, reference },
-    });
-
-    res.json({
-      success: true,
-      authorizationUrl: result.data.authorization_url,
-      reference,
-    });
+    const result = await initiateSubscriptionCheckout({ userId: user.id, planKey, email, currency });
+    res.json({ success: true, ...result });
   } catch (err) {
     res.status(400).json({ success: false, error: err.message });
   }
 });
+
+/**
+ * Start a subscription checkout initiated from wiamlabs.com's
+ * central pricing page, NOT from inside the app — so there is no
+ * WiamApp login session to read a user id from. Identifies the
+ * account by email instead, the same way Stripe Checkout links do.
+ * Everything downstream (the webhook, the activation) is identical
+ * to the authenticated path above — same reference format, same
+ * metadata shape, same subscription_config lookup.
+ */
+router.post('/paystack/subscribe-by-email', async (req, res) => {
+  try {
+    const { planKey, email, currency = 'GHS' } = req.body;
+
+    if (!planKey || !email) {
+      return res.status(400).json({ success: false, error: 'planKey and email are required.' });
+    }
+
+    const { data: existingUser, error: userLookupErr } = await supabaseAdmin
+      .from('users')
+      .select('id, role')
+      .eq('email', email)
+      .maybeSingle();
+
+    if (userLookupErr) throw userLookupErr;
+    if (!existingUser) {
+      return res.status(404).json({
+        success: false,
+        error: 'No WiamApp account found for that email. Register at wiamapp.com/register first, then come back to upgrade.',
+      });
+    }
+    if (existingUser.role !== 'worker') {
+      return res.status(400).json({
+        success: false,
+        error: 'Pro is a worker plan — this email is not registered as a worker account.',
+      });
+    }
+
+    const result = await initiateSubscriptionCheckout({ userId: existingUser.id, planKey, email, currency });
+    res.json({ success: true, ...result });
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+});
+
+async function initiateSubscriptionCheckout({ userId, planKey, email, currency }) {
+  const { data: planConfig, error: planErr } = await supabaseAdmin
+    .from('subscription_config')
+    .select('*')
+    .eq('plan_key', planKey)
+    .eq('is_active', true)
+    .single();
+
+  if (planErr || !planConfig) {
+    throw new Error('That plan does not exist or is not currently available.');
+  }
+
+  // IMPORTANT: a standard Ghana/Nigeria Paystack merchant account
+  // can only charge in GHS/NGN respectively — passing currency:
+  // 'USD' directly here fails with "Currency not supported" unless
+  // multi-currency billing was specifically enabled on the account.
+  // Convert to the customer's real local currency instead, using
+  // the same live-rate helper as the rest of the app.
+  const localAmount = await usdToLocal(planConfig.price_usd_web, currency);
+  const amountInKobo = Math.round(localAmount * 100);
+  const reference = `wiam_sub_${Date.now()}_${userId.slice(0, 8)}`;
+
+  const paystackRes = await fetch('https://api.paystack.co/transaction/initialize', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${PAYSTACK_SECRET}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      email,
+      amount: amountInKobo,
+      currency,
+      metadata: {
+        app: 'wiamapp',
+        payment_type: 'subscription',
+        user_id: userId,
+        plan_key: planKey,
+        custom_fields: [
+          { display_name: 'App', value: 'WiamApp' },
+          { display_name: 'Plan', value: planConfig.plan_name },
+        ],
+      },
+      callback_url: 'https://wiamapp.com/billing/success',
+    }),
+  });
+
+  const result = await paystackRes.json();
+  if (!result.status) throw new Error(result.message);
+
+  await supabaseAdmin.from('audit_logs').insert({
+    user_id: userId,
+    action: 'subscription_checkout_started',
+    metadata: { plan_key: planKey, amount_usd: planConfig.price_usd_web, reference },
+  });
+
+  return { authorizationUrl: result.data.authorization_url, reference };
+}
 
 export default router;

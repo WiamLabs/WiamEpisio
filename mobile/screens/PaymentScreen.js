@@ -1,7 +1,7 @@
 // © 2026 WiamApp. Powered by WiamLabs
 // screens/PaymentScreen.js
 // Paystack payment — money goes to escrow, not directly to worker
-// Backend: POST /api/payments/initialize, POST /api/payments/verify
+// Backend: POST /api/payments/paystack/initiate, GET /api/payments/paystack/verify/:reference
 
 import React, { useState } from 'react';
 import {
@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { WebView } from 'react-native-webview';
+import { useAuth } from '../lib/AuthContext';
 
 const BG      = '#FFFFFF';
 const NAVY    = '#0D0D2B';
@@ -22,7 +23,8 @@ const MUTED   = '#888899';
 const BACKEND = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 export default function PaymentScreen({ navigation, route }) {
-  const { bookingId, amount, workerName } = route?.params || {};
+  const { bookingId, amount, workerName, currency = 'GHS' } = route?.params || {};
+  const { session, user } = useAuth();
 
   const [loading,        setLoading]        = useState(false);
   const [paymentUrl,     setPaymentUrl]     = useState(null);
@@ -38,14 +40,17 @@ export default function PaymentScreen({ navigation, route }) {
     setLoading(true);
     setError('');
     try {
-      const res  = await fetch(`${BACKEND}/api/payments/initialize`, {
+      const res  = await fetch(`${BACKEND}/api/payments/paystack/initiate`, {
         method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ booking_id: bookingId }),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session?.access_token}`,
+        },
+        body:    JSON.stringify({ bookingId, amount: parseFloat(amount), currency, email: user?.email }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Payment initialization failed.');
-      setPaymentUrl(data.authorization_url);
+      setPaymentUrl(data.authorizationUrl);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -61,13 +66,16 @@ export default function PaymentScreen({ navigation, route }) {
       setVerifying(true);
       try {
         const reference = url.split('reference=')[1]?.split('&')[0];
-        const res  = await fetch(`${BACKEND}/api/payments/verify`, {
-          method:  'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body:    JSON.stringify({ booking_id: bookingId, reference }),
+        // Real status change (escrow, contact reveal, notifications)
+        // happens server-to-server via the Paystack webhook, which
+        // has usually already fired by the time this redirect lands.
+        // This call just confirms status quickly for the UI.
+        const res  = await fetch(`${BACKEND}/api/payments/paystack/verify/${reference}`, {
+          method:  'GET',
+          headers: { Authorization: `Bearer ${session?.access_token}` },
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Payment verification failed.');
+        if (!res.ok || !data.success) throw new Error(data.error || 'Payment verification failed.');
         navigation.replace('PaymentSuccess', { bookingId, workerName, amount });
       } catch (err) {
         setError(err.message);

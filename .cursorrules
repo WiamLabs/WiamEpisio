@@ -1,0 +1,48 @@
+# Cursor / AI assistant rules — WiamApp
+
+This repo is **WiamApp** only. It is one of several separate WiamLabs
+products, each in its own repository with its own stack. Do not assume
+conventions, dependencies, or file structures from any other WiamLabs
+product (WiamPass, WiamTrade, wiamlabs-web, wiamlabs-studio) apply here
+— they do not, even where names sound similar.
+
+## Stack (this repo only)
+- Backend: **Express** (plain, not NestJS), ES modules (`type: module`)
+- Database: **Supabase** (PostgreSQL) accessed via `@supabase/supabase-js`
+  — no ORM, no Prisma
+- Mobile: **Expo / React Native**, built via EAS
+- Web: **Next.js 15/16** (App Router), two separate apps: `marketing/`
+  (public site) and `business-web/` (portal, proxied under
+  `wiamapp.com/business/*` — see `marketing/next.config.js` rewrites)
+- Package manager: **npm** (not pnpm, not yarn)
+- Payments: Paystack, routed through the separate
+  `wiamlabs-payments-router` service — this repo's own webhook code
+  never needs to change when other products are added to that router
+
+## Structure
+```
+backend/         Express API — own package.json, own node_modules
+mobile/          Expo app — own package.json
+marketing/       Next.js — own package.json
+business-web/    Next.js — own package.json, proxied under marketing
+database/        Supabase SQL migrations, run manually, not via ORM
+docs/            MASTER_PLAN.md — full product spec, read before large changes
+```
+Four independent Node projects live in this one repo. Never assume a
+dependency in one is available in another — install separately per folder.
+
+## Before making changes
+Read `docs/MASTER_PLAN.md` for anything touching booking flow, trust
+system, verification, payments, or the screen/route list — it is the
+authoritative spec and is kept current (see its Section 29 for the
+latest architecture changes).
+
+## Hard rules
+- Never suggest switching this repo to Prisma, NestJS, or pnpm — those
+  belong to WiamPass, a different product, different repo.
+- Never invent a `wiamapp.team.wiamlabs.com` or similar admin panel —
+  WiamLabs is building a separate cross-product Studio for that
+  (see `wiamlabs-studio` repo). Do not build WiamApp-specific admin UI.
+- `wiamapp.com/business/*` is a rewrite proxy to a separate deployed
+  service (`business-web`), not a folder inside `marketing/`. Do not
+  "fix" this by merging the two Next.js apps.

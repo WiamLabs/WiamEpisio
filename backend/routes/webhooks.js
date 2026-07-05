@@ -5,6 +5,7 @@
 import { Router } from 'express';
 import { supabaseAdmin } from '../lib/supabaseAdmin.js';
 import { sendBookingEmail } from '../lib/resend.js';
+import { localToUsd } from '../lib/exchangeRates.js';
 
 const router = Router();
 
@@ -192,7 +193,7 @@ router.post('/paystack', async (req, res) => {
       // Find the payment record
       const { data: payment } = await supabaseAdmin
         .from('payments')
-        .select('*, bookings(*)')
+        .select('*, bookings(*, worker_profiles(user_id))')
         .eq('transaction_ref', reference)
         .single();
 
@@ -203,13 +204,14 @@ router.post('/paystack', async (req, res) => {
       // Handle booking payment
       if (metadata?.payment_type === 'booking') {
         const booking = payment.bookings;
+        const workerUserId = booking.worker_profiles?.user_id;
 
         // Update payment to escrow status
         await supabaseAdmin
           .from('payments')
           .update({
             payment_status: 'escrow',
-            amount_usd: amount / 100 / getExchangeRate(currency),
+            amount_usd: await localToUsd(amount / 100, currency),
           })
           .eq('id', payment.id);
 
@@ -225,7 +227,7 @@ router.post('/paystack', async (req, res) => {
           .eq('id', booking.id);
 
         // Notify both parties
-        await supabaseAdmin.from('notifications').insert([
+        const paymentNotifications = [
           {
             user_id: booking.customer_id,
             title: 'Payment confirmed ✅',
@@ -233,14 +235,19 @@ router.post('/paystack', async (req, res) => {
             type: 'payment',
             data: { booking_id: booking.id },
           },
-          {
-            user_id: booking.worker_user_id,
+        ];
+        if (workerUserId) {
+          paymentNotifications.push({
+            user_id: workerUserId,
             title: 'Customer payment received 💰',
             body: 'Payment is held in escrow. Complete the job to receive your earnings.',
             type: 'payment',
             data: { booking_id: booking.id },
-          },
-        ]);
+          });
+        } else {
+          console.error(`No worker_profiles.user_id found for booking ${booking.id} — worker was not notified of payment`);
+        }
+        await supabaseAdmin.from('notifications').insert(paymentNotifications);
 
         // Log it
         await supabaseAdmin.from('audit_logs').insert({
@@ -359,11 +366,5 @@ router.post('/paystack', async (req, res) => {
     res.status(500).json({ error: 'Webhook processing failed' });
   }
 });
-
-// Helper: rough exchange rate conversion (replace with real API)
-function getExchangeRate(currency) {
-  const rates = { GHS: 11.5, NGN: 1650, USD: 1 };
-  return rates[currency] || 1;
-}
 
 export default router;
