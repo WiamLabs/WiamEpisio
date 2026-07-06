@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  View, Text, TouchableOpacity, StyleSheet, StatusBar, ScrollView, ActivityIndicator, Alert, Linking,
+  View, Text, TouchableOpacity, StyleSheet, StatusBar, ScrollView, ActivityIndicator, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -115,11 +115,8 @@ export default function SubscriptionScreen({ navigation }) {
     if (!pkg) {
       Alert.alert(
         'Purchase unavailable',
-        'This plan is not available for in-app purchase right now. You can subscribe on the web to save 20%.',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Visit Website', onPress: () => Linking.openURL('https://wiamlabs.com/wiamapp/pricing') },
-        ]
+        'This plan is not available through the App Store right now. Please try again later, or use Restore Purchases if you subscribed before.',
+        [{ text: 'OK' }]
       );
       return;
     }
@@ -192,10 +189,6 @@ export default function SubscriptionScreen({ navigation }) {
             Upgrade to lower your commission, unlock Spotlight, and
             shorten the climb to earning your Checkmark badge.
           </Text>
-          <View style={styles.savingsBadge}>
-            <Ionicons name="globe-outline" size={14} color={Colors.navy} />
-            <Text style={styles.savingsText}>Subscribe at wiamapp.com to save 20%</Text>
-          </View>
         </View>
 
         {/* Plans */}
@@ -359,14 +352,6 @@ const styles = StyleSheet.create({
   hero: { paddingHorizontal: 24, paddingBottom: 20 },
   heroTitle: { color: Colors.white, fontSize: 22, fontWeight: '700', marginBottom: 8 },
   heroSub: { color: 'rgba(255,255,255,0.55)', fontSize: 14, lineHeight: 22, marginBottom: 14 },
-  savingsBadge: {
-    backgroundColor: 'rgba(212,160,23,0.15)', borderRadius: 20,
-    paddingHorizontal: 14, paddingVertical: 8,
-    flexDirection: 'row', alignItems: 'center', gap: 7,
-    alignSelf: 'flex-start',
-    borderWidth: 0.5, borderColor: 'rgba(212,160,23,0.3)',
-  },
-  savingsText: { color: Colors.gold, fontSize: 12, fontWeight: '500' },
 
   planCard: {
     backgroundColor: Colors.white, marginHorizontal: 20,
