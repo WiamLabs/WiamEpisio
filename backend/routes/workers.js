@@ -9,7 +9,25 @@ const router = Router();
 // Get all nearby workers
 router.get('/', async (req, res) => {
   try {
-    const { category, city = 'Accra', limit = 20, sort = 'rating' } = req.query;
+    const { category, country, city, limit = 20, sort = 'rating' } = req.query;
+
+    // Country comes from an explicit query param (public web browse)
+    // or from the logged-in customer's own account (mobile app) —
+    // either way it is REQUIRED and hard-filtered on. A customer in
+    // one country must never see a worker based in another country,
+    // no matter how the rest of the results are sorted.
+    let customerCountry = country;
+    if (!customerCountry && req.headers.authorization) {
+      try {
+        const user = await verifyUserToken(req.headers.authorization);
+        const { data: me } = await supabaseAdmin.from('users').select('country').eq('id', user.id).single();
+        customerCountry = me?.country;
+      } catch { /* fall through — no auth, no country resolved */ }
+    }
+
+    if (!customerCountry) {
+      return res.status(400).json({ error: 'country is required — pass it as a query param or send an auth token.' });
+    }
 
     let query = supabaseAdmin
       .from('worker_profiles')
@@ -18,12 +36,12 @@ router.get('/', async (req, res) => {
         latitude, longitude, is_available, is_verified,
         verified_badge, subscription_tier, eligibility_score,
         total_jobs_done, average_rating,
-        users (id, full_name, avatar_url, city),
+        users (id, full_name, avatar_url, city, country),
         worker_categories (categories (id, name, icon))
       `)
       .eq('is_available', true)
-      .eq('users.city', city)
-      .limit(Number(limit));
+      .eq('users.country', customerCountry)
+      .limit(Number(limit) * 3); // fetch extra — city ranking below may reorder across a wider pool before trimming to the real limit
 
     // Real sort handling — CategoryScreen offers 5 options and
     // previously all of them silently fell back to the same
@@ -80,7 +98,21 @@ router.get('/', async (req, res) => {
       enriched = enriched.sort((a, b) => (b.is_online ? 1 : 0) - (a.is_online ? 1 : 0));
     }
 
-    res.json(enriched);
+    // City is a RANKING preference, never a hard filter — same-city
+    // workers float to the top, but a customer whose exact city has
+    // few or no workers yet still sees everyone else in their own
+    // country, just ranked below. Array.sort is stable, so the sort
+    // order already applied above (rating/jobs/price/online) is
+    // preserved within each group.
+    if (city) {
+      enriched = enriched.sort((a, b) => {
+        const aMatch = a.users?.city === city ? 1 : 0;
+        const bMatch = b.users?.city === city ? 1 : 0;
+        return bMatch - aMatch;
+      });
+    }
+
+    res.json(enriched.slice(0, Number(limit)));
   } catch (err) {
     res.status(400).json({ error: err.message });
   }

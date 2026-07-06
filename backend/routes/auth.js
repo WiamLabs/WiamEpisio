@@ -14,6 +14,7 @@ router.post('/register', async (req, res) => {
     const {
       fullName, email, phone, password, role,
       city, country, countryCode,
+      landmarkDescription, digitalAddressCode, latitude, longitude,
       category,    // workers only
       companyName, // business only
     } = req.body;
@@ -69,7 +70,11 @@ router.post('/register', async (req, res) => {
         role,
         city,
         country,
-        country_code: countryCode || 'GH',
+        country_code: countryCode || null,
+        landmark_description: landmarkDescription || null,
+        digital_address_code: digitalAddressCode || null,
+        latitude:     latitude ?? null,
+        longitude:    longitude ?? null,
         is_verified:  false,
         is_active:    true,
       });
@@ -79,7 +84,14 @@ router.post('/register', async (req, res) => {
       if (role === 'worker') {
         const { data: wpData, error: wpError } = await supabaseAdmin
           .from('worker_profiles')
-          .insert({ user_id: userId })
+          .insert({
+            user_id: userId,
+            location_name: city || null,
+            landmark_description: landmarkDescription || null,
+            digital_address_code: digitalAddressCode || null,
+            latitude:  latitude ?? null,
+            longitude: longitude ?? null,
+          })
           .select('id')
           .single();
         if (wpError) throw wpError;

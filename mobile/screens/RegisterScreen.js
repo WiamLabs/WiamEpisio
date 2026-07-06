@@ -15,7 +15,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
-import { AFRICAN_COUNTRIES, DEFAULT_COUNTRY } from '../constants/countries';
+import { COUNTRIES, DEFAULT_COUNTRY } from '../constants/countries';
+import * as Location from 'expo-location';
 
 const LOGO    = require('../assets/logo.png');
 const BG      = '#0D0D2B';
@@ -41,7 +42,7 @@ const WORKER_CATEGORIES = [
 function CountryPicker({ value, onSelect }) {
   const [open,   setOpen]   = useState(false);
   const [search, setSearch] = useState('');
-  const filtered = AFRICAN_COUNTRIES.filter(c =>
+  const filtered = COUNTRIES.filter(c =>
     c.name.toLowerCase().includes(search.toLowerCase())
   );
   return (
@@ -231,6 +232,10 @@ export default function RegisterScreen({ navigation }) {
   const [password, setPassword] = useState('');
   const [country,  setCountry]  = useState(DEFAULT_COUNTRY);
   const [city,     setCity]     = useState('');
+  const [landmarkDescription, setLandmarkDescription] = useState('');
+  const [digitalAddressCode,  setDigitalAddressCode]  = useState('');
+  const [coords,   setCoords]   = useState(null); // { latitude, longitude }
+  const [locating, setLocating] = useState(false);
   const [category, setCategory] = useState('');
   const [agreed,   setAgreed]   = useState(false);
   const [showPw,   setShowPw]   = useState(false);
@@ -240,6 +245,27 @@ export default function RegisterScreen({ navigation }) {
   const canSubmit = fullName.trim() && email.trim() && phone.trim()
     && password.length >= 6 && agreed
     && (role === 'customer' || (role === 'worker' && category));
+
+  // Free, built into every phone — no API key, works in any country
+  // on Earth identically. This is the GPS pin saved on the account;
+  // the landmark/digital-code text fields above are what actually
+  // make it findable on the ground.
+  const useMyLocation = async () => {
+    setLocating(true);
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        setError('Location permission is needed to save your GPS pin. You can still register without it.');
+        return;
+      }
+      const pos = await Location.getCurrentPositionAsync({});
+      setCoords({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
+    } catch (e) {
+      setError('Could not get your location right now. You can still register without it.');
+    } finally {
+      setLocating(false);
+    }
+  };
 
   // ✅ FIX: Registration goes directly to Supabase — no backend needed
   const handleRegister = async () => {
@@ -279,6 +305,10 @@ export default function RegisterScreen({ navigation }) {
           city:         city || '',
           country:      country.name,
           country_code: country.code,
+          landmark_description: landmarkDescription || null,
+          digital_address_code: digitalAddressCode || null,
+          latitude:     coords?.latitude ?? null,
+          longitude:    coords?.longitude ?? null,
           is_verified:  false,
           created_at:   new Date().toISOString(),
         });
@@ -295,6 +325,10 @@ export default function RegisterScreen({ navigation }) {
           .insert({
             user_id:       userId,
             location_name: city || '',
+            landmark_description: landmarkDescription || null,
+            digital_address_code: digitalAddressCode || null,
+            latitude:      coords?.latitude ?? null,
+            longitude:     coords?.longitude ?? null,
             is_verified:   false,
             is_available:  false,
             hourly_rate:   0,
@@ -488,6 +522,48 @@ export default function RegisterScreen({ navigation }) {
             onSelect={(c) => setCity(c.name)}
           />
 
+          {/* Landmark — works in every country, especially where formal
+              street addressing is incomplete. This is how people already
+              give directions today; the app just saves it. */}
+          <Text style={s.label}>How to find you (landmark / directions)</Text>
+          <View style={s.inputWrap}>
+            <Ionicons name="flag-outline" size={17} color="rgba(255,255,255,0.35)" style={s.inputIcon} />
+            <TextInput
+              style={[s.inputText, { flex: 1 }]}
+              placeholder="e.g. Blue gate opposite Shell station"
+              placeholderTextColor={MUTED}
+              value={landmarkDescription}
+              onChangeText={setLandmarkDescription}
+            />
+          </View>
+
+          {/* Digital address code — optional, whatever this country
+              already has (GhanaPost GPS, a UK postcode, an Indian PIN,
+              a what3words address, anything). WiamApp never validates
+              or looks this up — it's just stored as-is. */}
+          <Text style={s.label}>Digital address code (optional)</Text>
+          <View style={s.inputWrap}>
+            <Ionicons name="pricetag-outline" size={17} color="rgba(255,255,255,0.35)" style={s.inputIcon} />
+            <TextInput
+              style={[s.inputText, { flex: 1 }]}
+              placeholder="e.g. GA-183-9038, or your country's own code"
+              placeholderTextColor={MUTED}
+              value={digitalAddressCode}
+              onChangeText={setDigitalAddressCode}
+              autoCapitalize="characters"
+            />
+          </View>
+
+          {/* GPS pin — free, built into the phone, works in any country
+              identically. Optional but recommended: this is the exact
+              location a worker gets sent once a booking is paid. */}
+          <TouchableOpacity style={s.locationBtn} onPress={useMyLocation} disabled={locating}>
+            <Ionicons name={coords ? 'checkmark-circle' : 'locate-outline'} size={17} color={coords ? '#22C55E' : GOLD} />
+            <Text style={[s.locationBtnText, coords && { color: '#22C55E' }]}>
+              {locating ? 'Getting your location…' : coords ? 'Location saved ✓' : 'Use my current location'}
+            </Text>
+          </TouchableOpacity>
+
           {/* Password */}
           <Text style={s.label}>Password</Text>
           <View style={s.inputWrap}>
@@ -576,6 +652,12 @@ const s = StyleSheet.create({
 
   label:               { color: MUTED, fontSize: 12, fontWeight: '600', marginBottom: 6, marginTop: 14, letterSpacing: 0.3 },
   inputWrap:           { flexDirection: 'row', alignItems: 'center', backgroundColor: INPUT_BG, borderWidth: 1, borderColor: INPUT_BD, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 13 },
+  locationBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    borderWidth: 1, borderColor: GOLD_BD, backgroundColor: GOLD_BG,
+    borderRadius: 12, paddingVertical: 13, marginBottom: 14,
+  },
+  locationBtnText: { color: GOLD, fontSize: 13.5, fontWeight: '600' },
   inputIcon:           { marginRight: 10 },
   inputText:           { color: WHITE, fontSize: 15 },
   inputPlaceholder:    { color: MUTED },

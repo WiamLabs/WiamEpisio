@@ -5,13 +5,9 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { COUNTRIES } from '../../lib/countries';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
-
-const COUNTRIES = [
-  { code: 'GH', name: 'Ghana' },
-  { code: 'NG', name: 'Nigeria' },
-];
 
 const STEPS = { FORM: 'form', OTP: 'otp', PROFILE: 'profile', DOCS: 'docs', DONE: 'done' };
 const ID_TYPES = [
@@ -46,7 +42,10 @@ export default function RegisterForm() {
   const [form, setForm] = useState({
     fullName: '', email: '', phone: '', password: '',
     city: '', country: 'GH', category: '',
+    landmarkDescription: '', digitalAddressCode: '',
   });
+  const [coords, setCoords] = useState(null); // { latitude, longitude }
+  const [locating, setLocating] = useState(false);
 
   useEffect(() => {
     if (role !== 'worker' || categories.length) return;
@@ -57,6 +56,27 @@ export default function RegisterForm() {
   }, [role, categories.length]);
 
   const update = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
+
+  // Free, built into every browser — no API key, works in any
+  // country identically. This is the GPS pin saved on the account;
+  // the landmark/digital-code fields are what make it findable.
+  const useMyLocation = () => {
+    if (!navigator.geolocation) {
+      setError('Your browser does not support location. You can still register without it.');
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setCoords({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
+        setLocating(false);
+      },
+      () => {
+        setError('Could not get your location. You can still register without it.');
+        setLocating(false);
+      }
+    );
+  };
 
   const submitRegister = async (e) => {
     e.preventDefault();
@@ -73,13 +93,18 @@ export default function RegisterForm() {
 
     setLoading(true);
     try {
+      const countryObj = COUNTRIES.find((c) => c.code === form.country);
       const res = await fetch(`${BACKEND_URL}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           fullName: form.fullName, email: form.email, phone: form.phone,
-          password: form.password, role, city: form.city, country: form.country,
-          countryCode: form.country, category: role === 'worker' ? form.category : undefined,
+          password: form.password, role, city: form.city,
+          country: countryObj?.name || form.country, countryCode: form.country,
+          landmarkDescription: form.landmarkDescription || undefined,
+          digitalAddressCode: form.digitalAddressCode || undefined,
+          latitude: coords?.latitude, longitude: coords?.longitude,
+          category: role === 'worker' ? form.category : undefined,
         }),
       });
       const data = await res.json();
@@ -281,9 +306,22 @@ export default function RegisterForm() {
                 className="flex-1 border border-line rounded-lg px-4 py-3 text-sm" />
               <select value={form.country} onChange={update('country')}
                 className="border border-line rounded-lg px-3 py-3 text-sm">
-                {COUNTRIES.map((c) => <option key={c.code} value={c.code}>{c.name}</option>)}
+                {COUNTRIES.map((c) => <option key={c.code} value={c.code}>{c.flag} {c.name}</option>)}
               </select>
             </div>
+
+            <input placeholder="How to find you (landmark / directions)" value={form.landmarkDescription}
+              onChange={update('landmarkDescription')}
+              className="w-full border border-line rounded-lg px-4 py-3 text-sm" />
+
+            <input placeholder="Digital address code (optional — e.g. GA-183-9038)" value={form.digitalAddressCode}
+              onChange={update('digitalAddressCode')}
+              className="w-full border border-line rounded-lg px-4 py-3 text-sm" />
+
+            <button type="button" onClick={useMyLocation} disabled={locating}
+              className="w-full flex items-center justify-center gap-2 border border-gold/25 bg-gold/10 text-ink font-semibold text-sm px-4 py-3 rounded-lg disabled:opacity-60">
+              {locating ? 'Getting your location…' : coords ? 'Location saved ✓' : '📍 Use my current location'}
+            </button>
 
             {role === 'worker' && (
               <select required value={form.category} onChange={update('category')}

@@ -1,15 +1,9 @@
-// © 2026 WiamApp. Powered by WiamLabs
-// constants/countries.js
-// Every country in the world — WiamApp is not Ghana-only or
-// Africa-only. Flags are computed from each ISO code at build time
-// elsewhere in this file's generation, not hand-typed, so there is
-// no risk of a wrong/missing flag for any one country. Free, no API,
-// no dependency on anything external.
-//
-// Ghana is pre-selected as a convenience default in the picker UI
-// only, since it's the current launch market — this has no bearing
-// on the backend, which requires an explicit country on every
-// account and never assumes one (see database migration 036).
+// © 2026 WiamLabs. All rights reserved.
+// lib/countries.js
+// Every country in the world — the marketing site's registration
+// form is not Ghana-only or Africa-only. Flags computed from ISO
+// codes, not hand-typed. Free, no API, no dependency on anything
+// external. Mirrors mobile/constants/countries.js exactly.
 
 export const COUNTRIES = [
   { name: 'Afghanistan', code: 'AF', flag: '🇦🇫', phoneCode: '+93' },
@@ -210,4 +204,4 @@ export const COUNTRIES = [
   { name: 'Zimbabwe', code: 'ZW', flag: '🇿🇼', phoneCode: '+263' },
 ];
 
-export const DEFAULT_COUNTRY = COUNTRIES.find(c => c.code === 'GH');
+export const DEFAULT_COUNTRY = COUNTRIES.find((c) => c.code === 'GH');

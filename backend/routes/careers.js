@@ -98,7 +98,7 @@ router.post('/apply', async (req, res) => {
         full_name:        fullName,
         email:            email.toLowerCase(),
         phone,
-        country:          country || 'Ghana',
+        country:          country || null,
         city:             city || null,
         years_experience: yearsExperience ? parseInt(yearsExperience, 10) : null,
         relevant_skills:  relevantSkills || null,

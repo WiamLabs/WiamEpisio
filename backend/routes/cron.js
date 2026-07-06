@@ -176,7 +176,7 @@ router.post('/calculate-rankings', async (req, res) => {
     // means something within a place a customer can actually book.
     const { data: pairs } = await supabaseAdmin
       .from('worker_profiles')
-      .select('id, average_rating, total_jobs_done, eligibility_score, users(city), worker_categories(category_id)')
+      .select('id, average_rating, total_jobs_done, eligibility_score, users(city, country), worker_categories(category_id)')
       .eq('is_available', true)
       .eq('is_verified', true);
 
@@ -184,12 +184,14 @@ router.post('/calculate-rankings', async (req, res) => {
     const flatRows = [];
     for (const w of pairs || []) {
       const city = w.users?.city;
-      if (!city) continue;
+      const country = w.users?.country;
+      if (!city || !country) continue;
       for (const wc of w.worker_categories || []) {
         flatRows.push({
           workerId: w.id,
           categoryId: wc.category_id,
           city,
+          country,
           rating: w.average_rating || 0,
           jobs: w.total_jobs_done || 0,
           score: w.eligibility_score || 0,
@@ -197,10 +199,11 @@ router.post('/calculate-rankings', async (req, res) => {
       }
     }
 
-    // Group by city + category
+    // Group by country + city + category — city names repeat across
+    // countries, so city alone is not a safe grouping key.
     const groups = {};
     for (const row of flatRows) {
-      const key = `${row.city}::${row.categoryId}`;
+      const key = `${row.country}::${row.city}::${row.categoryId}`;
       (groups[key] = groups[key] || []).push(row);
     }
 
@@ -211,14 +214,14 @@ router.post('/calculate-rankings', async (req, res) => {
       // top_rated — by average rating, jobs as tiebreaker
       const byRating = [...rows].sort((a, b) => b.rating - a.rating || b.jobs - a.jobs);
       byRating.slice(0, 20).forEach((r, i) => upserts.push({
-        worker_id: r.workerId, category_id: r.categoryId, city: r.city,
+        worker_id: r.workerId, category_id: r.categoryId, city: r.city, country: r.country,
         rank_type: 'top_rated', rank_position: i + 1, score: r.rating,
       }));
 
       // most_jobs_month — by job count
       const byJobs = [...rows].sort((a, b) => b.jobs - a.jobs);
       byJobs.slice(0, 20).forEach((r, i) => upserts.push({
-        worker_id: r.workerId, category_id: r.categoryId, city: r.city,
+        worker_id: r.workerId, category_id: r.categoryId, city: r.city, country: r.country,
         rank_type: 'most_jobs_month', rank_position: i + 1, score: r.jobs,
       }));
 
@@ -226,7 +229,7 @@ router.post('/calculate-rankings', async (req, res) => {
       // doubles as the most honest available "trust" ranking input)
       const byScore = [...rows].sort((a, b) => b.score - a.score);
       byScore.slice(0, 20).forEach((r, i) => upserts.push({
-        worker_id: r.workerId, category_id: r.categoryId, city: r.city,
+        worker_id: r.workerId, category_id: r.categoryId, city: r.city, country: r.country,
         rank_type: 'highest_trust', rank_position: i + 1, score: r.score,
       }));
 

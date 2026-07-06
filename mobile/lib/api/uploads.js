@@ -3,8 +3,6 @@
 
 const CLOUDINARY_CLOUD_NAME = process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME;
 const CLOUDINARY_UPLOAD_PRESET = process.env.EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
-const R2_BUCKET_URL = process.env.EXPO_PUBLIC_R2_BUCKET_URL;
-const R2_PUBLIC_URL = process.env.EXPO_PUBLIC_R2_PUBLIC_URL;
 
 // ─── CLOUDINARY — Image Uploads ──────────────────────────────
 
@@ -73,42 +71,12 @@ export async function uploadSelfie(imageUri) {
   return uploadImage(imageUri, 'selfies');
 }
 
-// ─── CLOUDFLARE R2 — Voice Message Uploads ───────────────────
-
-/**
- * Upload a voice recording to Cloudflare R2
- * Returns the public URL of the uploaded file
- *
- * @param {string} audioUri - Local file URI from expo-av recording
- */
-export async function uploadVoiceMessage(audioUri) {
-  if (!R2_BUCKET_URL) {
-    throw new Error('Cloudflare R2 URL missing. Check your .env file.');
-  }
-
-  const fileName = `voice_${Date.now()}.m4a`;
-  const uploadUrl = `${R2_BUCKET_URL}/voice-messages/${fileName}`;
-  const publicUrl = `${R2_PUBLIC_URL}/voice-messages/${fileName}`;
-
-  // Read the file as a blob
-  const response = await fetch(audioUri);
-  const blob = await response.blob();
-
-  // Upload to R2
-  const uploadResponse = await fetch(uploadUrl, {
-    method: 'PUT',
-    body: blob,
-    headers: {
-      'Content-Type': 'audio/mp4',
-    },
-  });
-
-  if (!uploadResponse.ok) {
-    throw new Error('Voice message upload to R2 failed.');
-  }
-
-  return publicUrl;
-}
+// Voice messages are NOT uploaded directly from the app to R2 — a
+// mobile client can never hold valid R2 write credentials safely,
+// and R2 rejects unsigned PUT requests anyway. The real path is
+// sendVoiceMessage() in lib/api/messages.js, which sends the audio
+// to the backend's /api/chat/send-voice endpoint; the backend does
+// the actual signed upload via backend/lib/r2Client.js.
 
 // ─── Smile Identity — ID Verification ────────────────────────
 
