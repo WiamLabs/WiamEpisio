@@ -153,6 +153,9 @@ router.post('/paystack/subscribe-by-email', async (req, res) => {
       return res.status(400).json({ success: false, error: 'planKey and email are required.' });
     }
 
+    const BUSINESS_PLAN_KEYS = ['starter_biz', 'growth_biz', 'enterprise'];
+    const isBusinessPlan = BUSINESS_PLAN_KEYS.includes(planKey);
+
     const { data: existingUser, error: userLookupErr } = await supabaseAdmin
       .from('users')
       .select('id, role')
@@ -163,13 +166,29 @@ router.post('/paystack/subscribe-by-email', async (req, res) => {
     if (!existingUser) {
       return res.status(404).json({
         success: false,
-        error: 'No WiamApp account found for that email. Register at wiamapp.com/register first, then come back to upgrade.',
+        error: isBusinessPlan
+          ? 'No WiamApp business account found for that email. Apply at wiamapp.com/business/apply first, then come back to upgrade.'
+          : 'No WiamApp account found for that email. Register at wiamapp.com/register first, then come back to upgrade.',
       });
     }
-    if (existingUser.role !== 'worker') {
+
+    if (isBusinessPlan) {
+      if (planKey === 'enterprise') {
+        return res.status(400).json({
+          success: false,
+          error: 'Enterprise is sold through sales. Apply at wiamapp.com/business/apply first.',
+        });
+      }
+      if (existingUser.role !== 'business') {
+        return res.status(400).json({
+          success: false,
+          error: 'That plan is for business accounts. Apply at wiamapp.com/business/apply first, then come back to upgrade.',
+        });
+      }
+    } else if (existingUser.role !== 'worker') {
       return res.status(400).json({
         success: false,
-        error: 'Pro is a worker plan — this email is not registered as a worker account.',
+        error: 'That plan is for worker accounts. Register as a worker at wiamapp.com/register first.',
       });
     }
 

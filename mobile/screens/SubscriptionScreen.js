@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  View, Text, TouchableOpacity, StyleSheet, StatusBar, ScrollView, ActivityIndicator, Alert,
+  View, Text, TouchableOpacity, StyleSheet, StatusBar, ScrollView, ActivityIndicator, Alert, Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -115,10 +115,10 @@ export default function SubscriptionScreen({ navigation }) {
     if (!pkg) {
       Alert.alert(
         'Purchase unavailable',
-        'This plan is not available for in-app purchase right now. You can also subscribe at wiamapp.com/pricing to save 20%.',
+        'This plan is not available for in-app purchase right now. You can subscribe on the web to save 20%.',
         [
           { text: 'Cancel', style: 'cancel' },
-          { text: 'Visit Website', onPress: () => {} },
+          { text: 'Visit Website', onPress: () => Linking.openURL('https://wiamlabs.com/wiamapp/pricing') },
         ]
       );
       return;

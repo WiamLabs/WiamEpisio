@@ -20,7 +20,7 @@ async function getWorkerIds() {
 
 export default async function sitemap() {
   const staticRoutes = [
-    '', '/browse', '/register', '/premium', '/business', '/careers', '/contact', '/terms', '/privacy',
+    '', '/browse', '/register', '/premium', '/pricing', '/business', '/careers', '/contact', '/terms', '/privacy',
   ].map((path) => ({
     url: `${SITE_URL}${path}`,
     lastModified: new Date(),

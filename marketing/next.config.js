@@ -11,7 +11,9 @@
 // static asset it generates already matches these rewrite targets.
 //
 // wiamapp.com/business itself (no further path) is NOT rewritten —
-// that stays this app's own pitch/pricing page at app/business/page.js.
+// it redirects to wiamlabs.com/wiamapp/business/pricing (see
+// app/business/page.js). Only /business/apply, /login, /dashboard/*
+// are proxied to business-web.
 const BUSINESS_ORIGIN = process.env.BUSINESS_ORIGIN || 'http://localhost:3001';
 
 const nextConfig = {
