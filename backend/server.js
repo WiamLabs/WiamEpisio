@@ -85,8 +85,11 @@ const uploadLimiter = rateLimit({
   message: { success: false, error: 'Too many uploads. Try again later.' },
 });
 
-// Apply global limiter
-app.use(globalLimiter);
+// Apply global limiter — skip health/root so Render probes never get 429
+app.use((req, res, next) => {
+  if (req.path === '/' || req.path === '/health') return next();
+  return globalLimiter(req, res, next);
+});
 
 // Webhooks need raw body for signature verification — mount BEFORE json parser
 app.use('/api/webhooks', express.raw({ type: 'application/json' }), webhookRoutes);
