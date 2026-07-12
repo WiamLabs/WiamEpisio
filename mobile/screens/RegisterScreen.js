@@ -17,6 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { COUNTRIES, DEFAULT_COUNTRY } from '../constants/countries';
 import { searchWiamAppSkills, resolveWiamAppSkill } from '../constants/skills';
 import { confirmLocationSetup } from '../lib/locationWarning';
+import { reverseGeocodePlace } from '../lib/reverseGeocode';
 import * as Location from 'expo-location';
 
 const BACKEND = process.env.EXPO_PUBLIC_BACKEND_URL;
@@ -318,7 +319,7 @@ export default function RegisterScreen({ navigation }) {
       // Prefer real GPS over Wi‑Fi/cell guesses (those often land in the wrong suburb)
       await Location.enableNetworkProviderAsync().catch(() => {});
       const pos = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Highest,
+        accuracy: Location.Accuracy.BestForNavigation,
         mayShowUserSettingsDialog: true,
       });
       const { latitude, longitude, accuracy } = pos.coords;
@@ -330,51 +331,24 @@ export default function RegisterScreen({ navigation }) {
           : '';
 
       // Warn if the phone itself is uncertain (wifi/cell, not GPS)
-      if (typeof accuracy === 'number' && accuracy > 200) {
+      if (typeof accuracy === 'number' && accuracy > 150) {
         setError(
           'GPS is weak right now (Wi‑Fi / network location). Turn on Location + GPS, go outdoors or near a window, then tap again — or type your city manually.'
         );
       }
 
-      // Reverse-geocode via OpenStreetMap (free). Names can be approximate —
-      // always review City / Landmark before submitting.
-      try {
-        const url = `https://nominatim.openstreetmap.org/reverse`
-          + `?lat=${latitude}&lon=${longitude}`
-          + `&format=json&addressdetails=1&zoom=16`;
-        const res = await fetch(url, {
-          headers: { 'User-Agent': 'WiamApp/1.0 (support@wiamapp.com)' },
-        });
-        const data = await res.json();
-        const addr = data?.address || {};
+      // Native geocoder first; estate labels like "Community 14" never become City
+      const place = await reverseGeocodePlace(latitude, longitude);
+      if (place.city) setCity(place.city);
+      if (place.landmark) setLandmarkDescription(place.landmark);
 
-        // Prefer real city/town for the City field — not a random nearby suburb first
-        const cityName =
-          addr.city || addr.town || addr.municipality || addr.village ||
-          addr.county || addr.state_district || '';
-
-        const suburb =
-          addr.suburb || addr.neighbourhood || addr.hamlet ||
-          addr.residential || addr.quarter || '';
-
-        const region = addr.state || addr.region || '';
-
-        if (cityName) setCity(cityName);
-        else if (suburb) setCity(suburb);
-
-        // Landmark = finer pin (suburb) — user can edit if wrong
-        if (suburb) setLandmarkDescription(suburb);
-
-        setLocationLabel(
-          [
-            [suburb, cityName].filter(Boolean).join(', ') || cityName || suburb,
-            region,
-            `${latitude.toFixed(5)}, ${longitude.toFixed(5)}${accuracyNote}`,
-          ].filter(Boolean).join(' · ')
-        );
-      } catch {
-        setLocationLabel(`${latitude.toFixed(5)}, ${longitude.toFixed(5)}${accuracyNote}`);
-      }
+      setLocationLabel(
+        [
+          place.label || place.city,
+          `${latitude.toFixed(5)}, ${longitude.toFixed(5)}${accuracyNote}`,
+          'Review city & landmark — GPS names can be off',
+        ].filter(Boolean).join(' · ')
+      );
     } catch (e) {
       setError('Could not get your GPS location. Turn on Location / GPS and try again, or type your city.');
     } finally {

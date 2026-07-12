@@ -15,6 +15,7 @@ import { useAuth } from '../lib/AuthContext';
 import { supabase } from '../lib/supabase';
 import { uploadImage } from '../lib/api/uploads';
 import { confirmLocationSetup } from '../lib/locationWarning';
+import { reverseGeocodePlace } from '../lib/reverseGeocode';
 
 const NAVY = '#0D0D2B';
 const GOLD = '#D4A017';
@@ -79,20 +80,18 @@ export default function CustomerEditProfileScreen({ navigation }) {
       }
       await Location.enableNetworkProviderAsync().catch(() => {});
       const pos = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Highest,
+        accuracy: Location.Accuracy.BestForNavigation,
         mayShowUserSettingsDialog: true,
       });
-      const { latitude, longitude } = pos.coords;
+      const { latitude, longitude, accuracy } = pos.coords;
       setCoords({ latitude, longitude });
-      try {
-        const url = `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1&zoom=16`;
-        const res = await fetch(url, { headers: { 'User-Agent': 'WiamApp/1.0 (support@wiamapp.com)' } });
-        const data = await res.json();
-        const addr = data?.address || {};
-        const cityName = addr.city || addr.town || addr.municipality || addr.village || addr.suburb || '';
-        setCity(cityName || `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`);
-      } catch {
-        setCity(`${latitude.toFixed(5)}, ${longitude.toFixed(5)}`);
+      const place = await reverseGeocodePlace(latitude, longitude);
+      setCity(place.city || `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`);
+      if (typeof accuracy === 'number' && accuracy > 150) {
+        Alert.alert(
+          'Weak GPS',
+          'Location accuracy is low. Edit the city if it looks wrong, or go outdoors and try again.',
+        );
       }
     } catch {
       Alert.alert('Location failed', 'Turn on GPS and try again, or type your city.');

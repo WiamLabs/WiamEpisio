@@ -19,6 +19,7 @@ import { useAuth } from '../lib/AuthContext';
 import { supabase } from '../lib/supabase';
 import { uploadAvatar } from '../lib/api/uploads';
 import { confirmLocationSetup } from '../lib/locationWarning';
+import { reverseGeocodePlace } from '../lib/reverseGeocode';
 
 const NAVY  = Colors.navyDeep;
 const NAVY2 = Colors.navyMid;
@@ -96,22 +97,23 @@ export default function WorkerProfileEditScreen({ navigation }) {
       }
       await Location.enableNetworkProviderAsync().catch(() => {});
       const pos = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Highest,
+        accuracy: Location.Accuracy.BestForNavigation,
         mayShowUserSettingsDialog: true,
       });
-      const { latitude, longitude } = pos.coords;
+      const { latitude, longitude, accuracy } = pos.coords;
       setCoords({ latitude, longitude });
 
-      try {
-        const url = `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1&zoom=16`;
-        const res = await fetch(url, { headers: { 'User-Agent': 'WiamApp/1.0 (support@wiamapp.com)' } });
-        const data = await res.json();
-        const addr = data?.address || {};
-        const cityName = addr.city || addr.town || addr.municipality || addr.village || addr.suburb || '';
-        const region = addr.state || '';
-        setLocation([cityName, region].filter(Boolean).join(', ') || `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`);
-      } catch {
-        setLocation(`${latitude.toFixed(5)}, ${longitude.toFixed(5)}`);
+      const place = await reverseGeocodePlace(latitude, longitude);
+      setLocation(
+        [place.city, place.region].filter(Boolean).join(', ')
+        || place.label
+        || `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`
+      );
+      if (typeof accuracy === 'number' && accuracy > 150) {
+        Alert.alert(
+          'Weak GPS',
+          'Location accuracy is low. Edit your base area if the name looks wrong.',
+        );
       }
     } catch {
       Alert.alert('Location failed', 'Turn on GPS and try again, or type your base area.');

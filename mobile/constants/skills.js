@@ -16,7 +16,16 @@ export const WIAMAPP_CATEGORIES = [
   'Events, Entertainment & Sound',
   'Music & Live Performance',
   'Film & Talent',
-  'Phones & Gadgets Repair',
+  'Electronics & Appliances Repair',
+  'Fashion, Tailoring & Textiles',
+  'Gardening, Farming & Outdoor',
+  'Security & Guarding',
+  'IT, Computers & Digital Services',
+  'Domestic Help & Caregiving',
+  'Printing, Signage & Branding',
+  'Furniture & Upholstery',
+  'Fitness, Sports & Coaching',
+  'Welding, Metal & Fabrication',
 ];
 
 /** Each skill maps to a parent category used by the backend categories table */
@@ -186,13 +195,106 @@ export const WIAMAPP_SKILLS = [
   { name: 'Script / Content Actor', category: 'Film & Talent' },
   { name: 'Presenter / Host', category: 'Film & Talent' },
 
-  // Phones & Gadgets Repair (service only — not product sales)
-  { name: 'Phone Repairer', category: 'Phones & Gadgets Repair' },
-  { name: 'Phone Screen Replacement', category: 'Phones & Gadgets Repair' },
-  { name: 'Phone Software / Unlock Technician', category: 'Phones & Gadgets Repair' },
-  { name: 'Tablet Repairer', category: 'Phones & Gadgets Repair' },
-  { name: 'Laptop Repairer', category: 'Phones & Gadgets Repair' },
-  { name: 'Gadget Repair Technician', category: 'Phones & Gadgets Repair' },
+  // Electronics & Appliances Repair (service only — not product sales)
+  { name: 'Phone Repairer', category: 'Electronics & Appliances Repair' },
+  { name: 'Phone Screen Replacement', category: 'Electronics & Appliances Repair' },
+  { name: 'Phone Software / Unlock Technician', category: 'Electronics & Appliances Repair' },
+  { name: 'Tablet Repairer', category: 'Electronics & Appliances Repair' },
+  { name: 'Laptop Repairer', category: 'Electronics & Appliances Repair' },
+  { name: 'Gadget Repair Technician', category: 'Electronics & Appliances Repair' },
+  { name: 'TV / LED Repairer', category: 'Electronics & Appliances Repair' },
+  { name: 'TV Repairer', category: 'Electronics & Appliances Repair' },
+  { name: 'Fridge / Freezer Repairer', category: 'Electronics & Appliances Repair' },
+  { name: 'Fridge Repairer', category: 'Electronics & Appliances Repair' },
+  { name: 'Washing Machine Repairer', category: 'Electronics & Appliances Repair' },
+  { name: 'Microwave Repairer', category: 'Electronics & Appliances Repair' },
+  { name: 'Home Theatre / Sound System Repairer', category: 'Electronics & Appliances Repair' },
+  { name: 'Decoder / DSTV Technician', category: 'Electronics & Appliances Repair' },
+  { name: 'Blender / Small Appliance Repairer', category: 'Electronics & Appliances Repair' },
+  { name: 'Iron / Fan Repairer', category: 'Electronics & Appliances Repair' },
+  { name: 'Printer / Photocopier Repairer', category: 'Electronics & Appliances Repair' },
+  { name: 'Game Console Repairer', category: 'Electronics & Appliances Repair' },
+
+  // Fashion
+  { name: 'Tailor / Seamstress', category: 'Fashion, Tailoring & Textiles' },
+  { name: 'Tailor', category: 'Fashion, Tailoring & Textiles' },
+  { name: 'Fashion Designer', category: 'Fashion, Tailoring & Textiles' },
+  { name: 'Kente / Traditional Cloth Weaver', category: 'Fashion, Tailoring & Textiles' },
+  { name: 'Shoe Maker / Cobbler', category: 'Fashion, Tailoring & Textiles' },
+  { name: 'Bag Maker', category: 'Fashion, Tailoring & Textiles' },
+  { name: 'Embroidery Specialist', category: 'Fashion, Tailoring & Textiles' },
+  { name: 'Curtain / Soft Furnishings Maker', category: 'Fashion, Tailoring & Textiles' },
+  { name: 'Bridal / Occasion Wear Stylist', category: 'Fashion, Tailoring & Textiles' },
+
+  // Gardening / Farming
+  { name: 'Gardener', category: 'Gardening, Farming & Outdoor' },
+  { name: 'Landscaper', category: 'Gardening, Farming & Outdoor' },
+  { name: 'Lawn / Grass Cutter', category: 'Gardening, Farming & Outdoor' },
+  { name: 'Tree Feller / Pruner', category: 'Gardening, Farming & Outdoor' },
+  { name: 'Farm Hand / Agricultural Helper', category: 'Gardening, Farming & Outdoor' },
+  { name: 'Irrigation Installer', category: 'Gardening, Farming & Outdoor' },
+  { name: 'Poultry / Livestock Helper', category: 'Gardening, Farming & Outdoor' },
+  { name: 'Greenhouse Technician', category: 'Gardening, Farming & Outdoor' },
+
+  // Security
+  { name: 'Security Guard', category: 'Security & Guarding' },
+  { name: 'Watchman / Night Guard', category: 'Security & Guarding' },
+  { name: 'Site Security Supervisor', category: 'Security & Guarding' },
+  { name: 'Event Security (Guard)', category: 'Security & Guarding' },
+  { name: 'Door / Access Control Guard', category: 'Security & Guarding' },
+  { name: 'Cash-in-Transit Guard', category: 'Security & Guarding' },
+
+  // IT
+  { name: 'Computer Technician', category: 'IT, Computers & Digital Services' },
+  { name: 'Network / Wi‑Fi Installer', category: 'IT, Computers & Digital Services' },
+  { name: 'Software / OS Installer', category: 'IT, Computers & Digital Services' },
+  { name: 'Data Recovery Specialist', category: 'IT, Computers & Digital Services' },
+  { name: 'CCTV / Network Cabling Tech', category: 'IT, Computers & Digital Services' },
+  { name: 'Web / App Freelancer', category: 'IT, Computers & Digital Services' },
+  { name: 'POS / Business Software Setup', category: 'IT, Computers & Digital Services' },
+  { name: 'Cyber Cafe / Printing Operator', category: 'IT, Computers & Digital Services' },
+
+  // Domestic
+  { name: 'House Help / Domestic Worker', category: 'Domestic Help & Caregiving' },
+  { name: 'House Help', category: 'Domestic Help & Caregiving' },
+  { name: 'Nanny / Childcare', category: 'Domestic Help & Caregiving' },
+  { name: 'Elderly Caregiver', category: 'Domestic Help & Caregiving' },
+  { name: 'Cook (Home)', category: 'Domestic Help & Caregiving' },
+  { name: 'Driver (Family / Personal)', category: 'Domestic Help & Caregiving' },
+  { name: 'Laundry Helper', category: 'Domestic Help & Caregiving' },
+  { name: 'Live-in House Manager', category: 'Domestic Help & Caregiving' },
+
+  // Printing
+  { name: 'Offset / Digital Printer', category: 'Printing, Signage & Branding' },
+  { name: 'Sign Writer / Signage Maker', category: 'Printing, Signage & Branding' },
+  { name: 'Large Format Banner Printer', category: 'Printing, Signage & Branding' },
+  { name: 'T-Shirt / Merchandise Printer', category: 'Printing, Signage & Branding' },
+  { name: 'Business Card / Branding Designer', category: 'Printing, Signage & Branding' },
+  { name: 'Vehicle Branding Installer', category: 'Printing, Signage & Branding' },
+  { name: 'Stamp / Seal Maker', category: 'Printing, Signage & Branding' },
+
+  // Furniture
+  { name: 'Furniture Maker / Carpenter', category: 'Furniture & Upholstery' },
+  { name: 'Upholsterer', category: 'Furniture & Upholstery' },
+  { name: 'Mattress Maker / Repairer', category: 'Furniture & Upholstery' },
+  { name: 'Cabinet Maker', category: 'Furniture & Upholstery' },
+  { name: 'Furniture Polisher / Restorer', category: 'Furniture & Upholstery' },
+  { name: 'Aluminium / Glass Furniture Worker', category: 'Furniture & Upholstery' },
+
+  // Fitness
+  { name: 'Personal Trainer', category: 'Fitness, Sports & Coaching' },
+  { name: 'Football / Sports Coach', category: 'Fitness, Sports & Coaching' },
+  { name: 'Fitness Instructor', category: 'Fitness, Sports & Coaching' },
+  { name: 'Yoga / Wellness Coach', category: 'Fitness, Sports & Coaching' },
+  { name: 'Boxing / Martial Arts Coach', category: 'Fitness, Sports & Coaching' },
+  { name: 'Swimming Instructor', category: 'Fitness, Sports & Coaching' },
+
+  // Welding
+  { name: 'Aluminium Fabricator', category: 'Welding, Metal & Fabrication' },
+  { name: 'Steel Door / Gate Maker', category: 'Welding, Metal & Fabrication' },
+  { name: 'Metal Roofing Fabricator', category: 'Welding, Metal & Fabrication' },
+  { name: 'Blacksmith', category: 'Welding, Metal & Fabrication' },
+  { name: 'Grill / Burglar Proof Maker', category: 'Welding, Metal & Fabrication' },
 ];
 
 /** Also allow typing a parent category name directly */

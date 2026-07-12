@@ -96,12 +96,41 @@ router.post('/register', async (req, res) => {
           .single();
         if (wpError) throw wpError;
 
-        // Find category id
-        const { data: catData } = await supabaseAdmin
-          .from('categories')
-          .select('id')
-          .ilike('name', `%${category}%`)
-          .single();
+        // Match category flexibly — live DB may use short names
+        // ("Automotive & Mechanical") while the app sends full names
+        // ("Automotive & Mechanical Repair").
+        const catName = String(category || '').trim();
+        let catData = null;
+        if (catName) {
+          const { data: exact } = await supabaseAdmin
+            .from('categories')
+            .select('id, name')
+            .ilike('name', catName)
+            .maybeSingle();
+          catData = exact;
+          if (!catData) {
+            const { data: contains } = await supabaseAdmin
+              .from('categories')
+              .select('id, name')
+              .ilike('name', `%${catName}%`)
+              .limit(1)
+              .maybeSingle();
+            catData = contains;
+          }
+          if (!catData) {
+            // App name longer than DB: take first meaningful tokens
+            const stem = catName.split(/[&,]/)[0].trim();
+            if (stem.length >= 4) {
+              const { data: prefix } = await supabaseAdmin
+                .from('categories')
+                .select('id, name')
+                .ilike('name', `${stem}%`)
+                .limit(1)
+                .maybeSingle();
+              catData = prefix;
+            }
+          }
+        }
 
         if (catData) {
           await supabaseAdmin.from('worker_categories').insert({
