@@ -11,12 +11,14 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import * as Location from 'expo-location';
 import VerifiedBadge from '../components/VerifiedBadge';
 import { useFocusEffect } from '@react-navigation/native';
 import { Colors } from '../constants/colors';
 import { useAuth } from '../lib/AuthContext';
 import { supabase } from '../lib/supabase';
 import { uploadAvatar } from '../lib/api/uploads';
+import { confirmLocationSetup } from '../lib/locationWarning';
 
 const NAVY  = Colors.navyDeep;
 const NAVY2 = Colors.navyMid;
@@ -24,6 +26,8 @@ const GOLD  = Colors.gold;
 const WHITE = Colors.white;
 const MUTED = 'rgba(255,255,255,0.45)';
 const BORDER= 'rgba(255,255,255,0.09)';
+const GOLD_BG = 'rgba(212,160,23,0.10)';
+const GOLD_BD = 'rgba(212,160,23,0.25)';
 
 export default function WorkerProfileEditScreen({ navigation }) {
   const { user, profile, refreshUser } = useAuth();
@@ -35,6 +39,8 @@ export default function WorkerProfileEditScreen({ navigation }) {
   const [location,    setLocation]    = useState('');
   const [phone,       setPhone]       = useState('');
   const [avatarUrl,   setAvatarUrl]   = useState(null);
+  const [coords,      setCoords]      = useState(null);
+  const [locating,    setLocating]    = useState(false);
 
   // ── UI State ──────────────────────────────────────────────
   const [editMode,    setEditMode]    = useState(false);
@@ -77,6 +83,42 @@ export default function WorkerProfileEditScreen({ navigation }) {
   }, [user, profile]);
 
   useFocusEffect(loadData);
+
+  const useMyLocation = async () => {
+    const ok = await confirmLocationSetup('worker');
+    if (!ok) return;
+    setLocating(true);
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission needed', 'Enable location in phone Settings, or type your base area.');
+        return;
+      }
+      await Location.enableNetworkProviderAsync().catch(() => {});
+      const pos = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Highest,
+        mayShowUserSettingsDialog: true,
+      });
+      const { latitude, longitude } = pos.coords;
+      setCoords({ latitude, longitude });
+
+      try {
+        const url = `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1&zoom=16`;
+        const res = await fetch(url, { headers: { 'User-Agent': 'WiamApp/1.0 (support@wiamapp.com)' } });
+        const data = await res.json();
+        const addr = data?.address || {};
+        const cityName = addr.city || addr.town || addr.municipality || addr.village || addr.suburb || '';
+        const region = addr.state || '';
+        setLocation([cityName, region].filter(Boolean).join(', ') || `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`);
+      } catch {
+        setLocation(`${latitude.toFixed(5)}, ${longitude.toFixed(5)}`);
+      }
+    } catch {
+      Alert.alert('Location failed', 'Turn on GPS and try again, or type your base area.');
+    } finally {
+      setLocating(false);
+    }
+  };
 
   // ── Change avatar ─────────────────────────────────────────
   const handleChangeAvatar = async () => {
@@ -132,6 +174,7 @@ export default function WorkerProfileEditScreen({ navigation }) {
           full_name: fullName.trim(),
           phone:     phone.trim(),
           city:      location.trim(),
+          ...(coords ? { latitude: coords.latitude, longitude: coords.longitude } : {}),
         })
         .eq('id', user.id);
       if (userErr) throw userErr;
@@ -144,6 +187,7 @@ export default function WorkerProfileEditScreen({ navigation }) {
             bio:           bio.trim(),
             hourly_rate:   hourlyRate ? parseFloat(hourlyRate) : null,
             location_name: location.trim(),
+            ...(coords ? { latitude: coords.latitude, longitude: coords.longitude } : {}),
             updated_at:    new Date().toISOString(),
           })
           .eq('id', profile.id);
@@ -364,6 +408,16 @@ export default function WorkerProfileEditScreen({ navigation }) {
                 placeholder="e.g. East Legon, Accra"
                 placeholderTextColor={MUTED}
               />
+              <TouchableOpacity
+                style={s.locBtn}
+                onPress={useMyLocation}
+                disabled={locating}
+              >
+                <Ionicons name={coords ? 'checkmark-circle' : 'locate-outline'} size={16} color={coords ? '#22C55E' : GOLD} />
+                <Text style={[s.locBtnText, coords && { color: '#22C55E' }]}>
+                  {locating ? 'Getting GPS…' : coords ? 'Base location updated ✓' : 'Use my current location'}
+                </Text>
+              </TouchableOpacity>
 
               <Text style={s.fieldLabel}>Phone Number</Text>
               <TextInput
@@ -471,6 +525,12 @@ const s = StyleSheet.create({
   editForm:      { backgroundColor: NAVY2, marginHorizontal: 20, borderRadius: 16, padding: 18, marginBottom: 14, borderWidth: 1, borderColor: BORDER },
   fieldLabel:    { fontSize: 12, fontWeight: '600', color: MUTED, marginBottom: 6, marginTop: 14, textTransform: 'uppercase', letterSpacing: 0.5 },
   input:         { backgroundColor: 'rgba(255,255,255,0.07)', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: WHITE, borderWidth: 1, borderColor: BORDER },
+  locBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    borderWidth: 1, borderColor: GOLD_BD, backgroundColor: GOLD_BG,
+    borderRadius: 10, paddingVertical: 12, marginTop: 10,
+  },
+  locBtnText: { color: GOLD, fontSize: 13.5, fontWeight: '600' },
   inputMulti:    { height: 90, textAlignVertical: 'top' },
   charCount:     { fontSize: 11, color: MUTED, textAlign: 'right', marginTop: 4 },
   saveBtn:       { backgroundColor: GOLD, borderRadius: 12, paddingVertical: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 20 },

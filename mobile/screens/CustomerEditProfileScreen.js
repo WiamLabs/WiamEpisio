@@ -10,15 +10,19 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import * as Location from 'expo-location';
 import { useAuth } from '../lib/AuthContext';
 import { supabase } from '../lib/supabase';
 import { uploadImage } from '../lib/api/uploads';
+import { confirmLocationSetup } from '../lib/locationWarning';
 
 const NAVY = '#0D0D2B';
 const GOLD = '#D4A017';
 const WHITE = '#FFFFFF';
 const MUTED = '#888899';
 const BORDER = '#EBEBEB';
+const GOLD_BG = 'rgba(212,160,23,0.10)';
+const GOLD_BD = 'rgba(212,160,23,0.35)';
 
 export default function CustomerEditProfileScreen({ navigation }) {
   const { user, refreshUser } = useAuth();
@@ -28,6 +32,8 @@ export default function CustomerEditProfileScreen({ navigation }) {
   const [city,     setCity]     = useState(user?.city || '');
   const [avatarUrl, setAvatarUrl] = useState(user?.avatar_url || null);
   const [coverUrl,  setCoverUrl]  = useState(user?.cover_url || null);
+  const [coords,   setCoords]   = useState(null);
+  const [locating, setLocating] = useState(false);
   const [saving,   setSaving]   = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [uploadingCover,  setUploadingCover]  = useState(false);
@@ -61,6 +67,40 @@ export default function CustomerEditProfileScreen({ navigation }) {
     }
   };
 
+  const useMyLocation = async () => {
+    const ok = await confirmLocationSetup('customer');
+    if (!ok) return;
+    setLocating(true);
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission needed', 'Enable location in phone Settings, or type your city.');
+        return;
+      }
+      await Location.enableNetworkProviderAsync().catch(() => {});
+      const pos = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Highest,
+        mayShowUserSettingsDialog: true,
+      });
+      const { latitude, longitude } = pos.coords;
+      setCoords({ latitude, longitude });
+      try {
+        const url = `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1&zoom=16`;
+        const res = await fetch(url, { headers: { 'User-Agent': 'WiamApp/1.0 (support@wiamapp.com)' } });
+        const data = await res.json();
+        const addr = data?.address || {};
+        const cityName = addr.city || addr.town || addr.municipality || addr.village || addr.suburb || '';
+        setCity(cityName || `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`);
+      } catch {
+        setCity(`${latitude.toFixed(5)}, ${longitude.toFixed(5)}`);
+      }
+    } catch {
+      Alert.alert('Location failed', 'Turn on GPS and try again, or type your city.');
+    } finally {
+      setLocating(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!fullName.trim()) {
       Alert.alert('Required', 'Please enter your name.');
@@ -76,6 +116,7 @@ export default function CustomerEditProfileScreen({ navigation }) {
           city: city.trim() || null,
           avatar_url: avatarUrl,
           cover_url: coverUrl,
+          ...(coords ? { latitude: coords.latitude, longitude: coords.longitude } : {}),
         })
         .eq('id', user.id);
 
@@ -150,6 +191,12 @@ export default function CustomerEditProfileScreen({ navigation }) {
 
           <Text style={s.label}>City</Text>
           <TextInput style={s.input} value={city} onChangeText={setCity} placeholder="e.g. Accra" placeholderTextColor={MUTED} />
+          <TouchableOpacity style={s.locBtn} onPress={useMyLocation} disabled={locating}>
+            <Ionicons name={coords ? 'checkmark-circle' : 'locate-outline'} size={16} color={coords ? '#22C55E' : GOLD} />
+            <Text style={[s.locBtnText, coords && { color: '#22C55E' }]}>
+              {locating ? 'Getting GPS…' : coords ? 'Service location updated ✓' : 'Use my current location'}
+            </Text>
+          </TouchableOpacity>
 
           <Text style={s.label}>Email</Text>
           <View style={[s.input, s.inputDisabled]}>
@@ -203,6 +250,12 @@ const s = StyleSheet.create({
   form: { paddingHorizontal: 20 },
   label: { fontSize: 12.5, fontWeight: '700', color: NAVY, marginBottom: 7, marginTop: 16 },
   input: { backgroundColor: '#F6F6F8', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 13, fontSize: 15, color: NAVY, borderWidth: 1, borderColor: BORDER },
+  locBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    borderWidth: 1, borderColor: GOLD_BD, backgroundColor: GOLD_BG,
+    borderRadius: 10, paddingVertical: 12, marginTop: 10,
+  },
+  locBtnText: { color: GOLD, fontSize: 13.5, fontWeight: '600' },
   inputDisabled: { backgroundColor: '#F0F0F2' },
   disabledText: { fontSize: 15, color: MUTED },
   hint: { fontSize: 11.5, color: MUTED, marginTop: 6 },

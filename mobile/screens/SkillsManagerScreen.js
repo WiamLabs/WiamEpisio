@@ -11,6 +11,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
+import { searchWiamAppSkills, resolveWiamAppSkill } from '../constants/skills';
+
 const NAVY    = '#0D0D2B';
 const NAVY2   = '#12123A';
 const GOLD    = '#D4A017';
@@ -36,9 +38,12 @@ export default function SkillsManagerScreen({ navigation, route }) {
 
   const [skills,   setSkills]   = useState([]);
   const [custom,   setCustom]   = useState('');
+  const [showTip,  setShowTip]  = useState(true);
   const [loading,  setLoading]  = useState(true);
   const [saving,   setSaving]   = useState(false);
   const [saved,    setSaved]    = useState(false);
+  const [matches,  setMatches]  = useState([]);
+  const [skillError, setSkillError] = useState('');
 
   useEffect(() => {
     const fetch_ = async () => {
@@ -60,8 +65,24 @@ export default function SkillsManagerScreen({ navigation, route }) {
   const addCustom = () => {
     const trimmed = custom.trim();
     if (!trimmed || skills.includes(trimmed)) return;
-    setSkills(prev => [...prev, trimmed]);
+    const resolved = resolveWiamAppSkill(trimmed);
+    if (!resolved) {
+      setSkillError('That skill is not on WiamApp. Pick from the suggestions.');
+      return;
+    }
+    setSkills(prev => [...prev, resolved.skillName]);
     setCustom('');
+    setMatches([]);
+    setSkillError('');
+    setShowTip(false);
+  };
+
+  const onCustomChange = (text) => {
+    setCustom(text);
+    if (text.trim()) setShowTip(false);
+    else setShowTip(true);
+    setSkillError('');
+    setMatches(searchWiamAppSkills(text, 6));
   };
 
   const handleSave = async () => {
@@ -121,15 +142,23 @@ export default function SkillsManagerScreen({ navigation, route }) {
             ))}
           </View>
 
-          {/* Add custom */}
-          <Text style={s.sectionLabel}>ADD YOUR OWN</Text>
+          {/* Add custom — must match WiamApp skills */}
+          <Text style={s.sectionLabel}>ADD A WIAMAPP SKILL</Text>
+          {showTip && (
+            <View style={s.tipBox}>
+              <Ionicons name="information-circle-outline" size={15} color={GOLD} />
+              <Text style={s.tipText}>
+                Type a skill WiamApp offers (e.g. Electrician, Barber). The tip disappears when you type — pick a suggestion so customers can find you.
+              </Text>
+            </View>
+          )}
           <View style={s.customRow}>
             <TextInput
               style={s.customInput}
               placeholder="Type a skill..."
               placeholderTextColor={MUTED}
               value={custom}
-              onChangeText={setCustom}
+              onChangeText={onCustomChange}
               onSubmitEditing={addCustom}
               returnKeyType="done"
             />
@@ -141,6 +170,26 @@ export default function SkillsManagerScreen({ navigation, route }) {
               <Text style={s.addBtnText}>Add</Text>
             </TouchableOpacity>
           </View>
+          {!!skillError && <Text style={s.errText}>{skillError}</Text>}
+          {matches.length > 0 && (
+            <View style={s.matchList}>
+              {matches.map((m) => (
+                <TouchableOpacity
+                  key={m.name}
+                  style={s.matchRow}
+                  onPress={() => {
+                    setCustom(m.name);
+                    setMatches([]);
+                    setShowTip(false);
+                    setSkillError('');
+                  }}
+                >
+                  <Text style={s.matchName}>{m.name}</Text>
+                  <Text style={s.matchCat}>{m.category}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
 
           {/* Save */}
           <TouchableOpacity
@@ -193,6 +242,23 @@ const s = StyleSheet.create({
   addBtn:         { backgroundColor: GOLD, borderRadius: 12, paddingHorizontal: 18, alignItems: 'center', justifyContent: 'center' },
   addBtnDisabled: { backgroundColor: 'rgba(212,160,23,0.25)' },
   addBtnText:     { color: NAVY, fontSize: 14, fontWeight: '700' },
+  tipBox: {
+    flexDirection: 'row', gap: 8, alignItems: 'flex-start',
+    backgroundColor: GOLD_BG, borderWidth: 1, borderColor: GOLD_BD,
+    borderRadius: 12, padding: 12, marginBottom: 10,
+  },
+  tipText: { flex: 1, color: 'rgba(255,255,255,0.7)', fontSize: 12.5, lineHeight: 18 },
+  errText: { color: '#EF4444', fontSize: 12, marginBottom: 8 },
+  matchList: {
+    backgroundColor: NAVY2, borderRadius: 12, borderWidth: 1, borderColor: BORDER,
+    marginBottom: 16, overflow: 'hidden',
+  },
+  matchRow: {
+    paddingHorizontal: 14, paddingVertical: 12,
+    borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.06)',
+  },
+  matchName: { color: WHITE, fontSize: 14, fontWeight: '600' },
+  matchCat: { color: MUTED, fontSize: 11, marginTop: 2 },
   saveBtn: {
     backgroundColor: GOLD, borderRadius: 13, paddingVertical: 15,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,

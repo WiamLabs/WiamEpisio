@@ -15,6 +15,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { COUNTRIES, DEFAULT_COUNTRY } from '../constants/countries';
+import { searchWiamAppSkills, resolveWiamAppSkill } from '../constants/skills';
+import { confirmLocationSetup } from '../lib/locationWarning';
 import * as Location from 'expo-location';
 
 const BACKEND = process.env.EXPO_PUBLIC_BACKEND_URL;
@@ -30,13 +32,92 @@ const INPUT_BG= 'rgba(255,255,255,0.07)';
 const INPUT_BD= 'rgba(255,255,255,0.12)';
 const DROP_BG = '#1A1A3A';
 
-const WORKER_CATEGORIES = [
-  'Electrician','Plumber','Carpenter','Painter',
-  'Mason / Builder','Mechanic / Auto','Cleaner',
-  'Barber / Beauty','Caterer / Cook',
-  'Photographer / Videographer','Delivery Rider',
-  'Event Planner','Teacher / Tutor','Other',
-];
+// ── Skill type-ahead (workers type what they offer; must match WiamApp) ──
+function SkillTypeInput({ value, onChange, onResolved }) {
+  const [query, setQuery] = useState(value || '');
+  const [suggestions, setSuggestions] = useState([]);
+  const [showTip, setShowTip] = useState(true);
+  const [invalid, setInvalid] = useState(false);
+
+  useEffect(() => {
+    if (value != null && value !== query) setQuery(value);
+  }, [value]);
+
+  const handleChange = (text) => {
+    setQuery(text);
+    onChange(text);
+    if (text.trim().length > 0) setShowTip(false);
+    else setShowTip(true);
+
+    const matches = searchWiamAppSkills(text, 8);
+    setSuggestions(matches);
+    const resolved = resolveWiamAppSkill(text);
+    setInvalid(text.trim().length >= 2 && !resolved && matches.length === 0);
+    onResolved?.(resolved);
+  };
+
+  const pick = (skill) => {
+    setQuery(skill.name);
+    onChange(skill.name);
+    setSuggestions([]);
+    setShowTip(false);
+    setInvalid(false);
+    onResolved?.({ skillName: skill.name, categoryName: skill.category });
+  };
+
+  return (
+    <View>
+      {showTip && (
+        <View style={s.skillTip}>
+          <Ionicons name="information-circle-outline" size={15} color={GOLD} />
+          <Text style={s.skillTipText}>
+            Type the skill you offer (e.g. Electrician, Barber, Plumber). It must be a skill WiamApp supports — suggestions will appear as you type.
+          </Text>
+        </View>
+      )}
+      <View style={[s.inputWrap, invalid && { borderColor: 'rgba(239,68,68,0.5)' }]}>
+        <Ionicons name="construct-outline" size={17} color="rgba(255,255,255,0.35)" style={s.inputIcon} />
+        <TextInput
+          style={[s.inputText, { flex: 1 }]}
+          placeholder="Type your main skill…"
+          placeholderTextColor={MUTED}
+          value={query}
+          onChangeText={handleChange}
+          autoCapitalize="words"
+        />
+        {!!query && (
+          <TouchableOpacity onPress={() => handleChange('')} style={{ padding: 4 }}>
+            <Ionicons name="close-circle" size={16} color={MUTED} />
+          </TouchableOpacity>
+        )}
+      </View>
+      {invalid && (
+        <Text style={s.pwWarn}>
+          That skill is not on WiamApp yet. Choose from the suggestions below.
+        </Text>
+      )}
+      {suggestions.length > 0 && (
+        <View style={s.dropDown}>
+          <ScrollView style={{ maxHeight: 200 }} keyboardShouldPersistTaps="handled" nestedScrollEnabled>
+            {suggestions.map((item) => (
+              <TouchableOpacity
+                key={item.name}
+                style={s.dropItem}
+                onPress={() => pick(item)}
+              >
+                <View style={{ flex: 1 }}>
+                  <Text style={s.dropItemText}>{item.name}</Text>
+                  <Text style={s.dropItemCode}>{item.category}</Text>
+                </View>
+                <Ionicons name="checkmark" size={14} color={GOLD} />
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      )}
+    </View>
+  );
+}
 
 // ── Country Picker ─────────────────────────────────────────────
 // FIX: Uses ScrollView instead of FlatList to avoid VirtualizedList warning
@@ -83,41 +164,6 @@ function CountryPicker({ value, onSelect }) {
                 </TouchableOpacity>
               );
             })}
-          </ScrollView>
-        </View>
-      )}
-    </View>
-  );
-}
-
-// ── Category Picker ────────────────────────────────────────────
-function CategoryPicker({ value, onSelect }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <View>
-      <TouchableOpacity style={s.inputWrap} onPress={() => setOpen(!open)} activeOpacity={0.8}>
-        <Ionicons name="construct-outline" size={17} color="rgba(255,255,255,0.35)" style={s.inputIcon} />
-        <Text style={[s.inputText, !value && s.inputPlaceholder]}>
-          {value || 'Select your main skill'}
-        </Text>
-        <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={15} color="rgba(255,255,255,0.3)" />
-      </TouchableOpacity>
-      {open && (
-        <View style={s.dropDown}>
-          {/* ✅ FIX: ScrollView instead of FlatList */}
-          <ScrollView style={{ maxHeight: 200 }} keyboardShouldPersistTaps="handled" nestedScrollEnabled>
-            {WORKER_CATEGORIES.map(item => (
-              <TouchableOpacity
-                key={item}
-                style={[s.dropItem, value === item && s.dropItemActive]}
-                onPress={() => { onSelect(item); setOpen(false); }}
-              >
-                <Text style={[s.dropItemText, value === item && { color: WHITE, fontWeight: '600' }]}>
-                  {item}
-                </Text>
-                {value === item && <Ionicons name="checkmark" size={14} color={GOLD} />}
-              </TouchableOpacity>
-            ))}
           </ScrollView>
         </View>
       )}
@@ -244,6 +290,7 @@ export default function RegisterScreen({ navigation }) {
   const [locating, setLocating] = useState(false);
   const [locationLabel, setLocationLabel] = useState('');
   const [category, setCategory] = useState('');
+  const [resolvedSkill, setResolvedSkill] = useState(null);
   const [agreed,   setAgreed]   = useState(false);
   const [showPw,   setShowPw]   = useState(false);
   const [loading,  setLoading]  = useState(false);
@@ -251,10 +298,13 @@ export default function RegisterScreen({ navigation }) {
 
   const canSubmit = fullName.trim() && email.trim() && phone.trim()
     && password.length >= 8 && agreed && city.trim()
-    && (role === 'customer' || (role === 'worker' && category));
+    && (role === 'customer' || (role === 'worker' && resolvedSkill));
 
   // GPS (phone) + OpenStreetMap Nominatim (free reverse-geocode for place names)
   const useMyLocation = async () => {
+    const ok = await confirmLocationSetup(role);
+    if (!ok) return;
+
     setLocating(true);
     setError('');
     setLocationLabel('');
@@ -360,7 +410,7 @@ export default function RegisterScreen({ navigation }) {
           digitalAddressCode: digitalAddressCode || null,
           latitude: coords?.latitude ?? null,
           longitude: coords?.longitude ?? null,
-          category: role === 'worker' ? category : undefined,
+          category: role === 'worker' ? resolvedSkill.categoryName : undefined,
         }),
       });
 
@@ -437,7 +487,7 @@ export default function RegisterScreen({ navigation }) {
           <View style={s.roleToggle}>
             <TouchableOpacity
               style={[s.roleBtn, role === 'customer' && s.roleBtnActive]}
-              onPress={() => { setRole('customer'); setCategory(''); }}
+              onPress={() => { setRole('customer'); setCategory(''); setResolvedSkill(null); }}
               activeOpacity={0.8}
             >
               <Ionicons name="search-outline" size={16}
@@ -495,7 +545,11 @@ export default function RegisterScreen({ navigation }) {
           {role === 'worker' && (
             <>
               <Text style={s.label}>Your main skill</Text>
-              <CategoryPicker value={category} onSelect={setCategory} />
+              <SkillTypeInput
+                value={category}
+                onChange={setCategory}
+                onResolved={setResolvedSkill}
+              />
             </>
           )}
 
@@ -655,8 +709,8 @@ const s = StyleSheet.create({
   container:           { flexGrow: 1, paddingHorizontal: 24, paddingBottom: 48 },
   backBtn:             { marginTop: 16, marginBottom: 8, width: 40, padding: 4 },
   brand:               { alignItems: 'center', marginBottom: 10 },
-  logo:                { width: 44, height: 44 },
-  brandName:           { fontSize: 22, fontWeight: '800', letterSpacing: -0.5, marginTop: 6 },
+  logo:                { width: 72, height: 72 },
+  brandName:           { fontSize: 26, fontWeight: '800', letterSpacing: -0.5, marginTop: 8 },
   title:               { color: WHITE, fontSize: 24, fontWeight: '800', marginBottom: 6 },
   subtitle:            { color: MUTED, fontSize: 13, marginBottom: 20, lineHeight: 20 },
 
@@ -681,6 +735,12 @@ const s = StyleSheet.create({
   },
   locationBtnText: { color: GOLD, fontSize: 13.5, fontWeight: '600' },
   locationHint: { color: 'rgba(255,255,255,0.45)', fontSize: 12, textAlign: 'center', marginBottom: 10 },
+  skillTip: {
+    flexDirection: 'row', gap: 8, alignItems: 'flex-start',
+    backgroundColor: GOLD_BG, borderWidth: 1, borderColor: GOLD_BD,
+    borderRadius: 12, padding: 12, marginBottom: 10,
+  },
+  skillTipText: { flex: 1, color: 'rgba(255,255,255,0.7)', fontSize: 12.5, lineHeight: 18 },
   inputIcon:           { marginRight: 10 },
   inputText:           { color: WHITE, fontSize: 15 },
   inputPlaceholder:    { color: MUTED },
