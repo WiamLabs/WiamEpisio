@@ -2,7 +2,7 @@
   "expo": {
     "name": "WiamApp",
     "slug": "wiamapp",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "runtimeVersion": {
       "policy": "appVersion"
     },
@@ -52,6 +52,15 @@
       "expo-asset",
       "expo-font",
       [
+        "expo-splash-screen",
+        {
+          "image": "./assets/logo.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#08081A"
+        }
+      ],
+      [
         "expo-camera",
         {
           "cameraPermission": "WiamApp uses your camera to take your verification selfie and ID photos."
@@ -86,9 +95,7 @@
     },
     "owner": "wiamlabs",
     "updates": {
-      "url": "https://u.expo.dev/6e023abf-cf61-4371-8875-86f4612390dd",
-      "checkAutomatically": "NEVER",
-      "fallbackToCacheTimeout": 0
+      "enabled": false
     }
   }
 }
