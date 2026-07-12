@@ -1,5 +1,5 @@
 // © 2026 WiamApp. Powered by WiamLabs
-// screens/ArtistSetupScreen.js — Musician Pro profile (handle, stage name, rider)
+// screens/ArtistSetupScreen.js — Star / Talent Pro (any bookable celebrity)
 
 import React, { useEffect, useState } from 'react';
 import {
@@ -17,11 +17,27 @@ const WHITE = '#FFFFFF';
 const MUTED = 'rgba(255,255,255,0.45)';
 const BORDER = 'rgba(255,255,255,0.1)';
 
+const TALENT_TYPES = [
+  { id: 'musician', label: 'Musician / Band' },
+  { id: 'actor', label: 'Actor / Actress' },
+  { id: 'director', label: 'Director / Producer' },
+  { id: 'dj', label: 'DJ' },
+  { id: 'comedian', label: 'Comedian' },
+  { id: 'dancer', label: 'Dancer / Choreographer' },
+  { id: 'influencer', label: 'Influencer / Creator' },
+  { id: 'speaker', label: 'Speaker / Host' },
+  { id: 'model', label: 'Model' },
+  { id: 'athlete', label: 'Athlete / Sports Star' },
+  { id: 'specialty', label: 'Specialty Act' },
+  { id: 'other', label: 'Other star / talent' },
+];
+
 export default function ArtistSetupScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [handle, setHandle] = useState('');
   const [stageName, setStageName] = useState('');
+  const [talentType, setTalentType] = useState('musician');
   const [genres, setGenres] = useState('');
   const [bio, setBio] = useState('');
   const [city, setCity] = useState('');
@@ -44,6 +60,7 @@ export default function ArtistSetupScreen({ navigation }) {
           const a = json.artist;
           setHandle(a.handle || '');
           setStageName(a.stage_name || '');
+          setTalentType(a.talent_type || 'musician');
           setGenres((a.genres || []).join(', '));
           setBio(a.bio || '');
           setCity(a.city || '');
@@ -75,6 +92,7 @@ export default function ArtistSetupScreen({ navigation }) {
         body: JSON.stringify({
           handle,
           stage_name: stageName,
+          talent_type: talentType,
           genres,
           bio,
           city,
@@ -90,7 +108,7 @@ export default function ArtistSetupScreen({ navigation }) {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || 'Save failed');
       setPublicUrl(`https://wiamapp.com/m/${json.artist.handle}`);
-      Alert.alert('Saved', 'Your Musician Pro page is ready. Put the link in your Instagram bio.');
+      Alert.alert('Saved', 'Your Star Pro booking page is ready. Put the link in your bio.');
     } catch (e) {
       Alert.alert('Could not save', e.message);
     } finally {
@@ -113,40 +131,54 @@ export default function ArtistSetupScreen({ navigation }) {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={22} color={WHITE} />
         </TouchableOpacity>
-        <Text style={s.headerTitle}>Musician Pro</Text>
+        <Text style={s.headerTitle}>Star Pro</Text>
         <View style={{ width: 22 }} />
       </View>
 
       <ScrollView contentContainerStyle={s.body} keyboardShouldPersistTaps="handled">
         <Text style={s.tip}>
-          Create a professional booking page. Fans stay on Facebook — bookers pay deposits on WiamApp.
+          For any bookable star — musicians, actors, directors, influencers, comedians, speakers and more.
+          Fans stay on social; bookers pay deposits on WiamApp. Works worldwide.
         </Text>
 
+        <Text style={s.label}>I am a…</Text>
+        <View style={s.chips}>
+          {TALENT_TYPES.map((t) => (
+            <TouchableOpacity
+              key={t.id}
+              style={[s.chip, talentType === t.id && s.chipOn]}
+              onPress={() => setTalentType(t.id)}
+            >
+              <Text style={[s.chipText, talentType === t.id && s.chipTextOn]}>{t.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
         <Text style={s.label}>Public handle</Text>
-        <TextInput style={s.input} value={handle} onChangeText={setHandle} autoCapitalize="none" placeholder="e.g. kwamehighlife" placeholderTextColor={MUTED} />
+        <TextInput style={s.input} value={handle} onChangeText={setHandle} autoCapitalize="none" placeholder="e.g. yourname" placeholderTextColor={MUTED} />
 
-        <Text style={s.label}>Stage name</Text>
-        <TextInput style={s.input} value={stageName} onChangeText={setStageName} placeholder="Name on posters" placeholderTextColor={MUTED} />
+        <Text style={s.label}>Stage / public name</Text>
+        <TextInput style={s.input} value={stageName} onChangeText={setStageName} placeholder="Name on posters & bookings" placeholderTextColor={MUTED} />
 
-        <Text style={s.label}>Genres (comma-separated)</Text>
-        <TextInput style={s.input} value={genres} onChangeText={setGenres} placeholder="Gospel, Highlife, Afrobeats" placeholderTextColor={MUTED} />
+        <Text style={s.label}>Tags (comma-separated)</Text>
+        <TextInput style={s.input} value={genres} onChangeText={setGenres} placeholder="e.g. Afrobeats, Drama, Keynote, Fashion" placeholderTextColor={MUTED} />
 
-        <Text style={s.label}>City / base</Text>
-        <TextInput style={s.input} value={city} onChangeText={setCity} placeholder="Accra" placeholderTextColor={MUTED} />
+        <Text style={s.label}>City / base (anywhere in the world)</Text>
+        <TextInput style={s.input} value={city} onChangeText={setCity} placeholder="City, Country" placeholderTextColor={MUTED} />
 
-        <Text style={s.label}>Band size</Text>
+        <Text style={s.label}>Team / band size</Text>
         <TextInput style={s.input} value={bandSize} onChangeText={setBandSize} keyboardType="number-pad" placeholderTextColor={MUTED} />
 
         <Text style={s.label}>Bio</Text>
-        <TextInput style={[s.input, { height: 100, textAlignVertical: 'top' }]} value={bio} onChangeText={setBio} multiline placeholder="Short artist bio" placeholderTextColor={MUTED} />
+        <TextInput style={[s.input, { height: 100, textAlignVertical: 'top' }]} value={bio} onChangeText={setBio} multiline placeholder="Short public bio" placeholderTextColor={MUTED} />
 
-        <Text style={s.section}>Tech rider</Text>
-        <Text style={s.label}>PA / sound needs</Text>
-        <TextInput style={s.input} value={paSystem} onChangeText={setPaSystem} placeholder="e.g. Full PA + 4 monitors" placeholderTextColor={MUTED} />
-        <Text style={s.label}>Stage size</Text>
-        <TextInput style={s.input} value={stageSize} onChangeText={setStageSize} placeholder="e.g. 4x3m minimum" placeholderTextColor={MUTED} />
+        <Text style={s.section}>Rider / hospitality</Text>
+        <Text style={s.label}>Tech / set needs</Text>
+        <TextInput style={s.input} value={paSystem} onChangeText={setPaSystem} placeholder="PA, cameras, lighting, green room…" placeholderTextColor={MUTED} />
+        <Text style={s.label}>Stage / space size</Text>
+        <TextInput style={s.input} value={stageSize} onChangeText={setStageSize} placeholder="e.g. 4x3m or studio day" placeholderTextColor={MUTED} />
         <Text style={s.label}>Other notes</Text>
-        <TextInput style={[s.input, { height: 80, textAlignVertical: 'top' }]} value={riderNotes} onChangeText={setRiderNotes} multiline placeholder="Load-in, power, hospitality…" placeholderTextColor={MUTED} />
+        <TextInput style={[s.input, { height: 80, textAlignVertical: 'top' }]} value={riderNotes} onChangeText={setRiderNotes} multiline placeholder="Load-in, power, travel, call sheet…" placeholderTextColor={MUTED} />
 
         <View style={s.row}>
           <Text style={s.rowLabel}>Public page visible</Text>
@@ -158,7 +190,7 @@ export default function ArtistSetupScreen({ navigation }) {
         )}
 
         <TouchableOpacity style={s.btn} onPress={save} disabled={saving}>
-          {saving ? <ActivityIndicator color={NAVY} /> : <Text style={s.btnText}>Save artist page</Text>}
+          {saving ? <ActivityIndicator color={NAVY} /> : <Text style={s.btnText}>Save Star Pro page</Text>}
         </TouchableOpacity>
 
         <TouchableOpacity style={s.linkBtn} onPress={() => navigation.navigate('ArtistPackages')}>
@@ -180,6 +212,11 @@ const s = StyleSheet.create({
   tip: { color: MUTED, fontSize: 13, lineHeight: 19, marginBottom: 16 },
   label: { color: MUTED, fontSize: 12, fontWeight: '600', marginBottom: 6, marginTop: 12 },
   section: { color: GOLD, fontSize: 11, fontWeight: '700', letterSpacing: 1.2, marginTop: 22, marginBottom: 4 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 4 },
+  chip: { borderWidth: 1, borderColor: BORDER, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8, marginRight: 8, marginBottom: 8 },
+  chipOn: { backgroundColor: GOLD, borderColor: GOLD },
+  chipText: { color: MUTED, fontSize: 12, fontWeight: '600' },
+  chipTextOn: { color: NAVY },
   input: { backgroundColor: 'rgba(255,255,255,0.07)', borderWidth: 1, borderColor: BORDER, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, color: WHITE, fontSize: 15 },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 18 },
   rowLabel: { color: WHITE, fontSize: 14 },

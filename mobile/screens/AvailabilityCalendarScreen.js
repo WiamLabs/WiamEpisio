@@ -246,7 +246,7 @@ export default function AvailabilityCalendarScreen({ navigation }) {
         {/* Musician Pro blackouts */}
         {hasArtist && (
           <View style={styles.section}>
-            <Text style={[styles.dayLabel, { marginBottom: 10 }]}>Musician Pro — Blackout dates</Text>
+            <Text style={[styles.dayLabel, { marginBottom: 10 }]}>Star Pro — Blackout dates</Text>
             <Text style={styles.infoText}>
               Block nights you cannot perform. Gig requests on these dates are rejected.
             </Text>

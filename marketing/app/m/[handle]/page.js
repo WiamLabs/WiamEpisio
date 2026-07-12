@@ -1,5 +1,5 @@
 // © 2026 WiamApp. Powered by WiamLabs
-// app/m/[handle]/page.js — Public Musician Pro artist page
+// app/m/[handle]/page.js — Public Star / Talent Pro booking page
 
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -25,9 +25,9 @@ export async function generateMetadata({ params }) {
   const a = data.artist;
   return {
     title: `${a.stage_name} — Book on WiamApp`,
-    description: a.bio || `Book ${a.stage_name} for live performance. Packages with deposit escrow on WiamApp.`,
+    description: a.bio || `Book ${a.stage_name} on WiamApp — packages with deposit escrow.`,
     openGraph: {
-      title: `${a.stage_name} — WiamApp Musician Pro`,
+      title: `${a.stage_name} — WiamApp Star Pro`,
       images: a.worker?.avatar_url ? [a.worker.avatar_url] : [],
     },
   };
@@ -59,7 +59,9 @@ export default async function ArtistPublicPage({ params }) {
             )}
           </div>
           <div>
-            <p className="text-gold text-xs font-bold tracking-widest uppercase mb-1">Musician Pro</p>
+            <p className="text-gold text-xs font-bold tracking-widest uppercase mb-1">
+              {artist.talent_type ? `Star Pro · ${String(artist.talent_type).replace(/_/g, ' ')}` : 'Star Pro'}
+            </p>
             <h1 className="font-display text-3xl md:text-4xl font-extrabold">{artist.stage_name}</h1>
             <p className="text-white/50 text-sm mt-1">@{artist.handle}
               {artist.city ? ` · ${artist.city}` : ''}

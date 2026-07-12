@@ -1,5 +1,5 @@
 // © 2026 WiamApp. Powered by WiamLabs
-// backend/routes/artists.js — Musician Pro public + artist tools API
+// backend/routes/artists.js — Star / Talent Pro public + artist tools API
 
 import { Router } from 'express';
 import { supabaseAdmin, verifyUserToken } from '../lib/supabaseAdmin.js';
@@ -138,7 +138,7 @@ router.put('/me', async (req, res) => {
 
     const {
       handle, stage_name, genres, bio, epk_url, rider_json,
-      band_size, city, is_public,
+      band_size, city, is_public, talent_type,
     } = req.body;
 
     const normalized = normalizeHandle(handle);
@@ -146,8 +146,16 @@ router.put('/me', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Handle must be at least 3 characters (a-z, 0-9, _ -).' });
     }
     if (!stage_name || !String(stage_name).trim()) {
-      return res.status(400).json({ success: false, error: 'Stage name is required.' });
+      return res.status(400).json({ success: false, error: 'Stage / public name is required.' });
     }
+
+    const allowedTypes = new Set([
+      'musician', 'actor', 'director', 'influencer', 'comedian', 'dancer',
+      'athlete', 'speaker', 'model', 'dj', 'host', 'specialty', 'performer', 'other',
+    ]);
+    const talentType = allowedTypes.has(String(talent_type || '').toLowerCase())
+      ? String(talent_type).toLowerCase()
+      : 'performer';
 
     const payload = {
       worker_profile_id: workerProfileId,
@@ -160,6 +168,7 @@ router.put('/me', async (req, res) => {
       band_size: band_size ? parseInt(band_size, 10) : 1,
       city: city || null,
       is_public: is_public !== false,
+      talent_type: talentType,
       updated_at: new Date().toISOString(),
     };
 

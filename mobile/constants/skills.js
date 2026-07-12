@@ -15,7 +15,7 @@ export const WIAMAPP_CATEGORIES = [
   'Education, Tuition & Lessons',
   'Events, Entertainment & Sound',
   'Music & Live Performance',
-  'Film & Talent',
+  'Film, TV & Talent',
   'Electronics & Appliances Repair',
   'Fashion, Tailoring & Textiles',
   'Gardening, Farming & Outdoor',
@@ -26,6 +26,22 @@ export const WIAMAPP_CATEGORIES = [
   'Furniture & Upholstery',
   'Fitness, Sports & Coaching',
   'Welding, Metal & Fabrication',
+  'Comedy & Spoken Word',
+  'Dance & Choreography',
+  'Influencers & Celebrity Appearances',
+  'Public Speaking & Thought Leadership',
+  'Theatre & Stage Performance',
+  'Magicians & Specialty Acts',
+  'Gaming & Esports Talent',
+  'Wedding & Ceremonial Services',
+  'Pet Care & Animal Services',
+  'Handyman & General Home Services',
+  'HVAC & Climate Control',
+  'Locksmith & Key Services',
+  'Translation & Language Services',
+  'Spiritual & Faith Services',
+  'Childcare & Nanny Services',
+  'Moving, Packing & Storage',
 ];
 
 /** Each skill maps to a parent category used by the backend categories table */
@@ -172,28 +188,55 @@ export const WIAMAPP_SKILLS = [
   { name: 'Backing Vocalist', category: 'Events, Entertainment & Sound' },
   { name: 'Praise & Worship Leader', category: 'Events, Entertainment & Sound' },
 
-  // Music & Live Performance
+  // Music & Live Performance (global)
   { name: 'Musician (Solo)', category: 'Music & Live Performance' },
   { name: 'Musician', category: 'Music & Live Performance' },
   { name: 'Band / Group', category: 'Music & Live Performance' },
   { name: 'Gospel Artist', category: 'Music & Live Performance' },
   { name: 'Rapper / Hip-Hop Artist', category: 'Music & Live Performance' },
   { name: 'Highlife / Traditional Performer', category: 'Music & Live Performance' },
+  { name: 'Afrobeats Artist', category: 'Music & Live Performance' },
+  { name: 'Pop Artist', category: 'Music & Live Performance' },
+  { name: 'R&B / Soul Artist', category: 'Music & Live Performance' },
+  { name: 'Jazz Musician', category: 'Music & Live Performance' },
+  { name: 'Classical Musician', category: 'Music & Live Performance' },
+  { name: 'Orchestra / Ensemble', category: 'Music & Live Performance' },
   { name: 'Session Musician', category: 'Music & Live Performance' },
   { name: 'Choir Director', category: 'Music & Live Performance' },
+  { name: 'DJ (Club / Wedding)', category: 'Music & Live Performance' },
+  { name: 'Music Producer', category: 'Music & Live Performance' },
+  { name: 'Songwriter', category: 'Music & Live Performance' },
   { name: 'Instrumentalist (Guitar)', category: 'Music & Live Performance' },
   { name: 'Instrumentalist (Keys)', category: 'Music & Live Performance' },
   { name: 'Instrumentalist (Drums)', category: 'Music & Live Performance' },
   { name: 'Instrumentalist (Bass)', category: 'Music & Live Performance' },
+  { name: 'Backup Dancer (Music)', category: 'Music & Live Performance' },
 
-  // Film & Talent
-  { name: 'Movie Actor / Actress', category: 'Film & Talent' },
-  { name: 'Movie Actor', category: 'Film & Talent' },
-  { name: 'Voice Actor', category: 'Film & Talent' },
-  { name: 'Extra / Background Actor', category: 'Film & Talent' },
-  { name: 'Model (Events / Commercial)', category: 'Film & Talent' },
-  { name: 'Script / Content Actor', category: 'Film & Talent' },
-  { name: 'Presenter / Host', category: 'Film & Talent' },
+  // Film, TV & Talent — actors, directors, crew (bookable worldwide)
+  { name: 'Movie Actor / Actress', category: 'Film, TV & Talent' },
+  { name: 'Movie Actor', category: 'Film, TV & Talent' },
+  { name: 'Movie Actress', category: 'Film, TV & Talent' },
+  { name: 'TV Actor / Actress', category: 'Film, TV & Talent' },
+  { name: 'Voice Actor', category: 'Film, TV & Talent' },
+  { name: 'Extra / Background Actor', category: 'Film, TV & Talent' },
+  { name: 'Model (Events / Commercial)', category: 'Film, TV & Talent' },
+  { name: 'Script / Content Actor', category: 'Film, TV & Talent' },
+  { name: 'Presenter / Host', category: 'Film, TV & Talent' },
+  { name: 'Movie Director', category: 'Film, TV & Talent' },
+  { name: 'Film Director', category: 'Film, TV & Talent' },
+  { name: 'TV Director', category: 'Film, TV & Talent' },
+  { name: 'Assistant Director (AD)', category: 'Film, TV & Talent' },
+  { name: 'Film Producer', category: 'Film, TV & Talent' },
+  { name: 'Casting Director', category: 'Film, TV & Talent' },
+  { name: 'Cinematographer / DoP', category: 'Film, TV & Talent' },
+  { name: 'Screenwriter', category: 'Film, TV & Talent' },
+  { name: 'Film Editor', category: 'Film, TV & Talent' },
+  { name: 'Production Designer', category: 'Film, TV & Talent' },
+  { name: 'Costume Designer', category: 'Film, TV & Talent' },
+  { name: 'Makeup Artist (Film / TV)', category: 'Film, TV & Talent' },
+  { name: 'Stunt Performer', category: 'Film, TV & Talent' },
+  { name: 'Location Manager', category: 'Film, TV & Talent' },
+  { name: 'Continuity / Script Supervisor', category: 'Film, TV & Talent' },
 
   // Electronics & Appliances Repair (service only — not product sales)
   { name: 'Phone Repairer', category: 'Electronics & Appliances Repair' },
@@ -295,13 +338,133 @@ export const WIAMAPP_SKILLS = [
   { name: 'Metal Roofing Fabricator', category: 'Welding, Metal & Fabrication' },
   { name: 'Blacksmith', category: 'Welding, Metal & Fabrication' },
   { name: 'Grill / Burglar Proof Maker', category: 'Welding, Metal & Fabrication' },
+
+  // Comedy
+  { name: 'Stand-up Comedian', category: 'Comedy & Spoken Word' },
+  { name: 'Comedian', category: 'Comedy & Spoken Word' },
+  { name: 'Comedy Troupe', category: 'Comedy & Spoken Word' },
+  { name: 'Spoken Word Artist', category: 'Comedy & Spoken Word' },
+  { name: 'Roast / Host Comedian', category: 'Comedy & Spoken Word' },
+  { name: 'Improv Performer', category: 'Comedy & Spoken Word' },
+
+  // Dance
+  { name: 'Contemporary Dancer', category: 'Dance & Choreography' },
+  { name: 'Ballet Dancer', category: 'Dance & Choreography' },
+  { name: 'Hip-Hop Dancer', category: 'Dance & Choreography' },
+  { name: 'Choreographer', category: 'Dance & Choreography' },
+  { name: 'Dance Crew', category: 'Dance & Choreography' },
+  { name: 'Traditional / Cultural Dancer', category: 'Dance & Choreography' },
+  { name: 'Ballroom / Latin Dancer', category: 'Dance & Choreography' },
+
+  // Influencers & celebrities
+  { name: 'Social Media Influencer', category: 'Influencers & Celebrity Appearances' },
+  { name: 'Celebrity Appearance', category: 'Influencers & Celebrity Appearances' },
+  { name: 'Brand Ambassador (Bookable)', category: 'Influencers & Celebrity Appearances' },
+  { name: 'Content Creator (Appearances)', category: 'Influencers & Celebrity Appearances' },
+  { name: 'Reality TV Personality', category: 'Influencers & Celebrity Appearances' },
+  { name: 'Sports Celebrity Appearance', category: 'Influencers & Celebrity Appearances' },
+
+  // Speakers
+  { name: 'Keynote Speaker', category: 'Public Speaking & Thought Leadership' },
+  { name: 'Motivational Speaker', category: 'Public Speaking & Thought Leadership' },
+  { name: 'Corporate Trainer', category: 'Public Speaking & Thought Leadership' },
+  { name: 'Panelist / Moderator', category: 'Public Speaking & Thought Leadership' },
+  { name: 'Workshop Facilitator', category: 'Public Speaking & Thought Leadership' },
+  { name: 'TEDx / Conference Speaker', category: 'Public Speaking & Thought Leadership' },
+
+  // Theatre
+  { name: 'Stage Actor / Actress', category: 'Theatre & Stage Performance' },
+  { name: 'Theatre Director', category: 'Theatre & Stage Performance' },
+  { name: 'Musical Theatre Performer', category: 'Theatre & Stage Performance' },
+  { name: 'Stage Manager', category: 'Theatre & Stage Performance' },
+  { name: 'Playwright', category: 'Theatre & Stage Performance' },
+
+  // Specialty acts
+  { name: 'Magician', category: 'Magicians & Specialty Acts' },
+  { name: 'Illusionist', category: 'Magicians & Specialty Acts' },
+  { name: 'Circus Performer', category: 'Magicians & Specialty Acts' },
+  { name: 'Fire / Specialty Act', category: 'Magicians & Specialty Acts' },
+  { name: 'Puppeteer', category: 'Magicians & Specialty Acts' },
+  { name: 'Clowns / Kids Entertainer', category: 'Magicians & Specialty Acts' },
+
+  // Gaming
+  { name: 'Esports Player', category: 'Gaming & Esports Talent' },
+  { name: 'Live Streamer (Appearances)', category: 'Gaming & Esports Talent' },
+  { name: 'Gaming Coach', category: 'Gaming & Esports Talent' },
+  { name: 'Tournament Host / Caster', category: 'Gaming & Esports Talent' },
+
+  // Wedding
+  { name: 'Wedding Planner', category: 'Wedding & Ceremonial Services' },
+  { name: 'Wedding Coordinator', category: 'Wedding & Ceremonial Services' },
+  { name: 'Wedding Officiant', category: 'Wedding & Ceremonial Services' },
+  { name: 'Bridal Assistant', category: 'Wedding & Ceremonial Services' },
+  { name: 'Ceremony Decorator', category: 'Wedding & Ceremonial Services' },
+
+  // Pets
+  { name: 'Dog Walker', category: 'Pet Care & Animal Services' },
+  { name: 'Pet Sitter', category: 'Pet Care & Animal Services' },
+  { name: 'Pet Groomer', category: 'Pet Care & Animal Services' },
+  { name: 'Pet Trainer', category: 'Pet Care & Animal Services' },
+  { name: 'Mobile Vet Assistant', category: 'Pet Care & Animal Services' },
+
+  // Handyman
+  { name: 'Handyman', category: 'Handyman & General Home Services' },
+  { name: 'Furniture Assembler', category: 'Handyman & General Home Services' },
+  { name: 'Door / Window Repairer', category: 'Handyman & General Home Services' },
+  { name: 'Drywall / Patch Repairer', category: 'Handyman & General Home Services' },
+  { name: 'General Home Fixer', category: 'Handyman & General Home Services' },
+
+  // HVAC
+  { name: 'HVAC Technician', category: 'HVAC & Climate Control' },
+  { name: 'AC Installer / Repairer', category: 'HVAC & Climate Control' },
+  { name: 'Heating Technician', category: 'HVAC & Climate Control' },
+  { name: 'Ventilation Specialist', category: 'HVAC & Climate Control' },
+
+  // Locksmith
+  { name: 'Locksmith', category: 'Locksmith & Key Services' },
+  { name: 'Automotive Locksmith', category: 'Locksmith & Key Services' },
+  { name: 'Safe Technician', category: 'Locksmith & Key Services' },
+  { name: 'Key Cutter', category: 'Locksmith & Key Services' },
+
+  // Translation
+  { name: 'Translator (Written)', category: 'Translation & Language Services' },
+  { name: 'Interpreter (Live)', category: 'Translation & Language Services' },
+  { name: 'Conference Interpreter', category: 'Translation & Language Services' },
+  { name: 'Sign Language Interpreter', category: 'Translation & Language Services' },
+  { name: 'Document Translator', category: 'Translation & Language Services' },
+
+  // Faith / spiritual (events)
+  { name: 'Wedding / Event Officiant', category: 'Spiritual & Faith Services' },
+  { name: 'Worship Leader', category: 'Spiritual & Faith Services' },
+  { name: 'Pastor / Minister (Events)', category: 'Spiritual & Faith Services' },
+  { name: 'Imam / Faith Officiant (Events)', category: 'Spiritual & Faith Services' },
+  { name: 'Choir Coordinator', category: 'Spiritual & Faith Services' },
+
+  // Childcare
+  { name: 'Nanny', category: 'Childcare & Nanny Services' },
+  { name: 'Babysitter', category: 'Childcare & Nanny Services' },
+  { name: 'After-School Helper', category: 'Childcare & Nanny Services' },
+  { name: 'Special Needs Carer (Child)', category: 'Childcare & Nanny Services' },
+
+  // Moving
+  { name: 'Home Mover', category: 'Moving, Packing & Storage' },
+  { name: 'Office Mover', category: 'Moving, Packing & Storage' },
+  { name: 'Packing Specialist', category: 'Moving, Packing & Storage' },
+  { name: 'Furniture Mover', category: 'Moving, Packing & Storage' },
+  { name: 'Storage Helper', category: 'Moving, Packing & Storage' },
 ];
 
 /** Also allow typing a parent category name directly */
-const CATEGORY_AS_SKILLS = WIAMAPP_CATEGORIES.map((name) => ({
-  name,
-  category: name,
-}));
+const LEGACY_ALIASES = [
+  { name: 'Film & Talent', category: 'Film, TV & Talent' },
+  { name: 'Phones & Gadgets Repair', category: 'Electronics & Appliances Repair' },
+  { name: 'Musician Pro', category: 'Music & Live Performance' },
+];
+
+const CATEGORY_AS_SKILLS = [
+  ...WIAMAPP_CATEGORIES.map((name) => ({ name, category: name })),
+  ...LEGACY_ALIASES,
+];
 
 const ALL = [...WIAMAPP_SKILLS, ...CATEGORY_AS_SKILLS];
 
