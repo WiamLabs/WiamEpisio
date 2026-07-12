@@ -1,21 +1,148 @@
 // © 2026 WiamApp. Powered by WiamLabs
-// backend/routes/payments.js — Paystack booking payments (GHS + NGN)
+// backend/routes/payments.js — multi-rail payments (Paystack live, Stripe ready)
 
 import { Router } from 'express';
 import { supabaseAdmin, verifyUserToken } from '../lib/supabaseAdmin.js';
 import { usdToLocal } from '../lib/exchangeRates.js';
+import { resolvePaymentProvider, listPaymentProviders } from '../lib/payments/resolveProvider.js';
+import { initiatePaystackCheckout, verifyPaystackPayment } from '../lib/payments/paystackProvider.js';
+import { initiateStripeCheckout, verifyStripePayment } from '../lib/payments/stripeProvider.js';
 
 const router = Router();
 
-const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY;
-
-// ─── PAYSTACK ─────────────────────────────────────────────────
+/**
+ * GET /api/payments/providers — which rails are configured (ops / debug)
+ */
+router.get('/providers', (_req, res) => {
+  res.json({ success: true, providers: listPaymentProviders() });
+});
 
 /**
- * Initiate Paystack payment
- * Customer pays for a booking — opens Paystack checkout in a WebView.
- * Inside Paystack the customer can choose MoMo, bank card, etc.
+ * Unified booking checkout.
+ * POST /api/payments/initiate
+ * Body: { bookingId, amount, currency, email, countryCode?, prefer? }
+ * Returns: { provider, checkoutUrl, authorizationUrl, reference, ... }
+ *
+ * Mobile should prefer this endpoint. Legacy /paystack/initiate still works.
  */
+router.post('/initiate', async (req, res) => {
+  try {
+    const user = await verifyUserToken(req.headers.authorization);
+    const {
+      bookingId, amount, currency = 'GHS', email,
+      countryCode, prefer,
+    } = req.body;
+
+    if (!bookingId || !amount || !email) {
+      return res.status(400).json({ error: 'bookingId, amount and email are required.' });
+    }
+
+    const provider = resolvePaymentProvider({ countryCode, currency, prefer });
+    const reference = `wiam_${Date.now()}_${String(bookingId).slice(0, 8)}`;
+    const metadata = {
+      payment_type: 'booking',
+      booking_id: bookingId,
+      product_name: 'WiamApp booking escrow',
+    };
+
+    let checkout;
+    if (provider === 'stripe') {
+      checkout = await initiateStripeCheckout({
+        email,
+        amount,
+        currency,
+        reference,
+        metadata,
+      });
+    } else {
+      checkout = await initiatePaystackCheckout({
+        email,
+        amount,
+        currency,
+        reference,
+        metadata,
+      });
+    }
+
+    await supabaseAdmin.from('payments').insert({
+      booking_id: bookingId,
+      payer_id: user.id,
+      amount,
+      currency: String(currency).toUpperCase(),
+      payment_method: checkout.provider,
+      payment_status: 'pending',
+      transaction_ref: checkout.reference,
+    });
+
+    await supabaseAdmin.from('audit_logs').insert({
+      user_id: user.id,
+      action: 'payment_initiated',
+      metadata: {
+        booking_id: bookingId,
+        method: checkout.provider,
+        amount,
+        currency,
+        reference: checkout.reference,
+      },
+    });
+
+    res.json({
+      provider: checkout.provider,
+      checkoutUrl: checkout.checkoutUrl,
+      // Back-compat for existing mobile WebView code
+      authorizationUrl: checkout.checkoutUrl,
+      reference: checkout.reference,
+      sessionId: checkout.sessionId || null,
+      publishableKey: checkout.publishableKey || null,
+    });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+/**
+ * Unified verify
+ * GET /api/payments/verify/:reference?provider=paystack|stripe
+ */
+router.get('/verify/:reference', async (req, res) => {
+  try {
+    await verifyUserToken(req.headers.authorization);
+    const provider = (req.query.provider || 'paystack').toLowerCase();
+    const reference = req.params.reference;
+
+    const result = provider === 'stripe'
+      ? await verifyStripePayment(reference)
+      : await verifyPaystackPayment(reference);
+
+    if (result.success) {
+      await supabaseAdmin
+        .from('payments')
+        .update({ payment_status: 'success', payment_method: result.provider })
+        .eq('transaction_ref', result.raw?.client_reference_id || reference);
+      // Prefer exact reference match
+      await supabaseAdmin
+        .from('payments')
+        .update({ payment_status: 'success', payment_method: result.provider })
+        .eq('transaction_ref', reference);
+    } else {
+      await supabaseAdmin
+        .from('payments')
+        .update({ payment_status: 'failed' })
+        .eq('transaction_ref', reference);
+    }
+
+    res.json({
+      success: result.success,
+      status: result.status,
+      provider: result.provider,
+    });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// ─── LEGACY PAYSTACK PATHS (unchanged URLs for existing APKs) ─
+
 router.post('/paystack/initiate', async (req, res) => {
   try {
     const user = await verifyUserToken(req.headers.authorization);
@@ -25,36 +152,15 @@ router.post('/paystack/initiate', async (req, res) => {
       return res.status(400).json({ error: 'bookingId, amount and email are required.' });
     }
 
-    // Paystack expects amount in kobo (multiply by 100)
-    const amountInKobo = Math.round(amount * 100);
-
-    const paystackRes = await fetch('https://api.paystack.co/transaction/initialize', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${PAYSTACK_SECRET}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email,
-        amount: amountInKobo,
-        currency,
-        reference: `wiam_${Date.now()}_${bookingId.slice(0, 8)}`,
-        metadata: {
-          app: 'wiamapp',
-          booking_id: bookingId,
-          custom_fields: [
-            { display_name: 'App', value: 'WiamApp' },
-            { display_name: 'Powered By', value: 'WiamLabs' },
-          ],
-        },
-        callback_url: 'https://wiamapp.com/payment/success',
-      }),
+    const reference = `wiam_${Date.now()}_${String(bookingId).slice(0, 8)}`;
+    const checkout = await initiatePaystackCheckout({
+      email,
+      amount,
+      currency,
+      reference,
+      metadata: { payment_type: 'booking', booking_id: bookingId },
     });
 
-    const result = await paystackRes.json();
-    if (!result.status) throw new Error(result.message);
-
-    // Save pending payment
     await supabaseAdmin.from('payments').insert({
       booking_id: bookingId,
       payer_id: user.id,
@@ -62,7 +168,7 @@ router.post('/paystack/initiate', async (req, res) => {
       currency,
       payment_method: 'paystack',
       payment_status: 'pending',
-      transaction_ref: result.data.reference,
+      transaction_ref: checkout.reference,
     });
 
     await supabaseAdmin.from('audit_logs').insert({
@@ -71,55 +177,32 @@ router.post('/paystack/initiate', async (req, res) => {
       metadata: { booking_id: bookingId, method: 'paystack', amount },
     });
 
-    // Return the Paystack authorization URL — open this in a WebView
     res.json({
-      authorizationUrl: result.data.authorization_url,
-      reference: result.data.reference,
+      authorizationUrl: checkout.checkoutUrl,
+      reference: checkout.reference,
+      provider: 'paystack',
     });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 });
 
-/**
- * Verify Paystack payment after callback
- */
 router.get('/paystack/verify/:reference', async (req, res) => {
   try {
     await verifyUserToken(req.headers.authorization);
-
-    const paystackRes = await fetch(
-      `https://api.paystack.co/transaction/verify/${req.params.reference}`,
-      { headers: { 'Authorization': `Bearer ${PAYSTACK_SECRET}` } }
-    );
-
-    const result = await paystackRes.json();
-    const success = result.data?.status === 'success';
+    const result = await verifyPaystackPayment(req.params.reference);
 
     await supabaseAdmin
       .from('payments')
-      .update({ payment_status: success ? 'success' : 'failed' })
+      .update({ payment_status: result.success ? 'success' : 'failed' })
       .eq('transaction_ref', req.params.reference);
 
-    res.json({ success, status: result.data?.status });
+    res.json({ success: result.success, status: result.status, provider: 'paystack' });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 });
 
-/**
- * Start a WEBSITE subscription purchase (Section 5C). This is the
- * piece that was missing entirely — the webhook in webhooks.js
- * already knows how to RECEIVE a successful subscription charge
- * and create the subscriptions/subscription_invoices rows, but
- * nothing ever actually started that charge with the right
- * metadata. This is that missing initiator.
- *
- * This is ONLY for billing_source = 'web' (wiamapp.com/billing).
- * In-app purchases on iOS/Android go through RevenueCat and never
- * touch this endpoint at all — mixing the two paths is exactly
- * what Section 5C warns against for App Store/Play Store policy.
- */
 router.post('/paystack/subscribe', async (req, res) => {
   try {
     const user = await verifyUserToken(req.headers.authorization);
@@ -136,15 +219,6 @@ router.post('/paystack/subscribe', async (req, res) => {
   }
 });
 
-/**
- * Start a subscription checkout initiated from wiamlabs.com's
- * central pricing page, NOT from inside the app — so there is no
- * WiamApp login session to read a user id from. Identifies the
- * account by email instead, the same way Stripe Checkout links do.
- * Everything downstream (the webhook, the activation) is identical
- * to the authenticated path above — same reference format, same
- * metadata shape, same subscription_config lookup.
- */
 router.post('/paystack/subscribe-by-email', async (req, res) => {
   try {
     const { planKey, email, currency = 'GHS' } = req.body;
@@ -199,6 +273,64 @@ router.post('/paystack/subscribe-by-email', async (req, res) => {
   }
 });
 
+/**
+ * Stripe subscription checkout scaffold (website billing worldwide).
+ * Enable later with PAYMENTS_STRIPE_ENABLED=true.
+ */
+router.post('/stripe/subscribe', async (req, res) => {
+  try {
+    const user = await verifyUserToken(req.headers.authorization);
+    const { planKey, email, currency = 'USD' } = req.body;
+    if (!planKey || !email) {
+      return res.status(400).json({ success: false, error: 'planKey and email are required.' });
+    }
+
+    const { data: planConfig, error: planErr } = await supabaseAdmin
+      .from('subscription_config')
+      .select('*')
+      .eq('plan_key', planKey)
+      .eq('is_active', true)
+      .single();
+    if (planErr || !planConfig) {
+      throw new Error('That plan does not exist or is not currently available.');
+    }
+
+    const amount = Number(planConfig.price_usd_web);
+    const reference = `wiam_sub_stripe_${Date.now()}_${user.id.slice(0, 8)}`;
+    const checkout = await initiateStripeCheckout({
+      email,
+      amount,
+      currency,
+      reference,
+      metadata: {
+        payment_type: 'subscription',
+        user_id: user.id,
+        plan_key: planKey,
+        product_name: planConfig.plan_name || 'WiamApp subscription',
+      },
+      successUrl: 'https://wiamapp.com/billing/success?session_id={CHECKOUT_SESSION_ID}&reference={REF}',
+      cancelUrl: 'https://wiamapp.com/billing/cancel',
+    });
+
+    await supabaseAdmin.from('audit_logs').insert({
+      user_id: user.id,
+      action: 'subscription_checkout_started',
+      metadata: { plan_key: planKey, provider: 'stripe', reference, amount_usd: amount },
+    });
+
+    res.json({
+      success: true,
+      provider: 'stripe',
+      authorizationUrl: checkout.checkoutUrl,
+      checkoutUrl: checkout.checkoutUrl,
+      reference: checkout.reference,
+      sessionId: checkout.sessionId,
+    });
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+});
+
 async function initiateSubscriptionCheckout({ userId, planKey, email, currency }) {
   const { data: planConfig, error: planErr } = await supabaseAdmin
     .from('subscription_config')
@@ -211,42 +343,24 @@ async function initiateSubscriptionCheckout({ userId, planKey, email, currency }
     throw new Error('That plan does not exist or is not currently available.');
   }
 
-  // IMPORTANT: a standard Ghana/Nigeria Paystack merchant account
-  // can only charge in GHS/NGN respectively — passing currency:
-  // 'USD' directly here fails with "Currency not supported" unless
-  // multi-currency billing was specifically enabled on the account.
-  // Convert to the customer's real local currency instead, using
-  // the same live-rate helper as the rest of the app.
   const localAmount = await usdToLocal(planConfig.price_usd_web, currency);
-  const amountInKobo = Math.round(localAmount * 100);
   const reference = `wiam_sub_${Date.now()}_${userId.slice(0, 8)}`;
 
-  const paystackRes = await fetch('https://api.paystack.co/transaction/initialize', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${PAYSTACK_SECRET}`,
-      'Content-Type': 'application/json',
+  const checkout = await initiatePaystackCheckout({
+    email,
+    amount: localAmount,
+    currency,
+    reference,
+    metadata: {
+      payment_type: 'subscription',
+      user_id: userId,
+      plan_key: planKey,
+      custom_fields: [
+        { display_name: 'Plan', value: planConfig.plan_name },
+      ],
     },
-    body: JSON.stringify({
-      email,
-      amount: amountInKobo,
-      currency,
-      metadata: {
-        app: 'wiamapp',
-        payment_type: 'subscription',
-        user_id: userId,
-        plan_key: planKey,
-        custom_fields: [
-          { display_name: 'App', value: 'WiamApp' },
-          { display_name: 'Plan', value: planConfig.plan_name },
-        ],
-      },
-      callback_url: 'https://wiamapp.com/billing/success',
-    }),
+    callbackUrl: 'https://wiamapp.com/billing/success',
   });
-
-  const result = await paystackRes.json();
-  if (!result.status) throw new Error(result.message);
 
   await supabaseAdmin.from('audit_logs').insert({
     user_id: userId,
@@ -254,7 +368,7 @@ async function initiateSubscriptionCheckout({ userId, planKey, email, currency }
     metadata: { plan_key: planKey, amount_usd: planConfig.price_usd_web, reference },
   });
 
-  return { authorizationUrl: result.data.authorization_url, reference };
+  return { authorizationUrl: checkout.checkoutUrl, reference: checkout.reference, provider: 'paystack' };
 }
 
 export default router;

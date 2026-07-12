@@ -1,11 +1,13 @@
 // © 2026 WiamApp. Powered by WiamLabs
 // backend/routes/webhooks.js
-// Handles webhooks from RevenueCat (subscriptions) and Paystack (payments)
+// Handles webhooks from RevenueCat, Paystack, and Stripe (worldwide ready)
 
 import { Router } from 'express';
 import { supabaseAdmin } from '../lib/supabaseAdmin.js';
 import { sendBookingEmail } from '../lib/resend.js';
 import { localToUsd } from '../lib/exchangeRates.js';
+import { constructStripeWebhookEvent } from '../lib/payments/stripeProvider.js';
+import { fulfillBookingPayment } from '../lib/payments/fulfillBookingPayment.js';
 
 const router = Router();
 
@@ -364,6 +366,131 @@ router.post('/paystack', async (req, res) => {
   } catch (err) {
     console.error('Paystack webhook error:', err.message);
     res.status(500).json({ error: 'Webhook processing failed' });
+  }
+});
+
+// ─── STRIPE WEBHOOK ───────────────────────────────────────────
+// Ready for worldwide cards. Enable with STRIPE_WEBHOOK_SECRET +
+ // PAYMENTS_STRIPE_ENABLED. Stripe Dashboard → Webhooks →
+// https://wiamapp-backend.onrender.com/api/webhooks/stripe
+// Events: checkout.session.completed, checkout.session.async_payment_succeeded
+
+router.post('/stripe', async (req, res) => {
+  try {
+    if (!process.env.STRIPE_WEBHOOK_SECRET || !process.env.STRIPE_SECRET_KEY) {
+      return res.status(503).json({ error: 'Stripe webhooks not configured yet.' });
+    }
+
+    const signature = req.headers['stripe-signature'];
+    if (!signature) {
+      return res.status(400).json({ error: 'Missing stripe-signature header' });
+    }
+
+    const event = constructStripeWebhookEvent(req.body, signature);
+
+    if (
+      event.type === 'checkout.session.completed'
+      || event.type === 'checkout.session.async_payment_succeeded'
+    ) {
+      const session = event.data.object;
+      const reference = session.client_reference_id || session.metadata?.reference;
+      const paymentType = session.metadata?.payment_type || 'booking';
+      const currency = (session.currency || 'usd').toUpperCase();
+      const amountMinor = session.amount_total;
+
+      if (paymentType === 'booking' && reference) {
+        await fulfillBookingPayment({
+          reference,
+          amountMinor,
+          currency,
+          provider: 'stripe',
+        });
+      }
+
+      if (paymentType === 'subscription' && session.metadata?.user_id && session.metadata?.plan_key) {
+        const user_id = session.metadata.user_id;
+        const plan_key = session.metadata.plan_key;
+
+        const { data: planConfig } = await supabaseAdmin
+          .from('subscription_config')
+          .select('*')
+          .eq('plan_key', plan_key)
+          .maybeSingle();
+
+        if (planConfig) {
+          const isBusinessPlan = ['starter_biz', 'growth_biz', 'enterprise'].includes(plan_key);
+          const accountType = isBusinessPlan ? 'business' : 'worker';
+          const nextBilling = new Date();
+          nextBilling.setMonth(nextBilling.getMonth() + 1);
+
+          if (isBusinessPlan) {
+            await supabaseAdmin
+              .from('business_profiles')
+              .update({ plan: plan_key.replace('_biz', '') })
+              .eq('user_id', user_id);
+          } else {
+            await supabaseAdmin
+              .from('worker_profiles')
+              .update({ subscription_tier: plan_key })
+              .eq('user_id', user_id);
+          }
+
+          const { data: existingSub } = await supabaseAdmin
+            .from('subscriptions')
+            .select('id')
+            .eq('user_id', user_id)
+            .eq('status', 'active')
+            .maybeSingle();
+
+          const subPayload = {
+            user_id,
+            account_type: accountType,
+            plan_key,
+            billing_source: 'web',
+            status: 'active',
+            amount_usd: planConfig.price_usd_web,
+            next_billing_date: nextBilling.toISOString().slice(0, 10),
+          };
+
+          let subscriptionId;
+          if (existingSub) {
+            await supabaseAdmin.from('subscriptions').update(subPayload).eq('id', existingSub.id);
+            subscriptionId = existingSub.id;
+          } else {
+            const { data: newSub } = await supabaseAdmin
+              .from('subscriptions')
+              .insert({ ...subPayload, started_at: new Date().toISOString() })
+              .select('id')
+              .single();
+            subscriptionId = newSub?.id;
+          }
+
+          await supabaseAdmin.from('subscription_invoices').insert({
+            user_id,
+            subscription_id: subscriptionId,
+            amount_usd: planConfig.price_usd_web,
+            currency_billed: currency,
+            status: 'paid',
+            paystack_ref: reference || session.id,
+            plan_name: planConfig.plan_name,
+            billing_period_start: new Date().toISOString().slice(0, 10),
+            billing_period_end: nextBilling.toISOString().slice(0, 10),
+          });
+
+          await supabaseAdmin.from('notifications').insert({
+            user_id,
+            title: `${planConfig.plan_name} activated!`,
+            body: `Your subscription is active until ${nextBilling.toLocaleDateString()}.`,
+            type: 'system',
+          });
+        }
+      }
+    }
+
+    res.json({ received: true });
+  } catch (err) {
+    console.error('Stripe webhook error:', err.message);
+    res.status(400).json({ error: `Webhook Error: ${err.message}` });
   }
 });
 

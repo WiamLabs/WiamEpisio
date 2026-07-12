@@ -28,6 +28,8 @@ export default function PaymentScreen({ navigation, route }) {
 
   const [loading,        setLoading]        = useState(false);
   const [paymentUrl,     setPaymentUrl]     = useState(null);
+  const [paymentProvider, setPaymentProvider] = useState('paystack');
+  const [paymentReference, setPaymentReference] = useState(null);
   const [verifying,      setVerifying]      = useState(false);
   const [error,          setError]          = useState('');
 
@@ -40,7 +42,7 @@ export default function PaymentScreen({ navigation, route }) {
     setLoading(true);
     setError('');
     try {
-      const res  = await fetch(`${BACKEND}/api/payments/paystack/initiate`, {
+      const res  = await fetch(`${BACKEND}/api/payments/initiate`, {
         method:  'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -50,7 +52,9 @@ export default function PaymentScreen({ navigation, route }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Payment initialization failed.');
-      setPaymentUrl(data.authorizationUrl);
+      setPaymentUrl(data.checkoutUrl || data.authorizationUrl);
+      setPaymentProvider(data.provider || 'paystack');
+      setPaymentReference(data.reference || null);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -60,20 +64,24 @@ export default function PaymentScreen({ navigation, route }) {
 
   const handleWebViewNav = async (navState) => {
     const url = navState.url;
-    // Paystack redirects to callback URL after payment
-    if (url.includes('wiamapp.com/payment/callback') || url.includes('payment/success')) {
+    // Our success URLs only (Paystack + Stripe Checkout both redirect here)
+    const isSuccess = url.includes('wiamapp.com/payment/success')
+      || url.includes('wiamapp.com/payment/callback')
+      || /\/payment\/success(\?|$)/.test(url);
+    if (isSuccess) {
       setPaymentUrl(null);
       setVerifying(true);
       try {
-        const reference = url.split('reference=')[1]?.split('&')[0];
-        // Real status change (escrow, contact reveal, notifications)
-        // happens server-to-server via the Paystack webhook, which
-        // has usually already fired by the time this redirect lands.
-        // This call just confirms status quickly for the UI.
-        const res  = await fetch(`${BACKEND}/api/payments/paystack/verify/${reference}`, {
-          method:  'GET',
-          headers: { Authorization: `Bearer ${session?.access_token}` },
-        });
+        const fromUrl = url.split('reference=')[1]?.split('&')[0]
+          || url.split('session_id=')[1]?.split('&')[0];
+        const reference = fromUrl || paymentReference;
+        const res  = await fetch(
+          `${BACKEND}/api/payments/verify/${encodeURIComponent(reference)}?provider=${paymentProvider}`,
+          {
+            method:  'GET',
+            headers: { Authorization: `Bearer ${session?.access_token}` },
+          },
+        );
         const data = await res.json();
         if (!res.ok || !data.success) throw new Error(data.error || 'Payment verification failed.');
         navigation.replace('PaymentSuccess', { bookingId, workerName, amount });

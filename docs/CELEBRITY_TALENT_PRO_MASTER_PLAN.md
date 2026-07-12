@@ -1,5 +1,7 @@
 # WiamApp Star / Talent Pro — Master Plan
+
 ### © 2026 WiamApp. Powered by WiamLabs
+
 ### Vertical: Bookable stars, creators & professionals — worldwide
 
 > Formerly drafted as “Musician Pro”. That was the first wedge.
@@ -32,17 +34,19 @@ Product **sellers** → WiamTrade later (not WiamApp).
 
 ## 2. Who Star Pro is for
 
-| Talent type | Examples of bookable work |
-|-------------|---------------------------|
-| Musician / band / DJ | Weddings, concerts, corporate, church |
-| Actor / actress | Events, brand shoots, cameos, theatre |
-| Film / TV director | Panels, workshops, hire for productions |
-| Influencer / creator | Appearances, launches, brand days |
-| Comedian / speaker | Shows, conferences, MC work |
-| Dancer / choreographer | Tours, videos, events |
-| Athlete / coach-star | Appearances, camps, endorsements |
-| Model / host / presenter | Runways, launches, live hosting |
-| Specialty act | Magician, circus, cultural troupe |
+
+| Talent type              | Examples of bookable work               |
+| ------------------------ | --------------------------------------- |
+| Musician / band / DJ     | Weddings, concerts, corporate, church   |
+| Actor / actress          | Events, brand shoots, cameos, theatre   |
+| Film / TV director       | Panels, workshops, hire for productions |
+| Influencer / creator     | Appearances, launches, brand days       |
+| Comedian / speaker       | Shows, conferences, MC work             |
+| Dancer / choreographer   | Tours, videos, events                   |
+| Athlete / coach-star     | Appearances, camps, endorsements        |
+| Model / host / presenter | Runways, launches, live hosting         |
+| Specialty act            | Magician, circus, cultural troupe       |
+
 
 Same backend tables (`artist_profiles`, packages, blackouts). Field `talent_type` distinguishes them.
 
@@ -51,15 +55,19 @@ Same backend tables (`artist_profiles`, packages, blackouts). Field `talent_type
 ## 3. Product surfaces
 
 ### 3.1 Public page — `/m/{handle}`
+
 Stage/public name, photo, city (anywhere), tags, bio, packages, **Book** CTA.
 
 ### 3.2 Talent tools (mobile)
+
 Handle, stage name, **talent type**, tags, rider/hospitality, packages, blackouts.
 
 ### 3.3 Booking wizard
+
 Package → date → venue/guest count → accept rider → Paystack deposit → balance rules.
 
 ### 3.4 Money & trust
+
 Escrow deposits, marketplace commission, optional Star Pro subscription for tools.
 Identity verification follows local law per country.
 
@@ -79,9 +87,9 @@ currency on packages         -- multi-currency ready (USD, GHS, NGN, EUR, …)
 
 ## 5. Soft launch (global)
 
-1. Invite talent in any city who already book via WhatsApp  
-2. Public pages on marketing site  
-3. Tune deposit % / travel rules  
+1. Invite talent in any city who already book via WhatsApp
+2. Public pages on marketing site
+3. Tune deposit % / travel rules
 4. Scale marketing by country
 
 ---
@@ -102,7 +110,8 @@ currency on packages         -- multi-currency ready (USD, GHS, NGN, EUR, …)
 - [x] Mobile setup / packages / booking
 - [x] Reframe to Star / Talent Pro (all celebrities)
 - [x] Global category expansion (world booking services)
-- [ ] Multi-currency Paystack / local rails per country (ops)
+- [x] Multi-currency rails: Paystack (Africa) + Stripe-ready worldwide (`docs/PAYMENTS_MULTI_RAIL.md`)
 - [ ] Soft-launch cohorts (ops)
+- [ ] Turn on Stripe live keys when expanding beyond Paystack markets (ops)
 
 © 2026 WiamApp. Powered by WiamLabs.

@@ -49,7 +49,7 @@ app.use(cors({
   // Mobile APKs often send no Origin (or null). Reflect/allow so registration works.
   origin: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-paystack-signature'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-paystack-signature', 'stripe-signature'],
 }));
 
 // ─── RATE LIMITERS ────────────────────────────────────────────

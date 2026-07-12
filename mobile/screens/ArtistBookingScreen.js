@@ -89,7 +89,7 @@ export default function ArtistBookingScreen({ navigation, route }) {
       if (!res.ok) throw new Error(json.error || 'Booking failed');
 
       // Initiate deposit payment
-      const payRes = await fetch(`${BACKEND}/api/payments/paystack/initiate`, {
+      const payRes = await fetch(`${BACKEND}/api/payments/initiate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -103,8 +103,9 @@ export default function ArtistBookingScreen({ navigation, route }) {
         }),
       });
       const pay = await payRes.json();
-      if (payRes.ok && pay.authorizationUrl) {
-        navigation.navigate('WebView', { url: pay.authorizationUrl, title: 'Pay deposit' });
+      const payUrl = pay.checkoutUrl || pay.authorizationUrl;
+      if (payRes.ok && payUrl) {
+        navigation.navigate('WebView', { url: payUrl, title: 'Pay deposit' });
       } else {
         Alert.alert(
           'Gig requested',
