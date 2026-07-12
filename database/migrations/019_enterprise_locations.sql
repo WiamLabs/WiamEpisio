@@ -31,6 +31,6 @@ CREATE POLICY "enterprise_locations_read_owner"
   ON enterprise_locations FOR SELECT
   USING (
     enterprise_id IN (
-      SELECT id FROM business_profiles WHERE owner_id = auth.uid()
+      SELECT id FROM business_profiles WHERE user_id = auth.uid()
     )
   );

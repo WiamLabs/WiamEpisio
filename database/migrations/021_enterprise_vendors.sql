@@ -29,7 +29,7 @@ CREATE POLICY "enterprise_vendors_read_owner"
   ON enterprise_vendors FOR SELECT
   USING (
     enterprise_id IN (
-      SELECT id FROM business_profiles WHERE owner_id = auth.uid()
+      SELECT id FROM business_profiles WHERE user_id = auth.uid()
     )
   );
 

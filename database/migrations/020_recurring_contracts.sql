@@ -38,6 +38,6 @@ CREATE POLICY "recurring_contracts_read_owner"
   ON recurring_contracts FOR SELECT
   USING (
     enterprise_id IN (
-      SELECT id FROM business_profiles WHERE owner_id = auth.uid()
+      SELECT id FROM business_profiles WHERE user_id = auth.uid()
     )
   );

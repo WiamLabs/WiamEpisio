@@ -45,7 +45,7 @@ CREATE POLICY "sla_contracts_read_owner"
   ON sla_contracts FOR SELECT
   USING (
     enterprise_id IN (
-      SELECT id FROM business_profiles WHERE owner_id = auth.uid()
+      SELECT id FROM business_profiles WHERE user_id = auth.uid()
     )
   );
 
@@ -53,6 +53,6 @@ CREATE POLICY "sla_breach_log_read_owner"
   ON sla_breach_log FOR SELECT
   USING (
     enterprise_id IN (
-      SELECT id FROM business_profiles WHERE owner_id = auth.uid()
+      SELECT id FROM business_profiles WHERE user_id = auth.uid()
     )
   );
