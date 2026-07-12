@@ -6,7 +6,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import * as SplashScreen from 'expo-splash-screen';
+import * as ExpoSplashScreen from 'expo-splash-screen';
 import { ActivityIndicator, View, Text } from 'react-native';
 import { Colors } from './constants/colors';
 import { AuthProvider, useAuth } from './lib/AuthContext';
@@ -188,7 +188,7 @@ function RootNavigator() {
 
   useEffect(() => {
     if (!loading) {
-      SplashScreen.hideAsync().catch(() => {});
+      ExpoSplashScreen.hideAsync().catch(() => {});
     }
   }, [loading]);
 
