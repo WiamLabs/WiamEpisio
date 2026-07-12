@@ -1,7 +1,33 @@
 -- © 2026 WiamApp. Powered by WiamLabs
 -- 039_expand_service_categories.sql
 -- Broaden WiamApp beyond "phone repair only" — real Ghana service economy.
--- APPEND only. Renames Phones category → Electronics & Appliances Repair.
+-- APPEND only. Aligns legacy short category names + expands electronics & new verticals.
+
+-- ── Align legacy category names with mobile skills.js ─────────
+UPDATE categories SET name = 'Building & Construction', description = 'Heavy-duty tradespeople who build structures, renovate, and do major construction work.'
+WHERE id = 'c1000000-0000-0000-0000-000000000001';
+UPDATE categories SET name = 'Plumbing & Water Systems', description = 'All plumbing, water supply, drainage, and water system specialists.'
+WHERE id = 'c1000000-0000-0000-0000-000000000002';
+UPDATE categories SET name = 'Electrical & Power Engineering', description = 'Electricians, solar installers, generator mechanics and power specialists.'
+WHERE id = 'c1000000-0000-0000-0000-000000000003';
+UPDATE categories SET name = 'Automotive & Mechanical Repair', description = 'Car mechanics, auto electricians, and all vehicle repair specialists.'
+WHERE id = 'c1000000-0000-0000-0000-000000000004';
+UPDATE categories SET name = 'Finishing, Painting & Decor', description = 'Painters, ceiling designers, interior decorators and finishing specialists.'
+WHERE id = 'c1000000-0000-0000-0000-000000000005';
+UPDATE categories SET name = 'Cleaning & Property Maintenance', description = 'Cleaners, fumigators, pest control and property maintenance workers.'
+WHERE id = 'c1000000-0000-0000-0000-000000000006';
+UPDATE categories SET name = 'Hair, Beauty & Personal Care', description = 'Barbers, hairstylists, makeup artists, nail technicians and beauty professionals.'
+WHERE id = 'c1000000-0000-0000-0000-000000000007';
+UPDATE categories SET name = 'Hospitality, Catering & Food', description = 'Event caterers, private chefs, bakers and food service professionals.'
+WHERE id = 'c1000000-0000-0000-0000-000000000008';
+UPDATE categories SET name = 'Photography, Media & Creative', description = 'Photographers, videographers, drone operators and creative professionals.'
+WHERE id = 'c1000000-0000-0000-0000-000000000009';
+UPDATE categories SET name = 'Logistics, Transport & Delivery', description = 'Dispatch riders, delivery drivers, movers and transport professionals.'
+WHERE id = 'c1000000-0000-0000-0000-000000000010';
+UPDATE categories SET name = 'Education, Tuition & Lessons', description = 'Tutors, teachers and skill instructors.'
+WHERE id = 'c1000000-0000-0000-0000-000000000011';
+UPDATE categories SET name = 'Events, Entertainment & Sound', description = 'DJs, MCs, event planners and entertainment crews.'
+WHERE id = 'c1000000-0000-0000-0000-000000000012';
 
 -- ── Rename / expand phones category into full electronics & appliances ──
 UPDATE categories SET
