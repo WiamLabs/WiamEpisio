@@ -253,10 +253,11 @@ export default function RegisterScreen({ navigation }) {
     && password.length >= 8 && agreed && city.trim()
     && (role === 'customer' || (role === 'worker' && category));
 
-  // GPS + reverse-geocode so City / Town fills with the real place name
+  // GPS (phone) + OpenStreetMap Nominatim (free reverse-geocode for place names)
   const useMyLocation = async () => {
     setLocating(true);
     setError('');
+    setLocationLabel('');
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
@@ -264,42 +265,65 @@ export default function RegisterScreen({ navigation }) {
         return;
       }
 
+      // Prefer real GPS over Wi‑Fi/cell guesses (those often land in the wrong suburb)
+      await Location.enableNetworkProviderAsync().catch(() => {});
       const pos = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
+        accuracy: Location.Accuracy.Highest,
+        mayShowUserSettingsDialog: true,
       });
-      const { latitude, longitude } = pos.coords;
+      const { latitude, longitude, accuracy } = pos.coords;
       setCoords({ latitude, longitude });
 
-      // Reverse-geocode via OpenStreetMap so the user sees their place
+      const accuracyNote =
+        typeof accuracy === 'number'
+          ? ` (±${Math.round(accuracy)}m)`
+          : '';
+
+      // Warn if the phone itself is uncertain (wifi/cell, not GPS)
+      if (typeof accuracy === 'number' && accuracy > 200) {
+        setError(
+          'GPS is weak right now (Wi‑Fi / network location). Turn on Location + GPS, go outdoors or near a window, then tap again — or type your city manually.'
+        );
+      }
+
+      // Reverse-geocode via OpenStreetMap (free). Names can be approximate —
+      // always review City / Landmark before submitting.
       try {
         const url = `https://nominatim.openstreetmap.org/reverse`
           + `?lat=${latitude}&lon=${longitude}`
-          + `&format=json&addressdetails=1`;
+          + `&format=json&addressdetails=1&zoom=16`;
         const res = await fetch(url, {
           headers: { 'User-Agent': 'WiamApp/1.0 (support@wiamapp.com)' },
         });
         const data = await res.json();
         const addr = data?.address || {};
 
-        const placeName =
-          addr.suburb || addr.neighbourhood || addr.hamlet ||
-          addr.village || addr.town || addr.city || addr.county ||
-          data?.display_name?.split(',')[0]?.trim() || '';
-
-        const region = addr.state || addr.region || addr.county || '';
+        // Prefer real city/town for the City field — not a random nearby suburb first
         const cityName =
-          addr.city || addr.town || addr.village || addr.county || placeName;
+          addr.city || addr.town || addr.municipality || addr.village ||
+          addr.county || addr.state_district || '';
+
+        const suburb =
+          addr.suburb || addr.neighbourhood || addr.hamlet ||
+          addr.residential || addr.quarter || '';
+
+        const region = addr.state || addr.region || '';
 
         if (cityName) setCity(cityName);
-        if (placeName && placeName !== cityName && !landmarkDescription.trim()) {
-          setLandmarkDescription(placeName);
-        }
+        else if (suburb) setCity(suburb);
+
+        // Landmark = finer pin (suburb) — user can edit if wrong
+        if (suburb) setLandmarkDescription(suburb);
+
         setLocationLabel(
-          [placeName || cityName, region].filter(Boolean).join(' · ')
-          || `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`
+          [
+            [suburb, cityName].filter(Boolean).join(', ') || cityName || suburb,
+            region,
+            `${latitude.toFixed(5)}, ${longitude.toFixed(5)}${accuracyNote}`,
+          ].filter(Boolean).join(' · ')
         );
       } catch {
-        setLocationLabel(`${latitude.toFixed(5)}, ${longitude.toFixed(5)}`);
+        setLocationLabel(`${latitude.toFixed(5)}, ${longitude.toFixed(5)}${accuracyNote}`);
       }
     } catch (e) {
       setError('Could not get your GPS location. Turn on Location / GPS and try again, or type your city.');
