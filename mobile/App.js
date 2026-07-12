@@ -186,17 +186,17 @@ function BusinessTabs() {
 function RootNavigator() {
   const { user, loading, supabaseConfigured } = useAuth();
 
+  // Hide native splash as soon as React mounts — never wait on auth/network
   useEffect(() => {
-    if (!loading) {
-      ExpoSplashScreen.hideAsync().catch(() => {});
-    }
-  }, [loading]);
+    ExpoSplashScreen.hideAsync().catch(() => {});
+  }, []);
 
   // Show spinner while checking session
   if (loading) {
     return (
       <View style={{ flex: 1, backgroundColor: Colors.navyDeep, alignItems: 'center', justifyContent: 'center' }}>
         <ActivityIndicator color={Colors.gold} size="large" />
+        <Text style={{ color: 'rgba(255,255,255,0.5)', marginTop: 16, fontSize: 13 }}>Starting WiamApp…</Text>
       </View>
     );
   }
@@ -214,7 +214,8 @@ function RootNavigator() {
     );
   }
 
-  // Decide initial route
+  // Always start at animated Splash for logged-out users.
+  // Logged-in users skip straight to their role home.
   let initialRoute = 'Splash';
   if (user) {
     if (user.role === 'worker')   initialRoute = 'WorkerApp';
@@ -299,16 +300,56 @@ function RootNavigator() {
   );
 }
 
+// ── Error boundary so a screen crash never leaves a blank logo splash ──
+class AppErrorBoundary extends React.Component {
+  state = { error: null };
+
+  static getDerivedStateFromError(error) {
+    return { error };
+  }
+
+  componentDidMount() {
+    ExpoSplashScreen.hideAsync().catch(() => {});
+  }
+
+  componentDidCatch(error) {
+    console.error('WiamApp crash:', error);
+    ExpoSplashScreen.hideAsync().catch(() => {});
+  }
+
+  render() {
+    if (this.state.error) {
+      return (
+        <View style={{ flex: 1, backgroundColor: Colors.navyDeep, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <Text style={{ color: Colors.white, fontSize: 18, fontWeight: '700', marginBottom: 8, textAlign: 'center' }}>
+            WiamApp hit an error
+          </Text>
+          <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, textAlign: 'center' }}>
+            {String(this.state.error?.message || this.state.error)}
+          </Text>
+        </View>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 // ── MAIN APP ──────────────────────────────────────────────────
 export default function App() {
+  useEffect(() => {
+    ExpoSplashScreen.hideAsync().catch(() => {});
+  }, []);
+
   return (
     <SafeAreaProvider>
-      <AuthProvider>
-        <StatusBar style="light" />
-        <NavigationContainer>
-          <RootNavigator />
-        </NavigationContainer>
-      </AuthProvider>
+      <AppErrorBoundary>
+        <AuthProvider>
+          <StatusBar style="light" />
+          <NavigationContainer>
+            <RootNavigator />
+          </NavigationContainer>
+        </AuthProvider>
+      </AppErrorBoundary>
     </SafeAreaProvider>
   );
 }

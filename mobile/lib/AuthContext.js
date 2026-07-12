@@ -7,7 +7,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase, supabaseConfigured } from './supabase';
 
 const AuthContext = createContext(null);
-const SESSION_TIMEOUT_MS = 8000;
+const SESSION_TIMEOUT_MS = 3000;
 
 export function AuthProvider({ children }) {
   const [session,  setSession]  = useState(null);   // Supabase session

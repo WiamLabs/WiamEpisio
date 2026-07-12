@@ -2,7 +2,7 @@
   "expo": {
     "name": "WiamApp",
     "slug": "wiamapp",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "runtimeVersion": {
       "policy": "appVersion"
     },
@@ -87,7 +87,7 @@
     "owner": "wiamlabs",
     "updates": {
       "url": "https://u.expo.dev/6e023abf-cf61-4371-8875-86f4612390dd",
-      "checkAutomatically": "ON_ERROR_RECOVERY",
+      "checkAutomatically": "NEVER",
       "fallbackToCacheTimeout": 0
     }
   }
