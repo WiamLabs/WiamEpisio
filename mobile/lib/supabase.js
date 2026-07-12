@@ -8,15 +8,16 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
-if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  throw new Error(
-    'Missing Supabase credentials.\n' +
-    'Please copy .env.example to .env and fill in your Supabase URL and Anon Key.\n' +
-    'Get them from: https://supabase.com → Your Project → Settings → API'
+export const supabaseConfigured = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
+
+if (!supabaseConfigured) {
+  console.error(
+    'Missing Supabase credentials. Set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY.'
   );
 }
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+export const supabase = supabaseConfigured
+  ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
     // Store session in phone storage so user stays logged in
     storage: AsyncStorage,
@@ -24,7 +25,8 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     persistSession: true,
     detectSessionInUrl: false,
   },
-});
+})
+  : null;
 
 // ─── Auth Helpers ────────────────────────────────────────────
 

@@ -6,7 +6,8 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { ActivityIndicator, View } from 'react-native';
+import * as SplashScreen from 'expo-splash-screen';
+import { ActivityIndicator, View, Text } from 'react-native';
 import { Colors } from './constants/colors';
 import { AuthProvider, useAuth } from './lib/AuthContext';
 
@@ -183,13 +184,32 @@ function BusinessTabs() {
 
 // ── Root navigator with smart auth redirect ───────────────────
 function RootNavigator() {
-  const { user, loading } = useAuth();
+  const { user, loading, supabaseConfigured } = useAuth();
+
+  useEffect(() => {
+    if (!loading) {
+      SplashScreen.hideAsync().catch(() => {});
+    }
+  }, [loading]);
 
   // Show spinner while checking session
   if (loading) {
     return (
       <View style={{ flex: 1, backgroundColor: Colors.navyDeep, alignItems: 'center', justifyContent: 'center' }}>
         <ActivityIndicator color={Colors.gold} size="large" />
+      </View>
+    );
+  }
+
+  if (!supabaseConfigured) {
+    return (
+      <View style={{ flex: 1, backgroundColor: Colors.navyDeep, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+        <Text style={{ color: Colors.white, fontSize: 18, fontWeight: '700', marginBottom: 8, textAlign: 'center' }}>
+          WiamApp setup incomplete
+        </Text>
+        <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 14, textAlign: 'center', lineHeight: 20 }}>
+          Supabase credentials were not bundled into this build. Rebuild the preview APK with EAS environment variables set.
+        </Text>
       </View>
     );
   }
