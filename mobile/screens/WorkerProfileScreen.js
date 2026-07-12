@@ -27,6 +27,7 @@ export default function WorkerProfileScreen({ navigation, route }) {
   const { workerId } = route?.params || {};
   const [worker,  setWorker]  = useState(null);
   const [reviews, setReviews] = useState([]);
+  const [artistHandle, setArtistHandle] = useState(null);
   const [loading, setLoading] = useState(true);
   const [tab,     setTab]     = useState('about'); // about | portfolio | reviews
 
@@ -41,6 +42,11 @@ export default function WorkerProfileScreen({ navigation, route }) {
         const rData = await rRes.json();
         setWorker(wData.data);
         setReviews(rData.data || []);
+        if (wData.data?.id) {
+          const aRes = await fetch(`${BACKEND}/api/artists/by-worker/${wData.data.id}`);
+          const aData = await aRes.json();
+          if (aData?.artist?.handle) setArtistHandle(aData.artist.handle);
+        }
       } catch { } finally { setLoading(false); }
     };
     if (workerId) fetchWorker();
@@ -307,10 +313,16 @@ export default function WorkerProfileScreen({ navigation, route }) {
         </TouchableOpacity>
         <TouchableOpacity
           style={s.bookBtn}
-          onPress={() => navigation.navigate('Booking', { workerId: worker.id, workerName: worker.full_name, hourlyRate: worker.hourly_rate })}
+          onPress={() => {
+            if (artistHandle) {
+              navigation.navigate('ArtistBooking', { handle: artistHandle });
+            } else {
+              navigation.navigate('Booking', { workerId: worker.id, workerName: worker.full_name, hourlyRate: worker.hourly_rate });
+            }
+          }}
           activeOpacity={0.85}
         >
-          <Text style={s.bookBtnText}>Book Now</Text>
+          <Text style={s.bookBtnText}>{artistHandle ? 'Book Artist' : 'Book Now'}</Text>
           <Ionicons name="arrow-forward" size={17} color={NAVY} />
         </TouchableOpacity>
       </View>

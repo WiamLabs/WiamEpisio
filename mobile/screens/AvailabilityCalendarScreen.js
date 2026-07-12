@@ -3,13 +3,14 @@
 // Worker sets their available days and working hours
 // Backend: GET/PATCH /api/workers/availability
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  View, Text, TouchableOpacity, StyleSheet, StatusBar, ScrollView, Switch, Alert,
+  View, Text, TouchableOpacity, StyleSheet, StatusBar, ScrollView, Switch, Alert, TextInput, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../constants/colors';
+import { supabase } from '../lib/supabase';
 
 const NAVY   = Colors.navy;
 const NAVY2  = Colors.navyMid;
@@ -17,6 +18,7 @@ const GOLD   = Colors.gold;
 const WHITE  = Colors.white;
 const MUTED  = 'rgba(255,255,255,0.50)';
 const BORDER = 'rgba(255,255,255,0.09)';
+const BACKEND = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 const DAYS = [
   { key: 'mon', label: 'Monday' },
@@ -72,6 +74,69 @@ function HourPicker({ value, options, onChange }) {
 export default function AvailabilityCalendarScreen({ navigation }) {
   const [schedule, setSchedule] = useState(DEFAULT_SCHEDULE);
   const [saving, setSaving] = useState(false);
+  const [blackouts, setBlackouts] = useState([]);
+  const [boStart, setBoStart] = useState('');
+  const [boEnd, setBoEnd] = useState('');
+  const [boReason, setBoReason] = useState('');
+  const [boSaving, setBoSaving] = useState(false);
+  const [hasArtist, setHasArtist] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
+        const res = await fetch(`${BACKEND}/api/artists/me`, {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        });
+        const json = await res.json();
+        if (json.artist) {
+          setHasArtist(true);
+          setBlackouts(json.blackouts || []);
+        }
+      } catch (_) {}
+    })();
+  }, []);
+
+  const addBlackout = async () => {
+    if (!boStart || !boEnd) {
+      Alert.alert('Required', 'Enter start and end dates (YYYY-MM-DD).');
+      return;
+    }
+    setBoSaving(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(`${BACKEND}/api/artists/me/blackouts`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ start_date: boStart, end_date: boEnd, reason: boReason }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Failed');
+      setBlackouts((prev) => [...prev, json.blackout]);
+      setBoStart(''); setBoEnd(''); setBoReason('');
+    } catch (e) {
+      Alert.alert('Error', e.message);
+    } finally {
+      setBoSaving(false);
+    }
+  };
+
+  const removeBlackout = async (id) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      await fetch(`${BACKEND}/api/artists/me/blackouts/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      setBlackouts((prev) => prev.filter((b) => b.id !== id));
+    } catch (e) {
+      Alert.alert('Error', e.message);
+    }
+  };
 
   const toggleDay = (key) => {
     setSchedule(prev => ({
@@ -178,6 +243,50 @@ export default function AvailabilityCalendarScreen({ navigation }) {
           })}
         </View>
 
+        {/* Musician Pro blackouts */}
+        {hasArtist && (
+          <View style={styles.section}>
+            <Text style={[styles.dayLabel, { marginBottom: 10 }]}>Musician Pro — Blackout dates</Text>
+            <Text style={styles.infoText}>
+              Block nights you cannot perform. Gig requests on these dates are rejected.
+            </Text>
+            {blackouts.map((b) => (
+              <View key={b.id} style={[styles.dayCard, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}>
+                <Text style={{ color: WHITE, fontSize: 13 }}>
+                  {b.start_date} → {b.end_date}{b.reason ? ` · ${b.reason}` : ''}
+                </Text>
+                <TouchableOpacity onPress={() => removeBlackout(b.id)}>
+                  <Ionicons name="trash-outline" size={16} color="#EF4444" />
+                </TouchableOpacity>
+              </View>
+            ))}
+            <TextInput
+              style={styles.boInput}
+              value={boStart}
+              onChangeText={setBoStart}
+              placeholder="Start YYYY-MM-DD"
+              placeholderTextColor={MUTED}
+            />
+            <TextInput
+              style={styles.boInput}
+              value={boEnd}
+              onChangeText={setBoEnd}
+              placeholder="End YYYY-MM-DD"
+              placeholderTextColor={MUTED}
+            />
+            <TextInput
+              style={styles.boInput}
+              value={boReason}
+              onChangeText={setBoReason}
+              placeholder="Reason (optional)"
+              placeholderTextColor={MUTED}
+            />
+            <TouchableOpacity style={styles.boBtn} onPress={addBlackout} disabled={boSaving}>
+              {boSaving ? <ActivityIndicator color={NAVY} /> : <Text style={styles.boBtnText}>Add blackout</Text>}
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Tips */}
         <View style={styles.tipsCard}>
           <Text style={styles.tipsTitle}>Tips</Text>
@@ -226,6 +335,9 @@ const styles = StyleSheet.create({
   hourOptionActive: { backgroundColor: 'rgba(212,160,23,0.12)' },
   hourOptionText:   { fontSize: 14, color: WHITE },
   unavailText:      { fontSize: 12, color: MUTED, marginTop: 8 },
+  boInput:          { backgroundColor: 'rgba(255,255,255,0.07)', borderRadius: 10, borderWidth: 1, borderColor: BORDER, paddingHorizontal: 12, paddingVertical: 11, color: WHITE, fontSize: 14, marginBottom: 8, marginTop: 4 },
+  boBtn:            { backgroundColor: GOLD, borderRadius: 12, paddingVertical: 12, alignItems: 'center', marginTop: 4, marginBottom: 8 },
+  boBtnText:        { color: NAVY, fontWeight: '700', fontSize: 14 },
   tipsCard:         { backgroundColor: NAVY2, marginHorizontal: 20, marginTop: 6, borderRadius: 14, padding: 16, borderWidth: 1, borderColor: BORDER },
   tipsTitle:        { fontSize: 13, fontWeight: '700', color: GOLD, marginBottom: 10 },
   tipItem:          { fontSize: 13, color: MUTED, lineHeight: 21 },

@@ -2,7 +2,7 @@
   "expo": {
     "name": "WiamApp",
     "slug": "wiamapp",
-    "version": "1.0.5",
+    "version": "1.0.6",
     "runtimeVersion": {
       "policy": "appVersion"
     },
@@ -34,7 +34,7 @@
         "backgroundColor": "#08081A"
       },
       "package": "com.wiamlabs.wiamapp",
-      "versionCode": 1,
+      "versionCode": 6,
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.READ_EXTERNAL_STORAGE",

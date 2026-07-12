@@ -14,6 +14,9 @@ export const WIAMAPP_CATEGORIES = [
   'Logistics, Transport & Delivery',
   'Education, Tuition & Lessons',
   'Events, Entertainment & Sound',
+  'Music & Live Performance',
+  'Film & Talent',
+  'Phones & Gadgets Repair',
 ];
 
 /** Each skill maps to a parent category used by the backend categories table */
@@ -156,6 +159,40 @@ export const WIAMAPP_SKILLS = [
   { name: 'Event Security', category: 'Events, Entertainment & Sound' },
   { name: 'Tent & Chair Supplier', category: 'Events, Entertainment & Sound' },
   { name: 'Photo Booth Operator', category: 'Events, Entertainment & Sound' },
+  { name: 'Live Singer', category: 'Events, Entertainment & Sound' },
+  { name: 'Backing Vocalist', category: 'Events, Entertainment & Sound' },
+  { name: 'Praise & Worship Leader', category: 'Events, Entertainment & Sound' },
+
+  // Music & Live Performance
+  { name: 'Musician (Solo)', category: 'Music & Live Performance' },
+  { name: 'Musician', category: 'Music & Live Performance' },
+  { name: 'Band / Group', category: 'Music & Live Performance' },
+  { name: 'Gospel Artist', category: 'Music & Live Performance' },
+  { name: 'Rapper / Hip-Hop Artist', category: 'Music & Live Performance' },
+  { name: 'Highlife / Traditional Performer', category: 'Music & Live Performance' },
+  { name: 'Session Musician', category: 'Music & Live Performance' },
+  { name: 'Choir Director', category: 'Music & Live Performance' },
+  { name: 'Instrumentalist (Guitar)', category: 'Music & Live Performance' },
+  { name: 'Instrumentalist (Keys)', category: 'Music & Live Performance' },
+  { name: 'Instrumentalist (Drums)', category: 'Music & Live Performance' },
+  { name: 'Instrumentalist (Bass)', category: 'Music & Live Performance' },
+
+  // Film & Talent
+  { name: 'Movie Actor / Actress', category: 'Film & Talent' },
+  { name: 'Movie Actor', category: 'Film & Talent' },
+  { name: 'Voice Actor', category: 'Film & Talent' },
+  { name: 'Extra / Background Actor', category: 'Film & Talent' },
+  { name: 'Model (Events / Commercial)', category: 'Film & Talent' },
+  { name: 'Script / Content Actor', category: 'Film & Talent' },
+  { name: 'Presenter / Host', category: 'Film & Talent' },
+
+  // Phones & Gadgets Repair (service only — not product sales)
+  { name: 'Phone Repairer', category: 'Phones & Gadgets Repair' },
+  { name: 'Phone Screen Replacement', category: 'Phones & Gadgets Repair' },
+  { name: 'Phone Software / Unlock Technician', category: 'Phones & Gadgets Repair' },
+  { name: 'Tablet Repairer', category: 'Phones & Gadgets Repair' },
+  { name: 'Laptop Repairer', category: 'Phones & Gadgets Repair' },
+  { name: 'Gadget Repair Technician', category: 'Phones & Gadgets Repair' },
 ];
 
 /** Also allow typing a parent category name directly */

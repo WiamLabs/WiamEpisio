@@ -227,6 +227,7 @@ export default function WorkerProfileEditScreen({ navigation }) {
 
   // ── Navigation helpers ────────────────────────────────────
   const menuItems = [
+    { icon: 'mic-outline',              label: 'Musician Pro',       screen: 'ArtistSetup' },
     { icon: 'images-outline',           label: 'Portfolio',           screen: 'PortfolioManager' },
     { icon: 'ribbon-outline',           label: 'Skills & Categories', screen: 'SkillsManager' },
     { icon: 'megaphone-outline',        label: 'Spotlight Posts',     screen: 'SpotlightManager' },

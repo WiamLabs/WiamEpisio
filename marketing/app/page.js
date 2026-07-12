@@ -14,7 +14,7 @@ async function getCategories() {
     const res = await fetch(`${BACKEND_URL}/api/workers/meta/categories`, { next: { revalidate: 3600 } });
     if (!res.ok) return [];
     const data = await res.json();
-    return Array.isArray(data) ? data.slice(0, 8) : [];
+    return Array.isArray(data) ? data.slice(0, 15) : [];
   } catch {
     return [];
   }
@@ -33,7 +33,7 @@ export default async function HomePage() {
               Find trusted workers, <span className="text-gold">verified</span> for the job.
             </h1>
             <p className="text-white/65 text-[15px] leading-relaxed mb-8 max-w-md">
-              Electricians, cleaners, plumbers, drivers, and more — every worker identity-checked before they can accept a job, every payment held securely until the work is done.
+              Electricians, musicians, phone repairers, cleaners, and more — every worker identity-checked before they can accept a job, every payment held securely until the work is done.
             </p>
             <div className="flex flex-wrap gap-3">
               <Link href="/browse" className="bg-gold text-navy font-semibold text-sm px-6 py-3.5 rounded-lg">
@@ -46,7 +46,7 @@ export default async function HomePage() {
           </div>
           <div className="hidden md:block">
             <div className="bg-navyMid border border-white/10 rounded-card p-6 space-y-3">
-              {['Verified electrician', 'Identity-checked cleaner', 'Trusted plumber'].map((label, i) => (
+              {['Verified electrician', 'Bookable musician', 'Trusted phone repairer'].map((label, i) => (
                 <div key={label} className="flex items-center gap-3 bg-navy/50 rounded-lg p-3">
                   <div className="w-10 h-10 rounded-full bg-navy text-gold flex items-center justify-center font-display font-bold text-sm flex-shrink-0">
                     {label[0]}

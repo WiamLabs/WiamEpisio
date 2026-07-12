@@ -31,7 +31,7 @@ const STATS = [
 ];
 
 const STEPS = [
-  { num: '1', icon: 'search-outline',          title: 'Search',   desc: 'Find verified workers near you across 12 categories' },
+  { num: '1', icon: 'search-outline',          title: 'Search',   desc: 'Find verified workers near you across 15+ categories' },
   { num: '2', icon: 'chatbubbles-outline',      title: 'Chat',     desc: 'Talk directly and agree on price before booking' },
   { num: '3', icon: 'shield-checkmark-outline', title: 'Pay Safe', desc: 'Money held in escrow — released when job is done right' },
 ];
@@ -215,7 +215,7 @@ export default function LandingScreen({ navigation }) {
         {/* ── CATEGORIES ───────────────────────────────────── */}
         <View style={s.section}>
           <Tag label="SERVICE CATEGORIES" />
-          <Text style={s.sectionTitle}>12 categories, 90+ skills</Text>
+          <Text style={s.sectionTitle}>15+ categories, 100+ skills</Text>
           <View style={s.catGrid}>
             {CATEGORIES.map((cat, i) => (
               <View key={i} style={s.catChip}>

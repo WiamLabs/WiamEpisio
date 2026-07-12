@@ -37,6 +37,7 @@ import enterpriseRoutes   from './routes/enterprise.js';
 import careersRoutes      from './routes/careers.js';
 import referralRoutes     from './routes/referrals.js';
 import disputeRoutes      from './routes/disputes.js';
+import artistRoutes       from './routes/artists.js';
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -140,6 +141,7 @@ app.use('/api/enterprise',                    enterpriseRoutes);
 app.use('/api/careers',                       careersRoutes);
 app.use('/api/referrals',                     referralRoutes);
 app.use('/api/disputes',                      disputeRoutes);
+app.use('/api/artists',                       artistRoutes);
 
 // ─── 404 HANDLER ─────────────────────────────────────────────
 app.use((req, res) => {

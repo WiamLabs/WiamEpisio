@@ -89,6 +89,9 @@ import BusinessApplicationScreen from './screens/BusinessApplicationScreen';
 import ReferralScreen from './screens/ReferralScreen';
 import DisputeScreen from './screens/DisputeScreen';
 import BookingPhotosScreen from './screens/BookingPhotosScreen';
+import ArtistSetupScreen from './screens/ArtistSetupScreen';
+import ArtistPackagesScreen from './screens/ArtistPackagesScreen';
+import ArtistBookingScreen from './screens/ArtistBookingScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab   = createBottomTabNavigator();
@@ -292,6 +295,9 @@ function RootNavigator() {
       <Stack.Screen name="CustomerEditProfile"   component={CustomerEditProfileScreen} />
       <Stack.Screen name="MyReviews"              component={MyReviewsScreen} />
       <Stack.Screen name="CustomerSettings"       component={CustomerSettingsScreen} />
+      <Stack.Screen name="ArtistSetup"            component={ArtistSetupScreen} />
+      <Stack.Screen name="ArtistPackages"         component={ArtistPackagesScreen} />
+      <Stack.Screen name="ArtistBooking"          component={ArtistBookingScreen} />
 
       {/* Business App */}
       <Stack.Screen name="BusinessApp"         component={BusinessTabs} />
