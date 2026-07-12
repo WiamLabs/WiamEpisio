@@ -45,15 +45,8 @@ const PORT = process.env.PORT || 3000;
 app.use(helmet());
 
 app.use(cors({
-  origin: [
-    'https://wiamapp.com',
-    'https://www.wiamapp.com',
-    'https://dashboard.wiamapp.com',
-    'https://wiamapp.pages.dev',
-    'exp://*',
-    'http://localhost:*',
-    process.env.NODE_ENV === 'development' ? '*' : null,
-  ].filter(Boolean),
+  // Mobile APKs often send no Origin (or null). Reflect/allow so registration works.
+  origin: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-paystack-signature'],
 }));

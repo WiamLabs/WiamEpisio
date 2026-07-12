@@ -39,6 +39,20 @@ export default function EmailOTPScreen({ navigation, route }) {
     return () => clearTimeout(timer);
   }, [countdown]);
 
+  // Auto-send OTP when the screen opens (in case register didn't already)
+  useEffect(() => {
+    if (!email || !BACKEND) return;
+    (async () => {
+      try {
+        await fetch(`${BACKEND}/api/auth/send-otp`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        });
+      } catch (_) {}
+    })();
+  }, [email]);
+
   const handleOtpChange = (text, index) => {
     const newOtp = [...otp];
     newOtp[index] = text.replace(/[^0-9]/g, '');

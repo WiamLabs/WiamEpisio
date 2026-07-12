@@ -5,7 +5,7 @@
 // 2. FlatList replaced with ScrollView inside dropdowns — fixes VirtualizedList warning
 // 3. City search uses improved Nominatim that finds ALL Ghana towns including small ones
 
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
   StyleSheet,  StatusBar,
@@ -14,9 +14,10 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { supabase } from '../lib/supabase';
 import { COUNTRIES, DEFAULT_COUNTRY } from '../constants/countries';
 import * as Location from 'expo-location';
+
+const BACKEND = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 const LOGO    = require('../assets/logo.png');
 const BG      = '#0D0D2B';
@@ -133,6 +134,11 @@ function CitySearch({ country, value, onSelect }) {
   const [showResults, setShowResults] = useState(false);
   const debounce = useRef(null);
 
+  // Keep the input in sync when "Use my location" fills the city
+  useEffect(() => {
+    if (value != null && value !== query) setQuery(value);
+  }, [value]);
+
   const search = useCallback((text) => {
     setQuery(text);
     if (text.length < 2) { setResults([]); setShowResults(false); return; }
@@ -236,6 +242,7 @@ export default function RegisterScreen({ navigation }) {
   const [digitalAddressCode,  setDigitalAddressCode]  = useState('');
   const [coords,   setCoords]   = useState(null); // { latitude, longitude }
   const [locating, setLocating] = useState(false);
+  const [locationLabel, setLocationLabel] = useState('');
   const [category, setCategory] = useState('');
   const [agreed,   setAgreed]   = useState(false);
   const [showPw,   setShowPw]   = useState(false);
@@ -243,143 +250,131 @@ export default function RegisterScreen({ navigation }) {
   const [error,    setError]    = useState('');
 
   const canSubmit = fullName.trim() && email.trim() && phone.trim()
-    && password.length >= 6 && agreed
+    && password.length >= 8 && agreed && city.trim()
     && (role === 'customer' || (role === 'worker' && category));
 
-  // Free, built into every phone — no API key, works in any country
-  // on Earth identically. This is the GPS pin saved on the account;
-  // the landmark/digital-code text fields above are what actually
-  // make it findable on the ground.
+  // GPS + reverse-geocode so City / Town fills with the real place name
   const useMyLocation = async () => {
     setLocating(true);
+    setError('');
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        setError('Location permission is needed to save your GPS pin. You can still register without it.');
+        setError('Location permission denied. Enable location in phone Settings, or type your city manually.');
         return;
       }
-      const pos = await Location.getCurrentPositionAsync({});
-      setCoords({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
+
+      const pos = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+      const { latitude, longitude } = pos.coords;
+      setCoords({ latitude, longitude });
+
+      // Reverse-geocode via OpenStreetMap so the user sees their place
+      try {
+        const url = `https://nominatim.openstreetmap.org/reverse`
+          + `?lat=${latitude}&lon=${longitude}`
+          + `&format=json&addressdetails=1`;
+        const res = await fetch(url, {
+          headers: { 'User-Agent': 'WiamApp/1.0 (support@wiamapp.com)' },
+        });
+        const data = await res.json();
+        const addr = data?.address || {};
+
+        const placeName =
+          addr.suburb || addr.neighbourhood || addr.hamlet ||
+          addr.village || addr.town || addr.city || addr.county ||
+          data?.display_name?.split(',')[0]?.trim() || '';
+
+        const region = addr.state || addr.region || addr.county || '';
+        const cityName =
+          addr.city || addr.town || addr.village || addr.county || placeName;
+
+        if (cityName) setCity(cityName);
+        if (placeName && placeName !== cityName && !landmarkDescription.trim()) {
+          setLandmarkDescription(placeName);
+        }
+        setLocationLabel(
+          [placeName || cityName, region].filter(Boolean).join(' · ')
+          || `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`
+        );
+      } catch {
+        setLocationLabel(`${latitude.toFixed(5)}, ${longitude.toFixed(5)}`);
+      }
     } catch (e) {
-      setError('Could not get your location right now. You can still register without it.');
+      setError('Could not get your GPS location. Turn on Location / GPS and try again, or type your city.');
     } finally {
       setLocating(false);
     }
   };
 
-  // ✅ FIX: Registration goes directly to Supabase — no backend needed
+  // Register via WiamApp backend (Resend OTP) — avoids Supabase email rate limits
   const handleRegister = async () => {
     if (!canSubmit || loading) return;
     setLoading(true);
     setError('');
 
     const fullPhone = `${country.phoneCode}${phone.trim()}`;
+    const cleanEmail = email.trim().toLowerCase();
 
     try {
-      // Step 1 — Create Supabase auth user
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email:    email.trim().toLowerCase(),
-        password: password,
-        options: {
-          data: {
-            full_name: fullName.trim(),
-            role,
-          },
-        },
+      if (!BACKEND) throw new Error('App is not connected to the server. Please reinstall the latest build.');
+
+      const res = await fetch(`${BACKEND}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fullName: fullName.trim(),
+          email: cleanEmail,
+          phone: fullPhone,
+          password,
+          role,
+          city: city.trim(),
+          country: country.name,
+          countryCode: country.code,
+          landmarkDescription: landmarkDescription || null,
+          digitalAddressCode: digitalAddressCode || null,
+          latitude: coords?.latitude ?? null,
+          longitude: coords?.longitude ?? null,
+          category: role === 'worker' ? category : undefined,
+        }),
       });
 
-      if (authError) throw new Error(authError.message);
-      if (!authData?.user) throw new Error('Registration failed. Please try again.');
-
-      const userId = authData.user.id;
-
-      // Step 2 — Create users table row
-      const { error: userErr } = await supabase
-        .from('users')
-        .insert({
-          id:           userId,
-          full_name:    fullName.trim(),
-          email:        email.trim().toLowerCase(),
-          phone:        fullPhone,
-          role,
-          city:         city || '',
-          country:      country.name,
-          country_code: country.code,
-          landmark_description: landmarkDescription || null,
-          digital_address_code: digitalAddressCode || null,
-          latitude:     coords?.latitude ?? null,
-          longitude:    coords?.longitude ?? null,
-          is_verified:  false,
-          created_at:   new Date().toISOString(),
-        });
-
-      // Ignore duplicate — row may already exist from trigger
-      if (userErr && !userErr.message.includes('duplicate')) {
-        throw new Error(userErr.message);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const msg = data.error || 'Registration failed. Please try again.';
+        if (/rate limit/i.test(msg)) {
+          throw new Error('Too many signup attempts. Wait about 1 hour, then try again — or use a different email.');
+        }
+        throw new Error(msg);
       }
 
-      // Step 3 — If worker, create worker_profiles row
-      if (role === 'worker') {
-        const { error: wpErr } = await supabase
-          .from('worker_profiles')
-          .insert({
-            user_id:       userId,
-            location_name: city || '',
-            landmark_description: landmarkDescription || null,
-            digital_address_code: digitalAddressCode || null,
-            latitude:      coords?.latitude ?? null,
-            longitude:     coords?.longitude ?? null,
-            is_verified:   false,
-            is_available:  false,
-            hourly_rate:   0,
-            average_rating:0,
-            total_jobs_done: 0,
-            subscription_tier: 'free',
-            created_at:    new Date().toISOString(),
-          });
-        if (wpErr && !wpErr.message.includes('duplicate')) {
-          console.warn('Worker profile create warning:', wpErr.message);
-        }
+      // Send OTP via Resend (backend) — does NOT hit Supabase email limits
+      await fetch(`${BACKEND}/api/auth/send-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: cleanEmail }),
+      });
 
-        // Step 4 — Save worker category
-        const { data: catRow } = await supabase
-          .from('categories')
-          .select('id')
-          .eq('name', category)
-          .single();
-
-        if (catRow) {
-          // Get the worker_profile id we just created
-          const { data: wp } = await supabase
-            .from('worker_profiles')
-            .select('id')
-            .eq('user_id', userId)
-            .single();
-
-          if (wp) {
-            await supabase.from('worker_categories').insert({
-              worker_profile_id: wp.id,
-              category_id:       catRow.id,
-            });
-          }
-        }
-      }
-
-      // Step 5 — Navigate to OTP verification
       navigation.navigate('EmailOTP', {
         role,
-        email:   email.trim().toLowerCase(),
-        phone:   fullPhone,
-        userId,
+        email: cleanEmail,
+        phone: fullPhone,
+        userId: data.userId,
       });
 
     } catch (err) {
       console.warn('Register error:', err.message);
-      setError(
-        err.message.includes('already registered') || err.message.includes('already been registered')
-          ? 'This email is already registered. Please log in instead.'
-          : err.message || 'Registration failed. Please check your details and try again.'
-      );
+      const msg = err.message || 'Registration failed. Please check your details and try again.';
+      if (/already|exist|registered/i.test(msg)) {
+        setError('This email is already registered. Please log in instead.');
+      } else if (/rate limit/i.test(msg)) {
+        setError('Too many signup attempts. Wait about 1 hour, then try again — or use a different email.');
+      } else if (/network|fetch failed|Failed to fetch/i.test(msg)) {
+        setError('Cannot reach WiamApp servers. Check your internet and try again.');
+      } else {
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -560,9 +555,12 @@ export default function RegisterScreen({ navigation }) {
           <TouchableOpacity style={s.locationBtn} onPress={useMyLocation} disabled={locating}>
             <Ionicons name={coords ? 'checkmark-circle' : 'locate-outline'} size={17} color={coords ? '#22C55E' : GOLD} />
             <Text style={[s.locationBtnText, coords && { color: '#22C55E' }]}>
-              {locating ? 'Getting your location…' : coords ? 'Location saved ✓' : 'Use my current location'}
+              {locating ? 'Getting your location…' : coords ? 'Location detected ✓' : 'Use my current location'}
             </Text>
           </TouchableOpacity>
+          {!!locationLabel && (
+            <Text style={s.locationHint}>{locationLabel}</Text>
+          )}
 
           {/* Password */}
           <Text style={s.label}>Password</Text>
@@ -570,7 +568,7 @@ export default function RegisterScreen({ navigation }) {
             <Ionicons name="lock-closed-outline" size={17} color="rgba(255,255,255,0.35)" style={s.inputIcon} />
             <TextInput
               style={[s.inputText, { flex: 1 }]}
-              placeholder="Min. 6 characters"
+              placeholder="Min. 8 characters"
               placeholderTextColor={MUTED}
               value={password}
               onChangeText={setPassword}
@@ -580,8 +578,8 @@ export default function RegisterScreen({ navigation }) {
               <Ionicons name={showPw ? 'eye-off-outline' : 'eye-outline'} size={18} color={MUTED} />
             </TouchableOpacity>
           </View>
-          {password.length > 0 && password.length < 6 && (
-            <Text style={s.pwWarn}>Password must be at least 6 characters</Text>
+          {password.length > 0 && password.length < 8 && (
+            <Text style={s.pwWarn}>Password must be at least 8 characters</Text>
           )}
 
           {/* Terms */}
@@ -655,9 +653,10 @@ const s = StyleSheet.create({
   locationBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
     borderWidth: 1, borderColor: GOLD_BD, backgroundColor: GOLD_BG,
-    borderRadius: 12, paddingVertical: 13, marginBottom: 14,
+    borderRadius: 12, paddingVertical: 13, marginBottom: 6,
   },
   locationBtnText: { color: GOLD, fontSize: 13.5, fontWeight: '600' },
+  locationHint: { color: 'rgba(255,255,255,0.45)', fontSize: 12, textAlign: 'center', marginBottom: 10 },
   inputIcon:           { marginRight: 10 },
   inputText:           { color: WHITE, fontSize: 15 },
   inputPlaceholder:    { color: MUTED },
