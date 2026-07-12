@@ -1,8 +1,14 @@
 -- ============================================================
 -- WIAMAPP MIGRATION 018 — Enhanced Customer and Worker Profiles
 -- © 2026 WiamApp. Powered by WiamLabs
--- Run after 017_trust_system.sql
+-- Run after 017_trust_system.sql (safe if 017 was skipped — creates deps)
 -- ============================================================
+
+-- Ensure trust columns exist (normally from 017)
+ALTER TABLE worker_profiles
+  ADD COLUMN IF NOT EXISTS trust_count INT DEFAULT 0;
+ALTER TABLE business_profiles
+  ADD COLUMN IF NOT EXISTS follow_count INT DEFAULT 0;
 
 -- Add push token to users
 ALTER TABLE users ADD COLUMN IF NOT EXISTS push_token TEXT;
@@ -90,6 +96,19 @@ CREATE INDEX IF NOT EXISTS idx_worker_profiles_trust
 CREATE INDEX IF NOT EXISTS idx_worker_profiles_subscription
   ON worker_profiles(subscription_plan, badge_type);
 
--- Enable realtime on trust tables
-ALTER PUBLICATION supabase_realtime ADD TABLE worker_trusts;
-ALTER PUBLICATION supabase_realtime ADD TABLE business_follows;
+-- Realtime only if trust tables exist (from 017)
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'worker_trusts') THEN
+    BEGIN
+      ALTER PUBLICATION supabase_realtime ADD TABLE worker_trusts;
+    EXCEPTION WHEN duplicate_object THEN NULL;
+    END;
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'business_follows') THEN
+    BEGIN
+      ALTER PUBLICATION supabase_realtime ADD TABLE business_follows;
+    EXCEPTION WHEN duplicate_object THEN NULL;
+    END;
+  END IF;
+END $$;
