@@ -261,7 +261,7 @@ router.post('/send-otp', async (req, res) => {
       expires_at: expiresAt.toISOString(),
     });
 
-    // Email the code via Resend. If RESEND_API_KEY isn't set, sendEmail
+    // Email the code via Brevo. If BREVO_API_KEY isn't set, sendEmail
     // safely no-ops (logged) — the code below still appears in server logs
     // so testing isn't blocked before the email domain is verified.
     await sendEmail({

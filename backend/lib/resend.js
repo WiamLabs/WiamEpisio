@@ -1,17 +1,16 @@
 // © 2026 WiamApp. Powered by WiamLabs
 // backend/lib/resend.js
-// Transactional email — Brevo preferred (same as WiamLabs site), Resend optional fallback.
+// WiamApp transactional email — Brevo only.
+// (Resend is for other WiamLabs products: WiamPass, WiamAI, WiamTrade — not this app.)
 //
 // Env (Render):
-//   BREVO_API_KEY     -> preferred (https://app.brevo.com → SMTP & API)
-//   RESEND_API_KEY    -> optional fallback
-//   EMAIL_FROM        -> "WiamApp <noreply@wiamapp.com>" (must be verified in Brevo)
-//   EMAIL_FROM_NAME   -> optional display name (default WiamApp)
-//   EMAIL_FROM_ADDRESS-> optional bare address if EMAIL_FROM is not "Name <email>"
+//   BREVO_API_KEY      -> https://app.brevo.com → SMTP & API
+//   EMAIL_FROM         -> "WiamApp <noreply@wiamapp.com>" (must be verified in Brevo)
+//   EMAIL_FROM_NAME    -> optional display name (default WiamApp)
+//   EMAIL_FROM_ADDRESS -> optional bare address if EMAIL_FROM is not "Name <email>"
 
-const BREVO_API_KEY  = process.env.BREVO_API_KEY;
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const EMAIL_FROM     = process.env.EMAIL_FROM || 'WiamApp <noreply@wiamapp.com>';
+const BREVO_API_KEY = process.env.BREVO_API_KEY;
+const EMAIL_FROM    = process.env.EMAIL_FROM || 'WiamApp <noreply@wiamapp.com>';
 
 function parseFrom(from) {
   const m = String(from || '').match(/^\s*(.*?)\s*<([^>]+)>\s*$/);
@@ -46,65 +45,37 @@ function layout(heading, bodyHtml) {
 </html>`;
 }
 
-async function sendViaBrevo({ to, subject, html }) {
-  const sender = parseFrom(EMAIL_FROM);
-  const res = await fetch('https://api.brevo.com/v3/smtp/email', {
-    method: 'POST',
-    headers: {
-      'api-key': BREVO_API_KEY,
-      'Content-Type': 'application/json',
-      accept: 'application/json',
-    },
-    body: JSON.stringify({
-      sender: { name: sender.name, email: sender.email },
-      to: [{ email: to }],
-      subject,
-      htmlContent: html,
-    }),
-  });
-  if (!res.ok) {
-    const text = await res.text();
-    console.error(`[brevo] Failed to send to ${to}: ${res.status} ${text}`);
-    return { error: text };
-  }
-  return await res.json().catch(() => ({ ok: true }));
-}
-
-async function sendViaResend({ to, subject, html }) {
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${RESEND_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ from: EMAIL_FROM, to, subject, html }),
-  });
-  if (!res.ok) {
-    const text = await res.text();
-    console.error(`[resend] Failed to send to ${to}: ${res.status} ${text}`);
-    return { error: text };
-  }
-  return await res.json();
-}
-
-// ─── Core sender ──────────────────────────────────────────────
+// ─── Core sender (Brevo) ──────────────────────────────────────
 export async function sendEmail({ to, subject, html }) {
-  if (!BREVO_API_KEY && !RESEND_API_KEY) {
-    console.warn(`[email] No BREVO_API_KEY or RESEND_API_KEY — skipping email to ${to} ("${subject}")`);
+  if (!BREVO_API_KEY) {
+    console.warn(`[brevo] BREVO_API_KEY not set — skipping email to ${to} ("${subject}")`);
     return { skipped: true };
   }
 
   try {
-    if (BREVO_API_KEY) {
-      const result = await sendViaBrevo({ to, subject, html });
-      if (!result.error) return result;
-      // Fall through to Resend if Brevo failed and Resend is configured
-      if (!RESEND_API_KEY) return result;
-      console.warn('[email] Brevo failed — trying Resend fallback');
+    const sender = parseFrom(EMAIL_FROM);
+    const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'api-key': BREVO_API_KEY,
+        'Content-Type': 'application/json',
+        accept: 'application/json',
+      },
+      body: JSON.stringify({
+        sender: { name: sender.name, email: sender.email },
+        to: [{ email: to }],
+        subject,
+        htmlContent: html,
+      }),
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      console.error(`[brevo] Failed to send to ${to}: ${res.status} ${text}`);
+      return { error: text };
     }
-    return await sendViaResend({ to, subject, html });
+    return await res.json().catch(() => ({ ok: true }));
   } catch (err) {
-    console.error(`[email] Error sending to ${to}:`, err.message);
+    console.error(`[brevo] Error sending to ${to}:`, err.message);
     return { error: err.message };
   }
 }
