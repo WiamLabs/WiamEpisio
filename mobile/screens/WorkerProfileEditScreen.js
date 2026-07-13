@@ -103,9 +103,11 @@ export default function WorkerProfileEditScreen({ navigation }) {
       const { latitude, longitude, accuracy } = pos.coords;
       setCoords({ latitude, longitude });
 
-      const place = await reverseGeocodePlace(latitude, longitude);
+      const place = await reverseGeocodePlace(latitude, longitude, { countryCode: 'GH' });
       setLocation(
-        [place.city, place.region].filter(Boolean).join(', ')
+        [place.digitalAddress, place.landmark || place.city, place.region]
+          .filter(Boolean)
+          .join(', ')
         || place.label
         || `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`
       );

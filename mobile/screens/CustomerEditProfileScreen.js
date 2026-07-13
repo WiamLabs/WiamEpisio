@@ -85,8 +85,17 @@ export default function CustomerEditProfileScreen({ navigation }) {
       });
       const { latitude, longitude, accuracy } = pos.coords;
       setCoords({ latitude, longitude });
-      const place = await reverseGeocodePlace(latitude, longitude);
-      setCity(place.city || `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`);
+      const place = await reverseGeocodePlace(latitude, longitude, { countryCode: 'GH' });
+      // Prefer district/city from GhanaPost; keep coords always
+      const cityLabel = place.city
+        || place.district
+        || place.landmark
+        || `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
+      setCity(
+        place.digitalAddress
+          ? `${cityLabel} (${place.digitalAddress})`
+          : cityLabel
+      );
       if (typeof accuracy === 'number' && accuracy > 150) {
         Alert.alert(
           'Weak GPS',

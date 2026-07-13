@@ -337,16 +337,26 @@ export default function RegisterScreen({ navigation }) {
         );
       }
 
-      // Native geocoder first; estate labels like "Community 14" never become City
-      const place = await reverseGeocodePlace(latitude, longitude);
+      // GhanaPost (GH) → Mapbox → native → Nominatim last. Lat/lng stay source of truth.
+      const place = await reverseGeocodePlace(latitude, longitude, {
+        countryCode: country?.code || country?.iso || 'GH',
+      });
       if (place.city) setCity(place.city);
       if (place.landmark) setLandmarkDescription(place.landmark);
+      if (place.digitalAddress) setDigitalAddressCode(place.digitalAddress);
+
+      const sourceNote =
+        place.source === 'ghanapost' ? 'GhanaPostGPS'
+          : place.source === 'mapbox' ? 'Mapbox'
+            : place.source === 'native' ? 'Device'
+              : 'Approximate';
 
       setLocationLabel(
         [
           place.label || place.city,
+          place.digitalAddress ? `Code ${place.digitalAddress}` : null,
           `${latitude.toFixed(5)}, ${longitude.toFixed(5)}${accuracyNote}`,
-          'Review city & landmark — GPS names can be off',
+          `${sourceNote} — edit city/landmark if wrong`,
         ].filter(Boolean).join(' · ')
       );
     } catch (e) {

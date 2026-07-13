@@ -1,17 +1,19 @@
 // © 2026 WiamApp. Powered by WiamLabs
 // lib/api/places.js
-// Google Places API — works for EVERY Ghana town, village, district
-// Replaces Nominatim (OpenStreetMap) which misses small Ghana towns
-// API Key: EXPO_PUBLIC_GOOGLE_PLACES_KEY (set in .env)
+// Search: Mapbox (global) → Google Places (optional) → Nominatim last resort
+
+import { searchMapbox, isMapboxConfigured } from '../mapping/providers/mapbox.js';
 
 const PLACES_KEY = process.env.EXPO_PUBLIC_GOOGLE_PLACES_KEY;
 
-// ── SEARCH CITIES / TOWNS / VILLAGES ─────────────────────────
-// Works for: Accra, Kwahu Tafo, Juaben, Berekum, Dambai, everywhere
 export async function searchPlaces(query, countryCode = 'GH') {
   if (!query || query.trim().length < 2) return [];
 
-  // If no Google key set, fall back to improved Nominatim
+  if (isMapboxConfigured()) {
+    const mb = await searchMapbox(query, countryCode);
+    if (mb.length) return mb;
+  }
+
   if (!PLACES_KEY || PLACES_KEY === 'YOUR_GOOGLE_PLACES_KEY') {
     return searchPlacesNominatim(query, countryCode);
   }
@@ -28,7 +30,7 @@ export async function searchPlaces(query, countryCode = 'GH') {
 
     if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
       console.warn('[Places] Google API error:', data.status, data.error_message);
-      return searchPlacesNominatim(query, countryCode); // Fallback
+      return searchPlacesNominatim(query, countryCode);
     }
 
     return (data.predictions || []).map(p => ({
@@ -45,10 +47,13 @@ export async function searchPlaces(query, countryCode = 'GH') {
   }
 }
 
-// ── SEARCH ANY ADDRESS (for booking address field) ────────────
-// Includes streets, landmarks, schools, markets — not just cities
 export async function searchAddresses(query, countryCode = 'GH') {
   if (!query || query.trim().length < 2) return [];
+
+  if (isMapboxConfigured()) {
+    const mb = await searchMapbox(query, countryCode);
+    if (mb.length) return mb;
+  }
 
   if (!PLACES_KEY || PLACES_KEY === 'YOUR_GOOGLE_PLACES_KEY') {
     return searchPlacesNominatim(query, countryCode);
@@ -80,8 +85,6 @@ export async function searchAddresses(query, countryCode = 'GH') {
   }
 }
 
-// ── GET COORDINATES FOR A PLACE ───────────────────────────────
-// Use after user selects a place — get lat/lng for GPS
 export async function getPlaceCoordinates(placeId) {
   if (!PLACES_KEY || PLACES_KEY === 'YOUR_GOOGLE_PLACES_KEY') return null;
 
@@ -108,23 +111,16 @@ export async function getPlaceCoordinates(placeId) {
   }
 }
 
-// ── IMPROVED NOMINATIM FALLBACK ───────────────────────────────
-// Used when Google API key is not set
-// Fixed: includes ALL place types (hamlet, locality, administrative etc.)
-// This finds Kwahu Tafo, Juaben, small Ghana towns that the old version missed
 async function searchPlacesNominatim(query, countryCode = 'GH') {
   try {
     const cc  = countryCode.toLowerCase();
-    // ✅ KEY FIX: Removed the strict type filter that was blocking small towns
-    // Old code: .filter(r => ['city','town','village'].includes(r.type))
-    // New code: accepts ALL place types including hamlet, locality, administrative
     const url = `https://nominatim.openstreetmap.org/search`
       + `?q=${encodeURIComponent(query)}`
       + `&countrycodes=${cc}`
       + `&format=json`
       + `&addressdetails=1`
       + `&limit=8`
-      + `&featuretype=settlement`; // Gets cities, towns, villages, AND hamlets
+      + `&featuretype=settlement`;
 
     const res  = await fetch(url, {
       headers: { 'User-Agent': 'WiamApp/1.0 (support@wiamapp.com)' },
@@ -135,12 +131,11 @@ async function searchPlacesNominatim(query, countryCode = 'GH') {
     const results = [];
 
     for (const r of data) {
-      // Extract the best name from the result
       const name = r.address?.city
         || r.address?.town
         || r.address?.village
-        || r.address?.hamlet        // ✅ NEW: includes hamlets
-        || r.address?.locality      // ✅ NEW: includes localities
+        || r.address?.hamlet
+        || r.address?.locality
         || r.address?.suburb
         || r.display_name.split(',')[0].trim();
 
