@@ -28,7 +28,7 @@ Based on **WiamApp Mapping Migration Blueprint** (Mapbox global + local plug-ins
 EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN=pk.your_mapbox_public_token
 ```
 
-Get a free token at https://account.mapbox.com/ — set a spending cap in the Mapbox dashboard.
+Get a free token at https://account.mapbox.com/. Put the real value in `mobile/.env` (local) and Expo EAS Environment Variables (preview/production builds) — do not commit the real token to git. Watch usage under account statistics; Mapbox will email if free tier is exceeded.
 
 GhanaPost community API needs no key for the public SperixLabs endpoints used here.
 
