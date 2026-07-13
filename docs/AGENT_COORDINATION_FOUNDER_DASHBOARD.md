@@ -1,4 +1,15 @@
-# Letter to all WiamLabs repository agents
+## Canonical Founder location (14 Jul 2026)
+
+**Founder dashboard home is now `wiamlabs-studio` → `/founder` (studio.wiamlabs.com).**
+
+| Product agent | Wire only here |
+|---------------|----------------|
+| WiamApp | `wiamlabs-studio/app/founder/wiamapp/` |
+| WiamPass | `wiamlabs-studio/app/founder/wiampass/` |
+
+See also: `wiamlabs-studio/docs/FOUNDER_DASHBOARD_HOME.md`
+
+---
 
 **From:** Martin (Founder)  
 **To:** Every agent working in WiamApp, WiamPass, WiamTrade, WiamAI, Studio, or any other WiamLabs product repo  

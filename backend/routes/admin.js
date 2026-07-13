@@ -9,6 +9,15 @@ const router = Router();
 // ─── ADMIN GUARD MIDDLEWARE ───────────────────────────────────
 async function requireAdmin(req, res, next) {
   try {
+    // Studio Founder proxy (server-to-server) — never expose this key to browsers
+    const studioKey = process.env.STUDIO_SERVICE_KEY;
+    if (studioKey && req.headers['x-studio-service-key'] === studioKey) {
+      req.adminUser = {
+        id: process.env.STUDIO_ACTOR_USER_ID || '00000000-0000-0000-0000-000000000001',
+      };
+      return next();
+    }
+
     const user = await verifyUserToken(req.headers.authorization);
     const { data } = await supabaseAdmin
       .from('users')
@@ -46,7 +55,7 @@ router.get('/dashboard', async (req, res) => {
       supabaseAdmin.from('users').select('id', { count: 'exact', head: true }).eq('role', 'worker'),
       supabaseAdmin.from('users').select('id', { count: 'exact', head: true }).eq('role', 'customer'),
       supabaseAdmin.from('bookings').select('id', { count: 'exact', head: true }),
-      supabaseAdmin.from('document_reviews').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+      supabaseAdmin.from('worker_verifications').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
       supabaseAdmin.from('bookings').select('id', { count: 'exact', head: true }).eq('status', 'disputed'),
       supabaseAdmin.from('fraud_reports').select('id', { count: 'exact', head: true }).eq('status', 'open'),
       supabaseAdmin.from('customer_document_reviews').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
@@ -190,11 +199,21 @@ router.patch('/users/:userId/reactivate', async (req, res) => {
 router.get('/verification-queue', async (req, res) => {
   try {
     const { type = 'worker' } = req.query;
-    const table = type === 'customer' ? 'customer_document_reviews' : 'document_reviews';
+
+    if (type === 'worker') {
+      // Workers submit into worker_verifications (not document_reviews)
+      const { data, error } = await supabaseAdmin
+        .from('worker_verifications')
+        .select('*, users (full_name, email, phone, city, role)')
+        .eq('status', 'pending')
+        .order('submitted_at', { ascending: true });
+      if (error) throw error;
+      return res.json({ success: true, data, type });
+    }
 
     const { data, error } = await supabaseAdmin
-      .from(table)
-      .select(`*, users (full_name, email, phone, city, role)`)
+      .from('customer_document_reviews')
+      .select('*, users (full_name, email, phone, city, role)')
       .eq('status', 'pending')
       .order('submitted_at', { ascending: true });
 
@@ -228,36 +247,50 @@ router.get('/document-url/:s3Key(*)', async (req, res) => {
 router.post('/verification/approve/:reviewId', async (req, res) => {
   try {
     const { userId, type = 'worker' } = req.body;
-    const table = type === 'customer' ? 'customer_document_reviews' : 'document_reviews';
-
-    await supabaseAdmin
-      .from(table)
-      .update({
-        status: 'approved',
-        reviewed_at: new Date().toISOString(),
-        reviewed_by: req.adminUser.id,
-      })
-      .eq('id', req.params.reviewId);
-
-    await supabaseAdmin
-      .from('users')
-      .update({
-        is_verified: true,
-        verification_status: 'approved',
-        verification_reviewed_at: new Date().toISOString(),
-        verification_reviewed_by: req.adminUser.id,
-      })
-      .eq('id', userId);
 
     if (type === 'worker') {
+      await supabaseAdmin
+        .from('worker_verifications')
+        .update({
+          status: 'approved',
+          reviewed_at: new Date().toISOString(),
+          reviewed_by: req.adminUser.id,
+        })
+        .eq('id', req.params.reviewId);
+
+      await supabaseAdmin
+        .from('users')
+        .update({
+          is_verified: true,
+          verification_status: 'approved',
+          verification_reviewed_at: new Date().toISOString(),
+          verification_reviewed_by: req.adminUser.id,
+        })
+        .eq('id', userId);
+
       await supabaseAdmin
         .from('worker_profiles')
         .update({ is_verified: true })
         .eq('user_id', userId);
     } else {
       await supabaseAdmin
+        .from('customer_document_reviews')
+        .update({
+          status: 'approved',
+          reviewed_at: new Date().toISOString(),
+          reviewed_by: req.adminUser.id,
+        })
+        .eq('id', req.params.reviewId);
+
+      await supabaseAdmin
         .from('users')
-        .update({ customer_verification_status: 'verified' })
+        .update({
+          is_verified: true,
+          verification_status: 'approved',
+          customer_verification_status: 'verified',
+          verification_reviewed_at: new Date().toISOString(),
+          verification_reviewed_by: req.adminUser.id,
+        })
         .eq('id', userId);
     }
 
@@ -291,17 +324,27 @@ router.post('/verification/reject/:reviewId', async (req, res) => {
     const { userId, reason, type = 'worker' } = req.body;
     if (!reason) return res.status(400).json({ success: false, error: 'Rejection reason required.' });
 
-    const table = type === 'customer' ? 'customer_document_reviews' : 'document_reviews';
-
-    await supabaseAdmin
-      .from(table)
-      .update({
-        status: 'rejected',
-        rejection_reason: reason,
-        reviewed_at: new Date().toISOString(),
-        reviewed_by: req.adminUser.id,
-      })
-      .eq('id', req.params.reviewId);
+    if (type === 'worker') {
+      await supabaseAdmin
+        .from('worker_verifications')
+        .update({
+          status: 'rejected',
+          rejection_reason: reason,
+          reviewed_at: new Date().toISOString(),
+          reviewed_by: req.adminUser.id,
+        })
+        .eq('id', req.params.reviewId);
+    } else {
+      await supabaseAdmin
+        .from('customer_document_reviews')
+        .update({
+          status: 'rejected',
+          rejection_reason: reason,
+          reviewed_at: new Date().toISOString(),
+          reviewed_by: req.adminUser.id,
+        })
+        .eq('id', req.params.reviewId);
+    }
 
     await supabaseAdmin
       .from('users')
