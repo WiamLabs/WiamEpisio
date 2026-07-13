@@ -323,7 +323,7 @@ router.post('/logout', async (req, res) => {
 });
 
 // ─── POST /api/auth/forgot-password ──────────────────────────
-// Sends a WiamApp-branded Resend email (not Supabase Auth mailer).
+// Sends a WiamApp-branded email via Brevo (not Supabase Auth mailer).
 router.post('/forgot-password', async (req, res) => {
   try {
     const { email } = req.body;
