@@ -20,11 +20,11 @@ function layout(heading, bodyHtml) {
 <html>
   <body style="margin:0;padding:0;background:#f4f5f7;font-family:Arial,Helvetica,sans-serif;color:#1f2937;">
     <div style="max-width:520px;margin:0 auto;padding:24px;">
-      <div style="background:#0F766E;border-radius:12px 12px 0 0;padding:20px 24px;">
-        <span style="color:#ffffff;font-size:20px;font-weight:700;">WiamApp</span>
+      <div style="background:#0D0D2B;border-radius:12px 12px 0 0;padding:20px 24px;">
+        <span style="color:#D4A017;font-size:20px;font-weight:700;">WiamApp</span>
       </div>
       <div style="background:#ffffff;border-radius:0 0 12px 12px;padding:24px;">
-        <h2 style="margin:0 0 12px;font-size:18px;color:#111827;">${heading}</h2>
+        <h2 style="margin:0 0 12px;font-size:18px;color:#0D0D2B;">${heading}</h2>
         ${bodyHtml}
       </div>
       <p style="text-align:center;color:#9ca3af;font-size:12px;margin-top:16px;">
@@ -134,4 +134,33 @@ export async function sendBookingEmail(email, fullName, details = {}) {
   });
 }
 
-export default { sendEmail, sendDocumentApprovedEmail, sendDocumentRejectedEmail, sendBookingEmail };
+// ─── Password reset (WiamApp-branded — never send via Supabase mailer) ──
+export async function sendPasswordResetEmail(email, resetUrl) {
+  return sendEmail({
+    to: email,
+    subject: 'Reset your WiamApp password',
+    html: layout(
+      'Reset your password',
+      `<p>We received a request to reset the password for your WiamApp account.</p>
+       <p style="margin:24px 0;">
+         <a href="${resetUrl}"
+            style="display:inline-block;background:#D4A017;color:#0D0D2B;font-weight:700;text-decoration:none;padding:14px 22px;border-radius:10px;">
+           Choose a new password
+         </a>
+       </p>
+       <p style="font-size:13px;color:#6b7280;line-height:1.5;">
+         This link expires soon. If you did not request a reset, you can ignore this email — your password stays the same.
+       </p>
+       <p style="font-size:12px;color:#9ca3af;word-break:break-all;">Or open this link:<br/>${resetUrl}</p>`
+    ),
+  });
+}
+
+export default {
+  sendEmail,
+  sendDocumentApprovedEmail,
+  sendDocumentRejectedEmail,
+  sendVerificationSubmittedEmail,
+  sendBookingEmail,
+  sendPasswordResetEmail,
+};

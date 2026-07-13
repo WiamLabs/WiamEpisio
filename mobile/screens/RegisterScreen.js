@@ -337,7 +337,7 @@ export default function RegisterScreen({ navigation }) {
         );
       }
 
-      // GhanaPost (GH) → Mapbox → native → Nominatim last. Lat/lng stay source of truth.
+      // Reverse-geocode for labels only. Lat/lng are what matching uses.
       const place = await reverseGeocodePlace(latitude, longitude, {
         countryCode: country?.code || country?.iso || 'GH',
       });
@@ -345,18 +345,13 @@ export default function RegisterScreen({ navigation }) {
       if (place.landmark) setLandmarkDescription(place.landmark);
       if (place.digitalAddress) setDigitalAddressCode(place.digitalAddress);
 
-      const sourceNote =
-        place.source === 'ghanapost' ? 'GhanaPostGPS'
-          : place.source === 'mapbox' ? 'Mapbox'
-            : place.source === 'native' ? 'Device'
-              : 'Approximate';
-
       setLocationLabel(
         [
-          place.label || place.city,
-          place.digitalAddress ? `Code ${place.digitalAddress}` : null,
+          place.digitalAddress || null,
+          place.landmark || null,
+          place.city || null,
+          place.region || null,
           `${latitude.toFixed(5)}, ${longitude.toFixed(5)}${accuracyNote}`,
-          `${sourceNote} — edit city/landmark if wrong`,
         ].filter(Boolean).join(' · ')
       );
     } catch (e) {
@@ -623,6 +618,10 @@ export default function RegisterScreen({ navigation }) {
           {!!locationLabel && (
             <Text style={s.locationHint}>{locationLabel}</Text>
           )}
+          <Text style={s.locationTip}>
+            We use this pin to match you with nearby workers and jobs — not for live turn‑by‑turn travel.
+            If the city or landmark looks wrong, edit it above before you continue.
+          </Text>
 
           {/* Password */}
           <Text style={s.label}>Password</Text>
@@ -718,7 +717,8 @@ const s = StyleSheet.create({
     borderRadius: 12, paddingVertical: 13, marginBottom: 6,
   },
   locationBtnText: { color: GOLD, fontSize: 13.5, fontWeight: '600' },
-  locationHint: { color: 'rgba(255,255,255,0.45)', fontSize: 12, textAlign: 'center', marginBottom: 10 },
+  locationHint: { color: 'rgba(255,255,255,0.45)', fontSize: 12, textAlign: 'center', marginBottom: 6 },
+  locationTip:  { color: 'rgba(255,255,255,0.38)', fontSize: 12, lineHeight: 18, textAlign: 'center', marginBottom: 14, paddingHorizontal: 4 },
   skillTip: {
     flexDirection: 'row', gap: 8, alignItems: 'flex-start',
     backgroundColor: GOLD_BG, borderWidth: 1, borderColor: GOLD_BD,

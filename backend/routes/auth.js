@@ -323,15 +323,49 @@ router.post('/logout', async (req, res) => {
 });
 
 // ─── POST /api/auth/forgot-password ──────────────────────────
+// Sends a WiamApp-branded Resend email (not Supabase Auth mailer).
 router.post('/forgot-password', async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) return res.status(400).json({ error: 'Email is required.' });
-    const { error } = await supabaseAdmin.auth.resetPasswordForEmail(email, {
-      redirectTo: 'https://wiamapp.com/reset-password',
+
+    const cleanEmail = String(email).trim().toLowerCase();
+    const redirectTo = process.env.PASSWORD_RESET_REDIRECT_URL
+      || 'https://wiamapp.com/reset-password';
+
+    // Always respond success to avoid email enumeration
+    const { data, error } = await supabaseAdmin.auth.admin.generateLink({
+      type: 'recovery',
+      email: cleanEmail,
+      options: { redirectTo },
     });
-    if (error) throw error;
-    res.json({ success: true, message: 'Password reset email sent.' });
+
+    if (error) {
+      // User may not exist — still return success
+      console.warn('[forgot-password]', error.message);
+      return res.json({ success: true, message: 'If that email is registered, a reset link is on its way.' });
+    }
+
+    const actionLink = data?.properties?.action_link;
+    if (!actionLink) {
+      console.warn('[forgot-password] No action_link returned');
+      return res.json({ success: true, message: 'If that email is registered, a reset link is on its way.' });
+    }
+
+    // Force production reset page — never leave users on localhost Site URL
+    let finalLink = actionLink;
+    try {
+      const u = new URL(actionLink);
+      u.searchParams.set('redirect_to', redirectTo);
+      finalLink = u.toString();
+    } catch {
+      finalLink = actionLink;
+    }
+
+    const { sendPasswordResetEmail } = await import('../lib/resend.js');
+    await sendPasswordResetEmail(cleanEmail, finalLink);
+
+    res.json({ success: true, message: 'If that email is registered, a reset link is on its way.' });
   } catch (err) {
     res.status(400).json({ success: false, error: err.message });
   }

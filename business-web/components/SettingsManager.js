@@ -44,10 +44,20 @@ export default function SettingsManager({ initialPrefs, userEmail }) {
   };
 
   const handlePasswordReset = async () => {
-    await supabase.auth.resetPasswordForEmail(userEmail, {
-      redirectTo: `${window.location.origin}/login`,
-    });
-    setResetSent(true);
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/auth/forgot-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: userEmail }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Could not send reset email.');
+      }
+      setResetSent(true);
+    } catch (err) {
+      alert(err.message || 'Could not send reset email.');
+    }
   };
 
   const handleDeactivate = async () => {
