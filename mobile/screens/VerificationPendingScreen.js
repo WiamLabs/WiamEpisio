@@ -1,27 +1,26 @@
 // © 2026 WiamApp. Powered by WiamLabs
 // screens/VerificationPendingScreen.js
-// Shown after worker submits verification docs
-// Worker can browse but cannot accept jobs yet
+// Shown ONLY after worker actually submits ID + selfie to the admin queue
 
 import React, { useEffect } from 'react';
 import { useAuth } from '../lib/AuthContext';
 import { supabase } from '../lib/supabase';
 import {
-  View, Text, TouchableOpacity, StyleSheet, StatusBar, Image,
+  View, Text, TouchableOpacity, StyleSheet, StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import BrandLogo from '../components/BrandLogo';
 
-const LOGO  = require('../assets/logo.png');
 const BG    = '#0D0D2B';
 const GOLD  = '#D4A017';
 const WHITE = '#FFFFFF';
 const MUTED = 'rgba(255,255,255,0.45)';
 
 export default function VerificationPendingScreen({ navigation, route }) {
-  const { user, profile, refreshUser } = useAuth();
+  const { user, refreshUser } = useAuth();
+  const email = route?.params?.email || user?.email || '';
 
-  // ✅ Poll every 30 seconds — auto-navigate when admin approves worker
   useEffect(() => {
     if (!user?.id) return;
     const check = async () => {
@@ -37,20 +36,18 @@ export default function VerificationPendingScreen({ navigation, route }) {
         }
       } catch {}
     };
-    check(); // Check immediately on mount
-    const interval = setInterval(check, 30000); // Then every 30s
+    check();
+    const interval = setInterval(check, 30000);
     return () => clearInterval(interval);
   }, [user?.id]);
-  const { email, role } = route?.params || {};
 
   return (
     <SafeAreaView style={s.safe}>
       <StatusBar barStyle="light-content" backgroundColor={BG} />
       <View style={s.container}>
 
-        <Image source={LOGO} style={s.logo} resizeMode="contain" />
+        <BrandLogo size="md" />
 
-        {/* Pending icon */}
         <View style={s.iconWrap}>
           <Ionicons name="time-outline" size={40} color={GOLD} />
         </View>
@@ -62,7 +59,6 @@ export default function VerificationPendingScreen({ navigation, route }) {
           We will notify you by email and in-app when done.
         </Text>
 
-        {/* Status card */}
         <View style={s.statusCard}>
           <View style={s.statusRow}>
             <View style={[s.statusDot, s.statusDotDone]} />
@@ -84,7 +80,6 @@ export default function VerificationPendingScreen({ navigation, route }) {
           </View>
         </View>
 
-        {/* What you can do now */}
         <View style={s.canDoCard}>
           <Text style={s.canDoTitle}>While you wait</Text>
           <View style={s.canDoRow}>
@@ -107,7 +102,6 @@ export default function VerificationPendingScreen({ navigation, route }) {
           </View>
         </View>
 
-        {/* Browse button */}
         <TouchableOpacity
           style={s.browseBtn}
           onPress={() => navigation.replace('WorkerApp')}
@@ -117,9 +111,11 @@ export default function VerificationPendingScreen({ navigation, route }) {
           <Ionicons name="arrow-forward" size={16} color={BG} style={{ marginLeft: 6 }} />
         </TouchableOpacity>
 
-        <Text style={s.emailNote}>
-          Confirmation sent to <Text style={s.emailHighlight}>{email}</Text>
-        </Text>
+        {email ? (
+          <Text style={s.emailNote}>
+            Confirmation sent to <Text style={s.emailHighlight}>{email}</Text>
+          </Text>
+        ) : null}
 
         <Text style={s.copyright}>© 2026 WiamApp · Powered by WiamLabs</Text>
       </View>
@@ -133,7 +129,6 @@ const s = StyleSheet.create({
     flex: 1, paddingHorizontal: 24,
     alignItems: 'center', justifyContent: 'center', paddingBottom: 30,
   },
-  logo: { width: 48, height: 48, marginBottom: 20 },
   iconWrap: {
     width: 72, height: 72, borderRadius: 22,
     backgroundColor: 'rgba(212,160,23,0.10)',

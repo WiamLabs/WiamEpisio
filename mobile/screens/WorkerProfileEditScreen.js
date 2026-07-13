@@ -240,9 +240,29 @@ export default function WorkerProfileEditScreen({ navigation }) {
     { icon: 'cash-outline',             label: 'Earnings',            screen: 'Earnings' },
     { icon: 'card-outline',             label: 'Subscription',        screen: 'Subscription' },
     { icon: 'shield-outline',           label: 'Safety & SOS',        screen: 'WorkerSafety' },
-    { icon: 'shield-checkmark-outline', label: 'Verification Status', screen: 'VerificationPending' },
+    { icon: 'shield-checkmark-outline', label: 'Verification Status', screen: null, action: 'verification' },
     { icon: 'settings-outline',         label: 'Settings',            screen: 'WorkerSettings' },
   ];
+
+  const openMenuItem = async (item) => {
+    if (item.action === 'verification') {
+      try {
+        const { data: ver } = await supabase
+          .from('worker_verifications')
+          .select('status')
+          .eq('user_id', user?.id)
+          .maybeSingle();
+        if (ver?.status === 'pending') navigation.navigate('VerificationPending');
+        else if (ver?.status === 'rejected') navigation.navigate('VerificationRejected');
+        else if (profile?.is_verified) navigation.navigate('VerificationApproved');
+        else navigation.navigate('WorkerVerifyIntro');
+      } catch {
+        navigation.navigate('WorkerVerifyIntro');
+      }
+      return;
+    }
+    if (item.screen) navigation.navigate(item.screen);
+  };
 
   const identityStatus = profile?.is_verified ? 'Identity Confirmed' : 'Pending Review';
   const identityColor  = profile?.is_verified ? Colors.success : Colors.warning;
@@ -471,7 +491,7 @@ export default function WorkerProfileEditScreen({ navigation }) {
               <TouchableOpacity
                 key={item.label}
                 style={[s.menuRow, i === menuItems.length - 1 && { borderBottomWidth: 0 }]}
-                onPress={() => navigation.navigate(item.screen)}
+                onPress={() => openMenuItem(item)}
               >
                 <View style={s.menuIconBox}>
                   <Ionicons name={item.icon} size={18} color={GOLD} />

@@ -11,8 +11,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import BrandLogo from '../components/BrandLogo';
 
-const LOGO    = require('../assets/logo.png');
 const BG      = '#0D0D2B';
 const GOLD    = '#D4A017';
 const WHITE   = '#FFFFFF';
@@ -70,7 +70,7 @@ export default function ResetPasswordScreen({ navigation, route }) {
       <SafeAreaView style={s.safe}>
         <StatusBar barStyle="light-content" backgroundColor={BG} />
         <View style={s.container}>
-          <Image source={LOGO} style={s.logo} resizeMode="contain" />
+          <BrandLogo size="md" />
           <View style={s.iconWrap}>
             <Ionicons name="checkmark-circle-outline" size={40} color="#22C55E" />
           </View>
@@ -97,7 +97,7 @@ export default function ResetPasswordScreen({ navigation, route }) {
       <StatusBar barStyle="light-content" backgroundColor={BG} />
       <View style={s.container}>
 
-        <Image source={LOGO} style={s.logo} resizeMode="contain" />
+        <BrandLogo size="md" />
 
         <View style={s.iconWrap}>
           <Ionicons name="lock-closed-outline" size={32} color={GOLD} />

@@ -5,15 +5,15 @@
 import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
-  StyleSheet,  StatusBar,
-  Image, ActivityIndicator, KeyboardAvoidingView,
+  StyleSheet, StatusBar,
+  ActivityIndicator, KeyboardAvoidingView,
   Platform, ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
+import BrandLogo from '../components/BrandLogo';
 
-const LOGO    = require('../assets/logo.png');
 const BG      = '#0D0D2B';
 const GOLD    = '#D4A017';
 const WHITE   = '#FFFFFF';
@@ -35,9 +35,9 @@ export default function LoginScreen({ navigation }) {
     setLoading(true);
     setError('');
     try {
-      // ✅ FIX: Sign in directly with Supabase — no backend call needed
+      const cleanEmail = email.trim().toLowerCase();
       const { data, error: authError } = await supabase.auth.signInWithPassword({
-        email:    email.trim().toLowerCase(),
+        email:    cleanEmail,
         password: password,
       });
 
@@ -50,7 +50,6 @@ export default function LoginScreen({ navigation }) {
       const userId = data.user?.id;
       if (!userId) throw new Error('Login failed. Please try again.');
 
-      // Get user role and verification status from users table
       const { data: userData, error: userErr } = await supabase
         .from('users')
         .select('role, is_verified, full_name')
@@ -61,21 +60,42 @@ export default function LoginScreen({ navigation }) {
 
       const role = userData.role;
 
-      // Navigate based on role
       if (role === 'worker') {
-        if (!userData.is_verified) {
-          navigation.replace('VerificationPending');
-        } else {
+        if (userData.is_verified) {
           navigation.replace('WorkerApp');
+        } else {
+          // Only show "submitted" if docs are actually in the admin queue
+          const { data: ver } = await supabase
+            .from('worker_verifications')
+            .select('status')
+            .eq('user_id', userId)
+            .maybeSingle();
+          if (ver?.status === 'pending') {
+            navigation.replace('VerificationPending', { email: cleanEmail });
+          } else if (ver?.status === 'rejected') {
+            navigation.replace('VerificationRejected', { email: cleanEmail });
+          } else {
+            // No docs yet (or still uploading) — start verification, don't claim submitted
+            navigation.replace('WorkerVerifyIntro', { email: cleanEmail });
+          }
         }
       } else if (role === 'business') {
         navigation.replace('BusinessApp');
       } else {
         // Customer
-        if (!userData.is_verified) {
-          navigation.replace('CustomerVerifyIntro');
-        } else {
+        if (userData.is_verified) {
           navigation.replace('CustomerApp');
+        } else {
+          const { data: cust } = await supabase
+            .from('users')
+            .select('customer_verification_status')
+            .eq('id', userId)
+            .maybeSingle();
+          if (cust?.customer_verification_status === 'pending') {
+            navigation.replace('CustomerVerifyPending', { email: cleanEmail });
+          } else {
+            navigation.replace('CustomerVerifyIntro', { email: cleanEmail });
+          }
         }
       }
 
@@ -102,7 +122,7 @@ export default function LoginScreen({ navigation }) {
 
           {/* Logo */}
           <View style={s.brand}>
-            <Image source={LOGO} style={s.logo} resizeMode="contain" />
+            <BrandLogo size="md" style={{ marginBottom: 10 }} />
             <Text style={s.brandName}>
               <Text style={{ color: WHITE }}>Wiam</Text>
               <Text style={{ color: GOLD }}>App</Text>
@@ -201,7 +221,6 @@ const s = StyleSheet.create({
   backBtn:   { marginTop: 16, marginBottom: 8, width: 40 },
 
   brand:     { alignItems: 'center', marginBottom: 20 },
-  logo:      { width: 56, height: 56, marginBottom: 10 },
   brandName: { fontSize: 24, fontWeight: '800', letterSpacing: 0.5 },
 
   title:    { color: WHITE, fontSize: 22, fontWeight: '700', marginBottom: 6 },

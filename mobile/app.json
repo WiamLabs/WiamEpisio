@@ -86,7 +86,8 @@
           "color": "#D4A017",
           "sounds": []
         }
-      ]
+      ],
+      "expo-audio"
     ],
     "extra": {
       "eas": {

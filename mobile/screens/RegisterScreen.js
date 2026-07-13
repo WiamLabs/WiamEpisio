@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import BrandLogo from '../components/BrandLogo';
 import { COUNTRIES, DEFAULT_COUNTRY } from '../constants/countries';
 import { searchWiamAppSkills, resolveWiamAppSkill } from '../constants/skills';
 import { confirmLocationSetup } from '../lib/locationWarning';
@@ -22,7 +23,6 @@ import * as Location from 'expo-location';
 
 const BACKEND = process.env.EXPO_PUBLIC_BACKEND_URL;
 
-const LOGO    = require('../assets/logo.png');
 const BG      = '#0D0D2B';
 const GOLD    = '#D4A017';
 const WHITE   = '#FFFFFF';
@@ -452,7 +452,7 @@ export default function RegisterScreen({ navigation }) {
 
           {/* Logo */}
           <View style={s.brand}>
-            <Image source={LOGO} style={s.logo} resizeMode="contain" />
+            <BrandLogo size="md" />
             <Text style={s.brandName}>
               <Text style={{ color: WHITE }}>Wiam</Text>
               <Text style={{ color: GOLD }}>App</Text>

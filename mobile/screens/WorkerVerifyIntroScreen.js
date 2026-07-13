@@ -9,8 +9,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import BrandLogo from '../components/BrandLogo';
 
-const LOGO  = require('../assets/logo.png');
 const BG    = '#0D0D2B';
 const GOLD  = '#D4A017';
 const WHITE = '#FFFFFF';
@@ -38,7 +38,7 @@ export default function WorkerVerifyIntroScreen({ navigation, route }) {
 
         {/* Logo */}
         <View style={s.brand}>
-          <Image source={LOGO} style={s.logo} resizeMode="contain" />
+          <BrandLogo size="md" />
         </View>
 
         {/* Shield icon */}

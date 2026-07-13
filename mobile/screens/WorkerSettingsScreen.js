@@ -425,7 +425,31 @@ export default function WorkerSettingsScreen({ navigation }) {
         <View style={s.card}>
           <Row icon="calendar-outline"         label="Availability"         sub="Set your working days & hours"    onPress={() => navigation.navigate('AvailabilityCalendar')} />
           <View style={s.div} />
-          <Row icon="shield-checkmark-outline" label="Verification Status"  sub="View your ID & selfie status"     onPress={() => navigation.navigate('VerificationPending')} />
+          <Row
+            icon="shield-checkmark-outline"
+            label="Verification Status"
+            sub="View your ID & selfie status"
+            onPress={async () => {
+              try {
+                const { data: ver } = await supabase
+                  .from('worker_verifications')
+                  .select('status')
+                  .eq('user_id', user?.id)
+                  .maybeSingle();
+                if (ver?.status === 'pending') {
+                  navigation.navigate('VerificationPending');
+                } else if (ver?.status === 'rejected') {
+                  navigation.navigate('VerificationRejected');
+                } else if (profile?.is_verified) {
+                  navigation.navigate('VerificationApproved');
+                } else {
+                  navigation.navigate('WorkerVerifyIntro');
+                }
+              } catch {
+                navigation.navigate('WorkerVerifyIntro');
+              }
+            }}
+          />
           <View style={s.div} />
           <Row icon="lock-closed-outline"      label="Change Password"                                             onPress={() => navigation.navigate('ForgotPassword')} />
           <View style={s.div} />

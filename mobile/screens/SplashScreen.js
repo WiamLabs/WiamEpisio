@@ -5,12 +5,12 @@
 import React, { useEffect, useRef } from 'react';
 import {
   View, Text, Animated, StyleSheet,
-  Dimensions, StatusBar, Image,
+  Dimensions, StatusBar,
 } from 'react-native';
 import { Colors } from '../constants/colors';
+import BrandLogo from '../components/BrandLogo';
 
 const { width } = Dimensions.get('window');
-const LOGO = require('../assets/logo.png');
 
 export default function SplashScreen({ navigation }) {
   const logoY       = useRef(new Animated.Value(0)).current;
@@ -108,11 +108,7 @@ export default function SplashScreen({ navigation }) {
           ],
         },
       ]}>
-        <Image
-          source={LOGO}
-          style={styles.logo}
-          resizeMode="contain"
-        />
+        <BrandLogo size="xl" style={{ marginBottom: 0 }} />
       </Animated.View>
 
       {/* App name + tagline */}

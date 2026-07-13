@@ -9,9 +9,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import BrandLogo from '../components/BrandLogo';
 
 const { width } = Dimensions.get('window');
-const LOGO   = require('../assets/logo.png');
 
 const BG       = '#0D0D2B';
 const CARD     = 'rgba(255,255,255,0.05)';
@@ -113,7 +113,7 @@ export default function LandingScreen({ navigation }) {
         <Animated.View style={[s.hero, { opacity: fade, transform: [{ translateY: slideY }] }]}>
 
           {/* Logo centered at top — large */}
-          <Image source={LOGO} style={s.heroLogo} resizeMode="contain" />
+          <BrandLogo size="lg" style={{ marginBottom: 14 }} />
 
           {/* WiamApp name — Wiam white App gold */}
           <Text style={s.heroName}>

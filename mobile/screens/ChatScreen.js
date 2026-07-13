@@ -9,7 +9,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Audio } from 'expo-av';
+import {
+  useAudioRecorder,
+  RecordingPresets,
+  AudioModule,
+  setAudioModeAsync,
+} from 'expo-audio';
 import { Colors } from '../constants/colors';
 import { useAuth } from '../lib/AuthContext';
 import { getMessages, sendMessage, sendVoiceMessage, markMessagesAsRead, subscribeToMessages } from '../lib/api/messages';
@@ -26,6 +31,7 @@ const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 export default function ChatScreen({ navigation, route }) {
   const { bookingId, workerName, workerId } = route.params || {};
   const { user } = useAuth();
+  const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
 
   const [messages,  setMessages]  = useState([]);
   const [text,      setText]      = useState('');
@@ -35,7 +41,6 @@ export default function ChatScreen({ navigation, route }) {
   const flatRef = useRef(null);
 
   // Voice recording state
-  const [recording,       setRecording]       = useState(null);
   const [isRecording,     setIsRecording]     = useState(false);
   const [recordingMillis, setRecordingMillis] = useState(0);
   const [sendingVoice,    setSendingVoice]    = useState(false);
@@ -196,25 +201,22 @@ export default function ChatScreen({ navigation, route }) {
 
   const startRecording = async () => {
     try {
-      const { status } = await Audio.requestPermissionsAsync();
-      if (status !== 'granted') {
+      const permission = await AudioModule.requestRecordingPermissionsAsync();
+      if (!permission.granted) {
         Alert.alert('Microphone needed', 'Allow microphone access to send voice messages.');
         return;
       }
 
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: true,
-        playsInSilentModeIOS: true,
+      await setAudioModeAsync({
+        allowsRecording: true,
+        playsInSilentMode: true,
       });
 
-      const { recording: rec } = await Audio.Recording.createAsync(
-        Audio.RecordingOptionsPresets.HIGH_QUALITY
-      );
-      setRecording(rec);
+      await recorder.prepareToRecordAsync();
+      recorder.record();
       setIsRecording(true);
       setRecordingMillis(0);
 
-      // Live timer — updates every second so the user can see duration
       recordingTimer.current = setInterval(() => {
         setRecordingMillis(prev => prev + 1000);
       }, 1000);
@@ -224,23 +226,21 @@ export default function ChatScreen({ navigation, route }) {
   };
 
   const stopAndSend = async () => {
-    if (!recording) return;
+    if (!isRecording) return;
 
     clearInterval(recordingTimer.current);
     setIsRecording(false);
     setSendingVoice(true);
 
     try {
-      await recording.stopAndUnloadAsync();
-      await Audio.setAudioModeAsync({ allowsRecordingIOS: false });
+      await recorder.stop();
+      await setAudioModeAsync({ allowsRecording: false });
 
-      const uri = recording.getURI();
-      setRecording(null);
+      const uri = recorder.uri;
       setRecordingMillis(0);
 
       if (!uri) throw new Error('Recording URI is empty — try again.');
 
-      // Upload to R2 via the existing backend uploads route
       const { data: { session } } = await supabase.auth.getSession();
       const formData = new FormData();
       formData.append('file', {
@@ -274,12 +274,11 @@ export default function ChatScreen({ navigation, route }) {
   };
 
   const cancelRecording = async () => {
-    if (!recording) return;
+    if (!isRecording) return;
     clearInterval(recordingTimer.current);
     try {
-      await recording.stopAndUnloadAsync();
+      await recorder.stop();
     } catch {}
-    setRecording(null);
     setIsRecording(false);
     setRecordingMillis(0);
   };

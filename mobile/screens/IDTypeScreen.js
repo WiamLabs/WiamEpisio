@@ -9,9 +9,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import BrandLogo from '../components/BrandLogo';
 import { Colors } from '../constants/colors';
 
-const LOGO  = require('../assets/logo.png');
 const NAVY  = Colors.navyDeep;
 const GOLD  = Colors.gold;
 const WHITE = Colors.white;
@@ -99,7 +99,7 @@ export default function IDTypeScreen({ navigation, route }) {
 
         {/* Logo */}
         <View style={s.brand}>
-          <Image source={LOGO} style={s.logo} resizeMode="contain" />
+          <BrandLogo size="md" />
         </View>
 
         {/* Progress bar — step 2 of 4 */}

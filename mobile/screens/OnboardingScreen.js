@@ -7,9 +7,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import BrandLogo from '../components/BrandLogo';
 
 const { height } = Dimensions.get('window');
-const LOGO = require('../assets/logo.png');
 
 const BG      = '#0D0D2B';
 const GOLD    = '#D4A017';
@@ -56,7 +56,7 @@ export default function OnboardingScreen({ navigation }) {
 
         {/* Logo + name */}
         <View style={s.brand}>
-          <Image source={LOGO} style={s.logo} resizeMode="contain" />
+          <BrandLogo size="md" />
           <Text style={s.brandName}>
             <Text style={{ color: WHITE }}>Wiam</Text>
             <Text style={{ color: GOLD }}>App</Text>
