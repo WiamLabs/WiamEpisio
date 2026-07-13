@@ -1,7 +1,13 @@
 ﻿-- ============================================================
 -- WIAMAPP — RUN ALL MIGRATIONS (single file)
 -- Paste this WHOLE file into Supabase -> SQL Editor -> Run.
--- IMPORTANT: run ONCE on a FRESH Supabase project.
+-- IMPORTANT: run ONCE on a FRESH Supabase project ONLY.
+--
+-- DO NOT run this on a database where you already applied
+-- individual migrations (017, 018, 019, 028, etc.). It will
+-- conflict with the live schema and fail (e.g. missing
+-- worker_id / owner_id / trust_count). Keep going with the
+-- next numbered file in database/migrations/ instead.
 -- © 2026 WiamApp. Powered by WiamLabs
 -- ============================================================
 
