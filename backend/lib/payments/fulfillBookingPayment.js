@@ -3,9 +3,10 @@
 
 import { supabaseAdmin } from '../supabaseAdmin.js';
 import { localToUsd } from '../exchangeRates.js';
+import { sendBookingEmail } from '../resend.js';
 
 /**
- * Mark payment + booking paid/escrow and notify both parties.
+ * Mark payment + booking paid/escrow and notify both parties (in-app + Brevo email).
  * Used by Paystack + Stripe webhooks (and verify fallbacks).
  */
 export async function fulfillBookingPayment({
@@ -89,6 +90,36 @@ export async function fulfillBookingPayment({
         provider,
       },
     });
+
+    // Brevo confirmation emails (best-effort — never block fulfillment)
+    try {
+      const userIds = [booking.customer_id, workerUserId].filter(Boolean);
+      const { data: users } = await supabaseAdmin
+        .from('users')
+        .select('id, email, full_name')
+        .in('id', userIds);
+
+      const byId = Object.fromEntries((users || []).map((u) => [u.id, u]));
+      const amountLabel = `${cur} ${Number(major).toFixed(2)}`;
+
+      const customer = byId[booking.customer_id];
+      if (customer?.email) {
+        await sendBookingEmail(customer.email, customer.full_name, {
+          title: 'Payment confirmed — WiamApp',
+          message: `Your payment of <strong>${amountLabel}</strong> is held safely in escrow. The worker's contact is now available in the app. Open WiamApp to view this booking.`,
+        });
+      }
+
+      const worker = workerUserId ? byId[workerUserId] : null;
+      if (worker?.email) {
+        await sendBookingEmail(worker.email, worker.full_name, {
+          title: 'Payment received — WiamApp',
+          message: `A customer paid <strong>${amountLabel}</strong> for your booking. Funds are held in escrow until the job is completed. Open WiamApp to view details and contact the customer.`,
+        });
+      }
+    } catch (emailErr) {
+      console.error('[fulfillBookingPayment] email failed:', emailErr.message);
+    }
   }
 
   return { ok: true, bookingId: payment.booking_id };

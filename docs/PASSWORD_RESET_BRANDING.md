@@ -22,7 +22,14 @@ Verify the sender in Brevo → **Senders, Domains & Dedicated IPs**.
 
 OTP, verification, bookings, and password-reset emails go through `backend/lib/resend.js` → Brevo only.
 
+### Password reset (two paths, same email)
+1. **In the app:** code in the Brevo email → `ResetPasswordScreen` → `POST /api/auth/reset-password`
+2. **On the web:** link in the same email → `https://wiamapp.com/reset-password`
+
 Password reset does **not** use Supabase’s mailer — users should not see “Supabase Auth”.
+
+### Booking confirmation emails
+Fired from `fulfillBookingPayment` (Paystack webhook, Stripe webhook, and payment verify) to customer + worker via Brevo.
 
 ## Fix the localhost reset link (one-time in Supabase)
 Auth → **URL Configuration**:

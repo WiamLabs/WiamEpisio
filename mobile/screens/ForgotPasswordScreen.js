@@ -4,7 +4,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
-  StyleSheet,  StatusBar,
+  StyleSheet, StatusBar,
   Image, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -22,7 +22,6 @@ const BACKEND = process.env.EXPO_PUBLIC_BACKEND_URL;
 export default function ForgotPasswordScreen({ navigation }) {
   const [email,   setEmail]   = useState('');
   const [loading, setLoading] = useState(false);
-  const [sent,    setSent]    = useState(false);
   const [error,   setError]   = useState('');
 
   const handleSend = async () => {
@@ -33,39 +32,17 @@ export default function ForgotPasswordScreen({ navigation }) {
       const res  = await fetch(`${BACKEND}/api/auth/forgot-password`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ email }),
+        body:    JSON.stringify({ email: email.trim().toLowerCase() }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Could not send reset email.');
-      setSent(true);
+      navigation.navigate('ResetPassword', { email: email.trim().toLowerCase() });
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
   };
-
-  if (sent) {
-    return (
-      <SafeAreaView style={s.safe}>
-        <StatusBar barStyle="light-content" backgroundColor={BG} />
-        <View style={s.container}>
-          <Image source={LOGO} style={s.logo} resizeMode="contain" />
-          <View style={s.iconWrap}>
-            <Ionicons name="checkmark-circle-outline" size={36} color="#22C55E" />
-          </View>
-          <Text style={s.title}>Email sent</Text>
-          <Text style={s.subtitle}>
-            Check <Text style={s.highlight}>{email}</Text> for a password reset link.
-            {'\n\n'}The link expires in 15 minutes.
-          </Text>
-          <TouchableOpacity style={s.btn} onPress={() => navigation.navigate('Login')}>
-            <Text style={s.btnText}>Back to Log In</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-    );
-  }
 
   return (
     <SafeAreaView style={s.safe}>
@@ -83,7 +60,7 @@ export default function ForgotPasswordScreen({ navigation }) {
 
         <Text style={s.title}>Forgot password?</Text>
         <Text style={s.subtitle}>
-          Enter your email address and we will send you a link to reset your password.
+          Enter your email and we will send a 6-digit code (and a web link) to reset your password.
         </Text>
 
         <Text style={s.label}>Email address</Text>
@@ -97,6 +74,7 @@ export default function ForgotPasswordScreen({ navigation }) {
             onChangeText={setEmail}
             keyboardType="email-address"
             autoCapitalize="none"
+            autoCorrect={false}
           />
         </View>
 
@@ -115,7 +93,7 @@ export default function ForgotPasswordScreen({ navigation }) {
         >
           {loading
             ? <ActivityIndicator color={BG} />
-            : <Text style={s.btnText}>Send Reset Link</Text>
+            : <Text style={s.btnText}>Send Reset Code</Text>
           }
         </TouchableOpacity>
 
@@ -146,7 +124,6 @@ const s = StyleSheet.create({
   },
   title:     { color: WHITE, fontSize: 22, fontWeight: '700', marginBottom: 8, textAlign: 'center' },
   subtitle:  { color: MUTED, fontSize: 13, textAlign: 'center', lineHeight: 21, marginBottom: 28 },
-  highlight: { color: GOLD, fontWeight: '600' },
   label: {
     color: 'rgba(255,255,255,0.55)', fontSize: 12,
     fontWeight: '500', marginBottom: 7, letterSpacing: 0.3, alignSelf: 'flex-start',

@@ -4,7 +4,6 @@
 
 import { Router } from 'express';
 import { supabaseAdmin } from '../lib/supabaseAdmin.js';
-import { sendBookingEmail } from '../lib/resend.js';
 import { localToUsd } from '../lib/exchangeRates.js';
 import { constructStripeWebhookEvent } from '../lib/payments/stripeProvider.js';
 import { fulfillBookingPayment } from '../lib/payments/fulfillBookingPayment.js';
@@ -203,64 +202,13 @@ router.post('/paystack', async (req, res) => {
         return res.json({ received: true });
       }
 
-      // Handle booking payment
+      // Handle booking payment (escrow + in-app notify + Brevo emails)
       if (metadata?.payment_type === 'booking') {
-        const booking = payment.bookings;
-        const workerUserId = booking.worker_profiles?.user_id;
-
-        // Update payment to escrow status
-        await supabaseAdmin
-          .from('payments')
-          .update({
-            payment_status: 'escrow',
-            amount_usd: await localToUsd(amount / 100, currency),
-          })
-          .eq('id', payment.id);
-
-        // Reveal phone numbers to both parties
-        // (The phone numbers are already in the database — we just
-        //  update the booking to show them are now accessible)
-        await supabaseAdmin
-          .from('bookings')
-          .update({
-            payment_status: 'paid',
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', booking.id);
-
-        // Notify both parties
-        const paymentNotifications = [
-          {
-            user_id: booking.customer_id,
-            title: 'Payment confirmed ✅',
-            body: "Your payment is held safely. The worker's contact is now available.",
-            type: 'payment',
-            data: { booking_id: booking.id },
-          },
-        ];
-        if (workerUserId) {
-          paymentNotifications.push({
-            user_id: workerUserId,
-            title: 'Customer payment received 💰',
-            body: 'Payment is held in escrow. Complete the job to receive your earnings.',
-            type: 'payment',
-            data: { booking_id: booking.id },
-          });
-        } else {
-          console.error(`No worker_profiles.user_id found for booking ${booking.id} — worker was not notified of payment`);
-        }
-        await supabaseAdmin.from('notifications').insert(paymentNotifications);
-
-        // Log it
-        await supabaseAdmin.from('audit_logs').insert({
-          user_id: booking.customer_id,
-          action: 'booking_payment_success',
-          metadata: {
-            booking_id: booking.id,
-            amount,
-            currency,
-            reference,
-          },
+        await fulfillBookingPayment({
+          reference,
+          amountMinor: amount,
+          currency,
+          provider: 'paystack',
         });
       }
 

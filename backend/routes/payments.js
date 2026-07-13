@@ -7,6 +7,7 @@ import { usdToLocal } from '../lib/exchangeRates.js';
 import { resolvePaymentProvider, listPaymentProviders } from '../lib/payments/resolveProvider.js';
 import { initiatePaystackCheckout, verifyPaystackPayment } from '../lib/payments/paystackProvider.js';
 import { initiateStripeCheckout, verifyStripePayment } from '../lib/payments/stripeProvider.js';
+import { fulfillBookingPayment } from '../lib/payments/fulfillBookingPayment.js';
 
 const router = Router();
 
@@ -115,15 +116,12 @@ router.get('/verify/:reference', async (req, res) => {
       : await verifyPaystackPayment(reference);
 
     if (result.success) {
-      await supabaseAdmin
-        .from('payments')
-        .update({ payment_status: 'success', payment_method: result.provider })
-        .eq('transaction_ref', result.raw?.client_reference_id || reference);
-      // Prefer exact reference match
-      await supabaseAdmin
-        .from('payments')
-        .update({ payment_status: 'success', payment_method: result.provider })
-        .eq('transaction_ref', reference);
+      await fulfillBookingPayment({
+        reference,
+        amountMinor: result.amountMinor,
+        currency: result.currency,
+        provider: result.provider,
+      });
     } else {
       await supabaseAdmin
         .from('payments')
@@ -192,10 +190,19 @@ router.get('/paystack/verify/:reference', async (req, res) => {
     await verifyUserToken(req.headers.authorization);
     const result = await verifyPaystackPayment(req.params.reference);
 
-    await supabaseAdmin
-      .from('payments')
-      .update({ payment_status: result.success ? 'success' : 'failed' })
-      .eq('transaction_ref', req.params.reference);
+    if (result.success) {
+      await fulfillBookingPayment({
+        reference: req.params.reference,
+        amountMinor: result.amountMinor,
+        currency: result.currency,
+        provider: 'paystack',
+      });
+    } else {
+      await supabaseAdmin
+        .from('payments')
+        .update({ payment_status: 'failed' })
+        .eq('transaction_ref', req.params.reference);
+    }
 
     res.json({ success: result.success, status: result.status, provider: 'paystack' });
   } catch (err) {

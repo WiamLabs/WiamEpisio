@@ -151,21 +151,29 @@ export async function sendBookingEmail(email, fullName, details = {}) {
 }
 
 // ─── Password reset (WiamApp-branded — never send via Supabase mailer) ──
-export async function sendPasswordResetEmail(email, resetUrl) {
+// App: use the 6-digit code on ResetPasswordScreen.
+// Web: use the link → https://wiamapp.com/reset-password
+export async function sendPasswordResetEmail(email, resetUrl, code) {
+  const codeBlock = code
+    ? `<p>Or enter this code in the WiamApp:</p>
+       <p style="font-size:32px;font-weight:700;letter-spacing:6px;color:#0D0D2B;margin:12px 0 24px;">${code}</p>`
+    : '';
+
   return sendEmail({
     to: email,
     subject: 'Reset your WiamApp password',
     html: layout(
       'Reset your password',
       `<p>We received a request to reset the password for your WiamApp account.</p>
+       ${codeBlock}
        <p style="margin:24px 0;">
          <a href="${resetUrl}"
             style="display:inline-block;background:#D4A017;color:#0D0D2B;font-weight:700;text-decoration:none;padding:14px 22px;border-radius:10px;">
-           Choose a new password
+           Choose a new password on the web
          </a>
        </p>
        <p style="font-size:13px;color:#6b7280;line-height:1.5;">
-         This link expires soon. If you did not request a reset, you can ignore this email — your password stays the same.
+         The code and link expire in about 15 minutes. If you did not request a reset, ignore this email — your password stays the same.
        </p>
        <p style="font-size:12px;color:#9ca3af;word-break:break-all;">Or open this link:<br/>${resetUrl}</p>`
     ),

@@ -324,6 +324,7 @@ router.post('/logout', async (req, res) => {
 
 // ─── POST /api/auth/forgot-password ──────────────────────────
 // Sends a WiamApp-branded email via Brevo (not Supabase Auth mailer).
+// Includes a web recovery link + a 6-digit code for in-app reset.
 router.post('/forgot-password', async (req, res) => {
   try {
     const { email } = req.body;
@@ -341,7 +342,6 @@ router.post('/forgot-password', async (req, res) => {
     });
 
     if (error) {
-      // User may not exist — still return success
       console.warn('[forgot-password]', error.message);
       return res.json({ success: true, message: 'If that email is registered, a reset link is on its way.' });
     }
@@ -362,8 +362,18 @@ router.post('/forgot-password', async (req, res) => {
       finalLink = actionLink;
     }
 
+    // In-app OTP (same otp_codes table as email verification)
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+    await supabaseAdmin.from('otp_codes').update({ used: true }).eq('email', cleanEmail).eq('used', false);
+    await supabaseAdmin.from('otp_codes').insert({
+      email: cleanEmail,
+      code: otp,
+      expires_at: expiresAt.toISOString(),
+    });
+
     const { sendPasswordResetEmail } = await import('../lib/resend.js');
-    await sendPasswordResetEmail(cleanEmail, finalLink);
+    await sendPasswordResetEmail(cleanEmail, finalLink, otp);
 
     res.json({ success: true, message: 'If that email is registered, a reset link is on its way.' });
   } catch (err) {
@@ -371,6 +381,56 @@ router.post('/forgot-password', async (req, res) => {
   }
 });
 
+// ─── POST /api/auth/reset-password ───────────────────────────
+// In-app reset: email + OTP from Brevo email + new password.
+router.post('/reset-password', async (req, res) => {
+  try {
+    const email = String(req.body.email || '').trim().toLowerCase();
+    const code = String(req.body.code || req.body.token || '').trim();
+    const password = String(req.body.password || '');
+
+    if (!email || !code || !password) {
+      return res.status(400).json({ success: false, error: 'Email, code, and password are required.' });
+    }
+    if (password.length < 8) {
+      return res.status(400).json({ success: false, error: 'Password must be at least 8 characters.' });
+    }
+
+    const { data: otpRow, error: otpError } = await supabaseAdmin
+      .from('otp_codes')
+      .select('*')
+      .eq('email', email)
+      .eq('code', code)
+      .eq('used', false)
+      .gt('expires_at', new Date().toISOString())
+      .maybeSingle();
+
+    if (otpError || !otpRow) {
+      return res.status(400).json({ success: false, error: 'Invalid or expired reset code.' });
+    }
+
+    const { data: profile } = await supabaseAdmin
+      .from('users')
+      .select('id')
+      .eq('email', email)
+      .maybeSingle();
+
+    if (!profile?.id) {
+      return res.status(400).json({ success: false, error: 'Invalid or expired reset code.' });
+    }
+
+    const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(profile.id, {
+      password,
+    });
+    if (updateError) throw updateError;
+
+    await supabaseAdmin.from('otp_codes').update({ used: true }).eq('id', otpRow.id);
+
+    res.json({ success: true, message: 'Password updated. You can log in now.' });
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+});
 // ─── DELETE /api/auth/account ─────────────────────────────────
 router.post('/data-export-request', async (req, res) => {
   try {

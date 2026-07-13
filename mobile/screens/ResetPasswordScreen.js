@@ -1,12 +1,12 @@
 // © 2026 WiamApp. Powered by WiamLabs
 // screens/ResetPasswordScreen.js
-// User arrives here from email reset link
-// Backend: POST /api/auth/reset-password
+// After ForgotPassword: enter email code from Brevo + new password.
+// Backend: POST /api/auth/reset-password { email, code, password }
 
 import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
-  StyleSheet,  StatusBar,
+  StyleSheet, StatusBar,
   Image, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -22,18 +22,24 @@ const GOLD_BD = 'rgba(212,160,23,0.25)';
 const BACKEND = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 export default function ResetPasswordScreen({ navigation, route }) {
-  const { token } = route?.params || {};
+  const initialEmail = route?.params?.email || '';
 
-  const [password,        setPassword]        = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPassword,    setShowPassword]    = useState(false);
-  const [showConfirm,     setShowConfirm]     = useState(false);
-  const [loading,         setLoading]         = useState(false);
-  const [done,            setDone]            = useState(false);
-  const [error,           setError]           = useState('');
+  const [email,             setEmail]             = useState(initialEmail);
+  const [code,              setCode]              = useState('');
+  const [password,          setPassword]          = useState('');
+  const [confirmPassword,   setConfirmPassword]   = useState('');
+  const [showPassword,      setShowPassword]      = useState(false);
+  const [showConfirm,       setShowConfirm]       = useState(false);
+  const [loading,           setLoading]           = useState(false);
+  const [done,              setDone]              = useState(false);
+  const [error,             setError]             = useState('');
 
   const passwordsMatch = password && confirmPassword && password === confirmPassword;
-  const canSubmit      = password.length >= 8 && passwordsMatch;
+  const canSubmit =
+    email.trim()
+    && code.trim().length >= 6
+    && password.length >= 8
+    && passwordsMatch;
 
   const handleReset = async () => {
     if (!canSubmit || loading) return;
@@ -43,7 +49,11 @@ export default function ResetPasswordScreen({ navigation, route }) {
       const res  = await fetch(`${BACKEND}/api/auth/reset-password`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ token, password }),
+        body:    JSON.stringify({
+          email: email.trim().toLowerCase(),
+          code: code.trim(),
+          password,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Could not reset password.');
@@ -95,11 +105,39 @@ export default function ResetPasswordScreen({ navigation, route }) {
 
         <Text style={s.title}>Reset your password</Text>
         <Text style={s.subtitle}>
-          Create a new password for your WiamApp account.
-          Minimum 8 characters.
+          Enter the 6-digit code from your email, then choose a new password.
         </Text>
 
-        {/* New password */}
+        <Text style={s.label}>Email</Text>
+        <View style={s.inputWrap}>
+          <Ionicons name="mail-outline" size={17} color="rgba(255,255,255,0.35)" style={s.inputIcon} />
+          <TextInput
+            style={[s.input, { flex: 1 }]}
+            placeholder="you@example.com"
+            placeholderTextColor="rgba(255,255,255,0.2)"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+            editable={!initialEmail}
+          />
+        </View>
+
+        <Text style={s.label}>Reset code</Text>
+        <View style={s.inputWrap}>
+          <Ionicons name="keypad-outline" size={17} color="rgba(255,255,255,0.35)" style={s.inputIcon} />
+          <TextInput
+            style={[s.input, { flex: 1, letterSpacing: 4 }]}
+            placeholder="6-digit code"
+            placeholderTextColor="rgba(255,255,255,0.2)"
+            value={code}
+            onChangeText={setCode}
+            keyboardType="number-pad"
+            maxLength={6}
+          />
+        </View>
+
         <Text style={s.label}>New password</Text>
         <View style={s.inputWrap}>
           <Ionicons name="lock-closed-outline" size={17} color="rgba(255,255,255,0.35)" style={s.inputIcon} />
@@ -119,7 +157,6 @@ export default function ResetPasswordScreen({ navigation, route }) {
           </TouchableOpacity>
         </View>
 
-        {/* Confirm password */}
         <Text style={s.label}>Confirm new password</Text>
         <View style={[s.inputWrap, confirmPassword && !passwordsMatch && s.inputWrapError]}>
           <Ionicons name="lock-closed-outline" size={17} color="rgba(255,255,255,0.35)" style={s.inputIcon} />
@@ -139,7 +176,6 @@ export default function ResetPasswordScreen({ navigation, route }) {
           </TouchableOpacity>
         </View>
 
-        {/* Password match indicator */}
         {confirmPassword ? (
           <View style={s.matchRow}>
             <Ionicons
@@ -153,7 +189,6 @@ export default function ResetPasswordScreen({ navigation, route }) {
           </View>
         ) : null}
 
-        {/* Error */}
         {error ? (
           <View style={s.errorBox}>
             <Ionicons name="alert-circle-outline" size={14} color="#EF4444" />
@@ -161,7 +196,6 @@ export default function ResetPasswordScreen({ navigation, route }) {
           </View>
         ) : null}
 
-        {/* Submit button */}
         <TouchableOpacity
           style={[s.btn, (!canSubmit || loading) && s.btnDisabled]}
           onPress={handleReset}
@@ -177,8 +211,8 @@ export default function ResetPasswordScreen({ navigation, route }) {
           }
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-          <Text style={s.backText}>Back to Log In</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
+          <Text style={s.backText}>Resend code</Text>
         </TouchableOpacity>
 
         <Text style={s.copyright}>© 2026 WiamApp · Powered by WiamLabs</Text>
