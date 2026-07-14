@@ -355,56 +355,16 @@ router.post('/logout', async (req, res) => {
 // ─── POST /api/auth/forgot-password ──────────────────────────
 // Sends a WiamApp-branded email via Brevo (not Supabase Auth mailer).
 // Includes a web recovery link + a 6-digit code for in-app reset.
+// Shared implementation also used by WiamSafety recovery webhook.
 router.post('/forgot-password', async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) return res.status(400).json({ error: 'Email is required.' });
 
-    const cleanEmail = String(email).trim().toLowerCase();
-    const redirectTo = process.env.PASSWORD_RESET_REDIRECT_URL
-      || 'https://wiamapp.com/reset-password';
+    const { sendPasswordResetForEmail } = await import('../lib/passwordReset.js');
+    await sendPasswordResetForEmail(email);
 
     // Always respond success to avoid email enumeration
-    const { data, error } = await supabaseAdmin.auth.admin.generateLink({
-      type: 'recovery',
-      email: cleanEmail,
-      options: { redirectTo },
-    });
-
-    if (error) {
-      console.warn('[forgot-password]', error.message);
-      return res.json({ success: true, message: 'If that email is registered, a reset link is on its way.' });
-    }
-
-    const actionLink = data?.properties?.action_link;
-    if (!actionLink) {
-      console.warn('[forgot-password] No action_link returned');
-      return res.json({ success: true, message: 'If that email is registered, a reset link is on its way.' });
-    }
-
-    // Force production reset page — never leave users on localhost Site URL
-    let finalLink = actionLink;
-    try {
-      const u = new URL(actionLink);
-      u.searchParams.set('redirect_to', redirectTo);
-      finalLink = u.toString();
-    } catch {
-      finalLink = actionLink;
-    }
-
-    // In-app OTP (same otp_codes table as email verification)
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
-    await supabaseAdmin.from('otp_codes').update({ used: true }).eq('email', cleanEmail).eq('used', false);
-    await supabaseAdmin.from('otp_codes').insert({
-      email: cleanEmail,
-      code: otp,
-      expires_at: expiresAt.toISOString(),
-    });
-
-    const { sendPasswordResetEmail } = await import('../lib/resend.js');
-    await sendPasswordResetEmail(cleanEmail, finalLink, otp);
-
     res.json({ success: true, message: 'If that email is registered, a reset link is on its way.' });
   } catch (err) {
     res.status(400).json({ success: false, error: err.message });
@@ -455,6 +415,22 @@ router.post('/reset-password', async (req, res) => {
     if (updateError) throw updateError;
 
     await supabaseAdmin.from('otp_codes').update({ used: true }).eq('id', otpRow.id);
+
+    // If this reset was started via WiamSafety handoff, tell Core it completed.
+    try {
+      const { data: handoff } = await supabaseAdmin
+        .from('wiamsafety_handoffs')
+        .select('reference_id')
+        .eq('product_user_id', profile.id)
+        .eq('action', 'password_reset')
+        .order('consumed_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (handoff?.reference_id) {
+        const { notifyWiamSafetyResetComplete } = await import('../lib/wiamsafety.js');
+        notifyWiamSafetyResetComplete(handoff.reference_id).catch(() => {});
+      }
+    } catch (_) { /* optional — never block password update */ }
 
     res.json({ success: true, message: 'Password updated. You can log in now.' });
   } catch (err) {

@@ -39,6 +39,7 @@ import careersRoutes      from './routes/careers.js';
 import referralRoutes     from './routes/referrals.js';
 import disputeRoutes      from './routes/disputes.js';
 import artistRoutes       from './routes/artists.js';
+import wiamsafetyRoutes   from './routes/wiamsafety.js';
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -50,7 +51,15 @@ app.use(cors({
   // Mobile APKs often send no Origin (or null). Reflect/allow so registration works.
   origin: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-paystack-signature', 'stripe-signature', 'x-bot-secret', 'x-studio-service-key'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'x-paystack-signature',
+    'stripe-signature',
+    'x-bot-secret',
+    'x-studio-service-key',
+    'x-wiamsafety-signature',
+  ],
 }));
 
 // ─── RATE LIMITERS ────────────────────────────────────────────
@@ -88,6 +97,8 @@ app.use((req, res, next) => {
 
 // Webhooks need raw body for signature verification — mount BEFORE json parser
 app.use('/api/webhooks', express.raw({ type: 'application/json' }), webhookRoutes);
+// WiamSafety Section 9 recovery — HMAC over exact raw body (same pattern)
+app.use('/api/wiamsafety', express.raw({ type: 'application/json' }), wiamsafetyRoutes);
 
 // Body parsing for all other routes
 app.use(express.json({ limit: '10mb' }));
