@@ -62,12 +62,23 @@ router.post('/telegram/founder-web-link', requireBotSecret, async (req, res) => 
       telegram_id: telegramId,
       expires_at: expiresAt,
     });
-    if (error) throw error;
+    if (error) {
+      if (/relation .*founder_web_login_tokens.* does not exist|schema cache/i.test(error.message || '')) {
+        return res.status(503).json({
+          success: false,
+          error: 'Founder login table missing. Run database/migrations/042_founder_web_login_tokens.sql in WiamApp Supabase.',
+        });
+      }
+      throw error;
+    }
 
     res.json({ code: raw });
   } catch (err) {
     console.error('[founder-web-link]', err.message);
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({
+      success: false,
+      error: err.message || 'Could not create Founder login link.',
+    });
   }
 });
 
