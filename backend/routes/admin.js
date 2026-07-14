@@ -558,4 +558,56 @@ router.patch('/sos-alerts/:id/resolve', async (req, res) => {
   }
 });
 
+// ─── Country availability (Studio Master God Mode) ────────────
+router.get('/country-access', async (req, res) => {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('platform_country_settings')
+      .select('country_mode, open_countries')
+      .eq('id', 'global')
+      .maybeSingle();
+    if (error) throw error;
+    res.json({
+      success: true,
+      product: 'wiamapp',
+      countryMode: data?.country_mode || 'ALL',
+      openCountries: (data?.open_countries || []).map((c) => String(c).toUpperCase()),
+    });
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+});
+
+router.patch('/country-access', async (req, res) => {
+  try {
+    const patch = {};
+    if (req.body?.countryMode === 'ALL' || req.body?.countryMode === 'ALLOWLIST') {
+      patch.country_mode = req.body.countryMode;
+    }
+    if (Array.isArray(req.body?.openCountries)) {
+      patch.open_countries = req.body.openCountries.map((c) => String(c).toUpperCase());
+    }
+    if (!Object.keys(patch).length) {
+      return res.status(400).json({ success: false, error: 'No country fields to update.' });
+    }
+    patch.updated_at = new Date().toISOString();
+
+    const { data, error } = await supabaseAdmin
+      .from('platform_country_settings')
+      .upsert({ id: 'global', ...patch }, { onConflict: 'id' })
+      .select('country_mode, open_countries')
+      .single();
+    if (error) throw error;
+
+    res.json({
+      success: true,
+      product: 'wiamapp',
+      countryMode: data.country_mode,
+      openCountries: (data.open_countries || []).map((c) => String(c).toUpperCase()),
+    });
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+});
+
 export default router;
