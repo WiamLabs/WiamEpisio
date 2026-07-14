@@ -270,8 +270,26 @@ router.post('/verification/approve/:reviewId', async (req, res) => {
 
       await supabaseAdmin
         .from('worker_profiles')
-        .update({ is_verified: true })
+        .update({ is_verified: true, verified_badge: true })
         .eq('user_id', userId);
+
+      // Same post-approve unlocks as /api/verification/approve/:userId
+      const { data: wp } = await supabaseAdmin
+        .from('worker_profiles')
+        .select('id')
+        .eq('user_id', userId)
+        .maybeSingle();
+      if (wp) {
+        await supabaseAdmin.rpc('recalculate_profile_completion', {
+          p_worker_profile_id: wp.id,
+        });
+      }
+      try {
+        const { qualifyReferral } = await import('./referrals.js');
+        await qualifyReferral({ referredUserId: userId, kind: 'worker_verified' });
+      } catch (refErr) {
+        console.warn('qualifyReferral after Studio approve:', refErr.message);
+      }
     } else {
       await supabaseAdmin
         .from('customer_document_reviews')
@@ -351,6 +369,9 @@ router.post('/verification/reject/:reviewId', async (req, res) => {
       .update({
         verification_status: 'rejected',
         verification_rejection_reason: reason,
+        ...(type === 'customer'
+          ? { customer_verification_status: 'unverified' }
+          : {}),
       })
       .eq('id', userId);
 

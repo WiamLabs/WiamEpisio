@@ -128,12 +128,33 @@ export async function uploadCV(fileBuffer, applicantEmail, mimeType) {
 }
 
 /**
- * Generate a temporary signed URL for private documents
- * Only admins can call this — expires in 15 minutes
+ * Private ID docs are uploaded with R2_PRIVATE_* (verification.js).
+ * Fall back to CLOUDFLARE_R2_* when private env is not set (legacy keys).
+ */
+function privateDocClient() {
+  const endpoint = process.env.R2_PRIVATE_ENDPOINT || process.env.CLOUDFLARE_R2_ENDPOINT;
+  const accessKeyId = process.env.R2_PRIVATE_ACCESS_KEY || process.env.CLOUDFLARE_R2_ACCESS_KEY_ID;
+  const secretAccessKey =
+    process.env.R2_PRIVATE_SECRET_KEY || process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY;
+  const bucket =
+    process.env.R2_PRIVATE_BUCKET_NAME || process.env.CLOUDFLARE_R2_BUCKET_NAME || BUCKET_NAME;
+
+  const client = new S3Client({
+    region: 'auto',
+    endpoint,
+    credentials: { accessKeyId, secretAccessKey },
+  });
+  return { client, bucket };
+}
+
+/**
+ * Generate a temporary signed URL for private ID documents.
+ * Only admins / Studio can call this — expires in 15 minutes.
  */
 export async function getPrivateDocumentUrl(key) {
-  const command = new GetObjectCommand({ Bucket: BUCKET_NAME, Key: key });
-  return getSignedUrl(r2, command, { expiresIn: 900 }); // 15 minutes
+  const { client, bucket } = privateDocClient();
+  const command = new GetObjectCommand({ Bucket: bucket, Key: key });
+  return getSignedUrl(client, command, { expiresIn: 900 });
 }
 
 /**

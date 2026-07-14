@@ -134,6 +134,8 @@ app.use('/api/auth',          authLimiter,    authRoutes);
 app.use('/api/workers',                       workerRoutes);
 app.use('/api/bookings',                      bookingRoutes);
 app.use('/api/uploads',       uploadLimiter,  uploadRoutes);
+// Mobile + marketing call /api/verification/*; keep /api/verify as alias.
+app.use('/api/verification',  verifyLimiter,  verificationRoutes);
 app.use('/api/verify',        verifyLimiter,  verificationRoutes);
 app.use('/api/payments',                      paymentRoutes);
 app.use('/api/notifications',                 notificationRoutes);

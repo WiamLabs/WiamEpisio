@@ -66,19 +66,28 @@ router.post('/upload-document', upload.single('document'), async (req, res) => {
       },
     }));
 
-    // Save key reference in database
-    const column = docType === 'id_front' ? 'id_front_key'
-                 : docType === 'id_back'  ? 'id_back_key'
-                 : 'selfie_key';
+    // Save key reference — workers only. Customers upload keys then call
+    // submit-customer-simple which writes customer_document_reviews.
+    const { data: roleRow } = await supabaseAdmin
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single();
 
-    await supabaseAdmin
-      .from('worker_verifications')
-      .upsert({
-        user_id:   user.id,
-        [column]:  key,
-        id_type:   idType || null,
-        status:    'uploading',
-      }, { onConflict: 'user_id' });
+    if (roleRow?.role === 'worker') {
+      const column = docType === 'id_front' ? 'id_front_key'
+                   : docType === 'id_back'  ? 'id_back_key'
+                   : 'selfie_key';
+
+      await supabaseAdmin
+        .from('worker_verifications')
+        .upsert({
+          user_id:   user.id,
+          [column]:  key,
+          id_type:   idType || null,
+          status:    'uploading',
+        }, { onConflict: 'user_id' });
+    }
 
     res.json({ success: true, key });
 
@@ -206,13 +215,32 @@ router.post('/submit-customer', upload.fields([
       ContentType: req.files.selfie[0].mimetype,
     }));
 
-    // Update user record
+    // Close older pending reviews, then insert current submission for Founder queue
     await supabaseAdmin.from('users').update({
-      customer_id_type:            idType,
-      customer_id_front_key:       frontKey,
-      customer_selfie_key:         selfieKey,
+      customer_id_type:             idType || null,
+      customer_id_front_key:        frontKey,
+      customer_selfie_key:          selfieKey,
       customer_verification_status: 'pending',
     }).eq('id', user.id);
+
+    await supabaseAdmin
+      .from('customer_document_reviews')
+      .update({ status: 'more_info' })
+      .eq('user_id', user.id)
+      .eq('status', 'pending');
+
+    const { error: reviewErr } = await supabaseAdmin
+      .from('customer_document_reviews')
+      .insert({
+        user_id:      user.id,
+        id_type:      idType || 'unknown',
+        id_front_key: frontKey,
+        selfie_key:   selfieKey,
+        status:       'pending',
+        submitted_at: new Date().toISOString(),
+      });
+
+    if (reviewErr) throw reviewErr;
 
     await supabaseAdmin.from('audit_logs').insert({
       user_id:  user.id,
@@ -227,6 +255,67 @@ router.post('/submit-customer', upload.fields([
 
   } catch (err) {
     console.error('Customer verify error:', err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ── POST /api/verification/submit-customer-simple ─────────────
+// Mobile flow: upload-document for front + selfie, then JSON submit.
+router.post('/submit-customer-simple', async (req, res) => {
+  try {
+    const user = await verifyUserToken(req.headers.authorization);
+    const { idType, frontKey, selfieKey, backKey } = req.body;
+
+    if (!frontKey || !selfieKey) {
+      return res.status(400).json({ error: 'ID front and selfie keys are required.' });
+    }
+
+    await supabaseAdmin.from('users').update({
+      customer_id_type:             idType || null,
+      customer_id_front_key:        frontKey,
+      customer_selfie_key:          selfieKey,
+      customer_verification_status: 'pending',
+    }).eq('id', user.id);
+
+    // Close any older pending rows for this user, then insert current submission
+    await supabaseAdmin
+      .from('customer_document_reviews')
+      .update({ status: 'more_info' })
+      .eq('user_id', user.id)
+      .eq('status', 'pending');
+
+    const { error: insertErr } = await supabaseAdmin
+      .from('customer_document_reviews')
+      .insert({
+        user_id:      user.id,
+        id_type:      idType || 'unknown',
+        id_front_key: frontKey,
+        id_back_key:  backKey || null,
+        selfie_key:   selfieKey,
+        status:       'pending',
+        submitted_at: new Date().toISOString(),
+      });
+
+    if (insertErr) throw insertErr;
+
+    await supabaseAdmin.from('audit_logs').insert({
+      user_id:  user.id,
+      action:   'customer_verification_submitted',
+      metadata: { idType, via: 'submit-customer-simple' },
+    });
+
+    const { data: userRow } = await supabaseAdmin
+      .from('users').select('email, full_name').eq('id', user.id).single();
+    if (userRow?.email) {
+      await sendVerificationSubmittedEmail(userRow.email, userRow.full_name);
+    }
+
+    res.json({
+      success: true,
+      message: 'Customer verification submitted. Admin will review within 24 hours.',
+    });
+  } catch (err) {
+    console.error('Customer simple submit error:', err.message);
     res.status(500).json({ success: false, error: err.message });
   }
 });
