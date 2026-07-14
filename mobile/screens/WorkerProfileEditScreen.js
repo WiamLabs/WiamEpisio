@@ -83,7 +83,14 @@ export default function WorkerProfileEditScreen({ navigation }) {
     }
   }, [user, profile]);
 
-  useFocusEffect(loadData);
+  useFocusEffect(
+    useCallback(() => {
+      async function run() {
+        await loadData();
+      }
+      run();
+    }, [loadData])
+  );
 
   const useMyLocation = async () => {
     const ok = await confirmLocationSetup('worker');
