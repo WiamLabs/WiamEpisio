@@ -12,12 +12,14 @@ const router = Router();
 router.post('/register', async (req, res) => {
   try {
     const {
-      fullName, email, phone, password, role,
+      fullName, email: rawEmail, phone, password, role,
       city, country, countryCode,
       landmarkDescription, digitalAddressCode, latitude, longitude,
       category,    // workers only
       companyName, // business only
     } = req.body;
+
+    const email = String(rawEmail || '').trim().toLowerCase();
 
     // Validate required fields
     if (!fullName || !email || !phone || !password || !role || !city || !country) {
@@ -158,10 +160,26 @@ router.post('/register', async (req, res) => {
         metadata: { role, city, country },
       });
 
+      // Email verification OTP once from the server (avoid client double-send
+      // which invalidates the first code before the user opens the email).
+      let otpSent = false;
+      let otpError = null;
+      try {
+        await mintAndEmailOtp(email);
+        otpSent = true;
+      } catch (otpErr) {
+        otpError = otpErr.message || 'Could not send verification email.';
+        console.error('Register OTP send failed:', otpError);
+      }
+
       res.status(201).json({
         success: true,
-        message: 'Account created successfully.',
+        message: otpSent
+          ? 'Account created successfully. Check your email for the verification code.'
+          : 'Account created. We could not send the verification email — use Resend on the next screen.',
         userId,
+        otpSent,
+        otpError,
       });
     } catch (innerErr) {
       // Roll back the orphaned auth user so the email can be reused.
@@ -245,50 +263,61 @@ router.get('/me', async (req, res) => {
   }
 });
 
+// Shared OTP mint + Brevo email (used by /send-otp and post-register).
+async function mintAndEmailOtp(rawEmail) {
+  const email = String(rawEmail || '').trim().toLowerCase();
+  if (!email) throw new Error('Email is required.');
+
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+  // Invalidate previous unused codes (match any casing left in DB)
+  await supabaseAdmin.from('otp_codes').update({ used: true }).ilike('email', email).eq('used', false);
+
+  const { error: insertErr } = await supabaseAdmin.from('otp_codes').insert({
+    email,
+    code: otp,
+    expires_at: expiresAt.toISOString(),
+  });
+  if (insertErr) throw insertErr;
+
+  await sendEmail({
+    to: email,
+    subject: 'Your WiamApp verification code',
+    required: true,
+    html: `
+      <div style="font-family:Arial,sans-serif;color:#1f2937;">
+        <h2 style="color:#0D0D2B;">Verify your email</h2>
+        <p>Your WiamApp verification code is:</p>
+        <p style="font-size:32px;font-weight:700;letter-spacing:6px;color:#0D0D2B;">${otp}</p>
+        <p style="color:#6b7280;">This code expires in 10 minutes. If you didn't request it, ignore this email.</p>
+      </div>`,
+  });
+
+  console.log(`OTP emailed to ${email}`);
+  return { email, otp };
+}
+
 // ─── POST /api/auth/send-otp ──────────────────────────────────
 router.post('/send-otp', async (req, res) => {
   try {
-    const { email } = req.body;
-    if (!email) return res.status(400).json({ error: 'Email is required.' });
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-
-    // Invalidate any previous unused codes for this email
-    await supabaseAdmin.from('otp_codes').update({ used: true }).eq('email', email).eq('used', false);
-
-    await supabaseAdmin.from('otp_codes').insert({
-      email,
-      code:       otp,
-      expires_at: expiresAt.toISOString(),
-    });
-
-    // Email the code via Brevo. If BREVO_API_KEY isn't set, sendEmail
-    // safely no-ops (logged) — the code below still appears in server logs
-    // so testing isn't blocked before the email domain is verified.
-    await sendEmail({
-      to: email,
-      subject: 'Your WiamApp verification code',
-      html: `
-        <div style="font-family:Arial,sans-serif;color:#1f2937;">
-          <h2 style="color:#0F766E;">Verify your email</h2>
-          <p>Your WiamApp verification code is:</p>
-          <p style="font-size:32px;font-weight:700;letter-spacing:6px;color:#0D0D2B;">${otp}</p>
-          <p style="color:#6b7280;">This code expires in 10 minutes. If you didn't request it, ignore this email.</p>
-        </div>`,
-    });
-
-    console.log(`OTP for ${email}: ${otp}`);
-
+    await mintAndEmailOtp(req.body?.email);
     res.json({ success: true, message: 'OTP sent.' });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error('send-otp error:', err.message);
+    res.status(500).json({ success: false, error: err.message || 'Could not send verification code.' });
   }
 });
 
 // ─── POST /api/auth/verify-otp ───────────────────────────────
 router.post('/verify-otp', async (req, res) => {
   try {
-    const { email, code } = req.body;
+    const email = String(req.body?.email || '').trim().toLowerCase();
+    const code  = String(req.body?.code || '').trim();
+    if (!email || !code) {
+      return res.status(400).json({ success: false, error: 'Email and code are required.' });
+    }
+
     const { data, error } = await supabaseAdmin
       .from('otp_codes')
       .select('*')
@@ -296,7 +325,7 @@ router.post('/verify-otp', async (req, res) => {
       .eq('code', code)
       .eq('used', false)
       .gt('expires_at', new Date().toISOString())
-      .single();
+      .maybeSingle();
     if (error || !data) {
       return res.status(400).json({ success: false, error: 'Invalid or expired OTP.' });
     }
@@ -306,8 +335,8 @@ router.post('/verify-otp', async (req, res) => {
     const { data: profile } = await supabaseAdmin
       .from('users')
       .select('id')
-      .eq('email', email)
-      .single();
+      .ilike('email', email)
+      .maybeSingle();
     if (profile?.id) {
       await supabaseAdmin.auth.admin.updateUserById(profile.id, { email_confirm: true });
     }

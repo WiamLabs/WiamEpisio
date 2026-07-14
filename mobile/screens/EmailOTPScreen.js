@@ -22,12 +22,12 @@ const GOLD_BD = 'rgba(212,160,23,0.25)';
 const BACKEND = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 export default function EmailOTPScreen({ navigation, route }) {
-  const { email, role } = route?.params || {};
+  const { email, role, otpSent: otpAlreadySent, otpError: initialOtpError } = route?.params || {};
 
   const [otp,        setOtp]        = useState(['', '', '', '', '', '']);
   const [loading,    setLoading]    = useState(false);
   const [resending,  setResending]  = useState(false);
-  const [error,      setError]      = useState('');
+  const [error,      setError]      = useState(initialOtpError || '');
   const [countdown,  setCountdown]  = useState(60);
   const [canResend,  setCanResend]  = useState(false);
   const inputs = useRef([]);
@@ -39,19 +39,30 @@ export default function EmailOTPScreen({ navigation, route }) {
     return () => clearTimeout(timer);
   }, [countdown]);
 
-  // Auto-send OTP when the screen opens (in case register didn't already)
+  // Only auto-send if register did not already email a code.
+  // Re-sending here used to invalidate the first OTP before the user opened mail.
   useEffect(() => {
-    if (!email || !BACKEND) return;
+    if (!email || !BACKEND || otpAlreadySent) return;
     (async () => {
       try {
-        await fetch(`${BACKEND}/api/auth/send-otp`, {
+        const res = await fetch(`${BACKEND}/api/auth/send-otp`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email }),
         });
-      } catch (_) {}
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          setError(data.error || 'Could not send verification email. Tap Resend.');
+          setCanResend(true);
+          setCountdown(0);
+        }
+      } catch (_) {
+        setError('Could not send verification email. Tap Resend.');
+        setCanResend(true);
+        setCountdown(0);
+      }
     })();
-  }, [email]);
+  }, [email, otpAlreadySent]);
 
   const handleOtpChange = (text, index) => {
     const newOtp = [...otp];
@@ -104,17 +115,19 @@ export default function EmailOTPScreen({ navigation, route }) {
     setResending(true);
     setError('');
     try {
-      await fetch(`${BACKEND}/api/auth/send-otp`, {
+      const res = await fetch(`${BACKEND}/api/auth/send-otp`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ email }),
       });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Could not resend. Please try again.');
       setCountdown(60);
       setCanResend(false);
       setOtp(['', '', '', '', '', '']);
       inputs.current[0]?.focus();
-    } catch {
-      setError('Could not resend. Please try again.');
+    } catch (err) {
+      setError(err.message || 'Could not resend. Please try again.');
     } finally {
       setResending(false);
     }

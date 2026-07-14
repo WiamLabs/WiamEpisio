@@ -46,9 +46,13 @@ function layout(heading, bodyHtml) {
 }
 
 // ─── Core sender (Brevo) ──────────────────────────────────────
-export async function sendEmail({ to, subject, html }) {
+// Pass required: true for OTP / password-reset so callers get a real failure
+// instead of a silent skip when BREVO_API_KEY is missing or Brevo rejects.
+export async function sendEmail({ to, subject, html, required = false }) {
   if (!BREVO_API_KEY) {
-    console.warn(`[brevo] BREVO_API_KEY not set — skipping email to ${to} ("${subject}")`);
+    const msg = `BREVO_API_KEY not set — cannot email ${to} ("${subject}")`;
+    console.warn(`[brevo] ${msg}`);
+    if (required) throw new Error('Email service is not configured. Please try again later.');
     return { skipped: true };
   }
 
@@ -71,10 +75,18 @@ export async function sendEmail({ to, subject, html }) {
     if (!res.ok) {
       const text = await res.text();
       console.error(`[brevo] Failed to send to ${to}: ${res.status} ${text}`);
+      if (required) {
+        throw new Error('Could not send email. Check that the sender domain is verified in Brevo.');
+      }
       return { error: text };
     }
     return await res.json().catch(() => ({ ok: true }));
   } catch (err) {
+    if (required && !/Could not send email|Email service is not configured/i.test(err.message)) {
+      console.error(`[brevo] Error sending to ${to}:`, err.message);
+      throw new Error('Could not send email. Please try again in a moment.');
+    }
+    if (required) throw err;
     console.error(`[brevo] Error sending to ${to}:`, err.message);
     return { error: err.message };
   }
@@ -162,6 +174,7 @@ export async function sendPasswordResetEmail(email, resetUrl, code) {
   return sendEmail({
     to: email,
     subject: 'Reset your WiamApp password',
+    required: true,
     html: layout(
       'Reset your password',
       `<p>We received a request to reset the password for your WiamApp account.</p>

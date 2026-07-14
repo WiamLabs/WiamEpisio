@@ -110,11 +110,15 @@ export default function RegisterForm() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Registration failed.');
 
-      // Trigger the OTP email
-      await fetch(`${BACKEND_URL}/api/auth/send-otp`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: form.email }),
-      });
+      // Register endpoint emails the OTP. Only resend if that failed.
+      if (!data.otpSent) {
+        const otpRes = await fetch(`${BACKEND_URL}/api/auth/send-otp`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: form.email }),
+        });
+        const otpData = await otpRes.json().catch(() => ({}));
+        if (!otpRes.ok) throw new Error(otpData.error || 'Account created but verification email failed. Use Resend.');
+      }
 
       setStep(STEPS.OTP);
     } catch (err) {
@@ -174,11 +178,15 @@ export default function RegisterForm() {
   const resendOtp = async () => {
     setError('');
     try {
-      await fetch(`${BACKEND_URL}/api/auth/send-otp`, {
+      const res = await fetch(`${BACKEND_URL}/api/auth/send-otp`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: form.email }),
       });
-    } catch {}
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Could not resend code.');
+    } catch (err) {
+      setError(err.message || 'Could not resend code.');
+    }
   };
 
   const submitProfile = async (e) => {

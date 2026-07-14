@@ -402,18 +402,28 @@ export default function RegisterScreen({ navigation }) {
         throw new Error(msg);
       }
 
-      // Send OTP via Resend (backend) — does NOT hit Supabase email limits
-      await fetch(`${BACKEND}/api/auth/send-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: cleanEmail }),
-      });
+      // OTP is emailed by the register endpoint. Only call send-otp if that failed.
+      let otpSent = !!data.otpSent;
+      if (!otpSent) {
+        const otpRes = await fetch(`${BACKEND}/api/auth/send-otp`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: cleanEmail }),
+        });
+        const otpData = await otpRes.json().catch(() => ({}));
+        otpSent = otpRes.ok;
+        if (!otpSent) {
+          console.warn('OTP send after register failed:', otpData.error || otpRes.status);
+        }
+      }
 
       navigation.navigate('EmailOTP', {
         role,
         email: cleanEmail,
         phone: fullPhone,
         userId: data.userId,
+        otpSent,
+        otpError: otpSent ? null : (data.otpError || 'Could not send the verification email. Tap Resend.'),
       });
 
     } catch (err) {
