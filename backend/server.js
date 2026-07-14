@@ -12,6 +12,7 @@ dotenv.config();
 
 // ─── ROUTE IMPORTS ────────────────────────────────────────────
 import authRoutes         from './routes/auth.js';
+import founderAuthRoutes  from './routes/founderAuth.js';
 import workerRoutes       from './routes/workers.js';
 import bookingRoutes      from './routes/bookings.js';
 import uploadRoutes       from './routes/uploads.js';
@@ -49,7 +50,7 @@ app.use(cors({
   // Mobile APKs often send no Origin (or null). Reflect/allow so registration works.
   origin: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-paystack-signature', 'stripe-signature'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-paystack-signature', 'stripe-signature', 'x-bot-secret', 'x-studio-service-key'],
 }));
 
 // ─── RATE LIMITERS ────────────────────────────────────────────
@@ -116,6 +117,8 @@ app.get('/health', (req, res) => {
 });
 
 // ─── API ROUTES ───────────────────────────────────────────────
+// Founder Telegram→Studio codes (bot secret / one-time) — not behind authLimiter
+app.use('/api/auth', founderAuthRoutes);
 app.use('/api/auth',          authLimiter,    authRoutes);
 app.use('/api/workers',                       workerRoutes);
 app.use('/api/bookings',                      bookingRoutes);
