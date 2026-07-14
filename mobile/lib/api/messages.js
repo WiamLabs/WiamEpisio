@@ -157,8 +157,10 @@ export async function getUnreadCount(userId) {
  *   }, [bookingId]);
  */
 export function subscribeToMessages(bookingId, onNewMessage) {
-  return supabase
-    .channel(`messages:${bookingId}`)
+  // Unique name per mount — same topic reuse returns a subscribed channel
+  // and `.on()` after `.subscribe()` throws (React Strict Mode remounts too).
+  const channel = supabase
+    .channel(`messages:${bookingId}:${Date.now()}-${Math.random().toString(36).slice(2, 8)}`)
     .on(
       'postgres_changes',
       {
@@ -172,4 +174,10 @@ export function subscribeToMessages(bookingId, onNewMessage) {
       }
     )
     .subscribe();
+
+  return {
+    unsubscribe() {
+      supabase.removeChannel(channel);
+    },
+  };
 }

@@ -61,8 +61,9 @@ router.post('/register', async (req, res) => {
     // From here on, if ANY step fails we must remove the auth user we just
     // created — otherwise the email gets "stuck" and the user can never retry.
     try {
-      // Insert into users table
-      const { error: userError } = await supabaseAdmin.from('users').insert({
+      // Upsert users row — `on_auth_user_created` may already have inserted a
+      // stub (id/email/role) when auth.admin.createUser ran.
+      const { error: userError } = await supabaseAdmin.from('users').upsert({
         id:           userId,
         full_name:    fullName,
         email,
@@ -77,7 +78,7 @@ router.post('/register', async (req, res) => {
         longitude:    longitude ?? null,
         is_verified:  false,
         is_active:    true,
-      });
+      }, { onConflict: 'id' });
       if (userError) throw userError;
 
       // If worker — create worker_profile + set category

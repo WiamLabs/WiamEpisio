@@ -67,8 +67,11 @@ export async function markAllNotificationsRead(userId) {
  *   return () => sub.unsubscribe();
  */
 export function subscribeToNotifications(userId, onNewNotification) {
-  return supabase
-    .channel(`notifications:${userId}`)
+  // Unique channel name per subscriber — reusing `notifications:${userId}`
+  // returns an already-subscribed channel when home + notifications screens
+  // both subscribe, and `.on()` after `.subscribe()` crashes the app.
+  const channel = supabase
+    .channel(`notifications:${userId}:${Date.now()}-${Math.random().toString(36).slice(2, 8)}`)
     .on(
       'postgres_changes',
       {
@@ -82,4 +85,10 @@ export function subscribeToNotifications(userId, onNewNotification) {
       }
     )
     .subscribe();
+
+  return {
+    unsubscribe() {
+      supabase.removeChannel(channel);
+    },
+  };
 }
