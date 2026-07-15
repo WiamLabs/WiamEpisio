@@ -7,55 +7,47 @@
 import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
-  StyleSheet,  StatusBar,
+  StyleSheet, StatusBar,
   ScrollView, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { Colors } from '../constants/colors';
+import GoldAvatar from '../components/ui/GoldAvatar';
 
-const BG      = '#FFFFFF';
-const NAVY    = '#0D0D2B';
-const GOLD    = '#D4A017';
-const GOLD_BG = 'rgba(212,160,23,0.10)';
-const BORDER  = '#EBEBEB';
-const MUTED   = '#888899';
 const BACKEND = process.env.EXPO_PUBLIC_BACKEND_URL;
+const PAD = Colors.screenPad;
 
 const TAGS = [
   'On time', 'Professional', 'Quality work', 'Clean',
   'Friendly', 'Good value', 'Would hire again', 'Expert',
 ];
 
+const RATING_LABELS = ['', 'Poor', 'Fair', 'Good', 'Great', 'Excellent'];
+
 export default function ReviewScreen({ navigation, route }) {
   const { bookingId, workerName } = route?.params || {};
 
-  const [rating,   setRating]   = useState(0);
-  const [hovered,  setHovered]  = useState(0);
-  const [comment,  setComment]  = useState('');
-  const [tags,     setTags]     = useState([]);
-  const [loading,  setLoading]  = useState(false);
-  const [error,    setError]    = useState('');
+  const [rating, setRating] = useState(0);
+  const [hovered, setHovered] = useState(0);
+  const [comment, setComment] = useState('');
+  const [tags, setTags] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const toggleTag = (tag) => {
-    setTags(t => t.includes(tag) ? t.filter(x => x !== tag) : [...t, tag]);
+    setTags((t) => (t.includes(tag) ? t.filter((x) => x !== tag) : [...t, tag]));
   };
-
-  const ratingLabels = ['', 'Poor', 'Fair', 'Good', 'Great', 'Excellent'];
 
   const handleSubmit = async () => {
     if (rating === 0 || loading) return;
     setLoading(true);
     setError('');
     try {
-      const res  = await fetch(`${BACKEND}/api/reviews`, {
-        method:  'POST',
+      const res = await fetch(`${BACKEND}/api/reviews`, {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({
-          booking_id: bookingId,
-          rating,
-          comment,
-          tags,
-        }),
+        body: JSON.stringify({ booking_id: bookingId, rating, comment, tags }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Could not submit review.');
@@ -68,38 +60,26 @@ export default function ReviewScreen({ navigation, route }) {
   };
 
   return (
-    <SafeAreaView style={s.safe}>
-      <StatusBar barStyle="dark-content" backgroundColor={BG} />
+    <SafeAreaView style={s.safe} edges={['top']}>
+      <StatusBar barStyle="light-content" backgroundColor={Colors.navy} />
 
       <View style={s.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={22} color={NAVY} />
+        <TouchableOpacity style={s.backBtn} onPress={() => navigation.goBack()}>
+          <Ionicons name="chevron-back" size={20} color={Colors.white} />
         </TouchableOpacity>
-        <Text style={s.headerTitle}>Leave a Review</Text>
-        <View style={{ width: 22 }} />
+        <Text style={s.headerTitle}>Rate Your Experience</Text>
       </View>
 
-      <ScrollView
-        contentContainerStyle={s.container}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Worker name */}
-        <View style={s.workerCard}>
-          <View style={s.workerAvatar}>
-            <Text style={s.workerAvatarText}>{workerName?.[0]?.toUpperCase()}</Text>
-          </View>
-          <View>
-            <Text style={s.workerName}>{workerName}</Text>
-            <Text style={s.workerLabel}>How was your experience?</Text>
-          </View>
+      <ScrollView contentContainerStyle={s.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        <View style={s.workerHero}>
+          <GoldAvatar name={workerName} size={64} />
+          <Text style={s.heroTitle}>How was {workerName?.split(' ')?.[0] || 'their'} work?</Text>
+          <Text style={s.heroSub}>Share your experience with other customers</Text>
         </View>
 
-        {/* Star rating */}
-        <Text style={s.label}>YOUR RATING *</Text>
         <View style={s.starsWrap}>
           <View style={s.starsRow}>
-            {[1, 2, 3, 4, 5].map(star => (
+            {[1, 2, 3, 4, 5].map((star) => (
               <TouchableOpacity
                 key={star}
                 onPress={() => setRating(star)}
@@ -111,160 +91,139 @@ export default function ReviewScreen({ navigation, route }) {
                 <Ionicons
                   name={(hovered || rating) >= star ? 'star' : 'star-outline'}
                   size={38}
-                  color={(hovered || rating) >= star ? GOLD : '#DDD'}
+                  color={(hovered || rating) >= star ? Colors.gold : Colors.navyLine}
                 />
               </TouchableOpacity>
             ))}
           </View>
           {(hovered || rating) > 0 && (
-            <Text style={s.ratingLabel}>{ratingLabels[hovered || rating]}</Text>
+            <Text style={s.ratingLabel}>{RATING_LABELS[hovered || rating]}</Text>
           )}
         </View>
 
-        {/* Quick tags */}
-        <Text style={s.label}>WHAT DID THEY DO WELL? (OPTIONAL)</Text>
-        <View style={s.tagsWrap}>
-          {TAGS.map(tag => (
-            <TouchableOpacity
-              key={tag}
-              style={[s.tagChip, tags.includes(tag) && s.tagChipActive]}
-              onPress={() => toggleTag(tag)}
-            >
-              {tags.includes(tag) && (
-                <Ionicons name="checkmark" size={12} color={NAVY} style={{ marginRight: 3 }} />
-              )}
-              <Text style={[s.tagText, tags.includes(tag) && s.tagTextActive]}>
-                {tag}
-              </Text>
-            </TouchableOpacity>
-          ))}
+        <Text style={s.fieldLabel}>What went well? (optional)</Text>
+        <View style={s.tagRow}>
+          {TAGS.map((tag) => {
+            const active = tags.includes(tag);
+            return (
+              <TouchableOpacity
+                key={tag}
+                style={[s.tagChip, active && s.tagChipActive]}
+                onPress={() => toggleTag(tag)}
+              >
+                {active ? <Ionicons name="checkmark" size={12} color={Colors.gold} style={{ marginRight: 3 }} /> : null}
+                <Text style={[s.tagText, active && s.tagTextActive]}>{tag}</Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
 
-        {/* Comment */}
-        <Text style={s.label}>WRITE A REVIEW (OPTIONAL)</Text>
-        <TextInput
-          style={s.textarea}
-          placeholder="Tell other customers about your experience with this worker..."
-          placeholderTextColor={MUTED}
-          value={comment}
-          onChangeText={setComment}
-          multiline
-          numberOfLines={4}
-          textAlignVertical="top"
-        />
+        <Text style={s.fieldLabel}>Write a review (optional)</Text>
+        <View style={s.fieldBox}>
+          <TextInput
+            style={s.textarea}
+            placeholder="Share details about work quality, punctuality, and professionalism..."
+            placeholderTextColor={Colors.textFaint}
+            value={comment}
+            onChangeText={setComment}
+            multiline
+            numberOfLines={4}
+            textAlignVertical="top"
+          />
+        </View>
 
-        {/* Verified notice */}
         <View style={s.verifiedNotice}>
-          <Ionicons name="shield-checkmark-outline" size={14} color={GOLD} />
+          <Ionicons name="shield-checkmark-outline" size={14} color={Colors.gold} />
           <Text style={s.verifiedText}>
             Only verified customers who completed a booking can leave reviews. No fake reviews on WiamApp.
           </Text>
         </View>
 
-        {/* Error */}
         {error ? (
           <View style={s.errorBox}>
-            <Ionicons name="alert-circle-outline" size={14} color="#EF4444" />
+            <Ionicons name="alert-circle-outline" size={14} color={Colors.error} />
             <Text style={s.errorText}>{error}</Text>
           </View>
         ) : null}
 
-        {/* Submit */}
+        <TouchableOpacity onPress={() => navigation.navigate('Home')} style={s.skipBtn}>
+          <Text style={s.skipText}>Skip for now</Text>
+        </TouchableOpacity>
+
+        <Text style={s.footerCopy}>© 2026 WiamApp · Powered by WiamLabs</Text>
+      </ScrollView>
+
+      <View style={s.submitBar}>
         <TouchableOpacity
           style={[s.submitBtn, (rating === 0 || loading) && s.submitBtnDisabled]}
           onPress={handleSubmit}
           disabled={rating === 0 || loading}
           activeOpacity={0.85}
         >
-          {loading
-            ? <ActivityIndicator color={NAVY} />
-            : <>
-                <Text style={[s.submitBtnText, rating === 0 && { color: 'rgba(13,13,43,0.4)' }]}>
-                  Submit Review
-                </Text>
-                {rating > 0 && <Ionicons name="arrow-forward" size={16} color={NAVY} style={{ marginLeft: 6 }} />}
-              </>
-          }
+          {loading ? (
+            <ActivityIndicator color={Colors.navy} />
+          ) : (
+            <Text style={[s.submitBtnText, rating === 0 && { opacity: 0.4 }]}>Submit Review</Text>
+          )}
         </TouchableOpacity>
-
-        <TouchableOpacity onPress={() => navigation.navigate('Home')} style={s.skipBtn}>
-          <Text style={s.skipText}>Skip for now</Text>
-        </TouchableOpacity>
-
-        <View style={{ height: 30 }} />
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }
 
 const s = StyleSheet.create({
-  safe:   { flex: 1, backgroundColor: BG },
-  header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 20, paddingVertical: 14,
-    borderBottomWidth: 0.5, borderBottomColor: BORDER,
+  safe: { flex: 1, backgroundColor: Colors.navy },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: PAD, paddingBottom: 14 },
+  backBtn: {
+    width: 36, height: 36, borderRadius: 18,
+    backgroundColor: Colors.navyCard, alignItems: 'center', justifyContent: 'center',
   },
-  headerTitle: { color: NAVY, fontSize: 17, fontWeight: '700' },
-  container:   { flexGrow: 1, padding: 20 },
-
-  workerCard: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    backgroundColor: '#F8F8FB', borderRadius: 13,
-    padding: 14, marginBottom: 24,
-    borderWidth: 0.5, borderColor: BORDER,
-  },
-  workerAvatar:    { width: 48, height: 48, borderRadius: 13, backgroundColor: GOLD_BG, alignItems: 'center', justifyContent: 'center' },
-  workerAvatarText:{ color: GOLD, fontSize: 20, fontWeight: '700' },
-  workerName:      { color: NAVY, fontSize: 15, fontWeight: '600', marginBottom: 2 },
-  workerLabel:     { color: MUTED, fontSize: 12 },
-
-  label: { color: MUTED, fontSize: 11, fontWeight: '700', letterSpacing: 1.5, marginBottom: 12, marginTop: 8 },
-
-  starsWrap: { alignItems: 'center', marginBottom: 24 },
-  starsRow:  { flexDirection: 'row', gap: 8, marginBottom: 8 },
-  starBtn:   { padding: 4 },
-  ratingLabel:{ color: NAVY, fontSize: 16, fontWeight: '600' },
-
-  tagsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 20 },
+  headerTitle: { fontSize: 17, fontWeight: '700', color: Colors.white },
+  scroll: { paddingHorizontal: PAD, paddingBottom: 110 },
+  workerHero: { alignItems: 'center', paddingVertical: 6, marginBottom: 8 },
+  heroTitle: { fontSize: 15, fontWeight: '700', color: Colors.white, marginTop: 12, marginBottom: 4 },
+  heroSub: { fontSize: 12, color: Colors.textDim },
+  starsWrap: { alignItems: 'center', marginBottom: 22 },
+  starsRow: { flexDirection: 'row', gap: 8, marginBottom: 8 },
+  starBtn: { padding: 4 },
+  ratingLabel: { color: Colors.white, fontSize: 16, fontWeight: '600' },
+  fieldLabel: { fontSize: 12.5, fontWeight: '600', color: Colors.white, marginBottom: 8, marginTop: 4 },
+  tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
   tagChip: {
     flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 14, paddingVertical: 9,
-    borderRadius: 20, borderWidth: 0.5,
-    borderColor: BORDER, backgroundColor: '#F5F5F8',
+    paddingHorizontal: 13, paddingVertical: 8, borderRadius: 999,
+    backgroundColor: Colors.navyCard, borderWidth: 1, borderColor: Colors.navyLine,
   },
-  tagChipActive: { backgroundColor: GOLD, borderColor: GOLD },
-  tagText:       { color: MUTED, fontSize: 13 },
-  tagTextActive: { color: NAVY, fontWeight: '600' },
-
-  textarea: {
-    backgroundColor: '#F5F5F8', borderRadius: 13,
-    borderWidth: 0.5, borderColor: BORDER,
-    padding: 13, color: NAVY, fontSize: 14,
-    lineHeight: 22, minHeight: 100,
+  tagChipActive: { backgroundColor: 'rgba(212,160,23,0.1)', borderColor: Colors.gold },
+  tagText: { color: '#B8B8CC', fontSize: 11.5 },
+  tagTextActive: { color: Colors.gold, fontWeight: '600' },
+  fieldBox: {
+    backgroundColor: Colors.navyCard, borderWidth: 1, borderColor: Colors.navyLine,
+    borderRadius: 14, padding: 13, marginBottom: 12,
   },
-
+  textarea: { color: Colors.white, fontSize: 13, minHeight: 100, lineHeight: 20 },
   verifiedNotice: {
     flexDirection: 'row', alignItems: 'flex-start', gap: 8,
-    backgroundColor: GOLD_BG, borderRadius: 11,
-    padding: 12, marginTop: 16,
-    borderWidth: 0.5, borderColor: 'rgba(212,160,23,0.2)',
+    backgroundColor: 'rgba(212,160,23,0.08)', borderRadius: 14,
+    borderWidth: 1, borderColor: 'rgba(212,160,23,0.2)', padding: 12, marginTop: 4,
   },
-  verifiedText: { color: NAVY, fontSize: 12, lineHeight: 18, flex: 1 },
-
+  verifiedText: { color: Colors.textDim, fontSize: 12, lineHeight: 18, flex: 1 },
   errorBox: {
     flexDirection: 'row', alignItems: 'center', gap: 7,
-    backgroundColor: 'rgba(239,68,68,0.08)',
-    borderRadius: 10, padding: 12, marginTop: 14,
+    backgroundColor: 'rgba(239,68,68,0.1)', borderRadius: 12, padding: 12, marginTop: 12,
   },
-  errorText: { color: '#EF4444', fontSize: 12, flex: 1 },
-
+  errorText: { color: Colors.error, fontSize: 12, flex: 1 },
+  skipBtn: { alignItems: 'center', paddingVertical: 14 },
+  skipText: { color: Colors.textFaint, fontSize: 13 },
+  footerCopy: { textAlign: 'center', fontSize: 10, color: '#3A3A56' },
+  submitBar: {
+    position: 'absolute', bottom: 0, left: 0, right: 0,
+    backgroundColor: Colors.navySoft, borderTopWidth: 1, borderTopColor: '#1C1C38',
+    paddingHorizontal: PAD, paddingVertical: 16,
+  },
   submitBtn: {
-    backgroundColor: GOLD, borderRadius: 13, paddingVertical: 15,
-    flexDirection: 'row', alignItems: 'center',
-    justifyContent: 'center', marginTop: 20, marginBottom: 10,
+    backgroundColor: Colors.gold, borderRadius: 16, paddingVertical: 14, alignItems: 'center',
   },
   submitBtnDisabled: { backgroundColor: 'rgba(212,160,23,0.25)' },
-  submitBtnText:     { color: NAVY, fontSize: 15, fontWeight: '700' },
-  skipBtn:           { alignItems: 'center', paddingVertical: 10 },
-  skipText:          { color: MUTED, fontSize: 13 },
+  submitBtnText: { color: Colors.navy, fontSize: 14, fontWeight: '700' },
 });

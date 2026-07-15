@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamApp — Payment</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75; --success:#22C55E;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); }
+  .statusbar{ height:44px; }
+
+  .header{ display:flex; align-items:center; gap:12px; padding:0 20px 14px; }
+  .back-btn{ width:36px; height:36px; border-radius:50%; background:var(--navy-card); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .header h1{ font-size:17px; font-weight:700; color:#fff; margin:0; }
+
+  .scrollarea{ height:calc(100% - 44px - 58px - 96px); overflow-y:auto; padding:0 20px; }
+
+  .escrow-hero{
+    border-radius:22px; padding:20px; margin-bottom:18px; text-align:center;
+    background:linear-gradient(135deg, var(--navy-card), var(--navy-soft)); border:1px solid var(--navy-line);
+  }
+  .escrow-icon{ width:52px; height:52px; border-radius:16px; background:rgba(212,160,23,0.12); display:flex; align-items:center; justify-content:center; margin:0 auto 12px; }
+  .escrow-icon svg{ color:var(--gold); width:24px; height:24px; }
+  .escrow-hero h2{ font-size:15px; font-weight:700; color:#fff; margin:0 0 6px; }
+  .escrow-hero p{ font-size:12px; color:var(--text-dim); line-height:1.5; margin:0; }
+
+  .breakdown{ background:var(--navy-card); border:1px solid var(--navy-line); border-radius:18px; padding:16px; margin-bottom:18px; }
+  .breakdown-row{ display:flex; justify-content:space-between; padding:8px 0; }
+  .breakdown-row span:first-child{ font-size:12.5px; color:var(--text-dim); }
+  .breakdown-row span:last-child{ font-size:12.5px; color:#fff; font-weight:500; }
+  .breakdown-divider{ height:1px; background:var(--navy-line); margin:6px 0; }
+  .breakdown-total span:first-child{ font-size:14px; font-weight:700; color:#fff; }
+  .breakdown-total span:last-child{ font-size:16px; font-weight:800; color:var(--gold); }
+  .commission-note{ font-size:10.5px; color:var(--text-faint); margin-top:4px; }
+
+  .section-label{ font-size:12.5px; font-weight:600; color:#fff; margin:0 0 10px; }
+  .pay-methods{ display:flex; flex-direction:column; gap:9px; margin-bottom:18px; }
+  .pay-method{
+    display:flex; align-items:center; gap:12px; padding:13px 14px; border-radius:14px;
+    background:var(--navy-card); border:1.5px solid var(--navy-line); cursor:pointer;
+  }
+  .pay-method.selected{ border-color:var(--gold); background:rgba(212,160,23,0.06); }
+  .pay-icon{ width:36px; height:36px; border-radius:10px; background:var(--navy-soft); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .pay-icon svg{ color:var(--gold); width:17px; height:17px; }
+  .pay-name{ font-size:13px; font-weight:600; color:#fff; margin:0; }
+  .pay-sub{ font-size:11px; color:var(--text-faint); margin:1px 0 0; }
+  .radio{ margin-left:auto; width:19px; height:19px; border-radius:50%; border:2px solid var(--navy-line); flex-shrink:0; }
+  .radio.on{ border-color:var(--gold); background:var(--gold); position:relative; }
+  .radio.on::after{ content:''; position:absolute; inset:4px; border-radius:50%; background:var(--navy); }
+
+  .protection-note{ display:flex; gap:9px; padding:12px 13px; border-radius:14px; background:rgba(34,197,94,0.08); border:1px solid rgba(34,197,94,0.2); }
+  .protection-note svg{ color:var(--success); flex-shrink:0; width:16px; height:16px; }
+  .protection-note p{ font-size:11px; color:#8FD6A8; line-height:1.5; margin:0; }
+
+  .footer-copy{ text-align:center; font-size:10px; color:#3A3A56; padding:18px 0 6px; }
+
+  .paybar{
+    position:absolute; bottom:0; left:0; right:0; height:96px; background:var(--navy-soft);
+    border-top:1px solid #1C1C38; display:flex; flex-direction:column; justify-content:center; padding:0 20px;
+  }
+  .pay-btn{ padding:14px; border-radius:16px; background:var(--gold); color:var(--navy); font-size:14.5px; font-weight:700; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; }
+  .pay-note{ text-align:center; font-size:10.5px; color:var(--text-faint); margin:8px 0 0; }
+
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"></div>
+
+  <div class="header">
+    <div class="back-btn"><svg viewBox="0 0 24 24" width="17" height="17" color="#fff"><polyline points="15 18 9 12 15 6"/></svg></div>
+    <h1>Payment</h1>
+  </div>
+
+  <div class="scrollarea">
+    <div class="escrow-hero">
+      <div class="escrow-icon">
+        <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </div>
+      <h2>Your money is protected</h2>
+      <p>Payment is held safely by WiamApp and only released to Kwabena once you confirm the job is complete.</p>
+    </div>
+
+    <div class="breakdown">
+      <div class="breakdown-row"><span>Service amount</span><span>GHS 450.00</span></div>
+      <div class="breakdown-row"><span>WiamApp escrow fee</span><span>GHS 0.00</span></div>
+      <div class="breakdown-divider"></div>
+      <div class="breakdown-row breakdown-total"><span>Total to pay</span><span>GHS 450.00</span></div>
+      <p class="commission-note">Kwabena receives GHS 405 (90%) once the job is confirmed complete.</p>
+    </div>
+
+    <p class="section-label">Payment method</p>
+    <div class="pay-methods">
+      <div class="pay-method selected">
+        <div class="pay-icon"><svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M2 10h20"/></svg></div>
+        <div>
+          <p class="pay-name">Debit / Credit Card</p>
+          <p class="pay-sub">Visa, Mastercard via Paystack</p>
+        </div>
+        <div class="radio on"></div>
+      </div>
+      <div class="pay-method">
+        <div class="pay-icon"><svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></div>
+        <div>
+          <p class="pay-name">Mobile Money</p>
+          <p class="pay-sub">MTN, Vodafone, AirtelTigo</p>
+        </div>
+        <div class="radio"></div>
+      </div>
+    </div>
+
+    <div class="protection-note">
+      <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+      <p>Never pay a worker outside WiamApp. Off-platform payments are not protected and violate platform terms.</p>
+    </div>
+
+    <p class="footer-copy">© 2026 WiamApp · Powered by WiamLabs</p>
+  </div>
+
+  <div class="paybar">
+    <button class="pay-btn">
+      <svg viewBox="0 0 24 24" width="16" height="16"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      Pay GHS 450.00
+    </button>
+    <p class="pay-note">Secured by Paystack · Held in escrow by WiamApp</p>
+  </div>
+</div>
+
+</body>
+</html>

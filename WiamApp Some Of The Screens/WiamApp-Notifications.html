@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamApp — Notifications</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810;
+    --text-dim:#7D7D97; --text-faint:#5A5A75;
+    --success:#22C55E; --warning:#F59E0B; --error:#EF4444; --info:#3B82F6;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); }
+  .statusbar{ height:44px; }
+  .topfixed{ padding:0 20px 8px; display:flex; align-items:center; justify-content:space-between; }
+  .page-title{ font-size:20px; font-weight:700; color:#fff; margin:4px 0; }
+  .clear-btn{ font-size:12px; color:var(--gold); font-weight:500; background:none; border:none; cursor:pointer; }
+
+  .scrollarea{ height:calc(100% - 44px - 46px - 84px); overflow-y:auto; padding:0 20px; }
+
+  .day-label{ font-size:11px; font-weight:700; letter-spacing:0.6px; color:var(--text-faint); text-transform:uppercase; margin:16px 4px 8px; }
+
+  .notif-row{ display:flex; gap:12px; padding:13px; border-radius:18px; margin-bottom:8px; position:relative; }
+  .notif-row.unread{ background:var(--navy-card); }
+  .notif-icon{ width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .icon-success{ background:rgba(34,197,94,0.14); }
+  .icon-success svg{ color:var(--success); }
+  .icon-warning{ background:rgba(245,158,11,0.14); }
+  .icon-warning svg{ color:var(--warning); }
+  .icon-info{ background:rgba(59,130,246,0.14); }
+  .icon-info svg{ color:var(--info); }
+  .icon-gold{ background:rgba(212,160,23,0.14); }
+  .icon-gold svg{ color:var(--gold); }
+  .notif-icon svg{ width:18px; height:18px; }
+
+  .notif-body{ flex:1; min-width:0; }
+  .notif-title{ font-size:13px; font-weight:600; color:#fff; margin:0; line-height:1.35; }
+  .notif-sub{ font-size:12px; color:var(--text-dim); margin:3px 0 0; line-height:1.4; }
+  .notif-time{ font-size:10.5px; color:var(--text-faint); margin:5px 0 0; }
+  .unread-dot{ position:absolute; top:14px; right:12px; width:7px; height:7px; border-radius:50%; background:var(--gold); }
+
+  .empty-state{ display:none; flex-direction:column; align-items:center; text-align:center; padding:80px 30px; }
+  .footer-copy{ text-align:center; font-size:10px; color:#3A3A56; padding:14px 0 20px; }
+
+  .bottomnav{ position:absolute; bottom:0; left:0; right:0; height:84px; background:var(--navy-soft); border-top:1px solid #1C1C38; display:flex; align-items:flex-start; justify-content:space-around; padding-top:12px; }
+  .navitem{ display:flex; flex-direction:column; align-items:center; gap:4px; width:56px; }
+  .navitem span{ font-size:9.5px; color:var(--text-faint); }
+  .navitem.active span{ color:var(--gold); }
+  .navitem svg{ width:19px; height:19px; }
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"></div>
+  <div class="topfixed">
+    <p class="page-title">Notifications</p>
+    <button class="clear-btn">Mark all read</button>
+  </div>
+
+  <div class="scrollarea">
+    <p class="day-label">Today</p>
+
+    <div class="notif-row unread">
+      <div class="notif-icon icon-success"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <div class="notif-body">
+        <p class="notif-title">Kwabena Owusu accepted your booking</p>
+        <p class="notif-sub">His phone number is now available. You can chat and arrange payment.</p>
+        <p class="notif-time">12 minutes ago</p>
+      </div>
+      <span class="unread-dot"></span>
+    </div>
+
+    <div class="notif-row unread">
+      <div class="notif-icon icon-gold"><svg viewBox="0 0 24 24"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg></div>
+      <div class="notif-body">
+        <p class="notif-title">Payment held in escrow</p>
+        <p class="notif-sub">GHS 320 is safely held until Ama confirms the job is complete.</p>
+        <p class="notif-time">1 hour ago</p>
+      </div>
+      <span class="unread-dot"></span>
+    </div>
+
+    <div class="notif-row">
+      <div class="notif-icon icon-warning"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+      <div class="notif-body">
+        <p class="notif-title">New booking request</p>
+        <p class="notif-sub">Martin Wiafe wants electrical work in Lashibi. Respond within 2 hours.</p>
+        <p class="notif-time">3 hours ago</p>
+      </div>
+    </div>
+
+    <p class="day-label">Yesterday</p>
+
+    <div class="notif-row">
+      <div class="notif-icon icon-success"><svg viewBox="0 0 24 24"><polygon points="12 2 15 9 22 9.5 16.5 14.3 18.2 21 12 17.3 5.8 21 7.5 14.3 2 9.5 9 9"/></svg></div>
+      <div class="notif-body">
+        <p class="notif-title">Nana Yeboah rated you 5 stars</p>
+        <p class="notif-sub">"Excellent work, finished on time and cleaned up after."</p>
+        <p class="notif-time">1 day ago</p>
+      </div>
+    </div>
+
+    <div class="notif-row">
+      <div class="notif-icon icon-info"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></div>
+      <div class="notif-body">
+        <p class="notif-title">Verification approved</p>
+        <p class="notif-sub">Your documents were reviewed. You can now accept jobs.</p>
+        <p class="notif-time">1 day ago</p>
+      </div>
+    </div>
+
+    <p class="footer-copy">© 2026 WiamApp · Powered by WiamLabs</p>
+  </div>
+
+  <div class="bottomnav">
+    <div class="navitem" style="color:#5A5A75">
+      <svg viewBox="0 0 24 24" width="19" height="19"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+      <span>Home</span>
+    </div>
+    <div class="navitem" style="color:#5A5A75">
+      <svg viewBox="0 0 24 24" width="19" height="19"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+      <span>Jobs</span>
+    </div>
+    <div class="navitem active">
+      <svg viewBox="0 0 24 24" width="19" height="19" fill="#D4A017" stroke="none"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" fill="none" stroke="#D4A017" stroke-width="1.8"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" fill="none" stroke="#D4A017" stroke-width="1.8"/></svg>
+      <span style="color:#D4A017">Alerts</span>
+    </div>
+    <div class="navitem" style="color:#5A5A75">
+      <div style="width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#D4A017,#A07810);display:flex;align-items:center;justify-content:center;color:#08081A;font-size:9px;font-weight:700;">K</div>
+      <span>Profile</span>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

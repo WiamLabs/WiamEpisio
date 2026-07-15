@@ -9,15 +9,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../constants/colors';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Colors, goldGradient } from '../constants/colors';
 import { getCustomerTrustScore } from '../lib/api/disputes';
+import GoldAvatar from '../components/ui/GoldAvatar';
 
-const NAVY    = Colors.navy;
-const NAVY2   = Colors.navyMid;
-const GOLD    = Colors.gold;
-const WHITE   = Colors.white;
-const MUTED   = 'rgba(255,255,255,0.50)';
-const BORDER  = 'rgba(255,255,255,0.09)';
+const PAD     = Colors.screenPad;
 const BACKEND = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 export default function JobDetailScreen({ navigation, route }) {
@@ -133,13 +130,13 @@ export default function JobDetailScreen({ navigation, route }) {
   const sc = getStatusConfig(status);
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <StatusBar barStyle="light-content" backgroundColor={NAVY} />
+    <SafeAreaView style={styles.safe} edges={['top']}>
+      <StatusBar barStyle="light-content" backgroundColor={Colors.navy} />
 
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={22} color={WHITE} />
+          <Ionicons name="arrow-back" size={22} color={Colors.white} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Job Detail</Text>
         <View style={[styles.statusPill, { backgroundColor: sc.bg }]}>
@@ -161,23 +158,23 @@ export default function JobDetailScreen({ navigation, route }) {
         <View style={styles.card}>
           <Text style={styles.cardLabel}>Customer</Text>
           <View style={styles.customerRow}>
-            <View style={styles.avatar}>
-              <Ionicons name="person" size={24} color={GOLD} />
-            </View>
+            <GoldAvatar name={job.customer} size={48} />
             <View style={styles.customerInfo}>
               <Text style={styles.customerName}>{job.customer}</Text>
               <Text style={styles.customerPhone}>{job.phone}</Text>
             </View>
-            <TouchableOpacity onPress={callCustomer} style={styles.callBtn}>
-              <Ionicons name="call" size={18} color={NAVY} />
-              <Text style={styles.callText}>Call</Text>
+            <TouchableOpacity onPress={callCustomer} activeOpacity={0.85}>
+              <LinearGradient colors={goldGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.callBtn}>
+                <Ionicons name="call" size={18} color={Colors.navy} />
+                <Text style={styles.callText}>Call</Text>
+              </LinearGradient>
             </TouchableOpacity>
           </View>
           {customerTrust && (
             <View style={styles.trustRow}>
               <View style={[styles.trustBadge, customerTrust.trustScore >= 70 ? styles.trustGood : customerTrust.trustScore >= 40 ? styles.trustOk : styles.trustLow]}>
-                <Ionicons name="shield-checkmark-outline" size={13} color={customerTrust.trustScore >= 70 ? '#22C55E' : customerTrust.trustScore >= 40 ? GOLD : '#EF4444'} />
-                <Text style={[styles.trustBadgeText, { color: customerTrust.trustScore >= 70 ? '#22C55E' : customerTrust.trustScore >= 40 ? GOLD : '#EF4444' }]}>
+                <Ionicons name="shield-checkmark-outline" size={13} color={customerTrust.trustScore >= 70 ? Colors.success : customerTrust.trustScore >= 40 ? Colors.gold : Colors.error} />
+                <Text style={[styles.trustBadgeText, { color: customerTrust.trustScore >= 70 ? Colors.success : customerTrust.trustScore >= 40 ? Colors.gold : Colors.error }]}>
                   Trust Score: {customerTrust.trustScore}/100
                 </Text>
               </View>
@@ -193,7 +190,7 @@ export default function JobDetailScreen({ navigation, route }) {
         <View style={styles.card}>
           <Text style={styles.cardLabel}>Job Details</Text>
           <View style={styles.detailRow}>
-            <Ionicons name="construct-outline" size={18} color={GOLD} />
+            <Ionicons name="construct-outline" size={18} color={Colors.gold} />
             <View style={styles.detailText}>
               <Text style={styles.detailKey}>Service</Text>
               <Text style={styles.detailVal}>{job.service}</Text>
@@ -201,7 +198,7 @@ export default function JobDetailScreen({ navigation, route }) {
           </View>
           <View style={styles.divider} />
           <View style={styles.detailRow}>
-            <Ionicons name="pricetag-outline" size={18} color={GOLD} />
+            <Ionicons name="pricetag-outline" size={18} color={Colors.gold} />
             <View style={styles.detailText}>
               <Text style={styles.detailKey}>Category</Text>
               <Text style={styles.detailVal}>{job.category}</Text>
@@ -209,7 +206,7 @@ export default function JobDetailScreen({ navigation, route }) {
           </View>
           <View style={styles.divider} />
           <View style={styles.detailRow}>
-            <Ionicons name="calendar-outline" size={18} color={GOLD} />
+            <Ionicons name="calendar-outline" size={18} color={Colors.gold} />
             <View style={styles.detailText}>
               <Text style={styles.detailKey}>Date & Time</Text>
               <Text style={styles.detailVal}>{job.date} at {job.time}</Text>
@@ -229,11 +226,11 @@ export default function JobDetailScreen({ navigation, route }) {
         <View style={styles.card}>
           <Text style={styles.cardLabel}>Location</Text>
           <View style={styles.locationRow}>
-            <Ionicons name="location-outline" size={18} color={GOLD} />
+            <Ionicons name="location-outline" size={18} color={Colors.gold} />
             <Text style={styles.locationText}>{job.location}</Text>
           </View>
           <TouchableOpacity onPress={openMaps} style={styles.mapsBtn}>
-            <Ionicons name="map-outline" size={16} color={GOLD} />
+            <Ionicons name="map-outline" size={16} color={Colors.gold} />
             <Text style={styles.mapsBtnText}>Open in Google Maps</Text>
           </TouchableOpacity>
         </View>
@@ -264,24 +261,20 @@ export default function JobDetailScreen({ navigation, route }) {
               <Ionicons name="close" size={18} color={Colors.error} />
               <Text style={[styles.actionBtnText, { color: Colors.error }]}>Decline</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.actionBtn, styles.acceptBtn]}
-              onPress={handleAccept}
-              disabled={loading}
-            >
-              <Ionicons name="checkmark" size={18} color={NAVY} />
-              <Text style={[styles.actionBtnText, { color: NAVY }]}>Accept Job</Text>
+            <TouchableOpacity onPress={handleAccept} disabled={loading} activeOpacity={0.85} style={{ flex: 1 }}>
+              <LinearGradient colors={goldGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.actionBtn, styles.acceptBtn]}>
+                <Ionicons name="checkmark" size={18} color={Colors.navy} />
+                <Text style={[styles.actionBtnText, { color: Colors.navy }]}>Accept Job</Text>
+              </LinearGradient>
             </TouchableOpacity>
           </>
         )}
         {status === 'accepted' && (
-          <TouchableOpacity
-            style={[styles.actionBtn, styles.acceptBtn, { flex: 1 }]}
-            onPress={handleCheckIn}
-            disabled={loading}
-          >
-            <Ionicons name="location" size={18} color={NAVY} />
-            <Text style={[styles.actionBtnText, { color: NAVY }]}>GPS Check-In (I've Arrived)</Text>
+          <TouchableOpacity onPress={handleCheckIn} disabled={loading} activeOpacity={0.85} style={{ flex: 1 }}>
+            <LinearGradient colors={goldGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.actionBtn, styles.acceptBtn, { flex: 1 }]}>
+              <Ionicons name="location" size={18} color={Colors.navy} />
+              <Text style={[styles.actionBtnText, { color: Colors.navy }]}>GPS Check-In (I've Arrived)</Text>
+            </LinearGradient>
           </TouchableOpacity>
         )}
         {status === 'in_progress' && (
@@ -290,8 +283,8 @@ export default function JobDetailScreen({ navigation, route }) {
             onPress={handleComplete}
             disabled={loading}
           >
-            <Ionicons name="checkmark-done" size={18} color={WHITE} />
-            <Text style={[styles.actionBtnText, { color: WHITE }]}>Mark as Completed</Text>
+            <Ionicons name="checkmark-done" size={18} color={Colors.white} />
+            <Text style={[styles.actionBtnText, { color: Colors.white }]}>Mark as Completed</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -300,46 +293,45 @@ export default function JobDetailScreen({ navigation, route }) {
 }
 
 const styles = StyleSheet.create({
-  safe:            { flex: 1, backgroundColor: NAVY },
-  header:          { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 16, paddingBottom: 14, gap: 12 },
+  safe:            { flex: 1, backgroundColor: Colors.navy },
+  header:          { flexDirection: 'row', alignItems: 'center', paddingHorizontal: PAD, paddingTop: 8, paddingBottom: 14, gap: 12 },
   backBtn:         { padding: 4 },
-  headerTitle:     { flex: 1, fontSize: 18, fontWeight: '700', color: WHITE },
+  headerTitle:     { flex: 1, fontSize: 18, fontWeight: '700', color: Colors.white },
   statusPill:      { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
   statusText:      { fontSize: 12, fontWeight: '600' },
   scroll:          { flex: 1 },
-  emergencyBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#EF4444', marginHorizontal: 20, borderRadius: 10, padding: 12, marginBottom: 4 },
-  emergencyText:   { color: '#fff', fontWeight: '700', fontSize: 13 },
-  card:            { backgroundColor: NAVY2, marginHorizontal: 20, marginTop: 14, borderRadius: 14, padding: 18, borderWidth: 1, borderColor: BORDER },
-  cardLabel:       { fontSize: 11, fontWeight: '700', color: GOLD, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 14 },
+  emergencyBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: Colors.error, marginHorizontal: PAD, borderRadius: 14, padding: 12, marginBottom: 4 },
+  emergencyText:   { color: Colors.white, fontWeight: '700', fontSize: 13 },
+  card:            { backgroundColor: Colors.navyCard, marginHorizontal: PAD, marginTop: 14, borderRadius: Colors.cardRadius, padding: 18, borderWidth: 1, borderColor: Colors.navyLine },
+  cardLabel:       { fontSize: 11, fontWeight: '700', color: Colors.gold, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 14 },
   customerRow:     { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  avatar:          { width: 48, height: 48, borderRadius: 24, backgroundColor: 'rgba(212,160,23,0.15)', alignItems: 'center', justifyContent: 'center' },
   customerInfo:    { flex: 1 },
-  customerName:    { fontSize: 16, fontWeight: '700', color: WHITE },
-  customerPhone:   { fontSize: 13, color: MUTED, marginTop: 2 },
-  callBtn:         { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: GOLD, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 7 },
-  callText:        { fontSize: 13, fontWeight: '700', color: NAVY },
-  trustRow:  { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: BORDER },
+  customerName:    { fontSize: 16, fontWeight: '700', color: Colors.white },
+  customerPhone:   { fontSize: 13, color: Colors.textDim, marginTop: 2 },
+  callBtn:         { flexDirection: 'row', alignItems: 'center', gap: 5, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 7 },
+  callText:        { fontSize: 13, fontWeight: '700', color: Colors.navy },
+  trustRow:  { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: Colors.navyLine },
   trustBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 20, marginBottom: 6 },
   trustGood: { backgroundColor: 'rgba(34,197,94,0.12)' },
   trustOk:   { backgroundColor: 'rgba(212,160,23,0.12)' },
   trustLow:  { backgroundColor: 'rgba(239,68,68,0.12)' },
   trustBadgeText: { fontSize: 12, fontWeight: '700' },
-  trustDetail: { fontSize: 11.5, color: MUTED },
+  trustDetail: { fontSize: 11.5, color: Colors.textDim },
   detailRow:       { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingVertical: 2 },
   detailText:      { flex: 1 },
-  detailKey:       { fontSize: 12, color: MUTED },
-  detailVal:       { fontSize: 15, fontWeight: '600', color: WHITE, marginTop: 2 },
-  divider:         { height: 1, backgroundColor: BORDER, marginVertical: 12 },
+  detailKey:       { fontSize: 12, color: Colors.textDim },
+  detailVal:       { fontSize: 15, fontWeight: '600', color: Colors.white, marginTop: 2 },
+  divider:         { height: 1, backgroundColor: Colors.navyLine, marginVertical: 12 },
   locationRow:     { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
-  locationText:    { flex: 1, fontSize: 14, color: WHITE, lineHeight: 20 },
-  mapsBtn:         { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 14, borderTopWidth: 1, borderTopColor: BORDER, paddingTop: 14 },
-  mapsBtnText:     { fontSize: 14, color: GOLD, fontWeight: '600' },
+  locationText:    { flex: 1, fontSize: 14, color: Colors.white, lineHeight: 20 },
+  mapsBtn:         { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 14, borderTopWidth: 1, borderTopColor: Colors.navyLine, paddingTop: 14 },
+  mapsBtnText:     { fontSize: 14, color: Colors.gold, fontWeight: '600' },
   notesText:       { fontSize: 14, color: 'rgba(255,255,255,0.75)', lineHeight: 21 },
-  postedText:      { textAlign: 'center', color: MUTED, fontSize: 12, marginTop: 18 },
-  actionBar:       { flexDirection: 'row', gap: 12, padding: 20, paddingBottom: 28, borderTopWidth: 1, borderTopColor: BORDER, backgroundColor: NAVY },
-  actionBtn:       { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 15, borderRadius: 12 },
+  postedText:      { textAlign: 'center', color: Colors.textDim, fontSize: 12, marginTop: 18 },
+  actionBar:       { flexDirection: 'row', gap: 12, padding: PAD, paddingBottom: 28, borderTopWidth: 1, borderTopColor: Colors.navyLine, backgroundColor: Colors.navy },
+  actionBtn:       { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 15, borderRadius: 14 },
   actionBtnText:   { fontSize: 15, fontWeight: '700' },
   rejectBtn:       { backgroundColor: 'rgba(239,68,68,0.12)', borderWidth: 1.5, borderColor: Colors.error },
-  acceptBtn:       { backgroundColor: GOLD },
+  acceptBtn:       { backgroundColor: Colors.gold },
   completeBtn:     { backgroundColor: Colors.success },
 });

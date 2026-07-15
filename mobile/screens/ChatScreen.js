@@ -19,12 +19,11 @@ import { Colors } from '../constants/colors';
 import { useAuth } from '../lib/AuthContext';
 import { getMessages, sendMessage, sendVoiceMessage, markMessagesAsRead, subscribeToMessages } from '../lib/api/messages';
 import { supabase } from '../lib/supabase';
+import GoldAvatar from '../components/ui/GoldAvatar';
 import VerifiedBadge from '../components/VerifiedBadge';
 
-const C     = Colors.light;
-const GOLD  = Colors.gold;
-const NAVY  = Colors.navy;
-const RED   = '#EF4444';
+const PAD   = Colors.screenPad;
+const RED   = Colors.error;
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
@@ -306,19 +305,22 @@ export default function ChatScreen({ navigation, route }) {
         )}
         <View style={[styles.msgRow, isMe && styles.msgRowMe]}>
           {!isMe && (
-            <View style={styles.msgAvatar}>
-              <Text style={styles.msgAvatarText}>{(workerName || 'W')[0].toUpperCase()}</Text>
-            </View>
+            <GoldAvatar name={workerName || 'Chat'} size={28} />
           )}
-          <View style={[styles.bubble, isMe ? styles.bubbleMe : styles.bubbleThem]}>
-            {item.voice_url ? (
-              <View style={styles.voiceMsg}>
-                <Ionicons name="mic" size={16} color={isMe ? NAVY : GOLD} />
-                <Text style={[styles.voiceText, isMe && { color: NAVY }]}>Voice message</Text>
-              </View>
-            ) : (
-              <Text style={[styles.bubbleText, isMe && styles.bubbleTextMe]}>{item.message}</Text>
-            )}
+          <View style={styles.bubbleWrap}>
+            <View style={[styles.bubble, isMe ? styles.bubbleMe : styles.bubbleThem]}>
+              {item.voice_url ? (
+                <View style={styles.voiceMsg}>
+                  <Ionicons name="mic" size={16} color={isMe ? Colors.navy : Colors.gold} />
+                  <Text style={[styles.voiceText, isMe && styles.voiceTextMe]}>Voice message</Text>
+                </View>
+              ) : (
+                <Text style={[styles.bubbleText, isMe && styles.bubbleTextMe]}>{item.message}</Text>
+              )}
+            </View>
+            <Text style={[styles.bubbleTime, isMe && styles.bubbleTimeMe]}>
+              {new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </Text>
           </View>
         </View>
       </View>
@@ -327,15 +329,16 @@ export default function ChatScreen({ navigation, route }) {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.safe}>
-        <ActivityIndicator color={GOLD} style={{ marginTop: 80 }} />
+      <SafeAreaView style={styles.safe} edges={['top']}>
+        <StatusBar barStyle="light-content" backgroundColor={Colors.navy} />
+        <ActivityIndicator color={Colors.gold} style={{ marginTop: 80 }} />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <StatusBar barStyle="dark-content" backgroundColor={C.background} />
+    <SafeAreaView style={styles.safe} edges={['top']}>
+      <StatusBar barStyle="light-content" backgroundColor={Colors.navy} />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -344,23 +347,26 @@ export default function ChatScreen({ navigation, route }) {
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <Ionicons name="arrow-back" size={22} color={NAVY} />
+            <Ionicons name="arrow-back" size={22} color={Colors.white} />
           </TouchableOpacity>
+          <GoldAvatar name={workerName || 'Chat'} size={38} online />
           <View style={styles.headerInfo}>
-            <View style={styles.headerAvatar}>
-              <Text style={styles.headerAvatarText}>{(workerName || 'W')[0].toUpperCase()}</Text>
+            <View style={styles.headerNameRow}>
+              <Text style={styles.headerName}>{workerName || 'Chat'}</Text>
+              {otherParty.verifiedBadge && <VerifiedBadge color="blue" size={13} />}
             </View>
-            <View>
-              <View style={styles.headerNameRow}>
-                <Text style={styles.headerName}>{workerName || 'Chat'}</Text>
-                {otherParty.verifiedBadge && <VerifiedBadge color="blue" size={13} />}
-              </View>
-              <Text style={styles.headerSub}>Booking #{bookingId?.slice(-6)}</Text>
-            </View>
+            <Text style={styles.headerSub}>Online · Booking #{bookingId?.slice(-6)}</Text>
           </View>
           <TouchableOpacity onPress={handleChatMenu} style={styles.menuBtn}>
-            <Ionicons name="ellipsis-vertical" size={20} color={NAVY} />
+            <Ionicons name="ellipsis-vertical" size={20} color={Colors.white} />
           </TouchableOpacity>
+        </View>
+
+        <View style={styles.escrowBanner}>
+          <Ionicons name="lock-closed-outline" size={15} color={Colors.gold} />
+          <Text style={styles.escrowText}>
+            Messages are tied to this booking. Keep payment and job details inside WiamApp.
+          </Text>
         </View>
 
         {/* Messages */}
@@ -372,7 +378,7 @@ export default function ChatScreen({ navigation, route }) {
           contentContainerStyle={styles.messagesList}
           ListEmptyComponent={
             <View style={styles.emptyChat}>
-              <Ionicons name="chatbubbles-outline" size={48} color={C.border} />
+              <Ionicons name="chatbubbles-outline" size={48} color={Colors.navyLine} />
               <Text style={styles.emptyChatText}>No messages yet</Text>
               <Text style={styles.emptyChatSub}>Send a message to get started</Text>
             </View>
@@ -406,10 +412,13 @@ export default function ChatScreen({ navigation, route }) {
           ) : (
             // ── TEXT MODE ────────────────────────────────────
             <>
+              <TouchableOpacity style={styles.plusBtn} activeOpacity={0.85}>
+                <Ionicons name="add" size={20} color={Colors.gold} />
+              </TouchableOpacity>
               <TextInput
                 style={styles.input}
                 placeholder="Type a message..."
-                placeholderTextColor={C.textSecondary}
+                placeholderTextColor={Colors.textFaint}
                 value={text}
                 onChangeText={setText}
                 multiline
@@ -418,27 +427,25 @@ export default function ChatScreen({ navigation, route }) {
                 onSubmitEditing={handleSend}
               />
               {text.trim() ? (
-                // Text is typed — show send button only
                 <TouchableOpacity
                   style={[styles.sendBtn, sending && { opacity: 0.5 }]}
                   onPress={handleSend}
                   disabled={sending}
                 >
                   {sending
-                    ? <ActivityIndicator color={NAVY} size="small" />
-                    : <Ionicons name="send" size={18} color={NAVY} />
+                    ? <ActivityIndicator color={Colors.navy} size="small" />
+                    : <Ionicons name="send" size={16} color={Colors.navy} />
                   }
                 </TouchableOpacity>
               ) : (
-                // No text — show mic button to start voice recording
                 <TouchableOpacity
                   style={styles.micBtn}
                   onPress={startRecording}
                   disabled={sendingVoice}
                 >
                   {sendingVoice
-                    ? <ActivityIndicator color={NAVY} size="small" />
-                    : <Ionicons name="mic" size={22} color={NAVY} />
+                    ? <ActivityIndicator color={Colors.navy} size="small" />
+                    : <Ionicons name="mic" size={20} color={Colors.navy} />
                   }
                 </TouchableOpacity>
               )}
@@ -451,41 +458,43 @@ export default function ChatScreen({ navigation, route }) {
 }
 
 const styles = StyleSheet.create({
-  safe:            { flex: 1, backgroundColor: C.background },
-  header:          { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: C.border, gap: 12 },
+  safe:            { flex: 1, backgroundColor: Colors.navy },
+  header:          { flexDirection: 'row', alignItems: 'center', paddingHorizontal: PAD, paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: Colors.navyLine, gap: 11 },
   backBtn:         { padding: 4 },
-  menuBtn:         { padding: 4 },
-  headerInfo:      { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
-  headerAvatar:    { width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(212,160,23,0.15)', alignItems: 'center', justifyContent: 'center' },
-  headerAvatarText:{ fontSize: 16, fontWeight: '700', color: GOLD },
+  menuBtn:         { padding: 4, marginLeft: 'auto' },
+  headerInfo:      { flex: 1 },
   headerNameRow:   { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  headerName:      { fontSize: 16, fontWeight: '700', color: NAVY },
-  headerSub:       { fontSize: 12, color: C.textSecondary },
-  messagesList:    { paddingHorizontal: 16, paddingVertical: 12, flexGrow: 1 },
-  timeLabel:       { textAlign: 'center', fontSize: 11, color: C.textSecondary, marginVertical: 8 },
-  msgRow:          { flexDirection: 'row', alignItems: 'flex-end', gap: 8, marginBottom: 6 },
+  headerName:      { fontSize: 14.5, fontWeight: '600', color: Colors.white },
+  headerSub:       { fontSize: 11, color: Colors.success, marginTop: 1 },
+  escrowBanner:    { flexDirection: 'row', alignItems: 'center', gap: 9, marginHorizontal: PAD, marginTop: 12, marginBottom: 4, padding: 10, paddingHorizontal: 13, borderRadius: 14, backgroundColor: 'rgba(212,160,23,0.1)', borderWidth: 1, borderColor: 'rgba(212,160,23,0.25)' },
+  escrowText:      { flex: 1, fontSize: 11, color: '#D9BE6E', lineHeight: 16 },
+  messagesList:    { paddingHorizontal: PAD, paddingVertical: 14, flexGrow: 1, gap: 10 },
+  timeLabel:       { textAlign: 'center', fontSize: 10.5, color: Colors.textFaint, marginVertical: 6 },
+  msgRow:          { flexDirection: 'row', alignItems: 'flex-end', gap: 8, marginBottom: 4 },
   msgRowMe:        { flexDirection: 'row-reverse' },
-  msgAvatar:       { width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(212,160,23,0.15)', alignItems: 'center', justifyContent: 'center' },
-  msgAvatarText:   { fontSize: 11, fontWeight: '700', color: GOLD },
-  bubble:          { maxWidth: '75%', borderRadius: 16, paddingHorizontal: 14, paddingVertical: 10 },
-  bubbleThem:      { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderBottomLeftRadius: 4 },
-  bubbleMe:        { backgroundColor: GOLD, borderBottomRightRadius: 4 },
-  bubbleText:      { fontSize: 15, color: NAVY, lineHeight: 21 },
-  bubbleTextMe:    { color: NAVY },
+  bubbleWrap:      { maxWidth: '74%' },
+  bubble:          { borderRadius: 18, paddingHorizontal: 13, paddingVertical: 10 },
+  bubbleThem:      { backgroundColor: Colors.navyCard, borderBottomLeftRadius: 5 },
+  bubbleMe:        { backgroundColor: Colors.gold, borderBottomRightRadius: 5 },
+  bubbleText:      { fontSize: 13, color: '#E4E4EF', lineHeight: 18 },
+  bubbleTextMe:    { color: Colors.navy, fontWeight: '500' },
+  bubbleTime:      { fontSize: 9.5, color: Colors.textFaint, marginTop: 3 },
+  bubbleTimeMe:    { textAlign: 'right', color: '#A0A0B8' },
   voiceMsg:        { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  voiceText:       { fontSize: 14, color: GOLD },
+  voiceText:       { fontSize: 14, color: Colors.gold },
+  voiceTextMe:     { color: Colors.navy },
 
-  // Recording mode styles
-  cancelVoiceBtn:      { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(239,68,68,0.1)' },
+  cancelVoiceBtn:      { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(239,68,68,0.12)' },
   recordingIndicator:  { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 },
   recordingDot:        { width: 10, height: 10, borderRadius: 5, backgroundColor: RED },
   recordingTimer:      { fontSize: 14, fontWeight: '700', color: RED },
-  recordingHint:       { fontSize: 11, color: '#888', flex: 1 },
-  micBtn:              { width: 44, height: 44, borderRadius: 22, backgroundColor: GOLD, alignItems: 'center', justifyContent: 'center' },
+  recordingHint:       { fontSize: 11, color: Colors.textDim, flex: 1 },
+  plusBtn:             { width: 34, height: 34, borderRadius: 17, backgroundColor: Colors.navyCard, alignItems: 'center', justifyContent: 'center' },
+  micBtn:              { width: 36, height: 36, borderRadius: 18, backgroundColor: Colors.gold, alignItems: 'center', justifyContent: 'center' },
   emptyChat:       { alignItems: 'center', paddingTop: 80, gap: 10 },
-  emptyChatText:   { fontSize: 16, color: C.textSecondary, fontWeight: '600' },
-  emptyChatSub:    { fontSize: 13, color: C.textSecondary },
-  inputBar:        { flexDirection: 'row', alignItems: 'flex-end', gap: 10, padding: 12, paddingBottom: 20, borderTopWidth: 1, borderTopColor: C.border, backgroundColor: C.background },
-  input:           { flex: 1, backgroundColor: C.surface, borderRadius: 22, paddingHorizontal: 16, paddingVertical: 10, fontSize: 15, color: NAVY, maxHeight: 120, borderWidth: 1, borderColor: C.border },
-  sendBtn:         { width: 44, height: 44, borderRadius: 22, backgroundColor: GOLD, alignItems: 'center', justifyContent: 'center' },
+  emptyChatText:   { fontSize: 16, color: Colors.textDim, fontWeight: '600' },
+  emptyChatSub:    { fontSize: 13, color: Colors.textDim },
+  inputBar:        { flexDirection: 'row', alignItems: 'flex-end', gap: 9, paddingHorizontal: 14, paddingTop: 10, paddingBottom: 22, borderTopWidth: 1, borderTopColor: '#1C1C38', backgroundColor: Colors.navySoft },
+  input:           { flex: 1, backgroundColor: Colors.navyCard, borderRadius: 20, paddingHorizontal: 15, paddingVertical: 9, fontSize: 13, color: Colors.white, maxHeight: 120 },
+  sendBtn:         { width: 36, height: 36, borderRadius: 18, backgroundColor: Colors.gold, alignItems: 'center', justifyContent: 'center' },
 });

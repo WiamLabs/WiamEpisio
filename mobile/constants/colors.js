@@ -1,53 +1,72 @@
 // © 2026 WiamApp. Powered by WiamLabs
-// WiamApp Brand Colors — Updated June 2026
+// Part 13 Design System — LOCKED. Do not restyle or invent new tokens.
+
+/**
+ * Source of truth:
+ * WiamApp Some Of The Screens/WiamApp-Master-Plan-Part13-Design-System.md
+ *
+ * Main app background is Navy (#08081A) for every role.
+ * Gold gradient (135°) for avatars, hero cards, primary CTAs.
+ */
 
 export const Colors = {
-  // Core Brand — matches the WiamApp logo exactly
-  navy: '#0D0D2B',        // Updated — richer navy matching the logo
-  navyDeep: '#08081A',    // Deepest navy for backgrounds
-  navyMid: '#12123A',     // Mid navy for cards
-  gold: '#D4A017',
-  white: '#FFFFFF',
-
-  // Gold shades
-  goldLight: '#F0C040',
-  goldDark: '#A07810',
-
-  // Light Mode (customer default)
-  light: {
-    background: '#FFFFFF',
-    surface: '#F8F8F8',
-    card: '#FFFFFF',
-    text: '#0D0D2B',
-    textSecondary: '#666680',
-    border: '#EBEBEB',
-    button: '#D4A017',
-    buttonText: '#0D0D2B',
-    inputBg: '#F4F4F4',
-  },
-
-  // Dark Mode (worker screens always dark)
-  dark: {
-    background: '#0D0D2B',
-    surface: '#12123A',
-    card: '#12123A',
-    text: '#FFFFFF',
-    textSecondary: '#AAAACC',
-    border: '#1E1E4A',
-    button: '#D4A017',   // Gold ALWAYS stays gold — never changes
-    buttonText: '#0D0D2B',
-    inputBg: 'rgba(255,255,255,0.07)',
-  },
+  // ── Part 13 core tokens ───────────────────────────────────
+  navy:       '#08081A', // Main app background
+  navyCard:   '#12122A', // Cards, list rows, inputs
+  navySoft:   '#161634', // Bottom nav, elevated surfaces
+  navyLine:   '#1E1E42', // Borders, dividers
+  gold:       '#D4A017', // Primary brand
+  goldDark:   '#A07810', // Gradient partner
+  textDim:    '#7D7D97', // Secondary text
+  textFaint:  '#5A5A75', // Tertiary / inactive nav
+  white:      '#FFFFFF',
 
   // Status
   success: '#22C55E',
-  error: '#EF4444',
   warning: '#F59E0B',
-  info: '#3B82F6',
-  online: '#22C55E',
+  error:   '#EF4444',
+  info:    '#3B82F6',
+  online:  '#22C55E',
 
-  // Verification badges — Section 8B of master plan
-  // ONE shape, TWO colors only. Individuals = blue. Business = gold.
+  // Verification badges (master plan — blue individual / gold business)
   badgeBlue: '#3B82F6',
   badgeGold: '#D4A017',
+
+  // Layout constants from Part 13
+  screenPad: 20,
+  cardRadius: 24,
+  bottomNavHeight: 84,
+
+  // Legacy aliases (screens still importing these — map to Part 13)
+  navyDeep: '#08081A',
+  navyMid:  '#12122A',
+  goldLight: '#F0C040',
+
+  /** @deprecated Part 13 is dark for all roles — use Colors directly */
+  light: {
+    background: '#08081A',
+    surface:    '#161634',
+    card:       '#12122A',
+    text:       '#FFFFFF',
+    textSecondary: '#7D7D97',
+    border:     '#1E1E42',
+    button:     '#D4A017',
+    buttonText: '#08081A',
+    inputBg:    '#12122A',
+  },
+
+  dark: {
+    background: '#08081A',
+    surface:    '#161634',
+    card:       '#12122A',
+    text:       '#FFFFFF',
+    textSecondary: '#7D7D97',
+    border:     '#1E1E42',
+    button:     '#D4A017',
+    buttonText: '#08081A',
+    inputBg:    '#12122A',
+  },
 };
+
+/** Gold → Gold Dark at 135° (avatars, hero cards, primary surfaces) */
+export const goldGradient = ['#D4A017', '#A07810'];

@@ -9,15 +9,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../constants/colors';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Colors, goldGradient } from '../constants/colors';
 import { supabase } from '../lib/supabase';
 
-const NAVY   = Colors.navy;
-const NAVY2  = Colors.navyMid;
-const GOLD   = Colors.gold;
-const WHITE  = Colors.white;
-const MUTED  = 'rgba(255,255,255,0.50)';
-const BORDER = 'rgba(255,255,255,0.09)';
+const PAD = Colors.screenPad;
 const BACKEND = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 const DAYS = [
@@ -50,7 +46,7 @@ function HourPicker({ value, options, onChange }) {
     <View>
       <TouchableOpacity style={styles.hourPicker} onPress={() => setOpen(!open)}>
         <Text style={styles.hourPickerText}>{value}</Text>
-        <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={14} color={MUTED} />
+        <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={14} color={Colors.textDim} />
       </TouchableOpacity>
       {open && (
         <View style={styles.hourDropdown}>
@@ -61,7 +57,7 @@ function HourPicker({ value, options, onChange }) {
                 style={[styles.hourOption, h === value && styles.hourOptionActive]}
                 onPress={() => { onChange(h); setOpen(false); }}
               >
-                <Text style={[styles.hourOptionText, h === value && { color: GOLD }]}>{h}</Text>
+                <Text style={[styles.hourOptionText, h === value && { color: Colors.gold }]}>{h}</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
@@ -175,13 +171,13 @@ export default function AvailabilityCalendarScreen({ navigation }) {
   };
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <StatusBar barStyle="light-content" backgroundColor={NAVY} />
+    <SafeAreaView style={styles.safe} edges={['top']}>
+      <StatusBar barStyle="light-content" backgroundColor={Colors.navy} />
 
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={22} color={WHITE} />
+          <Ionicons name="arrow-back" size={22} color={Colors.white} />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
           <Text style={styles.headerTitle}>My Availability</Text>
@@ -193,7 +189,7 @@ export default function AvailabilityCalendarScreen({ navigation }) {
 
         {/* Info card */}
         <View style={styles.infoCard}>
-          <Ionicons name="information-circle-outline" size={18} color={GOLD} />
+          <Ionicons name="information-circle-outline" size={18} color={Colors.gold} />
           <Text style={styles.infoText}>
             Set the days and hours you are available for jobs. Customers can only book you during these times.
           </Text>
@@ -206,12 +202,12 @@ export default function AvailabilityCalendarScreen({ navigation }) {
             return (
               <View key={day.key} style={styles.dayCard}>
                 <View style={styles.dayTop}>
-                  <Text style={[styles.dayLabel, !sch.active && { color: MUTED }]}>{day.label}</Text>
+                  <Text style={[styles.dayLabel, !sch.active && { color: Colors.textDim }]}>{day.label}</Text>
                   <Switch
                     value={sch.active}
                     onValueChange={() => toggleDay(day.key)}
-                    trackColor={{ false: 'rgba(255,255,255,0.12)', true: GOLD }}
-                    thumbColor={sch.active ? NAVY : 'rgba(255,255,255,0.5)'}
+                    trackColor={{ false: Colors.navyLine, true: Colors.gold }}
+                    thumbColor={sch.active ? Colors.navy : Colors.textDim}
                   />
                 </View>
                 {sch.active && (
@@ -224,7 +220,7 @@ export default function AvailabilityCalendarScreen({ navigation }) {
                         onChange={(v) => setHour(day.key, 'start', v)}
                       />
                     </View>
-                    <Ionicons name="arrow-forward" size={16} color={MUTED} style={{ marginTop: 22 }} />
+                    <Ionicons name="arrow-forward" size={16} color={Colors.textDim} style={{ marginTop: 22 }} />
                     <View style={styles.hourGroup}>
                       <Text style={styles.hourLabel}>End</Text>
                       <HourPicker
@@ -252,7 +248,7 @@ export default function AvailabilityCalendarScreen({ navigation }) {
             </Text>
             {blackouts.map((b) => (
               <View key={b.id} style={[styles.dayCard, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}>
-                <Text style={{ color: WHITE, fontSize: 13 }}>
+                <Text style={{ color: Colors.white, fontSize: 13 }}>
                   {b.start_date} → {b.end_date}{b.reason ? ` · ${b.reason}` : ''}
                 </Text>
                 <TouchableOpacity onPress={() => removeBlackout(b.id)}>
@@ -265,24 +261,24 @@ export default function AvailabilityCalendarScreen({ navigation }) {
               value={boStart}
               onChangeText={setBoStart}
               placeholder="Start YYYY-MM-DD"
-              placeholderTextColor={MUTED}
+              placeholderTextColor={Colors.textDim}
             />
             <TextInput
               style={styles.boInput}
               value={boEnd}
               onChangeText={setBoEnd}
               placeholder="End YYYY-MM-DD"
-              placeholderTextColor={MUTED}
+              placeholderTextColor={Colors.textDim}
             />
             <TextInput
               style={styles.boInput}
               value={boReason}
               onChangeText={setBoReason}
               placeholder="Reason (optional)"
-              placeholderTextColor={MUTED}
+              placeholderTextColor={Colors.textDim}
             />
             <TouchableOpacity style={styles.boBtn} onPress={addBlackout} disabled={boSaving}>
-              {boSaving ? <ActivityIndicator color={NAVY} /> : <Text style={styles.boBtnText}>Add blackout</Text>}
+              {boSaving ? <ActivityIndicator color={Colors.navy} /> : <Text style={styles.boBtnText}>Add blackout</Text>}
             </TouchableOpacity>
           </View>
         )}
@@ -300,13 +296,11 @@ export default function AvailabilityCalendarScreen({ navigation }) {
 
       {/* Save button */}
       <View style={styles.footer}>
-        <TouchableOpacity
-          style={[styles.saveBtn, saving && { opacity: 0.7 }]}
-          onPress={handleSave}
-          disabled={saving}
-        >
-          <Ionicons name="checkmark-circle" size={20} color={NAVY} />
-          <Text style={styles.saveBtnText}>{saving ? 'Saving...' : 'Save Availability'}</Text>
+        <TouchableOpacity onPress={handleSave} disabled={saving} activeOpacity={0.85}>
+          <LinearGradient colors={goldGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.saveBtn, saving && { opacity: 0.7 }]}>
+            <Ionicons name="checkmark-circle" size={20} color={Colors.navy} />
+            <Text style={styles.saveBtnText}>{saving ? 'Saving...' : 'Save Availability'}</Text>
+          </LinearGradient>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -314,34 +308,34 @@ export default function AvailabilityCalendarScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  safe:             { flex: 1, backgroundColor: NAVY },
-  header:           { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 16, paddingBottom: 14, gap: 12 },
+  safe:             { flex: 1, backgroundColor: Colors.navy },
+  header:           { flexDirection: 'row', alignItems: 'center', paddingHorizontal: PAD, paddingTop: 8, paddingBottom: 14, gap: 12 },
   backBtn:          { padding: 4 },
-  headerTitle:      { fontSize: 18, fontWeight: '700', color: WHITE },
-  headerSub:        { fontSize: 12, color: MUTED, marginTop: 1 },
-  infoCard:         { flexDirection: 'row', gap: 10, backgroundColor: 'rgba(212,160,23,0.10)', borderWidth: 1, borderColor: 'rgba(212,160,23,0.25)', borderRadius: 12, padding: 14, marginHorizontal: 20, marginTop: 8 },
+  headerTitle:      { fontSize: 18, fontWeight: '700', color: Colors.white },
+  headerSub:        { fontSize: 12, color: Colors.textDim, marginTop: 1 },
+  infoCard:         { flexDirection: 'row', gap: 10, backgroundColor: 'rgba(212,160,23,0.10)', borderWidth: 1, borderColor: 'rgba(212,160,23,0.25)', borderRadius: 14, padding: 14, marginHorizontal: PAD, marginTop: 8 },
   infoText:         { flex: 1, fontSize: 13, color: 'rgba(255,255,255,0.75)', lineHeight: 19 },
-  section:          { paddingHorizontal: 20, marginTop: 16 },
-  dayCard:          { backgroundColor: NAVY2, borderRadius: 14, padding: 16, marginBottom: 10, borderWidth: 1, borderColor: BORDER },
+  section:          { paddingHorizontal: PAD, marginTop: 16 },
+  dayCard:          { backgroundColor: Colors.navyCard, borderRadius: Colors.cardRadius, padding: 16, marginBottom: 10, borderWidth: 1, borderColor: Colors.navyLine },
   dayTop:           { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  dayLabel:         { fontSize: 16, fontWeight: '700', color: WHITE },
+  dayLabel:         { fontSize: 16, fontWeight: '700', color: Colors.white },
   hoursRow:         { flexDirection: 'row', alignItems: 'flex-end', gap: 10, marginTop: 14 },
   hourGroup:        { flex: 1 },
-  hourLabel:        { fontSize: 11, color: MUTED, marginBottom: 6 },
-  hourPicker:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'rgba(255,255,255,0.07)', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, borderWidth: 1, borderColor: BORDER },
-  hourPickerText:   { fontSize: 14, color: WHITE, fontWeight: '600' },
-  hourDropdown:     { position: 'absolute', top: '100%', left: 0, right: 0, backgroundColor: '#1A1A4A', borderRadius: 10, borderWidth: 1, borderColor: BORDER, zIndex: 100, marginTop: 4 },
+  hourLabel:        { fontSize: 11, color: Colors.textDim, marginBottom: 6 },
+  hourPicker:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: Colors.navySoft, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, borderWidth: 1, borderColor: Colors.navyLine },
+  hourPickerText:   { fontSize: 14, color: Colors.white, fontWeight: '600' },
+  hourDropdown:     { position: 'absolute', top: '100%', left: 0, right: 0, backgroundColor: Colors.navyCard, borderRadius: 10, borderWidth: 1, borderColor: Colors.navyLine, zIndex: 100, marginTop: 4 },
   hourOption:       { paddingVertical: 10, paddingHorizontal: 14 },
   hourOptionActive: { backgroundColor: 'rgba(212,160,23,0.12)' },
-  hourOptionText:   { fontSize: 14, color: WHITE },
-  unavailText:      { fontSize: 12, color: MUTED, marginTop: 8 },
-  boInput:          { backgroundColor: 'rgba(255,255,255,0.07)', borderRadius: 10, borderWidth: 1, borderColor: BORDER, paddingHorizontal: 12, paddingVertical: 11, color: WHITE, fontSize: 14, marginBottom: 8, marginTop: 4 },
-  boBtn:            { backgroundColor: GOLD, borderRadius: 12, paddingVertical: 12, alignItems: 'center', marginTop: 4, marginBottom: 8 },
-  boBtnText:        { color: NAVY, fontWeight: '700', fontSize: 14 },
-  tipsCard:         { backgroundColor: NAVY2, marginHorizontal: 20, marginTop: 6, borderRadius: 14, padding: 16, borderWidth: 1, borderColor: BORDER },
-  tipsTitle:        { fontSize: 13, fontWeight: '700', color: GOLD, marginBottom: 10 },
-  tipItem:          { fontSize: 13, color: MUTED, lineHeight: 21 },
-  footer:           { padding: 20, paddingBottom: 28, borderTopWidth: 1, borderTopColor: BORDER, backgroundColor: NAVY },
-  saveBtn:          { backgroundColor: GOLD, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 16, borderRadius: 14 },
-  saveBtnText:      { fontSize: 16, fontWeight: '700', color: NAVY },
+  hourOptionText:   { fontSize: 14, color: Colors.white },
+  unavailText:      { fontSize: 12, color: Colors.textDim, marginTop: 8 },
+  boInput:          { backgroundColor: Colors.navySoft, borderRadius: 10, borderWidth: 1, borderColor: Colors.navyLine, paddingHorizontal: 12, paddingVertical: 11, color: Colors.white, fontSize: 14, marginBottom: 8, marginTop: 4 },
+  boBtn:            { backgroundColor: Colors.gold, borderRadius: 12, paddingVertical: 12, alignItems: 'center', marginTop: 4, marginBottom: 8 },
+  boBtnText:        { color: Colors.navy, fontWeight: '700', fontSize: 14 },
+  tipsCard:         { backgroundColor: Colors.navyCard, marginHorizontal: PAD, marginTop: 6, borderRadius: Colors.cardRadius, padding: 16, borderWidth: 1, borderColor: Colors.navyLine },
+  tipsTitle:        { fontSize: 13, fontWeight: '700', color: Colors.gold, marginBottom: 10 },
+  tipItem:          { fontSize: 13, color: Colors.textDim, lineHeight: 21 },
+  footer:           { padding: PAD, paddingBottom: 28, borderTopWidth: 1, borderTopColor: Colors.navyLine, backgroundColor: Colors.navy },
+  saveBtn:          { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 16, borderRadius: 14 },
+  saveBtnText:      { fontSize: 16, fontWeight: '700', color: Colors.navy },
 });

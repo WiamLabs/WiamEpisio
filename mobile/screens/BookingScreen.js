@@ -6,48 +6,56 @@
 import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
-  StyleSheet,  StatusBar,
+  StyleSheet, StatusBar,
   ScrollView, KeyboardAvoidingView, Platform,
-  ActivityIndicator, Image,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { Colors } from '../constants/colors';
+import GoldAvatar from '../components/ui/GoldAvatar';
 
-const BG      = '#FFFFFF';
-const NAVY    = '#0D0D2B';
-const GOLD    = '#D4A017';
-const GOLD_BG = 'rgba(212,160,23,0.10)';
-const BORDER  = '#EBEBEB';
-const MUTED   = '#888899';
 const BACKEND = process.env.EXPO_PUBLIC_BACKEND_URL;
+const PAD = Colors.screenPad;
 
 const DATES = Array.from({ length: 7 }, (_, i) => {
   const d = new Date();
   d.setDate(d.getDate() + i);
   return {
-    key:   d.toISOString().split('T')[0],
-    day:   d.toLocaleDateString('en-GB', { weekday: 'short' }),
-    date:  d.getDate(),
+    key: d.toISOString().split('T')[0],
+    day: d.toLocaleDateString('en-GB', { weekday: 'short' }),
+    date: d.getDate(),
     month: d.toLocaleDateString('en-GB', { month: 'short' }),
     isToday: i === 0,
   };
 });
 
-const TIMES = ['8:00 AM','9:00 AM','10:00 AM','11:00 AM','12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM'];
+const TIMES = ['8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM'];
+
+function BackBtn({ onPress }) {
+  return (
+    <TouchableOpacity style={s.backBtn} onPress={onPress} accessibilityLabel="Go back">
+      <Ionicons name="chevron-back" size={20} color={Colors.white} />
+    </TouchableOpacity>
+  );
+}
+
+function FieldLabel({ children }) {
+  return <Text style={s.fieldLabel}>{children}</Text>;
+}
 
 export default function BookingScreen({ navigation, route }) {
   const { workerId, workerName, hourlyRate } = route?.params || {};
 
-  const [step,        setStep]        = useState(1); // 1=form, 2=confirm
+  const [step, setStep] = useState(1);
   const [description, setDescription] = useState('');
-  const [address,     setAddress]     = useState('');
-  const [date,        setDate]        = useState(DATES[0].key);
-  const [time,        setTime]        = useState('');
-  const [hours,       setHours]       = useState(1);
-  const [loading,     setLoading]     = useState(false);
-  const [error,       setError]       = useState('');
+  const [address, setAddress] = useState('');
+  const [date, setDate] = useState(DATES[0].key);
+  const [time, setTime] = useState('');
+  const [hours, setHours] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const estimatedTotal = hourlyRate ? (hourlyRate * hours) : null;
   const canContinue = description.length >= 10 && address && date && time;
 
   const handleConfirm = async () => {
@@ -55,15 +63,15 @@ export default function BookingScreen({ navigation, route }) {
     setLoading(true);
     setError('');
     try {
-      const res  = await fetch(`${BACKEND}/api/bookings`, {
-        method:  'POST',
+      const res = await fetch(`${BACKEND}/api/bookings`, {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({
-          worker_id:       workerId,
+        body: JSON.stringify({
+          worker_id: workerId,
           description,
           address,
-          scheduled_date:  date,
-          scheduled_time:  time,
+          scheduled_date: date,
+          scheduled_time: time,
           estimated_hours: hours,
         }),
       });
@@ -77,98 +85,94 @@ export default function BookingScreen({ navigation, route }) {
     }
   };
 
+  const selectedDateLabel = DATES.find((d) => d.key === date);
+  const dateDisplay = selectedDateLabel?.isToday ? 'Today' : `${selectedDateLabel?.day} ${selectedDateLabel?.date} ${selectedDateLabel?.month}`;
+
   return (
-    <SafeAreaView style={s.safe}>
-      <StatusBar barStyle="dark-content" backgroundColor={BG} />
+    <SafeAreaView style={s.safe} edges={['top']}>
+      <StatusBar barStyle="light-content" backgroundColor={Colors.navy} />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
 
-        {/* Header */}
         <View style={s.header}>
-          <TouchableOpacity onPress={() => step === 1 ? navigation.goBack() : setStep(1)}>
-            <Ionicons name="arrow-back" size={22} color={NAVY} />
-          </TouchableOpacity>
-          <Text style={s.headerTitle}>
-            {step === 1 ? 'Book a Worker' : 'Confirm Booking'}
-          </Text>
-          <View style={{ width: 22 }} />
+          <BackBtn onPress={() => (step === 1 ? navigation.goBack() : setStep(1))} />
+          <Text style={s.headerTitle}>{step === 1 ? 'Book a Service' : 'Confirm Booking'}</Text>
         </View>
 
-        {/* Progress */}
-        <View style={s.progress}>
-          <View style={[s.progressStep, s.progressDone]} />
-          <View style={[s.progressStep, step >= 2 ? s.progressDone : s.progressActive]} />
-        </View>
+        {step === 2 ? (
+          <View style={s.progressRow}>
+            <View style={[s.progressDot, s.progressDone]} />
+            <View style={[s.progressLine, s.progressDone]} />
+            <View style={[s.progressDot, s.progressDone]} />
+          </View>
+        ) : null}
 
-        <ScrollView contentContainerStyle={s.container} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-
+        <ScrollView
+          contentContainerStyle={s.scroll}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
           {step === 1 ? (
             <>
-              {/* Worker info */}
-              <View style={s.workerCard}>
-                <View style={s.workerAvatar}>
-                  <Ionicons name="person-outline" size={22} color={GOLD} />
-                </View>
-                <View>
+              <View style={s.workerMini}>
+                <GoldAvatar name={workerName} size={38} />
+                <View style={{ flex: 1 }}>
                   <Text style={s.workerName}>{workerName}</Text>
-                  {hourlyRate && <Text style={s.workerRate}>GHS {hourlyRate}/hr · Starting rate</Text>}
+                  <Text style={s.workerRole}>
+                    {hourlyRate ? `GHS ${hourlyRate}/hr starting rate` : 'Service provider'}
+                  </Text>
                 </View>
               </View>
 
-              {/* Job description */}
-              <Text style={s.label}>Describe the job *</Text>
-              <TextInput
-                style={s.textarea}
-                placeholder="e.g. Fix a leaking pipe in my kitchen, replace the tap and check for other issues..."
-                placeholderTextColor={MUTED}
-                value={description}
-                onChangeText={setDescription}
-                multiline
-                numberOfLines={4}
-                textAlignVertical="top"
-              />
-              <Text style={[s.charCount, description.length < 10 && { color: '#EF4444' }]}>
+              <FieldLabel>What do you need done? *</FieldLabel>
+              <View style={[s.fieldBox, { alignItems: 'flex-start' }]}>
+                <Ionicons name="document-text-outline" size={16} color={Colors.gold} style={{ marginTop: 2 }} />
+                <TextInput
+                  style={[s.fieldInput, s.textarea]}
+                  placeholder="e.g. Fix a leaking pipe in my kitchen..."
+                  placeholderTextColor={Colors.textFaint}
+                  value={description}
+                  onChangeText={setDescription}
+                  multiline
+                  numberOfLines={4}
+                  textAlignVertical="top"
+                />
+              </View>
+              <Text style={[s.charCount, description.length < 10 && { color: Colors.error }]}>
                 {description.length}/10 minimum
               </Text>
 
-              {/* Address */}
-              <Text style={s.label}>Job address *</Text>
-              <View style={s.inputWrap}>
-                <Ionicons name="location-outline" size={17} color={MUTED} style={{ marginRight: 8 }} />
+              <FieldLabel>Location *</FieldLabel>
+              <View style={s.fieldBox}>
+                <Ionicons name="location-outline" size={16} color={Colors.gold} />
                 <TextInput
-                  style={[s.input, { flex: 1 }]}
+                  style={s.fieldInput}
                   placeholder="Street address where work is needed"
-                  placeholderTextColor={MUTED}
+                  placeholderTextColor={Colors.textFaint}
                   value={address}
                   onChangeText={setAddress}
                 />
               </View>
 
-              {/* Date picker */}
-              <Text style={s.label}>Select date *</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.datesRow}>
-                {DATES.map(d => (
+              <FieldLabel>Select date *</FieldLabel>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 4 }}>
+                {DATES.map((d) => (
                   <TouchableOpacity
                     key={d.key}
                     style={[s.dateCard, date === d.key && s.dateCardActive]}
                     onPress={() => setDate(d.key)}
                   >
-                    <Text style={[s.dateDayText, date === d.key && s.dateActiveText]}>
+                    <Text style={[s.dateDay, date === d.key && s.dateActiveText]}>
                       {d.isToday ? 'Today' : d.day}
                     </Text>
-                    <Text style={[s.dateDateText, date === d.key && s.dateActiveText]}>
-                      {d.date}
-                    </Text>
-                    <Text style={[s.dateMonthText, date === d.key && s.dateActiveText]}>
-                      {d.month}
-                    </Text>
+                    <Text style={[s.dateNum, date === d.key && s.dateActiveText]}>{d.date}</Text>
+                    <Text style={[s.dateMonth, date === d.key && s.dateActiveText]}>{d.month}</Text>
                   </TouchableOpacity>
                 ))}
               </ScrollView>
 
-              {/* Time picker */}
-              <Text style={s.label}>Select time *</Text>
-              <View style={s.timesGrid}>
-                {TIMES.map(t => (
+              <FieldLabel>Preferred time *</FieldLabel>
+              <View style={s.chipRow}>
+                {TIMES.map((t) => (
                   <TouchableOpacity
                     key={t}
                     style={[s.timeChip, time === t && s.timeChipActive]}
@@ -179,209 +183,190 @@ export default function BookingScreen({ navigation, route }) {
                 ))}
               </View>
 
-              {/* Estimated hours */}
-              <Text style={s.label}>Estimated hours</Text>
+              <FieldLabel>Estimated hours</FieldLabel>
               <View style={s.hoursRow}>
-                <TouchableOpacity
-                  style={s.hoursBtn}
-                  onPress={() => setHours(h => Math.max(1, h - 1))}
-                >
-                  <Ionicons name="remove" size={18} color={NAVY} />
+                <TouchableOpacity style={s.hoursBtn} onPress={() => setHours((h) => Math.max(1, h - 1))}>
+                  <Ionicons name="remove" size={18} color={Colors.white} />
                 </TouchableOpacity>
                 <Text style={s.hoursValue}>{hours} hr{hours > 1 ? 's' : ''}</Text>
-                <TouchableOpacity
-                  style={s.hoursBtn}
-                  onPress={() => setHours(h => Math.min(12, h + 1))}
-                >
-                  <Ionicons name="add" size={18} color={NAVY} />
+                <TouchableOpacity style={s.hoursBtn} onPress={() => setHours((h) => Math.min(12, h + 1))}>
+                  <Ionicons name="add" size={18} color={Colors.white} />
                 </TouchableOpacity>
-                {estimatedTotal && (
-                  <Text style={s.estimatedTotal}>
-                    ≈ GHS {(hourlyRate * hours).toFixed(0)} estimated
-                  </Text>
-                )}
+                {hourlyRate ? (
+                  <Text style={s.estimatedTotal}>≈ GHS {(hourlyRate * hours).toFixed(0)} estimated</Text>
+                ) : null}
               </View>
 
-              <View style={s.chatNotice}>
-                <Ionicons name="chatbubbles-outline" size={15} color={GOLD} />
-                <Text style={s.chatNoticeText}>
+              <View style={s.notice}>
+                <Ionicons name="chatbubbles-outline" size={15} color={Colors.gold} />
+                <Text style={s.noticeText}>
                   Chat opens after the worker accepts. Agree on the final price before paying.
                 </Text>
               </View>
-
-              <TouchableOpacity
-                style={[s.continueBtn, !canContinue && s.continueBtnDisabled]}
-                onPress={() => canContinue && setStep(2)}
-                activeOpacity={0.85}
-              >
-                <Text style={[s.continueBtnText, !canContinue && { color: 'rgba(255,255,255,0.4)' }]}>
-                  Review Booking
-                </Text>
-                {canContinue && <Ionicons name="arrow-forward" size={16} color={NAVY} style={{ marginLeft: 6 }} />}
-              </TouchableOpacity>
             </>
           ) : (
             <>
-              {/* Confirmation step */}
               <Text style={s.confirmTitle}>Review your booking</Text>
               <Text style={s.confirmSub}>
                 Once the worker accepts, chat opens and you agree on the final price before payment.
               </Text>
 
-              <View style={s.confirmCard}>
+              <View style={s.detailCard}>
                 {[
-                  { label: 'Worker',      value: workerName },
-                  { label: 'Job',         value: description },
-                  { label: 'Address',     value: address },
-                  { label: 'Date',        value: DATES.find(d => d.key === date)?.isToday ? 'Today' : date },
-                  { label: 'Time',        value: time },
-                  { label: 'Est. hours',  value: `${hours} hr${hours > 1 ? 's' : ''}` },
+                  { label: 'Worker', value: workerName },
+                  { label: 'Job', value: description },
+                  { label: 'Address', value: address },
+                  { label: 'Date', value: dateDisplay },
+                  { label: 'Time', value: time },
+                  { label: 'Est. hours', value: `${hours} hr${hours > 1 ? 's' : ''}` },
                   { label: 'Starting rate', value: hourlyRate ? `GHS ${hourlyRate}/hr` : 'To be agreed' },
-                ].map((item, i) => (
-                  <View key={i} style={s.confirmRow}>
-                    <Text style={s.confirmLabel}>{item.label}</Text>
-                    <Text style={s.confirmValue} numberOfLines={2}>{item.value}</Text>
+                ].map((item, i, arr) => (
+                  <View key={item.label} style={[s.detailRow, i < arr.length - 1 && s.detailRowBorder]}>
+                    <Text style={s.detailLabel}>{item.label}</Text>
+                    <Text style={s.detailValue} numberOfLines={2}>{item.value}</Text>
                   </View>
                 ))}
               </View>
 
-              <View style={s.escrowNotice}>
-                <Ionicons name="lock-closed-outline" size={15} color={GOLD} />
-                <Text style={s.escrowNoticeText}>
+              <View style={s.notice}>
+                <Ionicons name="lock-closed-outline" size={15} color={Colors.gold} />
+                <Text style={s.noticeText}>
                   Payment is held in escrow by WiamApp and only released when you confirm the job is done right.
                 </Text>
               </View>
 
               {error ? (
                 <View style={s.errorBox}>
-                  <Ionicons name="alert-circle-outline" size={14} color="#EF4444" />
+                  <Ionicons name="alert-circle-outline" size={14} color={Colors.error} />
                   <Text style={s.errorText}>{error}</Text>
                 </View>
               ) : null}
-
-              <TouchableOpacity
-                style={s.confirmBtn}
-                onPress={handleConfirm}
-                disabled={loading}
-                activeOpacity={0.85}
-              >
-                {loading
-                  ? <ActivityIndicator color={NAVY} />
-                  : <>
-                      <Text style={s.confirmBtnText}>Send Booking Request</Text>
-                      <Ionicons name="arrow-forward" size={16} color={NAVY} style={{ marginLeft: 6 }} />
-                    </>
-                }
-              </TouchableOpacity>
             </>
           )}
 
+          <Text style={s.footerCopy}>© 2026 WiamApp · Powered by WiamLabs</Text>
         </ScrollView>
+
+        <View style={s.submitBar}>
+          {step === 1 ? (
+            <>
+              <TouchableOpacity
+                style={[s.primaryBtn, !canContinue && s.primaryBtnDisabled]}
+                onPress={() => canContinue && setStep(2)}
+                activeOpacity={0.85}
+              >
+                <Text style={[s.primaryBtnText, !canContinue && { opacity: 0.4 }]}>Review Booking</Text>
+              </TouchableOpacity>
+              <Text style={s.submitNote}>You won't be charged until you agree on price and pay</Text>
+            </>
+          ) : (
+            <TouchableOpacity
+              style={s.primaryBtn}
+              onPress={handleConfirm}
+              disabled={loading}
+              activeOpacity={0.85}
+            >
+              {loading ? (
+                <ActivityIndicator color={Colors.navy} />
+              ) : (
+                <Text style={s.primaryBtnText}>Send Booking Request</Text>
+              )}
+            </TouchableOpacity>
+          )}
+        </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const s = StyleSheet.create({
-  safe:      { flex: 1, backgroundColor: BG },
-  header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 16, paddingVertical: 12,
-    borderBottomWidth: 0.5, borderBottomColor: BORDER,
+  safe: { flex: 1, backgroundColor: Colors.navy },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: PAD, paddingBottom: 14 },
+  backBtn: {
+    width: 36, height: 36, borderRadius: 18,
+    backgroundColor: Colors.navyCard, alignItems: 'center', justifyContent: 'center',
   },
-  headerTitle: { color: NAVY, fontSize: 16, fontWeight: '600' },
-  progress:    { flexDirection: 'row', gap: 4, paddingHorizontal: 16, paddingVertical: 8 },
-  progressStep:{ flex: 1, height: 3, borderRadius: 2, backgroundColor: '#EEE' },
-  progressDone:{ backgroundColor: GOLD },
-  progressActive:{ backgroundColor: 'rgba(212,160,23,0.3)' },
-  container:   { flexGrow: 1, padding: 20 },
-
-  workerCard: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    backgroundColor: '#F8F8FB', borderRadius: 13,
-    padding: 14, marginBottom: 20,
-    borderWidth: 0.5, borderColor: BORDER,
+  headerTitle: { fontSize: 17, fontWeight: '700', color: Colors.white },
+  progressRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: PAD, marginBottom: 8 },
+  progressDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.navyLine },
+  progressLine: { flex: 1, height: 3, backgroundColor: Colors.navyLine, marginHorizontal: 4 },
+  progressDone: { backgroundColor: Colors.gold },
+  scroll: { paddingHorizontal: PAD, paddingBottom: 120 },
+  workerMini: {
+    flexDirection: 'row', alignItems: 'center', gap: 11,
+    backgroundColor: Colors.navyCard, borderWidth: 1, borderColor: Colors.navyLine,
+    borderRadius: 16, padding: 12, marginBottom: 20,
   },
-  workerAvatar: {
-    width: 44, height: 44, borderRadius: 12,
-    backgroundColor: GOLD_BG, alignItems: 'center', justifyContent: 'center',
+  workerName: { fontSize: 13, fontWeight: '600', color: Colors.white },
+  workerRole: { fontSize: 11, color: Colors.textDim, marginTop: 1 },
+  fieldLabel: { fontSize: 12.5, fontWeight: '600', color: Colors.white, marginBottom: 8, marginTop: 4 },
+  fieldBox: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    backgroundColor: Colors.navyCard, borderWidth: 1, borderColor: Colors.navyLine,
+    borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12,
   },
-  workerName: { color: NAVY, fontSize: 15, fontWeight: '600', marginBottom: 2 },
-  workerRate: { color: MUTED, fontSize: 12 },
-
-  label: { color: MUTED, fontSize: 12, fontWeight: '600', letterSpacing: 0.3, marginBottom: 8, marginTop: 16 },
-  textarea: {
-    backgroundColor: '#F5F5F8', borderRadius: 12,
-    borderWidth: 0.5, borderColor: BORDER,
-    padding: 13, color: NAVY, fontSize: 14, lineHeight: 22,
-    minHeight: 100,
-  },
-  charCount: { color: MUTED, fontSize: 11, textAlign: 'right', marginTop: 4 },
-  inputWrap: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#F5F5F8', borderRadius: 12,
-    borderWidth: 0.5, borderColor: BORDER,
-    paddingHorizontal: 13, paddingVertical: 13,
-  },
-  input: { color: NAVY, fontSize: 14 },
-
-  datesRow: { marginBottom: 4 },
+  fieldInput: { flex: 1, color: Colors.white, fontSize: 13 },
+  textarea: { minHeight: 80, textAlignVertical: 'top', lineHeight: 20 },
+  charCount: { fontSize: 11, color: Colors.textFaint, textAlign: 'right', marginTop: 4, marginBottom: 8 },
   dateCard: {
     alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10,
     borderRadius: 12, marginRight: 8,
-    borderWidth: 0.5, borderColor: BORDER, backgroundColor: '#F5F5F8',
+    borderWidth: 1, borderColor: Colors.navyLine, backgroundColor: Colors.navyCard,
   },
-  dateCardActive: { backgroundColor: NAVY, borderColor: NAVY },
-  dateDayText:    { color: MUTED, fontSize: 11, marginBottom: 2 },
-  dateDateText:   { color: NAVY, fontSize: 18, fontWeight: '700', marginBottom: 2 },
-  dateMonthText:  { color: MUTED, fontSize: 10 },
-  dateActiveText: { color: '#FFF' },
-
-  timesGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 4 },
-  timeChip:          { paddingHorizontal: 14, paddingVertical: 9, borderRadius: 10, borderWidth: 0.5, borderColor: BORDER, backgroundColor: '#F5F5F8' },
-  timeChipActive:    { backgroundColor: NAVY, borderColor: NAVY },
-  timeChipText:      { color: MUTED, fontSize: 13 },
-  timeChipTextActive:{ color: '#FFF', fontWeight: '600' },
-
-  hoursRow:      { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  hoursBtn:      { width: 36, height: 36, borderRadius: 10, backgroundColor: '#F5F5F8', borderWidth: 0.5, borderColor: BORDER, alignItems: 'center', justifyContent: 'center' },
-  hoursValue:    { color: NAVY, fontSize: 16, fontWeight: '700', minWidth: 50, textAlign: 'center' },
-  estimatedTotal:{ color: GOLD, fontSize: 13, fontWeight: '600' },
-
-  chatNotice: {
+  dateCardActive: { backgroundColor: Colors.gold, borderColor: Colors.gold },
+  dateDay: { color: Colors.textDim, fontSize: 11, marginBottom: 2 },
+  dateNum: { color: Colors.white, fontSize: 18, fontWeight: '700', marginBottom: 2 },
+  dateMonth: { color: Colors.textFaint, fontSize: 10 },
+  dateActiveText: { color: Colors.navy },
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
+  timeChip: {
+    paddingHorizontal: 14, paddingVertical: 9, borderRadius: 12,
+    backgroundColor: Colors.navyCard, borderWidth: 1, borderColor: Colors.navyLine,
+  },
+  timeChipActive: { backgroundColor: Colors.gold, borderColor: Colors.gold },
+  timeChipText: { color: '#B8B8CC', fontSize: 12 },
+  timeChipTextActive: { color: Colors.navy, fontWeight: '600' },
+  hoursRow: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 16 },
+  hoursBtn: {
+    width: 36, height: 36, borderRadius: 10,
+    backgroundColor: Colors.navyCard, borderWidth: 1, borderColor: Colors.navyLine,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  hoursValue: { color: Colors.white, fontSize: 16, fontWeight: '700', minWidth: 50, textAlign: 'center' },
+  estimatedTotal: { color: Colors.gold, fontSize: 13, fontWeight: '600' },
+  notice: {
     flexDirection: 'row', alignItems: 'flex-start', gap: 8,
-    backgroundColor: GOLD_BG, borderRadius: 11, padding: 12, marginTop: 20, marginBottom: 4,
+    backgroundColor: 'rgba(212,160,23,0.08)', borderRadius: 14,
+    borderWidth: 1, borderColor: 'rgba(212,160,23,0.2)',
+    padding: 12, marginTop: 8,
   },
-  chatNoticeText: { color: NAVY, fontSize: 12, lineHeight: 18, flex: 1 },
-
-  continueBtn: { backgroundColor: GOLD, borderRadius: 13, paddingVertical: 15, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 20 },
-  continueBtnDisabled:{ backgroundColor: 'rgba(212,160,23,0.25)' },
-  continueBtnText:    { color: NAVY, fontSize: 15, fontWeight: '700' },
-
-  confirmTitle: { color: NAVY, fontSize: 20, fontWeight: '700', marginBottom: 6 },
-  confirmSub:   { color: MUTED, fontSize: 13, lineHeight: 20, marginBottom: 20 },
-  confirmCard: {
-    backgroundColor: '#F8F8FB', borderRadius: 14,
-    borderWidth: 0.5, borderColor: BORDER,
-    padding: 4, marginBottom: 16,
+  noticeText: { color: Colors.textDim, fontSize: 12, lineHeight: 18, flex: 1 },
+  confirmTitle: { color: Colors.white, fontSize: 20, fontWeight: '700', marginBottom: 6 },
+  confirmSub: { color: Colors.textDim, fontSize: 13, lineHeight: 20, marginBottom: 20 },
+  detailCard: {
+    backgroundColor: Colors.navyCard, borderRadius: Colors.cardRadius,
+    borderWidth: 1, borderColor: Colors.navyLine, marginBottom: 16, overflow: 'hidden',
   },
-  confirmRow: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start',
-    paddingHorizontal: 14, paddingVertical: 11,
-    borderBottomWidth: 0.5, borderBottomColor: BORDER,
+  detailRow: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12 },
+  detailRowBorder: { borderBottomWidth: 1, borderBottomColor: Colors.navyLine },
+  detailLabel: { color: Colors.textFaint, fontSize: 12, flex: 1 },
+  detailValue: { color: Colors.white, fontSize: 13, fontWeight: '500', flex: 2, textAlign: 'right' },
+  errorBox: {
+    flexDirection: 'row', alignItems: 'center', gap: 7,
+    backgroundColor: 'rgba(239,68,68,0.1)', borderRadius: 12, padding: 12, marginTop: 12,
   },
-  confirmLabel: { color: MUTED, fontSize: 13, flex: 1 },
-  confirmValue: { color: NAVY, fontSize: 13, fontWeight: '500', flex: 2, textAlign: 'right' },
-
-  escrowNotice: {
-    flexDirection: 'row', alignItems: 'flex-start', gap: 8,
-    backgroundColor: GOLD_BG, borderRadius: 11, padding: 12, marginBottom: 16,
+  errorText: { color: Colors.error, fontSize: 12, flex: 1 },
+  footerCopy: { textAlign: 'center', fontSize: 10, color: '#3A3A56', marginTop: 20 },
+  submitBar: {
+    position: 'absolute', bottom: 0, left: 0, right: 0,
+    backgroundColor: Colors.navySoft, borderTopWidth: 1, borderTopColor: '#1C1C38',
+    paddingHorizontal: PAD, paddingTop: 14, paddingBottom: 24,
   },
-  escrowNoticeText: { color: NAVY, fontSize: 12, lineHeight: 18, flex: 1 },
-
-  errorBox: { flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: 'rgba(239,68,68,0.08)', borderRadius: 10, padding: 12, marginBottom: 14 },
-  errorText: { color: '#EF4444', fontSize: 12, flex: 1 },
-
-  confirmBtn: { backgroundColor: GOLD, borderRadius: 13, paddingVertical: 15, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
-  confirmBtnText: { color: NAVY, fontSize: 15, fontWeight: '700' },
+  primaryBtn: {
+    backgroundColor: Colors.gold, borderRadius: 16, paddingVertical: 14,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  primaryBtnDisabled: { backgroundColor: 'rgba(212,160,23,0.25)' },
+  primaryBtnText: { color: Colors.navy, fontSize: 14, fontWeight: '700' },
+  submitNote: { textAlign: 'center', fontSize: 10.5, color: Colors.textFaint, marginTop: 8 },
 });

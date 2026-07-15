@@ -7,7 +7,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../constants/colors';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Colors, goldGradient } from '../constants/colors';
 import {
   getSubscriptionPackages,
   purchaseSubscription,
@@ -160,7 +161,8 @@ export default function SubscriptionScreen({ navigation }) {
 
   if (loading) {
     return (
-      <SafeAreaView style={[styles.safe, { justifyContent: 'center', alignItems: 'center' }]}>
+      <SafeAreaView style={[styles.safe, { justifyContent: 'center', alignItems: 'center' }]} edges={['top']}>
+        <StatusBar barStyle="light-content" backgroundColor={Colors.navy} />
         <ActivityIndicator size="large" color={Colors.gold} />
         <Text style={styles.loadingText}>Loading plans...</Text>
       </SafeAreaView>
@@ -168,26 +170,25 @@ export default function SubscriptionScreen({ navigation }) {
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={styles.safe} edges={['top']}>
       <StatusBar barStyle="light-content" backgroundColor={Colors.navy} />
 
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color={Colors.white} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Upgrade Your Plan</Text>
-        <View style={{ width: 22 }} />
+        <Text style={styles.headerTitle}>Upgrade Plan</Text>
+        <View style={{ width: 36 }} />
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
 
         {/* Hero */}
         <View style={styles.hero}>
-          <Text style={styles.heroTitle}>Grow faster on WiamApp</Text>
+          <Text style={styles.heroTitle}>Lower your commission</Text>
           <Text style={styles.heroSub}>
-            Upgrade to lower your commission, unlock Spotlight, and
-            shorten the climb to earning your Checkmark badge.
+            Upgrade to keep more of what you earn on every completed job.
           </Text>
         </View>
 
@@ -201,103 +202,56 @@ export default function SubscriptionScreen({ navigation }) {
               key={plan.key}
               style={[
                 styles.planCard,
-                plan.highlight && styles.planCardHighlight,
+                plan.highlight && styles.planCardPro,
                 isCurrentPlan && styles.planCardActive,
               ]}
             >
-              {plan.highlight && (
-                <View style={styles.popularBadge}>
-                  <Text style={styles.popularText}>MOST POPULAR</Text>
+              {isCurrentPlan && (
+                <View style={styles.currentPill}>
+                  <Text style={styles.currentPillText}>Current Plan</Text>
                 </View>
               )}
 
-              {/* Plan Header */}
-              <View style={styles.planHeader}>
-                <View>
-                  <Text style={[styles.planName, plan.highlight && { color: Colors.white }]}>
-                    {plan.name}
-                  </Text>
-                  {plan.badgeLabel && (
-                    <View style={styles.planBadgeRow}>
-                      <Ionicons name="trending-up-outline" size={13} color={plan.color} />
-                      <Text style={[styles.planBadgeLabel, { color: plan.color }]}>
-                        {plan.badgeLabel}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-                <View style={styles.planPricing}>
-                  <Text style={[styles.planPrice, plan.highlight && { color: Colors.gold }]}>
-                    {plan.priceLabel}
-                  </Text>
-                  <Text style={[styles.planPriceSub, plan.highlight && { color: 'rgba(255,255,255,0.5)' }]}>
-                    {plan.priceSub}
-                  </Text>
-                </View>
-              </View>
+              <Text style={styles.planName}>{plan.name}</Text>
+              <Text style={styles.planPrice}>
+                {plan.priceLabel}
+                <Text style={styles.planPriceSub}> /{plan.priceSub === 'forever' ? 'forever' : 'month'}</Text>
+              </Text>
+              <Text style={styles.planCommission}>{plan.commission} commission per booking</Text>
 
-              {/* Commission */}
-              <View style={[styles.commissionRow, plan.highlight && { backgroundColor: 'rgba(255,255,255,0.1)' }]}>
-                <Ionicons name="wallet-outline" size={15} color={plan.highlight ? Colors.gold : Colors.navy} />
-                <Text style={[styles.commissionText, plan.highlight && { color: Colors.white }]}>
-                  {plan.commission} commission per booking
-                </Text>
-              </View>
-
-              {/* Features */}
               <View style={styles.featuresList}>
                 {plan.features.map((f, i) => (
                   <View key={i} style={styles.featureRow}>
-                    <Ionicons
-                      name="checkmark-circle"
-                      size={16}
-                      color={plan.highlight ? Colors.gold : Colors.success}
-                    />
-                    <Text style={[styles.featureText, plan.highlight && { color: 'rgba(255,255,255,0.85)' }]}>
-                      {f}
-                    </Text>
+                    <Ionicons name="checkmark" size={14} color={Colors.gold} />
+                    <Text style={styles.featureText}>{f}</Text>
                   </View>
                 ))}
                 {plan.notIncluded?.map((f, i) => (
                   <View key={`n${i}`} style={styles.featureRow}>
-                    <Ionicons name="close-circle" size={16} color="#ccc" />
+                    <Ionicons name="close" size={14} color={Colors.textFaint} />
                     <Text style={styles.notIncludedText}>{f}</Text>
                   </View>
                 ))}
               </View>
 
-              {/* Action Button */}
-              {isCurrentPlan ? (
-                <View style={styles.currentPlanBtn}>
-                  <Ionicons name="checkmark-circle" size={16} color={Colors.success} />
-                  <Text style={styles.currentPlanText}>Current Plan</Text>
-                </View>
-              ) : plan.key === 'free' ? null : (
-                <TouchableOpacity
-                  style={[
-                    styles.upgradeBtn,
-                    plan.highlight ? styles.upgradeBtnPrimary : styles.upgradeBtnSecondary,
-                  ]}
-                  onPress={() => handlePurchase(plan)}
-                  disabled={isBuying}
-                  activeOpacity={0.85}
-                >
-                  {isBuying ? (
-                    <ActivityIndicator size="small" color={Colors.navy} />
+              {isCurrentPlan ? null : plan.key === 'free' ? null : (
+                <TouchableOpacity onPress={() => handlePurchase(plan)} disabled={isBuying} activeOpacity={0.85}>
+                  {plan.highlight ? (
+                    <LinearGradient colors={goldGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.upgradeBtn}>
+                      {isBuying ? (
+                        <ActivityIndicator size="small" color={Colors.navy} />
+                      ) : (
+                        <Text style={[styles.upgradeBtnText, { color: Colors.navy }]}>Subscribe to {plan.name}</Text>
+                      )}
+                    </LinearGradient>
                   ) : (
-                    <>
-                      <Text style={[
-                        styles.upgradeBtnText,
-                        !plan.highlight && { color: Colors.navy },
-                      ]}>
-                        Upgrade to {plan.name}
-                      </Text>
-                      <Ionicons
-                        name="arrow-forward"
-                        size={16}
-                        color={plan.highlight ? Colors.navy : Colors.navy}
-                      />
-                    </>
+                    <View style={[styles.upgradeBtn, styles.upgradeBtnSecondary]}>
+                      {isBuying ? (
+                        <ActivityIndicator size="small" color={Colors.white} />
+                      ) : (
+                        <Text style={styles.upgradeBtnText}>Subscribe to {plan.name}</Text>
+                      )}
+                    </View>
                   )}
                 </TouchableOpacity>
               )}
@@ -321,18 +275,22 @@ export default function SubscriptionScreen({ navigation }) {
           </TouchableOpacity>
         </View>
 
-        {/* Restore and notes */}
+        <View style={styles.storeNote}>
+          <Ionicons name="information-circle-outline" size={15} color={Colors.info} />
+          <Text style={styles.storeNoteText}>
+            Subscriptions are billed through your App Store or Google Play account, not WiamApp directly. Cancel anytime from your device's subscription settings.
+          </Text>
+        </View>
+
         <TouchableOpacity style={styles.restoreBtn} onPress={handleRestore}>
           <Text style={styles.restoreBtnText}>Restore Previous Purchases</Text>
         </TouchableOpacity>
 
         <Text style={styles.noteText}>
-          Subscriptions auto-renew monthly. Cancel anytime in your App Store or Google Play settings.
-          Prices shown are approximate. Final price charged in your local App Store currency.
+          Payment will be charged to your Apple ID or Google Play account. Subscriptions auto-renew unless cancelled at least 24 hours before the renewal date.
         </Text>
 
         <Text style={styles.copyright}>© 2026 WiamApp · Powered by WiamLabs</Text>
-        <View style={{ height: 24 }} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -340,92 +298,74 @@ export default function SubscriptionScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.navy },
-  loadingText: { color: 'rgba(255,255,255,0.5)', marginTop: 12, fontSize: 14 },
+  loadingText: { color: Colors.textDim, marginTop: 12, fontSize: 14 },
 
   header: {
     flexDirection: 'row', alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20, paddingVertical: 16,
+    paddingHorizontal: Colors.screenPad, paddingVertical: 14,
   },
-  headerTitle: { color: Colors.white, fontSize: 17, fontWeight: '600' },
+  backBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: Colors.navyCard, alignItems: 'center', justifyContent: 'center' },
+  headerTitle: { color: Colors.white, fontSize: 17, fontWeight: '700' },
 
-  hero: { paddingHorizontal: 24, paddingBottom: 20 },
-  heroTitle: { color: Colors.white, fontSize: 22, fontWeight: '700', marginBottom: 8 },
-  heroSub: { color: 'rgba(255,255,255,0.55)', fontSize: 14, lineHeight: 22, marginBottom: 14 },
+  hero: { paddingHorizontal: Colors.screenPad, paddingBottom: 20, alignItems: 'center' },
+  heroTitle: { color: Colors.white, fontSize: 19, fontWeight: '800', marginBottom: 6, textAlign: 'center' },
+  heroSub: { color: Colors.textDim, fontSize: 12.5, lineHeight: 20, textAlign: 'center' },
 
   planCard: {
-    backgroundColor: Colors.white, marginHorizontal: 20,
-    borderRadius: 18, padding: 20, marginBottom: 16,
-    borderWidth: 0.5, borderColor: '#EBEBEB', overflow: 'hidden',
+    backgroundColor: Colors.navyCard, marginHorizontal: Colors.screenPad,
+    borderRadius: 22, padding: 20, marginBottom: 14,
+    borderWidth: 1.5, borderColor: Colors.navyLine, position: 'relative',
   },
-  planCardHighlight: {
-    backgroundColor: Colors.navy,
-    borderColor: Colors.gold, borderWidth: 1.5,
+  planCardPro: { borderColor: Colors.gold, backgroundColor: 'rgba(212,160,23,0.06)' },
+  planCardActive: { borderColor: Colors.success },
+
+  currentPill: {
+    position: 'absolute', top: 16, right: 16,
+    backgroundColor: 'rgba(34,197,94,0.12)', borderRadius: 999,
+    paddingHorizontal: 10, paddingVertical: 4,
   },
-  planCardActive: { borderColor: Colors.success, borderWidth: 1.5 },
+  currentPillText: { color: Colors.success, fontSize: 9.5, fontWeight: '700' },
 
-  popularBadge: {
-    backgroundColor: Colors.gold, alignSelf: 'flex-start',
-    borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4, marginBottom: 12,
-  },
-  popularText: { color: Colors.navy, fontSize: 10, fontWeight: '700', letterSpacing: 1 },
+  planName: { color: Colors.white, fontSize: 15, fontWeight: '700' },
+  planPrice: { color: Colors.white, fontSize: 24, fontWeight: '800', marginTop: 6 },
+  planPriceSub: { fontSize: 12, fontWeight: '500', color: Colors.textDim },
+  planCommission: { color: Colors.gold, fontSize: 12, fontWeight: '600', marginTop: 2, marginBottom: 14 },
 
-  planHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 },
-  planName: { color: Colors.navy, fontSize: 20, fontWeight: '700' },
-  planBadgeRow:   { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 3 },
-  planBadgeLabel: { fontSize: 13 },
-  planPricing: { alignItems: 'flex-end' },
-  planPrice: { color: Colors.navy, fontSize: 22, fontWeight: '700' },
-  planPriceSub: { color: '#888', fontSize: 12, marginTop: 2 },
+  featuresList: { gap: 5 },
+  featureRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 2 },
+  featureText: { color: '#C9C9DE', fontSize: 12, flex: 1 },
+  notIncludedText: { color: Colors.textFaint, fontSize: 12, flex: 1 },
 
-  commissionRow: {
-    backgroundColor: '#F8F8F8', borderRadius: 10,
-    paddingHorizontal: 12, paddingVertical: 8,
-    flexDirection: 'row', alignItems: 'center', gap: 7, marginBottom: 16,
-  },
-  commissionText: { color: Colors.navy, fontSize: 13, fontWeight: '500' },
-
-  featuresList: { gap: 8, marginBottom: 20 },
-  featureRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  featureText: { color: Colors.navy, fontSize: 14, flex: 1 },
-  notIncludedText: { color: '#bbb', fontSize: 14, flex: 1 },
-
-  currentPlanBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 7, backgroundColor: 'rgba(34,197,94,0.1)',
-    borderRadius: 12, paddingVertical: 13,
-    borderWidth: 1, borderColor: 'rgba(34,197,94,0.3)',
-  },
-  currentPlanText: { color: Colors.success, fontSize: 15, fontWeight: '600' },
-
-  upgradeBtn: {
-    borderRadius: 12, paddingVertical: 14,
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-  },
-  upgradeBtnPrimary: { backgroundColor: Colors.gold },
-  upgradeBtnSecondary: { backgroundColor: Colors.navy },
-  upgradeBtnText: { color: Colors.white, fontSize: 15, fontWeight: '600' },
+  upgradeBtn: { borderRadius: 14, paddingVertical: 12, marginTop: 14, alignItems: 'center', justifyContent: 'center' },
+  upgradeBtnSecondary: { backgroundColor: Colors.navyLine },
+  upgradeBtnText: { color: Colors.white, fontSize: 13, fontWeight: '600' },
 
   businessCta: {
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    marginHorizontal: 20, borderRadius: 16, padding: 20,
+    backgroundColor: 'rgba(212,160,23,0.06)',
+    marginHorizontal: Colors.screenPad, borderRadius: 20, padding: 20,
     alignItems: 'center', marginBottom: 16,
-    borderWidth: 0.5, borderColor: 'rgba(212,160,23,0.3)',
+    borderWidth: 1, borderColor: 'rgba(212,160,23,0.3)',
   },
   businessCtaTitle: { color: Colors.white, fontSize: 18, fontWeight: '700', marginTop: 10, marginBottom: 8 },
-  businessCtaSub: { color: 'rgba(255,255,255,0.5)', fontSize: 13, textAlign: 'center', lineHeight: 20, marginBottom: 16 },
-  businessCtaBtn: {
-    backgroundColor: Colors.gold, borderRadius: 12,
-    paddingHorizontal: 20, paddingVertical: 12,
-  },
+  businessCtaSub: { color: Colors.textDim, fontSize: 13, textAlign: 'center', lineHeight: 20, marginBottom: 16 },
+  businessCtaBtn: { backgroundColor: Colors.gold, borderRadius: 14, paddingHorizontal: 20, paddingVertical: 12 },
   businessCtaBtnText: { color: Colors.navy, fontSize: 14, fontWeight: '600' },
 
+  storeNote: {
+    flexDirection: 'row', gap: 9, alignItems: 'flex-start',
+    marginHorizontal: Colors.screenPad, marginTop: 8,
+    padding: 13, borderRadius: 14,
+    backgroundColor: 'rgba(59,130,246,0.08)', borderWidth: 1, borderColor: 'rgba(59,130,246,0.2)',
+  },
+  storeNoteText: { flex: 1, fontSize: 11, color: '#8FB4F0', lineHeight: 17 },
+
   restoreBtn: { alignItems: 'center', paddingVertical: 14 },
-  restoreBtnText: { color: 'rgba(255,255,255,0.4)', fontSize: 14, textDecorationLine: 'underline' },
+  restoreBtnText: { color: Colors.textDim, fontSize: 14, textDecorationLine: 'underline' },
 
   noteText: {
-    color: 'rgba(255,255,255,0.25)', fontSize: 11,
+    color: Colors.textFaint, fontSize: 10,
     textAlign: 'center', marginHorizontal: 24, lineHeight: 17, marginBottom: 12,
   },
-  copyright: { color: 'rgba(255,255,255,0.2)', fontSize: 11, textAlign: 'center' },
+  copyright: { color: '#3A3A56', fontSize: 10, textAlign: 'center', paddingBottom: 8 },
 });

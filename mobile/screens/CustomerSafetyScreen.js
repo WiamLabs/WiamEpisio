@@ -1,25 +1,18 @@
 // © 2026 WiamApp. Powered by WiamLabs
-// screens/CustomerSafetyScreen.js
-// SOS setup, emergency contact, live location sharing during active jobs
-// Backend: GET/PUT /api/safety/customer
+// screens/CustomerSafetyScreen.js — Part 13 Safety & SOS
 
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
-  StyleSheet,  StatusBar,
+  StyleSheet, StatusBar,
   ScrollView, ActivityIndicator, Switch,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Colors, goldGradient } from '../constants/colors';
 
-const BG      = '#FFFFFF';
-const NAVY    = '#0D0D2B';
-const GOLD    = '#D4A017';
-const GOLD_BG = 'rgba(212,160,23,0.10)';
-const GOLD_BD = 'rgba(212,160,23,0.25)';
-const RED     = '#EF4444';
-const BORDER  = '#EBEBEB';
-const MUTED   = '#888899';
+const PAD = Colors.screenPad;
 const BACKEND = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 export default function CustomerSafetyScreen({ navigation }) {
@@ -76,29 +69,29 @@ export default function CustomerSafetyScreen({ navigation }) {
   };
 
   if (loading) return (
-    <SafeAreaView style={s.safe}>
-      <ActivityIndicator color={GOLD} style={{ marginTop: 60 }} />
+    <SafeAreaView style={s.safe} edges={['top']}>
+      <StatusBar barStyle="light-content" backgroundColor={Colors.navy} />
+      <ActivityIndicator color={Colors.gold} style={{ marginTop: 60 }} />
     </SafeAreaView>
   );
 
   return (
-    <SafeAreaView style={s.safe}>
-      <StatusBar barStyle="dark-content" backgroundColor={BG} />
+    <SafeAreaView style={s.safe} edges={['top']}>
+      <StatusBar barStyle="light-content" backgroundColor={Colors.navy} />
 
       <View style={s.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={22} color={NAVY} />
+        <TouchableOpacity onPress={() => navigation.goBack()} style={s.backBtn}>
+          <Ionicons name="arrow-back" size={22} color={Colors.white} />
         </TouchableOpacity>
-        <Text style={s.headerTitle}>Safety Settings</Text>
-        <View style={{ width: 22 }} />
+        <Text style={s.headerTitle}>Safety & SOS</Text>
+        <View style={{ width: 36 }} />
       </View>
 
       <ScrollView contentContainerStyle={s.container} showsVerticalScrollIndicator={false}>
 
-        {/* SOS explanation */}
         <View style={s.sosCard}>
           <View style={s.sosIconWrap}>
-            <Ionicons name="shield-checkmark-outline" size={28} color={GOLD} />
+            <Ionicons name="shield-checkmark-outline" size={28} color={Colors.gold} />
           </View>
           <View style={s.sosInfo}>
             <Text style={s.sosTitle}>WiamApp Safety System</Text>
@@ -109,19 +102,18 @@ export default function CustomerSafetyScreen({ navigation }) {
           </View>
         </View>
 
-        {/* Emergency contact */}
-        <Text style={s.sectionTitle}>EMERGENCY CONTACT</Text>
+        <Text style={s.sectionLabel}>EMERGENCY CONTACT</Text>
         <Text style={s.sectionDesc}>
           This person will be notified with your location and the worker's details if you trigger SOS.
         </Text>
 
         <Text style={s.label}>Full name</Text>
         <View style={s.inputWrap}>
-          <Ionicons name="person-outline" size={17} color={MUTED} style={s.inputIcon} />
+          <Ionicons name="person-outline" size={17} color={Colors.textDim} style={s.inputIcon} />
           <TextInput
             style={[s.input, { flex: 1 }]}
             placeholder="Emergency contact's name"
-            placeholderTextColor={MUTED}
+            placeholderTextColor={Colors.textDim}
             value={contactName}
             onChangeText={setContactName}
           />
@@ -129,11 +121,11 @@ export default function CustomerSafetyScreen({ navigation }) {
 
         <Text style={s.label}>Phone number</Text>
         <View style={s.inputWrap}>
-          <Ionicons name="call-outline" size={17} color={MUTED} style={s.inputIcon} />
+          <Ionicons name="call-outline" size={17} color={Colors.textDim} style={s.inputIcon} />
           <TextInput
             style={[s.input, { flex: 1 }]}
             placeholder="+233 XX XXX XXXX"
-            placeholderTextColor={MUTED}
+            placeholderTextColor={Colors.textDim}
             value={contactPhone}
             onChangeText={setContactPhone}
             keyboardType="phone-pad"
@@ -142,26 +134,25 @@ export default function CustomerSafetyScreen({ navigation }) {
 
         <Text style={s.label}>Relationship</Text>
         <View style={s.inputWrap}>
-          <Ionicons name="people-outline" size={17} color={MUTED} style={s.inputIcon} />
+          <Ionicons name="people-outline" size={17} color={Colors.textDim} style={s.inputIcon} />
           <TextInput
             style={[s.input, { flex: 1 }]}
             placeholder="e.g. Spouse, Parent, Friend"
-            placeholderTextColor={MUTED}
+            placeholderTextColor={Colors.textDim}
             value={contactRelation}
             onChangeText={setContactRelation}
           />
         </View>
 
-        {/* Safety toggles */}
-        <Text style={s.sectionTitle}>SAFETY PREFERENCES</Text>
+        <Text style={s.sectionLabel}>SAFETY PREFERENCES</Text>
 
         <View style={s.toggleCard}>
           <View style={s.toggleRow}>
-            <View style={s.toggleInfo}>
-              <View style={s.toggleIconWrap}>
-                <Ionicons name="location-outline" size={17} color={GOLD} />
+            <View style={s.toggleLeft}>
+              <View style={s.toggleIcon}>
+                <Ionicons name="location-outline" size={16} color={Colors.gold} />
               </View>
-              <View style={s.toggleText}>
+              <View>
                 <Text style={s.toggleTitle}>Share location during jobs</Text>
                 <Text style={s.toggleDesc}>Worker can see your location when job is active</Text>
               </View>
@@ -169,17 +160,17 @@ export default function CustomerSafetyScreen({ navigation }) {
             <Switch
               value={shareLocation}
               onValueChange={setShareLocation}
-              trackColor={{ false: '#DDD', true: GOLD }}
-              thumbColor={BG}
+              trackColor={{ false: Colors.navyLine, true: Colors.gold }}
+              thumbColor={Colors.white}
             />
           </View>
 
           <View style={[s.toggleRow, s.toggleRowBorder]}>
-            <View style={s.toggleInfo}>
-              <View style={s.toggleIconWrap}>
-                <Ionicons name="notifications-outline" size={17} color={GOLD} />
+            <View style={s.toggleLeft}>
+              <View style={s.toggleIcon}>
+                <Ionicons name="notifications-outline" size={16} color={Colors.gold} />
               </View>
-              <View style={s.toggleText}>
+              <View>
                 <Text style={s.toggleTitle}>Notify contact on booking</Text>
                 <Text style={s.toggleDesc}>Your emergency contact gets a message when you book</Text>
               </View>
@@ -187,19 +178,18 @@ export default function CustomerSafetyScreen({ navigation }) {
             <Switch
               value={notifyOnBooking}
               onValueChange={setNotifyOnBooking}
-              trackColor={{ false: '#DDD', true: GOLD }}
-              thumbColor={BG}
+              trackColor={{ false: Colors.navyLine, true: Colors.gold }}
+              thumbColor={Colors.white}
             />
           </View>
         </View>
 
-        {/* How SOS works */}
         <View style={s.howCard}>
-          <Text style={s.howTitle}>HOW SOS WORKS</Text>
+          <Text style={s.howLabel}>HOW SOS WORKS</Text>
           {[
             'During an active job, a red SOS button is always visible',
             'Tap it once — your contact receives an alert with your GPS location',
-            'The worker\'s verified name, photo, and ID number are included',
+            "The worker's verified name, photo, and ID number are included",
             'WiamApp operations team is also notified immediately',
           ].map((item, i) => (
             <View key={i} style={s.howRow}>
@@ -209,34 +199,30 @@ export default function CustomerSafetyScreen({ navigation }) {
           ))}
         </View>
 
-        {/* Error */}
         {error ? (
           <View style={s.errorBox}>
-            <Ionicons name="alert-circle-outline" size={14} color={RED} />
+            <Ionicons name="alert-circle-outline" size={14} color={Colors.error} />
             <Text style={s.errorText}>{error}</Text>
           </View>
         ) : null}
 
-        {/* Save button */}
-        <TouchableOpacity
-          style={[s.saveBtn, saved && s.saveBtnDone]}
-          onPress={handleSave}
-          disabled={saving}
-          activeOpacity={0.85}
-        >
-          {saving
-            ? <ActivityIndicator color={NAVY} />
-            : <>
-                <Ionicons
-                  name={saved ? 'checkmark-circle' : 'save-outline'}
-                  size={17}
-                  color={NAVY}
-                />
-                <Text style={s.saveBtnText}>
-                  {saved ? 'Settings Saved!' : 'Save Safety Settings'}
-                </Text>
-              </>
-          }
+        <TouchableOpacity onPress={handleSave} disabled={saving} activeOpacity={0.85}>
+          <LinearGradient
+            colors={saved ? [Colors.success, Colors.success] : goldGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={s.saveBtn}
+          >
+            {saving
+              ? <ActivityIndicator color={Colors.navy} />
+              : <>
+                  <Ionicons name={saved ? 'checkmark-circle' : 'save-outline'} size={17} color={Colors.navy} />
+                  <Text style={s.saveBtnText}>
+                    {saved ? 'Settings Saved!' : 'Save Safety Settings'}
+                  </Text>
+                </>
+            }
+          </LinearGradient>
         </TouchableOpacity>
 
         <View style={{ height: 30 }} />
@@ -246,19 +232,19 @@ export default function CustomerSafetyScreen({ navigation }) {
 }
 
 const s = StyleSheet.create({
-  safe:   { flex: 1, backgroundColor: BG },
+  safe:   { flex: 1, backgroundColor: Colors.navy },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 20, paddingVertical: 14,
-    borderBottomWidth: 0.5, borderBottomColor: BORDER,
+    paddingHorizontal: PAD, paddingVertical: 14,
   },
-  headerTitle: { color: NAVY, fontSize: 17, fontWeight: '700' },
-  container:   { flexGrow: 1, padding: 20 },
+  backBtn:     { width: 36, height: 36, borderRadius: 18, backgroundColor: Colors.navyCard, alignItems: 'center', justifyContent: 'center' },
+  headerTitle: { color: Colors.white, fontSize: 17, fontWeight: '700' },
+  container:   { flexGrow: 1, padding: PAD },
 
   sosCard: {
     flexDirection: 'row', alignItems: 'flex-start', gap: 14,
-    backgroundColor: GOLD_BG, borderRadius: 14,
-    borderWidth: 0.5, borderColor: GOLD_BD,
+    backgroundColor: 'rgba(212,160,23,0.10)', borderRadius: Colors.cardRadius,
+    borderWidth: 1, borderColor: 'rgba(212,160,23,0.25)',
     padding: 16, marginBottom: 24,
   },
   sosIconWrap: {
@@ -267,61 +253,55 @@ const s = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center', flexShrink: 0,
   },
   sosInfo:  { flex: 1 },
-  sosTitle: { color: NAVY, fontSize: 15, fontWeight: '700', marginBottom: 5 },
-  sosDesc:  { color: MUTED, fontSize: 12, lineHeight: 18 },
+  sosTitle: { color: Colors.white, fontSize: 15, fontWeight: '700', marginBottom: 5 },
+  sosDesc:  { color: Colors.textDim, fontSize: 12, lineHeight: 18 },
 
-  sectionTitle: { color: MUTED, fontSize: 11, fontWeight: '700', letterSpacing: 1.5, marginBottom: 6, marginTop: 8 },
-  sectionDesc:  { color: MUTED, fontSize: 13, lineHeight: 19, marginBottom: 14 },
+  sectionLabel: { color: Colors.gold, fontSize: 10, fontWeight: '700', letterSpacing: 1.5, marginBottom: 6, marginTop: 8 },
+  sectionDesc:  { color: Colors.textDim, fontSize: 13, lineHeight: 19, marginBottom: 14 },
 
-  label: { color: MUTED, fontSize: 12, fontWeight: '500', marginBottom: 7, marginTop: 12, letterSpacing: 0.3 },
+  label: { color: Colors.textDim, fontSize: 12, fontWeight: '500', marginBottom: 7, marginTop: 12, letterSpacing: 0.3 },
   inputWrap: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#F5F5F8', borderRadius: 12,
-    borderWidth: 0.5, borderColor: BORDER,
+    backgroundColor: Colors.navySoft, borderRadius: 12,
+    borderWidth: 1, borderColor: Colors.navyLine,
     paddingHorizontal: 13, paddingVertical: 13,
   },
   inputIcon: { marginRight: 10 },
-  input:     { color: NAVY, fontSize: 14 },
+  input:     { color: Colors.white, fontSize: 14 },
 
   toggleCard: {
-    backgroundColor: '#F8F8FB', borderRadius: 14,
-    borderWidth: 0.5, borderColor: BORDER,
+    backgroundColor: Colors.navyCard, borderRadius: Colors.cardRadius,
+    borderWidth: 1, borderColor: Colors.navyLine,
     marginTop: 10, marginBottom: 20, overflow: 'hidden',
   },
   toggleRow: {
     flexDirection: 'row', alignItems: 'center',
     justifyContent: 'space-between', padding: 14,
   },
-  toggleRowBorder: { borderTopWidth: 0.5, borderTopColor: BORDER },
-  toggleInfo:      { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1, marginRight: 10 },
-  toggleIconWrap:  { width: 36, height: 36, borderRadius: 10, backgroundColor: GOLD_BG, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
-  toggleText:      { flex: 1 },
-  toggleTitle:     { color: NAVY, fontSize: 14, fontWeight: '500', marginBottom: 2 },
-  toggleDesc:      { color: MUTED, fontSize: 11, lineHeight: 16 },
+  toggleRowBorder: { borderTopWidth: 1, borderTopColor: Colors.navyLine },
+  toggleLeft:      { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1, marginRight: 10 },
+  toggleIcon:      { width: 34, height: 34, borderRadius: 9, backgroundColor: 'rgba(212,160,23,0.10)', alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  toggleTitle:     { color: Colors.white, fontSize: 13, fontWeight: '500', marginBottom: 2 },
+  toggleDesc:      { color: Colors.textDim, fontSize: 11, lineHeight: 15 },
 
-  howCard: {
-    backgroundColor: '#F8F8FB', borderRadius: 14,
-    borderWidth: 0.5, borderColor: BORDER,
-    padding: 16, marginBottom: 20, gap: 12,
-  },
-  howTitle: { color: MUTED, fontSize: 10, fontWeight: '700', letterSpacing: 1.5, marginBottom: 4 },
+  howCard:  { backgroundColor: Colors.navyCard, borderRadius: Colors.cardRadius, borderWidth: 1, borderColor: Colors.navyLine, padding: 16, marginBottom: 20, gap: 12 },
+  howLabel: { color: Colors.gold, fontSize: 10, fontWeight: '700', letterSpacing: 1.5, marginBottom: 4 },
   howRow:   { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
-  howNum:   { width: 22, height: 22, borderRadius: 11, backgroundColor: RED, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
-  howNumText:{ color: BG, fontSize: 11, fontWeight: '700' },
-  howText:  { color: NAVY, fontSize: 13, flex: 1, lineHeight: 19 },
+  howNum:   { width: 22, height: 22, borderRadius: 11, backgroundColor: Colors.error, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  howNumText:{ color: Colors.white, fontSize: 11, fontWeight: '700' },
+  howText:  { color: Colors.textDim, fontSize: 12, flex: 1, lineHeight: 18 },
 
   errorBox: {
     flexDirection: 'row', alignItems: 'center', gap: 7,
     backgroundColor: 'rgba(239,68,68,0.08)',
     borderRadius: 10, padding: 12, marginBottom: 14,
   },
-  errorText: { color: RED, fontSize: 12, flex: 1 },
+  errorText: { color: Colors.error, fontSize: 12, flex: 1 },
 
   saveBtn: {
-    backgroundColor: GOLD, borderRadius: 13, paddingVertical: 15,
+    borderRadius: 14, paddingVertical: 15,
     flexDirection: 'row', alignItems: 'center',
     justifyContent: 'center', gap: 8,
   },
-  saveBtnDone: { backgroundColor: '#22C55E' },
-  saveBtnText: { color: NAVY, fontSize: 15, fontWeight: '700' },
+  saveBtnText: { color: Colors.navy, fontSize: 15, fontWeight: '700' },
 });

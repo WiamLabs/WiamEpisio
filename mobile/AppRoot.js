@@ -112,9 +112,16 @@ function CustomerTabs() {
           return <Ionicons name={icons[route.name]} size={size} color={color} />;
         },
         tabBarActiveTintColor:   Colors.gold,
-        tabBarInactiveTintColor: '#aaa',
-        tabBarStyle: { backgroundColor: '#fff', borderTopColor: '#EBEBEB', borderTopWidth: 0.5, paddingBottom: 6, height: 60 },
-        tabBarLabelStyle: { fontSize: 11 },
+        tabBarInactiveTintColor: Colors.textFaint,
+        tabBarStyle: {
+          backgroundColor: Colors.navySoft,
+          borderTopColor: '#1C1C38',
+          borderTopWidth: 1,
+          height: Colors.bottomNavHeight,
+          paddingTop: 12,
+          paddingBottom: 16,
+        },
+        tabBarLabelStyle: { fontSize: 9.5, fontWeight: '500' },
         headerShown: false,
       })}
     >
@@ -127,31 +134,40 @@ function CustomerTabs() {
   );
 }
 
-// ── Worker Tabs ───────────────────────────────────────────────
+// ── Worker Tabs — Part 13: Home, Jobs, Earnings, Chat, Profile ─
 function WorkerTabs() {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
           const icons = {
-            Dashboard:     focused ? 'grid'          : 'grid-outline',
-            Jobs:          focused ? 'briefcase'     : 'briefcase-outline',
-            WorkerNotifs:  focused ? 'notifications' : 'notifications-outline',
-            WorkerProfileTab: focused ? 'person'        : 'person-outline',
+            Home:     focused ? 'home'        : 'home-outline',
+            Jobs:     focused ? 'briefcase'   : 'briefcase-outline',
+            Earnings: focused ? 'wallet'      : 'wallet-outline',
+            Chat:     focused ? 'chatbubbles' : 'chatbubbles-outline',
+            Profile:  focused ? 'person'      : 'person-outline',
           };
           return <Ionicons name={icons[route.name]} size={size} color={color} />;
         },
         tabBarActiveTintColor:   Colors.gold,
-        tabBarInactiveTintColor: 'rgba(255,255,255,0.35)',
-        tabBarStyle: { backgroundColor: Colors.navyDeep, borderTopColor: '#1E1E4A', borderTopWidth: 0.5, paddingBottom: 6, height: 60 },
-        tabBarLabelStyle: { fontSize: 11 },
+        tabBarInactiveTintColor: Colors.textFaint,
+        tabBarStyle: {
+          backgroundColor: Colors.navySoft,
+          borderTopColor: '#1C1C38',
+          borderTopWidth: 1,
+          height: Colors.bottomNavHeight,
+          paddingTop: 12,
+          paddingBottom: 16,
+        },
+        tabBarLabelStyle: { fontSize: 9.5, fontWeight: '500' },
         headerShown: false,
       })}
     >
-      <Tab.Screen name="Dashboard"     component={WorkerDashboardScreen} />
-      <Tab.Screen name="Jobs"          component={WorkerJobsScreen} />
-      <Tab.Screen name="WorkerNotifs"  component={WorkerNotificationsScreen} options={{ title: 'Alerts' }} />
-      <Tab.Screen name="WorkerProfileTab" component={WorkerProfileEditScreen}   options={{ title: 'Profile' }} />
+      <Tab.Screen name="Home"     component={WorkerDashboardScreen} />
+      <Tab.Screen name="Jobs"     component={WorkerJobsScreen} />
+      <Tab.Screen name="Earnings" component={EarningsScreen} />
+      <Tab.Screen name="Chat"     component={ChatListScreen} />
+      <Tab.Screen name="Profile"  component={WorkerProfileEditScreen} />
     </Tab.Navigator>
   );
 }
@@ -171,9 +187,16 @@ function BusinessTabs() {
           return <Ionicons name={icons[route.name]} size={size} color={color} />;
         },
         tabBarActiveTintColor:   Colors.gold,
-        tabBarInactiveTintColor: 'rgba(255,255,255,0.35)',
-        tabBarStyle: { backgroundColor: Colors.navyDeep, borderTopColor: '#1E1E4A', borderTopWidth: 0.5, paddingBottom: 6, height: 60 },
-        tabBarLabelStyle: { fontSize: 11 },
+        tabBarInactiveTintColor: Colors.textFaint,
+        tabBarStyle: {
+          backgroundColor: Colors.navySoft,
+          borderTopColor: '#1C1C38',
+          borderTopWidth: 1,
+          height: Colors.bottomNavHeight,
+          paddingTop: 12,
+          paddingBottom: 16,
+        },
+        tabBarLabelStyle: { fontSize: 9.5, fontWeight: '500' },
         headerShown: false,
       })}
     >
@@ -281,7 +304,7 @@ function RootNavigator() {
       {/* Worker App */}
       <Stack.Screen name="WorkerApp"            component={WorkerTabs} />
       <Stack.Screen name="JobDetail"            component={JobDetailScreen} />
-      <Stack.Screen name="Earnings"             component={EarningsScreen} />
+      <Stack.Screen name="WorkerNotifications"  component={WorkerNotificationsScreen} />
       <Stack.Screen name="PortfolioManager"     component={PortfolioManagerScreen} />
       <Stack.Screen name="SkillsManager"        component={SkillsManagerScreen} />
       <Stack.Screen name="SpotlightManager"     component={SpotlightManagerScreen} />

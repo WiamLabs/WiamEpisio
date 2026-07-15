@@ -11,15 +11,10 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Colors, goldGradient } from '../constants/colors';
 
-const NAVY    = '#0D0D2B';
-const NAVY2   = '#12123A';
-const GOLD    = '#D4A017';
-const GOLD_BG = 'rgba(212,160,23,0.10)';
-const GOLD_BD = 'rgba(212,160,23,0.25)';
-const WHITE   = '#FFFFFF';
-const MUTED   = 'rgba(255,255,255,0.45)';
-const BORDER  = 'rgba(255,255,255,0.08)';
+const PAD = Colors.screenPad;
 const BACKEND = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 export default function PortfolioManagerScreen({ navigation }) {
@@ -101,15 +96,15 @@ export default function PortfolioManagerScreen({ navigation }) {
   };
 
   return (
-    <SafeAreaView style={s.safe}>
-      <StatusBar barStyle="light-content" backgroundColor={NAVY} />
+    <SafeAreaView style={s.safe} edges={['top']}>
+      <StatusBar barStyle="light-content" backgroundColor={Colors.navy} />
       <View style={s.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={22} color={WHITE} />
+        <TouchableOpacity onPress={() => navigation.goBack()} style={s.backBtn}>
+          <Ionicons name="arrow-back" size={22} color={Colors.white} />
         </TouchableOpacity>
         <Text style={s.headerTitle}>Portfolio</Text>
         <TouchableOpacity onPress={() => setShowAdd(!showAdd)}>
-          <Ionicons name={showAdd ? 'close' : 'add-circle-outline'} size={24} color={GOLD} />
+          <Ionicons name={showAdd ? 'close' : 'add-circle-outline'} size={24} color={Colors.gold} />
         </TouchableOpacity>
       </View>
 
@@ -129,11 +124,11 @@ export default function PortfolioManagerScreen({ navigation }) {
             ) : (
               <View style={s.pickRow}>
                 <TouchableOpacity style={s.pickBtn} onPress={takePhoto}>
-                  <Ionicons name="camera-outline" size={22} color={GOLD} />
+                  <Ionicons name="camera-outline" size={22} color={Colors.gold} />
                   <Text style={s.pickBtnText}>Camera</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={s.pickBtn} onPress={pickImage}>
-                  <Ionicons name="images-outline" size={22} color={GOLD} />
+                  <Ionicons name="images-outline" size={22} color={Colors.gold} />
                   <Text style={s.pickBtnText}>Gallery</Text>
                 </TouchableOpacity>
               </View>
@@ -141,26 +136,29 @@ export default function PortfolioManagerScreen({ navigation }) {
             <TextInput
               style={s.captionInput}
               placeholder="Add a caption (optional)..."
-              placeholderTextColor={MUTED}
+              placeholderTextColor={Colors.textDim}
               value={caption}
               onChangeText={setCaption}
             />
-            <TouchableOpacity
-              style={[s.uploadBtn, (!newImage || uploading) && s.uploadBtnDisabled]}
-              onPress={handleUpload}
-              disabled={!newImage || uploading}
-            >
-              {uploading
-                ? <ActivityIndicator color={NAVY} />
-                : <Text style={s.uploadBtnText}>Upload Photo</Text>
-              }
+            <TouchableOpacity onPress={handleUpload} disabled={!newImage || uploading} activeOpacity={0.85}>
+              <LinearGradient
+                colors={(!newImage || uploading) ? ['rgba(212,160,23,0.25)', 'rgba(160,120,16,0.25)'] : goldGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={s.uploadBtn}
+              >
+                {uploading
+                  ? <ActivityIndicator color={Colors.navy} />
+                  : <Text style={s.uploadBtnText}>Upload Photo</Text>
+                }
+              </LinearGradient>
             </TouchableOpacity>
           </View>
         )}
 
         {/* Portfolio tip */}
         <View style={s.tip}>
-          <Ionicons name="bulb-outline" size={14} color={GOLD} />
+          <Ionicons name="bulb-outline" size={14} color={Colors.gold} />
           <Text style={s.tipText}>
             Workers with 5+ portfolio photos get 3x more bookings. Show before & after results.
           </Text>
@@ -168,7 +166,7 @@ export default function PortfolioManagerScreen({ navigation }) {
 
         {/* Portfolio grid */}
         {loading ? (
-          <ActivityIndicator color={GOLD} style={{ marginTop: 40 }} />
+          <ActivityIndicator color={Colors.gold} style={{ marginTop: 40 }} />
         ) : portfolio.length === 0 ? (
           <View style={s.empty}>
             <Ionicons name="images-outline" size={48} color="rgba(255,255,255,0.1)" />
@@ -181,7 +179,7 @@ export default function PortfolioManagerScreen({ navigation }) {
               <View key={item.id} style={s.gridItem}>
                 <Image source={{ uri: item.image_url }} style={s.gridImage} resizeMode="cover" />
                 <TouchableOpacity style={s.deleteBtn} onPress={() => handleDelete(item.id)}>
-                  <Ionicons name="trash-outline" size={14} color={WHITE} />
+                  <Ionicons name="trash-outline" size={14} color={Colors.white} />
                 </TouchableOpacity>
                 {item.caption ? (
                   <View style={s.captionOverlay}>
@@ -199,15 +197,16 @@ export default function PortfolioManagerScreen({ navigation }) {
 }
 
 const s = StyleSheet.create({
-  safe:        { flex: 1, backgroundColor: NAVY },
-  header:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 14 },
-  headerTitle: { color: WHITE, fontSize: 17, fontWeight: '700' },
+  safe:        { flex: 1, backgroundColor: Colors.navy },
+  header:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: PAD, paddingVertical: 14 },
+  backBtn:     { width: 36, height: 36, borderRadius: 18, backgroundColor: Colors.navyCard, alignItems: 'center', justifyContent: 'center' },
+  headerTitle: { color: Colors.white, fontSize: 17, fontWeight: '700' },
 
   addPanel: {
-    backgroundColor: NAVY2, marginHorizontal: 20, marginBottom: 16,
-    borderRadius: 16, borderWidth: 0.5, borderColor: BORDER, padding: 16,
+    backgroundColor: Colors.navyCard, marginHorizontal: PAD, marginBottom: 16,
+    borderRadius: Colors.cardRadius, borderWidth: 1, borderColor: Colors.navyLine, padding: 16,
   },
-  addTitle:    { color: GOLD, fontSize: 10, fontWeight: '700', letterSpacing: 1.5, marginBottom: 14 },
+  addTitle:    { color: Colors.gold, fontSize: 10, fontWeight: '700', letterSpacing: 1.5, marginBottom: 14 },
   previewWrap: { position: 'relative', borderRadius: 12, overflow: 'hidden', marginBottom: 12 },
   preview:     { width: '100%', height: 180, borderRadius: 12 },
   changePhotoBtn: { position: 'absolute', top: 8, right: 8 },
@@ -215,32 +214,31 @@ const s = StyleSheet.create({
   pickBtn: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: 8, paddingVertical: 14, borderRadius: 12,
-    backgroundColor: GOLD_BG, borderWidth: 0.5, borderColor: GOLD_BD,
+    backgroundColor: 'rgba(212,160,23,0.10)', borderWidth: 1, borderColor: 'rgba(212,160,23,0.25)',
   },
-  pickBtnText:   { color: GOLD, fontSize: 14, fontWeight: '500' },
+  pickBtnText:   { color: Colors.gold, fontSize: 14, fontWeight: '500' },
   captionInput: {
-    backgroundColor: 'rgba(255,255,255,0.07)', borderRadius: 10,
-    borderWidth: 0.5, borderColor: BORDER,
-    padding: 12, color: WHITE, fontSize: 14, marginBottom: 12,
+    backgroundColor: Colors.navySoft, borderRadius: 10,
+    borderWidth: 1, borderColor: Colors.navyLine,
+    padding: 12, color: Colors.white, fontSize: 14, marginBottom: 12,
   },
-  uploadBtn:         { backgroundColor: GOLD, borderRadius: 12, paddingVertical: 13, alignItems: 'center' },
-  uploadBtnDisabled: { backgroundColor: 'rgba(212,160,23,0.25)' },
-  uploadBtnText:     { color: NAVY, fontSize: 14, fontWeight: '700' },
+  uploadBtn:         { borderRadius: 12, paddingVertical: 13, alignItems: 'center' },
+  uploadBtnText:     { color: Colors.navy, fontSize: 14, fontWeight: '700' },
 
   tip: {
     flexDirection: 'row', alignItems: 'flex-start', gap: 8,
-    backgroundColor: GOLD_BG, borderRadius: 12, padding: 12,
-    borderWidth: 0.5, borderColor: GOLD_BD,
-    marginHorizontal: 20, marginBottom: 16,
+    backgroundColor: 'rgba(212,160,23,0.10)', borderRadius: 14, padding: 12,
+    borderWidth: 1, borderColor: 'rgba(212,160,23,0.25)',
+    marginHorizontal: PAD, marginBottom: 16,
   },
-  tipText: { color: 'rgba(255,255,255,0.6)', fontSize: 12, lineHeight: 18, flex: 1 },
+  tipText: { color: Colors.textDim, fontSize: 12, lineHeight: 18, flex: 1 },
 
   empty:      { alignItems: 'center', paddingVertical: 48, gap: 10 },
-  emptyTitle: { color: WHITE, fontSize: 16, fontWeight: '600' },
-  emptyText:  { color: MUTED, fontSize: 13 },
+  emptyTitle: { color: Colors.white, fontSize: 16, fontWeight: '600' },
+  emptyText:  { color: Colors.textDim, fontSize: 13 },
 
-  grid:      { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 20, gap: 8 },
-  gridItem:  { width: '48%', position: 'relative', borderRadius: 12, overflow: 'hidden' },
+  grid:      { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: PAD, gap: 8 },
+  gridItem:  { width: '48%', position: 'relative', borderRadius: 14, overflow: 'hidden', borderWidth: 1, borderColor: Colors.navyLine },
   gridImage: { width: '100%', height: 160 },
   deleteBtn: {
     position: 'absolute', top: 8, right: 8,
@@ -251,5 +249,5 @@ const s = StyleSheet.create({
     position: 'absolute', bottom: 0, left: 0, right: 0,
     backgroundColor: 'rgba(0,0,0,0.6)', padding: 8,
   },
-  captionText: { color: WHITE, fontSize: 11, lineHeight: 15 },
+  captionText: { color: Colors.white, fontSize: 11, lineHeight: 15 },
 });

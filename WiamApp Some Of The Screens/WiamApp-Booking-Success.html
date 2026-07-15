@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamApp — Booking Sent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75; --success:#22C55E;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); display:flex; flex-direction:column; }
+  .statusbar{ height:44px; flex-shrink:0; }
+  .content{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:0 30px; text-align:center; }
+
+  .check-circle{
+    width:84px; height:84px; border-radius:50%; background:rgba(212,160,23,0.12); border:2px solid var(--gold);
+    display:flex; align-items:center; justify-content:center; margin-bottom:20px; position:relative;
+  }
+  .check-circle::before{ content:''; position:absolute; inset:-8px; border-radius:50%; border:1.5px solid rgba(212,160,23,0.25); }
+  .check-circle svg{ color:var(--gold); width:38px; height:38px; }
+
+  h1{ font-size:20px; font-weight:800; color:#fff; margin:0 0 8px; }
+  .sub{ font-size:12.5px; color:var(--text-dim); line-height:1.55; margin:0 0 24px; }
+  .sub b{ color:#fff; font-weight:600; }
+
+  .ref-card{ width:100%; background:var(--navy-card); border:1px solid var(--navy-line); border-radius:18px; padding:16px; margin-bottom:20px; }
+  .ref-label{ font-size:10.5px; color:var(--text-faint); margin:0 0 4px; }
+  .ref-value{ font-size:18px; font-weight:800; color:var(--gold); letter-spacing:1px; margin:0; font-family:monospace; }
+
+  .timeline{ width:100%; text-align:left; margin-bottom:24px; }
+  .tl-row{ display:flex; gap:12px; padding:8px 0; align-items:flex-start; }
+  .tl-dot{ width:8px; height:8px; border-radius:50%; margin-top:5px; flex-shrink:0; }
+  .tl-dot.done{ background:var(--success); }
+  .tl-dot.pending{ background:var(--gold); }
+  .tl-dot.future{ background:var(--navy-line); }
+  .tl-text{ font-size:12px; color:#C9C9DE; }
+  .tl-text.future{ color:var(--text-faint); }
+
+  .footer-copy{ font-size:10px; color:#3A3A56; padding:8px 0; flex-shrink:0; }
+
+  .actionbar{ flex-shrink:0; display:flex; flex-direction:column; gap:10px; padding:0 20px 24px; }
+  .btn-primary{ padding:14px; border-radius:16px; background:var(--gold); color:var(--navy); font-size:14px; font-weight:700; border:none; cursor:pointer; }
+  .btn-secondary{ padding:13px; border-radius:16px; background:none; color:#C9C9DE; font-size:13px; font-weight:600; border:1px solid var(--navy-line); cursor:pointer; }
+
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"></div>
+  <div class="content">
+    <div class="check-circle"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+    <h1>Request Sent!</h1>
+    <p class="sub">Your booking request has been sent to<br/><b>Kwabena Owusu</b>. He has 2 hours to respond.</p>
+
+    <div class="ref-card">
+      <p class="ref-label">Booking Reference</p>
+      <p class="ref-value">WA-BK-260714-3821</p>
+    </div>
+
+    <div class="timeline">
+      <div class="tl-row"><span class="tl-dot done"></span><span class="tl-text">Request sent to Kwabena Owusu</span></div>
+      <div class="tl-row"><span class="tl-dot pending"></span><span class="tl-text">Waiting for worker to accept</span></div>
+      <div class="tl-row"><span class="tl-dot future"></span><span class="tl-text future">Make payment (held in escrow)</span></div>
+      <div class="tl-row"><span class="tl-dot future"></span><span class="tl-text future">Job completed & confirmed</span></div>
+    </div>
+  </div>
+
+  <div class="actionbar">
+    <button class="btn-primary">View Booking</button>
+    <button class="btn-secondary">Back to Home</button>
+  </div>
+  <p class="footer-copy" style="text-align:center;">© 2026 WiamApp · Powered by WiamLabs</p>
+</div>
+
+</body>
+</html>

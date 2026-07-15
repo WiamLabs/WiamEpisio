@@ -10,38 +10,43 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { Colors } from '../constants/colors';
+import GoldAvatar from '../components/ui/GoldAvatar';
 
-const BG      = '#FFFFFF';
-const NAVY    = '#0D0D2B';
-const GOLD    = '#D4A017';
-const GOLD_BG = 'rgba(212,160,23,0.10)';
-const BORDER  = '#EBEBEB';
-const MUTED   = '#888899';
 const BACKEND = process.env.EXPO_PUBLIC_BACKEND_URL;
+const PAD = Colors.screenPad;
 
 const STATUS_CONFIG = {
-  pending:   { label: 'Pending',    color: '#F59E0B', bg: 'rgba(245,158,11,0.1)',  icon: 'time-outline' },
-  accepted:  { label: 'Accepted',   color: '#3B82F6', bg: 'rgba(59,130,246,0.1)',  icon: 'checkmark-circle-outline' },
-  paid:      { label: 'Paid',       color: '#22C55E', bg: 'rgba(34,197,94,0.1)',   icon: 'card-outline' },
-  active:    { label: 'In Progress',color: '#8B5CF6', bg: 'rgba(139,92,246,0.1)', icon: 'play-circle-outline' },
-  completed: { label: 'Completed',  color: '#22C55E', bg: 'rgba(34,197,94,0.1)',   icon: 'checkmark-done-circle-outline' },
-  cancelled: { label: 'Cancelled',  color: '#EF4444', bg: 'rgba(239,68,68,0.1)',   icon: 'close-circle-outline' },
-  disputed:  { label: 'Disputed',   color: '#EF4444', bg: 'rgba(239,68,68,0.1)',   icon: 'alert-circle-outline' },
+  pending: { label: 'Pending', color: Colors.warning, bg: 'rgba(245,158,11,0.14)' },
+  accepted: { label: 'Accepted', color: Colors.info, bg: 'rgba(59,130,246,0.14)' },
+  paid: { label: 'Paid', color: Colors.success, bg: 'rgba(34,197,94,0.14)' },
+  active: { label: 'In Progress', color: '#8B5CF6', bg: 'rgba(139,92,246,0.14)' },
+  completed: { label: 'Completed', color: Colors.success, bg: 'rgba(34,197,94,0.14)' },
+  cancelled: { label: 'Cancelled', color: Colors.error, bg: 'rgba(239,68,68,0.14)' },
+  disputed: { label: 'Disputed', color: Colors.error, bg: 'rgba(239,68,68,0.14)' },
 };
+
+const PROGRESS_STEPS = ['pending', 'accepted', 'paid', 'completed'];
+
+function progressIndex(status) {
+  if (status === 'active') return 2;
+  const idx = PROGRESS_STEPS.indexOf(status);
+  return idx >= 0 ? idx : 0;
+}
 
 export default function BookingDetailScreen({ navigation, route }) {
   const { bookingId } = route?.params || {};
-  const [booking,    setBooking]    = useState(null);
-  const [loading,    setLoading]    = useState(true);
+  const [booking, setBooking] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [confirming, setConfirming] = useState(false);
 
   const fetchBooking = async () => {
     try {
-      const res  = await fetch(`${BACKEND}/api/bookings/${bookingId}`);
+      const res = await fetch(`${BACKEND}/api/bookings/${bookingId}`);
       const data = await res.json();
       setBooking(data.data);
-    } catch { } finally {
+    } catch { /* empty */ } finally {
       setLoading(false);
       setRefreshing(false);
     }
@@ -52,7 +57,7 @@ export default function BookingDetailScreen({ navigation, route }) {
   const handleConfirmComplete = async () => {
     setConfirming(true);
     try {
-      const res  = await fetch(`${BACKEND}/api/bookings/${bookingId}/complete`, {
+      const res = await fetch(`${BACKEND}/api/bookings/${bookingId}/complete`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });
@@ -67,282 +72,275 @@ export default function BookingDetailScreen({ navigation, route }) {
     }
   };
 
-  if (loading) return (
-    <SafeAreaView style={s.safe}>
-      <ActivityIndicator color={GOLD} style={{ marginTop: 60 }} />
-    </SafeAreaView>
-  );
+  if (loading) {
+    return (
+      <SafeAreaView style={s.safe}>
+        <ActivityIndicator color={Colors.gold} style={{ marginTop: 60 }} />
+      </SafeAreaView>
+    );
+  }
 
-  if (!booking) return (
-    <SafeAreaView style={s.safe}>
-      <TouchableOpacity style={s.backBtn} onPress={() => navigation.goBack()}>
-        <Ionicons name="arrow-back" size={22} color={NAVY} />
-      </TouchableOpacity>
-      <View style={s.errorWrap}>
-        <Text style={s.errorText}>Booking not found</Text>
-      </View>
-    </SafeAreaView>
-  );
+  if (!booking) {
+    return (
+      <SafeAreaView style={s.safe}>
+        <TouchableOpacity style={s.backBtn} onPress={() => navigation.goBack()}>
+          <Ionicons name="chevron-back" size={20} color={Colors.white} />
+        </TouchableOpacity>
+        <View style={s.errorWrap}>
+          <Text style={s.errorText}>Booking not found</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   const status = STATUS_CONFIG[booking.status] || STATUS_CONFIG.pending;
+  const progIdx = progressIndex(booking.status);
+  const progressLabels = ['Booked', 'Accepted', 'Paid', 'Done'];
 
   return (
-    <SafeAreaView style={s.safe}>
-      <StatusBar barStyle="dark-content" backgroundColor={BG} />
+    <SafeAreaView style={s.safe} edges={['top']}>
+      <StatusBar barStyle="light-content" backgroundColor={Colors.navy} />
 
       <View style={s.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={22} color={NAVY} />
-        </TouchableOpacity>
-        <Text style={s.headerTitle}>Booking Details</Text>
-        <View style={{ width: 22 }} />
+        <View style={s.headerLeft}>
+          <TouchableOpacity style={s.backBtn} onPress={() => navigation.goBack()}>
+            <Ionicons name="chevron-back" size={20} color={Colors.white} />
+          </TouchableOpacity>
+          <Text style={s.headerTitle}>Booking Detail</Text>
+        </View>
+        <View style={[s.statusPill, { backgroundColor: status.bg }]}>
+          <Text style={[s.statusPillText, { color: status.color }]}>{status.label}</Text>
+        </View>
       </View>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={s.scroll}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchBooking(); }} tintColor={GOLD} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => { setRefreshing(true); fetchBooking(); }}
+            tintColor={Colors.gold}
+          />
         }
       >
-        {/* Status banner */}
-        <View style={[s.statusBanner, { backgroundColor: status.bg }]}>
-          <Ionicons name={status.icon} size={20} color={status.color} />
-          <View style={s.statusInfo}>
-            <Text style={[s.statusLabel, { color: status.color }]}>{status.label}</Text>
-            <Text style={s.statusDesc}>
-              {booking.status === 'pending'   && 'Waiting for worker to accept your request'}
-              {booking.status === 'accepted'  && 'Worker accepted — open chat to agree on price'}
-              {booking.status === 'paid'      && 'Payment received — worker is on their way'}
-              {booking.status === 'active'    && 'Job is in progress'}
-              {booking.status === 'completed' && 'Job completed successfully'}
-              {booking.status === 'cancelled' && 'This booking was cancelled'}
-            </Text>
+        <TouchableOpacity
+          style={s.workerMini}
+          onPress={() => navigation.navigate('WorkerProfile', { workerId: booking.worker_id })}
+          activeOpacity={0.8}
+        >
+          <GoldAvatar name={booking.worker_name} size={44} />
+          <View style={{ flex: 1 }}>
+            <Text style={s.workerName}>{booking.worker_name}</Text>
+            <Text style={s.workerRole}>{booking.category_name}</Text>
           </View>
+          <Ionicons name="chevron-forward" size={16} color={Colors.textFaint} />
+        </TouchableOpacity>
+
+        <View style={s.progressTrack}>
+          {progressLabels.map((_, i) => (
+            <React.Fragment key={i}>
+              <View style={[s.progressDot, i <= progIdx && s.progressDotDone]} />
+              {i < progressLabels.length - 1 ? (
+                <View style={[s.progressStep, i < progIdx && s.progressStepDone]} />
+              ) : null}
+            </React.Fragment>
+          ))}
+        </View>
+        <View style={s.progressLabels}>
+          {progressLabels.map((label) => (
+            <Text key={label} style={s.progressLabel}>{label}</Text>
+          ))}
         </View>
 
-        <View style={s.content}>
-          {/* Booking reference */}
-          <View style={s.refRow}>
-            <Text style={s.refLabel}>Booking Ref</Text>
-            <Text style={s.refValue}>{booking.booking_ref}</Text>
-          </View>
-
-          {/* Worker */}
-          <Text style={s.sectionTitle}>Worker</Text>
-          <TouchableOpacity
-            style={s.workerCard}
-            onPress={() => navigation.navigate('WorkerProfile', { workerId: booking.worker_id })}
-          >
-            <View style={s.workerAvatar}>
-              <Text style={s.workerAvatarText}>{booking.worker_name?.[0]?.toUpperCase()}</Text>
-            </View>
-            <View style={s.workerInfo}>
-              <Text style={s.workerName}>{booking.worker_name}</Text>
-              <Text style={s.workerCategory}>{booking.category_name}</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={16} color="#CCC" />
-          </TouchableOpacity>
-
-          {/* Job details */}
-          <Text style={s.sectionTitle}>Job Details</Text>
-          <View style={s.detailCard}>
-            {[
-              { label: 'Description',    value: booking.description },
-              { label: 'Address',        value: booking.address },
-              { label: 'Date',           value: booking.scheduled_date },
-              { label: 'Time',           value: booking.scheduled_time },
-              { label: 'Est. hours',     value: `${booking.estimated_hours || '–'} hrs` },
-              { label: 'Agreed price',   value: booking.agreed_price_ghs ? `GHS ${booking.agreed_price_ghs}` : 'To be agreed in chat' },
-              { label: 'Escrow status',  value: booking.escrow_status || 'Not funded' },
-            ].map((item, i) => (
-              <View key={i} style={[s.detailRow, i > 0 && s.detailRowBorder]}>
-                <Text style={s.detailLabel}>{item.label}</Text>
-                <Text style={s.detailValue} numberOfLines={2}>{item.value}</Text>
+        <Text style={s.sectionLabel}>Booking Details</Text>
+        <View style={s.detailCard}>
+          {[
+            { icon: 'document-text-outline', label: 'Service description', value: booking.description },
+            { icon: 'location-outline', label: 'Location', value: booking.address },
+            { icon: 'calendar-outline', label: 'Scheduled for', value: `${booking.scheduled_date}, ${booking.scheduled_time}` },
+            { icon: 'wallet-outline', label: 'Agreed price', value: booking.agreed_price_ghs ? `GHS ${booking.agreed_price_ghs}` : 'To be agreed in chat' },
+            { icon: 'time-outline', label: 'Est. hours', value: `${booking.estimated_hours || '–'} hrs` },
+            { icon: 'lock-closed-outline', label: 'Escrow status', value: booking.escrow_status || 'Not funded' },
+            { icon: 'receipt-outline', label: 'Reference', value: booking.booking_ref },
+          ].map((item, i, arr) => (
+            <View key={item.label} style={[s.detailRow, i < arr.length - 1 && s.detailRowBorder]}>
+              <Ionicons name={item.icon} size={15} color={Colors.gold} style={{ marginTop: 1 }} />
+              <View style={{ flex: 1 }}>
+                <Text style={s.detailRowLabel}>{item.label}</Text>
+                <Text style={s.detailRowValue}>{item.value}</Text>
               </View>
-            ))}
-          </View>
-
-          {/* Action buttons based on status */}
-          {booking.status === 'accepted' && (
-            <View style={s.actionsWrap}>
-              <TouchableOpacity
-                style={s.chatBtn}
-                onPress={() => navigation.navigate('ChatRoom', { bookingId, workerName: booking.worker_name })}
-                activeOpacity={0.85}
-              >
-                <Ionicons name="chatbubbles-outline" size={17} color={NAVY} />
-                <Text style={s.chatBtnText}>Open Chat</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={s.payBtn}
-                onPress={() => navigation.navigate('Payment', { bookingId, amount: booking.agreed_price_ghs, workerName: booking.worker_name })}
-                activeOpacity={0.85}
-              >
-                <Text style={s.payBtnText}>Pay Now</Text>
-                <Ionicons name="arrow-forward" size={16} color={NAVY} />
-              </TouchableOpacity>
             </View>
-          )}
-
-          {booking.status === 'paid' || booking.status === 'active' ? (
-            <View style={s.actionsWrap}>
-              <TouchableOpacity
-                style={s.chatBtn}
-                onPress={() => navigation.navigate('ChatRoom', { bookingId, workerName: booking.worker_name })}
-                activeOpacity={0.85}
-              >
-                <Ionicons name="chatbubbles-outline" size={17} color={NAVY} />
-                <Text style={s.chatBtnText}>Chat</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={s.completeBtn}
-                onPress={handleConfirmComplete}
-                disabled={confirming}
-                activeOpacity={0.85}
-              >
-                {confirming
-                  ? <ActivityIndicator color={BG} size="small" />
-                  : <>
-                      <Text style={s.completeBtnText}>Job Done — Release Payment</Text>
-                      <Ionicons name="checkmark-circle" size={16} color={BG} />
-                    </>
-                }
-              </TouchableOpacity>
-            </View>
-          ) : null}
-
-          {booking.status === 'completed' && !booking.has_review && (
-            <TouchableOpacity
-              style={s.reviewBtn}
-              onPress={() => navigation.navigate('Review', { bookingId, workerName: booking.worker_name })}
-              activeOpacity={0.85}
-            >
-              <Ionicons name="star-outline" size={17} color={NAVY} />
-              <Text style={s.reviewBtnText}>Leave a Review</Text>
-            </TouchableOpacity>
-          )}
-
-          {/* Safety info */}
-          <View style={s.safetyCard}>
-            <Ionicons name="shield-checkmark-outline" size={15} color={GOLD} />
-            <Text style={s.safetyText}>
-              Payment is held safely in escrow. Only released when you confirm the job is done right.
-            </Text>
-          </View>
-
-          {['paid', 'active', 'completed'].includes(booking.status) && (
-            <TouchableOpacity
-              style={s.photosLink}
-              onPress={() => navigation.navigate('BookingPhotos', { bookingId })}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="camera-outline" size={16} color={GOLD} />
-              <Text style={s.photosLinkText}>Before / After Photos</Text>
-              <Ionicons name="chevron-forward" size={16} color={MUTED} />
-            </TouchableOpacity>
-          )}
-
-          {['paid', 'active', 'completed'].includes(booking.status) && (
-            <TouchableOpacity
-              style={s.disputeLink}
-              onPress={() => navigation.navigate('Dispute', { bookingId })}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="alert-circle-outline" size={15} color="rgba(255,255,255,0.5)" />
-              <Text style={s.disputeLinkText}>Something wrong with this booking? Report an issue</Text>
-            </TouchableOpacity>
-          )}
+          ))}
         </View>
+
+        {['paid', 'active', 'completed'].includes(booking.status) && (
+          <TouchableOpacity
+            style={s.linkRow}
+            onPress={() => navigation.navigate('BookingPhotos', { bookingId })}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="camera-outline" size={16} color={Colors.gold} />
+            <Text style={s.linkText}>Before / After Photos</Text>
+            <Ionicons name="chevron-forward" size={16} color={Colors.textFaint} />
+          </TouchableOpacity>
+        )}
+
+        <View style={s.safetyCard}>
+          <Ionicons name="shield-checkmark-outline" size={15} color={Colors.gold} />
+          <Text style={s.safetyText}>
+            Payment is held safely in escrow. Only released when you confirm the job is done right.
+          </Text>
+        </View>
+
+        {['paid', 'active', 'completed'].includes(booking.status) && (
+          <TouchableOpacity
+            style={s.disputeLink}
+            onPress={() => navigation.navigate('Dispute', { bookingId })}
+            activeOpacity={0.7}
+          >
+            <Text style={s.disputeText}>Something wrong? Report an issue</Text>
+          </TouchableOpacity>
+        )}
+
+        <Text style={s.footerCopy}>© 2026 WiamApp · Powered by WiamLabs</Text>
       </ScrollView>
+
+      <View style={s.actionBar}>
+        {booking.status === 'accepted' && (
+          <>
+            <TouchableOpacity
+              style={s.btnOutline}
+              onPress={() => navigation.navigate('ChatRoom', { bookingId, workerName: booking.worker_name })}
+            >
+              <Text style={s.btnOutlineText}>Chat</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={s.btnPrimary}
+              onPress={() => navigation.navigate('Payment', {
+                bookingId,
+                amount: booking.agreed_price_ghs,
+                workerName: booking.worker_name,
+              })}
+            >
+              <Text style={s.btnPrimaryText}>Pay Now</Text>
+            </TouchableOpacity>
+          </>
+        )}
+
+        {(booking.status === 'paid' || booking.status === 'active') && (
+          <>
+            <TouchableOpacity
+              style={s.btnOutline}
+              onPress={() => navigation.navigate('ChatRoom', { bookingId, workerName: booking.worker_name })}
+            >
+              <Text style={s.btnOutlineText}>Chat</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={s.btnSuccess} onPress={handleConfirmComplete} disabled={confirming}>
+              {confirming ? (
+                <ActivityIndicator color={Colors.white} size="small" />
+              ) : (
+                <Text style={s.btnSuccessText}>Job Done — Release</Text>
+              )}
+            </TouchableOpacity>
+          </>
+        )}
+
+        {booking.status === 'completed' && !booking.has_review && (
+          <TouchableOpacity
+            style={s.btnPrimary}
+            onPress={() => navigation.navigate('Review', { bookingId, workerName: booking.worker_name })}
+          >
+            <Text style={s.btnPrimaryText}>Leave a Review</Text>
+          </TouchableOpacity>
+        )}
+
+        {booking.status === 'pending' && (
+          <Text style={s.waitingText}>Waiting for worker to accept your request</Text>
+        )}
+      </View>
     </SafeAreaView>
   );
 }
 
 const s = StyleSheet.create({
-  safe:      { flex: 1, backgroundColor: BG },
+  safe: { flex: 1, backgroundColor: Colors.navy },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 20, paddingVertical: 14,
-    borderBottomWidth: 0.5, borderBottomColor: BORDER,
+    paddingHorizontal: PAD, paddingBottom: 14,
   },
-  headerTitle: { color: NAVY, fontSize: 17, fontWeight: '700' },
-  backBtn:     { padding: 16 },
-  errorWrap:   { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  errorText:   { color: MUTED, fontSize: 15 },
-
-  statusBanner: {
-    flexDirection: 'row', alignItems: 'flex-start', gap: 12,
-    padding: 16, borderBottomWidth: 0.5, borderBottomColor: BORDER,
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  backBtn: {
+    width: 36, height: 36, borderRadius: 18,
+    backgroundColor: Colors.navyCard, alignItems: 'center', justifyContent: 'center',
   },
-  statusInfo:  { flex: 1 },
-  statusLabel: { fontSize: 14, fontWeight: '700', marginBottom: 2 },
-  statusDesc:  { color: MUTED, fontSize: 12, lineHeight: 18 },
-
-  content:      { padding: 20 },
-  refRow:       { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, paddingBottom: 14, borderBottomWidth: 0.5, borderBottomColor: BORDER },
-  refLabel:     { color: MUTED, fontSize: 12 },
-  refValue:     { color: NAVY, fontSize: 13, fontWeight: '700', letterSpacing: 1 },
-  sectionTitle: { color: MUTED, fontSize: 11, fontWeight: '700', letterSpacing: 1.5, marginBottom: 10, marginTop: 4 },
-
-  workerCard: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    backgroundColor: '#F8F8FB', borderRadius: 13,
-    padding: 14, marginBottom: 20,
-    borderWidth: 0.5, borderColor: BORDER,
+  headerTitle: { fontSize: 17, fontWeight: '700', color: Colors.white },
+  statusPill: { paddingHorizontal: 11, paddingVertical: 5, borderRadius: 999 },
+  statusPillText: { fontSize: 10.5, fontWeight: '700' },
+  scroll: { paddingHorizontal: PAD, paddingBottom: 110 },
+  workerMini: {
+    flexDirection: 'row', alignItems: 'center', gap: 11,
+    backgroundColor: Colors.navyCard, borderWidth: 1, borderColor: Colors.navyLine,
+    borderRadius: 16, padding: 13, marginBottom: 18,
   },
-  workerAvatar:    { width: 44, height: 44, borderRadius: 12, backgroundColor: GOLD_BG, alignItems: 'center', justifyContent: 'center' },
-  workerAvatarText:{ color: GOLD, fontSize: 18, fontWeight: '700' },
-  workerInfo:      { flex: 1 },
-  workerName:      { color: NAVY, fontSize: 14, fontWeight: '600', marginBottom: 2 },
-  workerCategory:  { color: MUTED, fontSize: 12 },
-
+  workerName: { fontSize: 14, fontWeight: '600', color: Colors.white },
+  workerRole: { fontSize: 11.5, color: Colors.textDim, marginTop: 1 },
+  progressTrack: { flexDirection: 'row', alignItems: 'center', marginTop: 6 },
+  progressDot: { width: 9, height: 9, borderRadius: 5, backgroundColor: Colors.navyLine },
+  progressDotDone: { backgroundColor: Colors.gold },
+  progressStep: { flex: 1, height: 3, backgroundColor: Colors.navyLine },
+  progressStepDone: { backgroundColor: Colors.gold },
+  progressLabels: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 6, marginBottom: 20 },
+  progressLabel: { fontSize: 9, color: Colors.textFaint },
+  sectionLabel: {
+    fontSize: 12, fontWeight: '700', letterSpacing: 0.6, color: Colors.textFaint,
+    textTransform: 'uppercase', marginBottom: 10, marginLeft: 4,
+  },
   detailCard: {
-    backgroundColor: '#F8F8FB', borderRadius: 14,
-    borderWidth: 0.5, borderColor: BORDER,
-    marginBottom: 20, overflow: 'hidden',
+    backgroundColor: Colors.navyCard, borderWidth: 1, borderColor: Colors.navyLine,
+    borderRadius: 18, padding: 16, marginBottom: 16,
   },
-  detailRow:       { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingHorizontal: 14, paddingVertical: 11 },
-  detailRowBorder: { borderTopWidth: 0.5, borderTopColor: BORDER },
-  detailLabel:     { color: MUTED, fontSize: 13, flex: 1 },
-  detailValue:     { color: NAVY, fontSize: 13, fontWeight: '500', flex: 2, textAlign: 'right' },
-
-  actionsWrap: { flexDirection: 'row', gap: 10, marginBottom: 14 },
-  chatBtn: {
-    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 7, paddingVertical: 13, borderRadius: 13,
-    borderWidth: 1.5, borderColor: NAVY,
+  detailRow: { flexDirection: 'row', gap: 11, paddingVertical: 9 },
+  detailRowBorder: { borderBottomWidth: 1, borderBottomColor: Colors.navyLine },
+  detailRowLabel: { fontSize: 10.5, color: Colors.textFaint, marginBottom: 2 },
+  detailRowValue: { fontSize: 13, color: Colors.white, fontWeight: '500', lineHeight: 18 },
+  linkRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    backgroundColor: 'rgba(212,160,23,0.08)', borderRadius: 14,
+    paddingHorizontal: 14, paddingVertical: 13, marginBottom: 12,
   },
-  chatBtnText:  { color: NAVY, fontSize: 14, fontWeight: '600' },
-  payBtn: {
-    flex: 2, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 7, paddingVertical: 13, borderRadius: 13, backgroundColor: GOLD,
-  },
-  payBtnText:  { color: NAVY, fontSize: 14, fontWeight: '700' },
-  completeBtn: {
-    flex: 2, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 7, paddingVertical: 13, borderRadius: 13, backgroundColor: '#22C55E',
-  },
-  completeBtnText: { color: BG, fontSize: 13, fontWeight: '700' },
-  reviewBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 8, paddingVertical: 14, borderRadius: 13,
-    backgroundColor: GOLD_BG, borderWidth: 0.5,
-    borderColor: 'rgba(212,160,23,0.25)', marginBottom: 14,
-  },
-  reviewBtnText: { color: NAVY, fontSize: 14, fontWeight: '600' },
+  linkText: { flex: 1, color: Colors.white, fontSize: 13, fontWeight: '600' },
   safetyCard: {
     flexDirection: 'row', alignItems: 'flex-start', gap: 9,
-    backgroundColor: GOLD_BG, borderRadius: 12, padding: 13,
-    borderWidth: 0.5, borderColor: 'rgba(212,160,23,0.2)',
+    backgroundColor: 'rgba(212,160,23,0.08)', borderRadius: 14,
+    borderWidth: 1, borderColor: 'rgba(212,160,23,0.2)', padding: 13,
   },
-  safetyText: { color: NAVY, fontSize: 12, lineHeight: 18, flex: 1 },
-  photosLink: {
-    flexDirection: 'row', alignItems: 'center', gap: 8,
-    backgroundColor: GOLD_BG, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 13, marginTop: 14,
+  safetyText: { color: Colors.textDim, fontSize: 12, lineHeight: 18, flex: 1 },
+  disputeLink: { alignItems: 'center', marginTop: 14, paddingVertical: 8 },
+  disputeText: { color: Colors.textFaint, fontSize: 12 },
+  footerCopy: { textAlign: 'center', fontSize: 10, color: '#3A3A56', marginTop: 16 },
+  errorWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  errorText: { color: Colors.textDim, fontSize: 15 },
+  actionBar: {
+    position: 'absolute', bottom: 0, left: 0, right: 0,
+    flexDirection: 'row', gap: 10, alignItems: 'center',
+    backgroundColor: Colors.navySoft, borderTopWidth: 1, borderTopColor: '#1C1C38',
+    paddingHorizontal: PAD, paddingVertical: 16, minHeight: 88,
   },
-  photosLinkText: { color: NAVY, fontSize: 13, fontWeight: '600', flex: 1 },
-  disputeLink: {
-    flexDirection: 'row', alignItems: 'center', gap: 6, justifyContent: 'center', marginTop: 16, paddingVertical: 8,
+  btnPrimary: {
+    flex: 1, backgroundColor: Colors.gold, borderRadius: 14,
+    paddingVertical: 13, alignItems: 'center',
   },
-  disputeLinkText: { color: MUTED, fontSize: 12 },
+  btnPrimaryText: { color: Colors.navy, fontSize: 13, fontWeight: '600' },
+  btnOutline: {
+    flex: 1, borderRadius: 14, paddingVertical: 13, alignItems: 'center',
+    borderWidth: 1, borderColor: Colors.navyLine,
+  },
+  btnOutlineText: { color: '#C9C9DE', fontSize: 13, fontWeight: '600' },
+  btnSuccess: {
+    flex: 2, backgroundColor: Colors.success, borderRadius: 14,
+    paddingVertical: 13, alignItems: 'center',
+  },
+  btnSuccessText: { color: Colors.white, fontSize: 13, fontWeight: '700' },
+  waitingText: { flex: 1, textAlign: 'center', color: Colors.textDim, fontSize: 13 },
 });

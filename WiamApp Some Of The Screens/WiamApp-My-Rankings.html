@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamApp — My Rankings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75; --success:#22C55E;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); }
+  .statusbar{ height:44px; }
+  .header{ display:flex; align-items:center; gap:12px; padding:0 20px 14px; }
+  .back-btn{ width:36px; height:36px; border-radius:50%; background:var(--navy-card); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .header h1{ font-size:17px; font-weight:700; color:#fff; margin:0; }
+
+  .scrollarea{ height:calc(100% - 44px - 58px); overflow-y:auto; padding:0 20px 20px; }
+
+  .rank-hero{
+    border-radius:24px; padding:22px; margin-bottom:18px; text-align:center;
+    background:linear-gradient(135deg,var(--navy-card),var(--navy-soft)); border:1px solid var(--navy-line);
+  }
+  .rank-badge{ width:64px; height:64px; border-radius:50%; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); display:flex; align-items:center; justify-content:center; margin:0 auto 12px; }
+  .rank-badge svg{ color:var(--navy); width:28px; height:28px; }
+  .rank-position{ font-size:26px; font-weight:800; color:#fff; margin:0; }
+  .rank-sub{ font-size:12.5px; color:var(--text-dim); margin:4px 0 0; }
+  .rank-category{ font-size:11px; color:var(--gold); font-weight:600; margin:2px 0 0; }
+
+  .progress-bar-wrap{ margin-top:16px; }
+  .progress-labels{ display:flex; justify-content:space-between; font-size:10.5px; color:var(--text-faint); margin-bottom:6px; }
+  .progress-track{ height:6px; border-radius:999px; background:var(--navy-line); overflow:hidden; }
+  .progress-fill{ height:100%; width:68%; background:linear-gradient(90deg,var(--gold),var(--gold-dark)); border-radius:999px; }
+
+  .section-label{ font-size:12px; font-weight:700; letter-spacing:0.6px; color:var(--text-faint); text-transform:uppercase; margin:20px 4px 12px; }
+
+  .leaderboard-row{ display:flex; align-items:center; gap:12px; padding:12px; border-radius:16px; background:var(--navy-card); border:1px solid var(--navy-line); margin-bottom:8px; }
+  .leaderboard-row.me{ border-color:var(--gold); background:rgba(212,160,23,0.06); }
+  .rank-num{ font-size:14px; font-weight:800; color:var(--text-faint); width:24px; flex-shrink:0; text-align:center; }
+  .rank-num.top{ color:var(--gold); }
+  .lb-avatar{ width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); display:flex; align-items:center; justify-content:center; color:var(--navy); font-weight:700; font-size:13px; flex-shrink:0; }
+  .lb-name{ font-size:13px; font-weight:600; color:#fff; margin:0; flex:1; }
+  .lb-score{ display:flex; align-items:center; gap:4px; flex-shrink:0; }
+  .lb-score svg{ width:12px; height:12px; color:var(--gold); }
+  .lb-score span{ font-size:12px; font-weight:600; color:#fff; }
+
+  .criteria-card{ background:var(--navy-card); border:1px solid var(--navy-line); border-radius:18px; padding:15px; margin-top:16px; }
+  .criteria-title{ font-size:12.5px; font-weight:600; color:#fff; margin:0 0 10px; }
+  .criteria-row{ display:flex; align-items:center; gap:9px; padding:6px 0; }
+  .criteria-row svg{ width:14px; height:14px; color:var(--success); flex-shrink:0; }
+  .criteria-row span{ font-size:11.5px; color:#B8B8CC; }
+
+  .footer-copy{ text-align:center; font-size:10px; color:#3A3A56; padding:16px 0 6px; }
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"></div>
+  <div class="header">
+    <div class="back-btn"><svg viewBox="0 0 24 24" width="17" height="17" color="#fff"><polyline points="15 18 9 12 15 6"/></svg></div>
+    <h1>My Rankings</h1>
+  </div>
+
+  <div class="scrollarea">
+    <div class="rank-hero">
+      <div class="rank-badge"><svg viewBox="0 0 24 24"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10l1 8a5 5 0 0 1-5 5h-2a5 5 0 0 1-5-5z"/></svg></div>
+      <p class="rank-position">#4 of 32</p>
+      <p class="rank-sub">You're in the top 15% this month</p>
+      <p class="rank-category">Electrical & Power · East Legon</p>
+
+      <div class="progress-bar-wrap">
+        <div class="progress-labels"><span>#4 currently</span><span>#3 next (12 pts away)</span></div>
+        <div class="progress-track"><div class="progress-fill"></div></div>
+      </div>
+    </div>
+
+    <p class="section-label">Top Electricians — East Legon</p>
+
+    <div class="leaderboard-row">
+      <span class="rank-num top">1</span>
+      <div class="lb-avatar">DA</div>
+      <p class="lb-name">Daniel Asante</p>
+      <div class="lb-score"><svg viewBox="0 0 24 24" fill="#D4A017" stroke="none"><polygon points="12 2 15 9 22 9.5 16.5 14.3 18.2 21 12 17.3 5.8 21 7.5 14.3 2 9.5 9 9"/></svg><span>98 pts</span></div>
+    </div>
+    <div class="leaderboard-row">
+      <span class="rank-num top">2</span>
+      <div class="lb-avatar">EM</div>
+      <p class="lb-name">Emmanuel Mensah</p>
+      <div class="lb-score"><svg viewBox="0 0 24 24" fill="#D4A017" stroke="none"><polygon points="12 2 15 9 22 9.5 16.5 14.3 18.2 21 12 17.3 5.8 21 7.5 14.3 2 9.5 9 9"/></svg><span>91 pts</span></div>
+    </div>
+    <div class="leaderboard-row">
+      <span class="rank-num top">3</span>
+      <div class="lb-avatar">SO</div>
+      <p class="lb-name">Samuel Osei</p>
+      <div class="lb-score"><svg viewBox="0 0 24 24" fill="#D4A017" stroke="none"><polygon points="12 2 15 9 22 9.5 16.5 14.3 18.2 21 12 17.3 5.8 21 7.5 14.3 2 9.5 9 9"/></svg><span>86 pts</span></div>
+    </div>
+    <div class="leaderboard-row me">
+      <span class="rank-num">4</span>
+      <div class="lb-avatar">KO</div>
+      <p class="lb-name">Kwabena Owusu (You)</p>
+      <div class="lb-score"><svg viewBox="0 0 24 24" fill="#D4A017" stroke="none"><polygon points="12 2 15 9 22 9.5 16.5 14.3 18.2 21 12 17.3 5.8 21 7.5 14.3 2 9.5 9 9"/></svg><span>74 pts</span></div>
+    </div>
+    <div class="leaderboard-row">
+      <span class="rank-num">5</span>
+      <div class="lb-avatar">JB</div>
+      <p class="lb-name">Joseph Boateng</p>
+      <div class="lb-score"><svg viewBox="0 0 24 24" fill="#D4A017" stroke="none"><polygon points="12 2 15 9 22 9.5 16.5 14.3 18.2 21 12 17.3 5.8 21 7.5 14.3 2 9.5 9 9"/></svg><span>69 pts</span></div>
+    </div>
+
+    <div class="criteria-card">
+      <p class="criteria-title">How ranking is calculated</p>
+      <div class="criteria-row"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span>Rating average (last 90 days)</span></div>
+      <div class="criteria-row"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span>Jobs completed on time</span></div>
+      <div class="criteria-row"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span>Response time to requests</span></div>
+      <div class="criteria-row"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span>Repeat customer rate</span></div>
+    </div>
+
+    <p class="footer-copy">© 2026 WiamApp · Powered by WiamLabs</p>
+  </div>
+</div>
+
+</body>
+</html>

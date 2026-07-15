@@ -1,33 +1,40 @@
 // © 2026 WiamApp. Powered by WiamLabs
-// screens/SearchScreen.js — PRODUCTION real Supabase search
+// screens/SearchScreen.js — Part 13 Search (real Supabase search)
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, StatusBar, FlatList, TextInput,
-  ActivityIndicator, Switch, ScrollView,
+  ActivityIndicator, ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import VerifiedBadge from '../components/VerifiedBadge';
+import GoldAvatar from '../components/ui/GoldAvatar';
 import { Colors } from '../constants/colors';
 import { useAuth } from '../lib/AuthContext';
 import { searchWorkers, getCategories } from '../lib/api/workers';
 
-const C    = Colors.light;
-const GOLD = Colors.gold;
-const NAVY = Colors.navy;
+const PAD = Colors.screenPad;
+
+const FILTER_CHIPS = [
+  { id: 'available', label: 'Available now', icon: 'time-outline' },
+  { id: 'rating', label: '4.5+ rating', icon: 'star' },
+  { id: 'verified', label: 'Verified', icon: 'shield-checkmark-outline' },
+];
 
 export default function SearchScreen({ navigation, route }) {
   const { user } = useAuth();
   const inputRef = useRef(null);
 
-  const [query,          setQuery]          = useState(route.params?.query || '');
-  const [category,       setCategory]       = useState(route.params?.category || null);
-  const [verifiedOnly,   setVerifiedOnly]   = useState(false);
-  const [results,        setResults]        = useState([]);
-  const [categories,     setCategories]     = useState([]);
-  const [loading,        setLoading]        = useState(false);
-  const [searched,       setSearched]       = useState(false);
+  const [query, setQuery] = useState(route.params?.query || '');
+  const [category, setCategory] = useState(route.params?.category || null);
+  const [verifiedOnly, setVerifiedOnly] = useState(false);
+  const [availableOnly, setAvailableOnly] = useState(false);
+  const [ratingOnly, setRatingOnly] = useState(false);
+  const [results, setResults] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [searched, setSearched] = useState(false);
 
   useEffect(() => {
     getCategories().then(setCategories).catch(() => {});
@@ -53,143 +60,166 @@ export default function SearchScreen({ navigation, route }) {
     }
   };
 
-  const renderWorker = ({ item }) => (
-    <TouchableOpacity
-      style={styles.workerCard}
-      onPress={() => navigation.navigate('WorkerProfile', { workerId: item.id })}
-    >
-      <View style={styles.workerLeft}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{(item.users?.full_name || 'W')[0].toUpperCase()}</Text>
-          {item.is_available && <View style={styles.onlineDot} />}
-        </View>
+  const toggleChip = (id) => {
+    if (id === 'available') setAvailableOnly((v) => !v);
+    if (id === 'rating') setRatingOnly((v) => !v);
+    if (id === 'verified') setVerifiedOnly((v) => !v);
+  };
+
+  const chipActive = (id) => {
+    if (id === 'available') return availableOnly;
+    if (id === 'rating') return ratingOnly;
+    if (id === 'verified') return verifiedOnly;
+    return false;
+  };
+
+  const filteredResults = useMemo(() => {
+    let list = results;
+    if (availableOnly) list = list.filter((w) => w.is_available);
+    if (ratingOnly) list = list.filter((w) => (w.average_rating || 0) >= 4.5);
+    return list;
+  }, [results, availableOnly, ratingOnly]);
+
+  const renderWorker = ({ item }) => {
+    const catName = item.worker_categories?.[0]?.categories?.name || 'Worker';
+    const city = item.users?.city || 'Accra';
+    return (
+      <TouchableOpacity
+        style={styles.workerCard}
+        onPress={() => navigation.navigate('WorkerProfile', { workerId: item.id })}
+        activeOpacity={0.85}
+      >
+        <GoldAvatar
+          name={item.users?.full_name}
+          uri={item.users?.avatar_url}
+          size={50}
+          online={!!item.is_available}
+        />
+        {item.verified_badge ? (
+          <View style={styles.verifiedWrap}>
+            <VerifiedBadge color="blue" size={14} />
+          </View>
+        ) : null}
         <View style={styles.workerInfo}>
-          <View style={styles.nameRow}>
-            <Text style={styles.workerName}>{item.users?.full_name}</Text>
-            {item.verified_badge && (
-              // Section 8B: blue = individual worker. All results here are
-              // individual workers today. Once Section 17B's Provider
-              // business search ships, branch on item.result_type:
-              // <VerifiedBadge color={item.result_type === 'business' ? 'gold' : 'blue'} size={16} />
-              <VerifiedBadge color="blue" size={16} />
-            )}
-          </View>
-          <Text style={styles.workerCat}>
-            {item.worker_categories?.[0]?.categories?.name || 'Worker'}
-          </Text>
+          <Text style={styles.workerName} numberOfLines={1}>{item.users?.full_name}</Text>
+          <Text style={styles.workerCat}>{catName} · {city}</Text>
           <View style={styles.workerMeta}>
-            <Ionicons name="location-outline" size={12} color={C.textSecondary} />
-            <Text style={styles.metaText}>{item.users?.city || 'Accra'}</Text>
-            <Text style={styles.metaDot}>·</Text>
-            <Ionicons name="star" size={12} color={GOLD} />
-            <Text style={styles.metaText}>{item.average_rating ? item.average_rating.toFixed(1) : 'New'}</Text>
-            <Text style={styles.metaDot}>·</Text>
-            <Text style={styles.metaText}>{item.total_jobs_done} jobs</Text>
+            <View style={styles.metaItem}>
+              <Ionicons name="star" size={11} color={Colors.gold} />
+              <Text style={styles.metaText}>
+                {item.average_rating ? item.average_rating.toFixed(1) : 'New'}
+              </Text>
+            </View>
+            <View style={styles.metaItem}>
+              <Ionicons name="checkmark" size={11} color={Colors.gold} />
+              <Text style={styles.metaText}>{item.total_jobs_done || 0} jobs</Text>
+            </View>
+            <View style={styles.metaItem}>
+              <Ionicons name="location-outline" size={11} color={Colors.gold} />
+              <Text style={styles.metaText}>{city}</Text>
+            </View>
           </View>
         </View>
-      </View>
-      <View style={styles.workerRight}>
-        <Text style={styles.rate}>GHS {item.hourly_rate}</Text>
-        <Text style={styles.rateUnit}>/hr</Text>
-        <View style={[styles.availBadge, { backgroundColor: item.is_available ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)' }]}>
-          <Text style={[styles.availText, { color: item.is_available ? Colors.success : Colors.error }]}>
-            {item.is_available ? 'Available' : 'Busy'}
-          </Text>
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
+      </TouchableOpacity>
+    );
+  };
+
+  const locationLabel = user?.city || 'your area';
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <StatusBar barStyle="dark-content" backgroundColor={C.background} />
+    <SafeAreaView style={styles.safe} edges={['top']}>
+      <StatusBar barStyle="light-content" backgroundColor={Colors.navy} />
 
-      {/* Search bar */}
-      <View style={styles.searchRow}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={22} color={NAVY} />
-        </TouchableOpacity>
-        <View style={styles.searchBar}>
-          <Ionicons name="search-outline" size={18} color={C.textSecondary} />
-          <TextInput
-            ref={inputRef}
-            style={styles.searchInput}
-            placeholder="Search workers, services..."
-            placeholderTextColor={C.textSecondary}
-            value={query}
-            onChangeText={setQuery}
-            returnKeyType="search"
-            onSubmitEditing={doSearch}
-          />
-          {query.length > 0 && (
-            <TouchableOpacity onPress={() => { setQuery(''); setResults([]); setSearched(false); }}>
-              <Ionicons name="close-circle" size={18} color={C.textSecondary} />
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
-
-      {/* Filters */}
-      <View style={styles.filtersRow}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: 20 }}>
-          <TouchableOpacity
-            style={[styles.filterChip, !category && styles.filterChipActive]}
-            onPress={() => setCategory(null)}
-          >
-            <Text style={[styles.filterText, !category && styles.filterTextActive]}>All</Text>
+      <View style={styles.topFixed}>
+        <Text style={styles.pageTitle}>Search</Text>
+        <View style={styles.searchRow}>
+          <View style={styles.searchBar}>
+            <Ionicons name="search-outline" size={16} color={Colors.textFaint} />
+            <TextInput
+              ref={inputRef}
+              style={styles.searchInput}
+              placeholder="Search electricians, plumbers, braiders..."
+              placeholderTextColor={Colors.textFaint}
+              value={query}
+              onChangeText={setQuery}
+              returnKeyType="search"
+              onSubmitEditing={doSearch}
+            />
+            {query.length > 0 ? (
+              <TouchableOpacity onPress={() => { setQuery(''); setResults([]); setSearched(false); }}>
+                <Ionicons name="close-circle" size={18} color={Colors.textFaint} />
+              </TouchableOpacity>
+            ) : null}
+          </View>
+          <TouchableOpacity style={styles.filterBtn} accessibilityLabel="Filters">
+            <Ionicons name="options-outline" size={16} color={Colors.navy} />
           </TouchableOpacity>
-          {categories.map(cat => (
-            <TouchableOpacity
-              key={cat.id}
-              style={[styles.filterChip, category === cat.name && styles.filterChipActive]}
-              onPress={() => setCategory(category === cat.name ? null : cat.name)}
-            >
-              <Text style={styles.filterEmoji}>{cat.icon || '🔧'}</Text>
-              <Text style={[styles.filterText, category === cat.name && styles.filterTextActive]}>{cat.name}</Text>
-            </TouchableOpacity>
-          ))}
+        </View>
+
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
+          {FILTER_CHIPS.map((chip) => {
+            const active = chipActive(chip.id);
+            return (
+              <TouchableOpacity
+                key={chip.id}
+                style={[styles.fchip, active && styles.fchipActive]}
+                onPress={() => toggleChip(chip.id)}
+              >
+                <Ionicons name={chip.icon} size={12} color={active ? Colors.gold : '#B8B8CC'} />
+                <Text style={[styles.fchipText, active && styles.fchipTextActive]}>{chip.label}</Text>
+              </TouchableOpacity>
+            );
+          })}
+          {categories.slice(0, 4).map((cat) => {
+            const active = category === cat.name;
+            return (
+              <TouchableOpacity
+                key={cat.id}
+                style={[styles.fchip, active && styles.fchipActive]}
+                onPress={() => setCategory(active ? null : cat.name)}
+              >
+                <Text style={styles.fchipEmoji}>{cat.icon || '🔧'}</Text>
+                <Text style={[styles.fchipText, active && styles.fchipTextActive]}>{cat.name}</Text>
+              </TouchableOpacity>
+            );
+          })}
         </ScrollView>
       </View>
 
-      {/* Verified toggle */}
-      <View style={styles.verifiedRow}>
-        <Text style={styles.verifiedLabel}>Verified workers only</Text>
-        <Switch
-          value={verifiedOnly}
-          onValueChange={setVerifiedOnly}
-          trackColor={{ false: C.border, true: GOLD }}
-          thumbColor={verifiedOnly ? NAVY : '#aaa'}
-        />
-      </View>
-
-      {/* Results */}
       {loading ? (
-        <ActivityIndicator color={GOLD} style={{ marginTop: 40 }} />
+        <ActivityIndicator color={Colors.gold} style={{ marginTop: 40 }} />
       ) : (
         <FlatList
-          data={results}
-          keyExtractor={i => i.id}
+          data={filteredResults}
+          keyExtractor={(i) => i.id}
           renderItem={renderWorker}
-          contentContainerStyle={results.length === 0 ? styles.emptyContainer : styles.list}
+          contentContainerStyle={filteredResults.length === 0 ? styles.emptyContainer : styles.list}
           ListHeaderComponent={
-            searched && !loading
-              ? <Text style={styles.resultCount}>{results.length} worker{results.length !== 1 ? 's' : ''} found</Text>
-              : null
+            searched && !loading ? (
+              <Text style={styles.resultCount}>
+                {filteredResults.length} worker{filteredResults.length !== 1 ? 's' : ''} found near {locationLabel}
+              </Text>
+            ) : null
           }
           ListEmptyComponent={
             searched ? (
               <View style={styles.empty}>
-                <Ionicons name="search-outline" size={48} color={C.border} />
+                <Ionicons name="search-outline" size={48} color={Colors.navyLine} />
                 <Text style={styles.emptyTitle}>No workers found</Text>
                 <Text style={styles.emptyText}>Try a different search or remove filters</Text>
               </View>
             ) : (
               <View style={styles.empty}>
-                <Ionicons name="people-outline" size={48} color={C.border} />
+                <Ionicons name="people-outline" size={48} color={Colors.navyLine} />
                 <Text style={styles.emptyTitle}>Search for workers</Text>
                 <Text style={styles.emptyText}>Type a service or pick a category above</Text>
               </View>
             )
+          }
+          ListFooterComponent={
+            filteredResults.length > 0 ? (
+              <Text style={styles.footer}>© 2026 WiamApp · Powered by WiamLabs</Text>
+            ) : null
           }
         />
       )}
@@ -197,43 +227,83 @@ export default function SearchScreen({ navigation, route }) {
   );
 }
 
-
-
 const styles = StyleSheet.create({
-  safe:            { flex: 1, backgroundColor: C.background },
-  searchRow:       { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingTop: 14, paddingBottom: 10 },
-  backBtn:         { padding: 4 },
-  searchBar:       { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.surface, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12, borderWidth: 1, borderColor: C.border },
-  searchInput:     { flex: 1, fontSize: 15, color: NAVY },
-  filtersRow:      { paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: C.border },
-  filterChip:      { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.surface, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 7, borderWidth: 1, borderColor: C.border },
-  filterChipActive:{ backgroundColor: NAVY, borderColor: NAVY },
-  filterEmoji:     { fontSize: 14 },
-  filterText:      { fontSize: 13, color: C.textSecondary, fontWeight: '500' },
-  filterTextActive:{ color: '#fff', fontWeight: '700' },
-  verifiedRow:     { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: C.border },
-  verifiedLabel:   { fontSize: 14, color: NAVY, fontWeight: '500' },
-  resultCount:     { fontSize: 13, color: C.textSecondary, paddingHorizontal: 20, marginBottom: 8, marginTop: 4 },
-  list:            { paddingBottom: 40 },
-  emptyContainer:  { flex: 1 },
-  empty:           { alignItems: 'center', paddingTop: 70, gap: 10 },
-  emptyTitle:      { fontSize: 17, fontWeight: '600', color: C.textSecondary },
-  emptyText:       { fontSize: 14, color: C.textSecondary, textAlign: 'center', paddingHorizontal: 30 },
-  workerCard:      { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: C.border },
-  workerLeft:      { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
-  avatar:          { width: 50, height: 50, borderRadius: 25, backgroundColor: 'rgba(212,160,23,0.12)', alignItems: 'center', justifyContent: 'center', position: 'relative' },
-  avatarText:      { fontSize: 20, fontWeight: '700', color: GOLD },
-  onlineDot:       { position: 'absolute', bottom: 1, right: 1, width: 12, height: 12, borderRadius: 6, backgroundColor: Colors.success, borderWidth: 2, borderColor: '#fff' },
-  workerInfo:      { flex: 1 },
-  nameRow:         { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  workerName:      { fontSize: 15, fontWeight: '700', color: NAVY },
-  workerCat:       { fontSize: 13, color: C.textSecondary, marginTop: 2 },
-  workerMeta:      { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
-  metaText:        { fontSize: 12, color: C.textSecondary },
-  metaDot:         { fontSize: 12, color: C.border },
-  workerRight:     { alignItems: 'flex-end', gap: 4 },
-  rate:            { fontSize: 16, fontWeight: '800', color: NAVY },
-  rateUnit:        { fontSize: 11, color: C.textSecondary },
-  availBadge:      { borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 },
-  availText:       { fontSize: 11, fontWeight: '600' },
+  safe: { flex: 1, backgroundColor: Colors.navy },
+  topFixed: { paddingHorizontal: PAD, paddingBottom: 12 },
+  pageTitle: { fontSize: 20, fontWeight: '700', color: Colors.white, marginTop: 4, marginBottom: 14 },
+  searchRow: { flexDirection: 'row', alignItems: 'center', gap: 9 },
+  searchBar: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 9,
+    backgroundColor: Colors.navyCard,
+    borderRadius: 16,
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: Colors.navyLine,
+  },
+  searchInput: { flex: 1, fontSize: 13.5, color: Colors.white },
+  filterBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: Colors.gold,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  filterRow: { gap: 8, marginTop: 12, paddingBottom: 2 },
+  fchip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 13,
+    borderRadius: 999,
+    backgroundColor: Colors.navyCard,
+    borderWidth: 1,
+    borderColor: Colors.navyLine,
+  },
+  fchipActive: {
+    backgroundColor: 'rgba(212,160,23,0.12)',
+    borderColor: Colors.gold,
+  },
+  fchipText: { fontSize: 11.5, fontWeight: '500', color: '#B8B8CC' },
+  fchipTextActive: { color: Colors.gold },
+  fchipEmoji: { fontSize: 12 },
+  resultCount: { fontSize: 12, color: Colors.textFaint, marginBottom: 12, paddingHorizontal: PAD },
+  list: { paddingHorizontal: PAD, paddingBottom: 28 },
+  emptyContainer: { flex: 1, paddingHorizontal: PAD },
+  empty: { alignItems: 'center', paddingTop: 70, gap: 10 },
+  emptyTitle: { fontSize: 17, fontWeight: '600', color: Colors.textDim },
+  emptyText: { fontSize: 14, color: Colors.textDim, textAlign: 'center', paddingHorizontal: 30 },
+  workerCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    padding: 12,
+    borderRadius: 18,
+    backgroundColor: Colors.navyCard,
+    borderWidth: 1,
+    borderColor: Colors.navyLine,
+    marginBottom: 10,
+  },
+  verifiedWrap: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: 'rgba(212,160,23,0.14)',
+    borderWidth: 1,
+    borderColor: 'rgba(212,160,23,0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  workerInfo: { flex: 1, minWidth: 0 },
+  workerName: { fontSize: 13.5, fontWeight: '600', color: Colors.white },
+  workerCat: { fontSize: 11.5, color: Colors.textDim, marginTop: 2, marginBottom: 4 },
+  workerMeta: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  metaItem: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  metaText: { fontSize: 11, color: '#B8B8CC' },
+  footer: { textAlign: 'center', fontSize: 10, color: '#3A3A56', paddingVertical: 12 },
 });

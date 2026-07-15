@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamApp — Business Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); }
+  .statusbar{ height:44px; }
+  .header{ display:flex; align-items:center; gap:12px; padding:0 20px 14px; }
+  .back-btn{ width:36px; height:36px; border-radius:50%; background:var(--navy-card); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .header h1{ font-size:17px; font-weight:700; color:#fff; margin:0; }
+
+  .scrollarea{ height:calc(100% - 44px - 58px); overflow-y:auto; padding:0 20px 20px; }
+
+  .business-card{
+    display:flex; align-items:center; gap:12px; padding:16px; border-radius:20px;
+    background:linear-gradient(135deg,var(--navy-card),var(--navy-soft)); border:1px solid var(--navy-line); margin-bottom:20px;
+  }
+  .biz-avatar{ width:48px; height:48px; border-radius:14px; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); display:flex; align-items:center; justify-content:center; color:var(--navy); font-weight:800; font-size:18px; flex-shrink:0; }
+  .biz-name-row{ display:flex; align-items:center; gap:5px; }
+  .biz-name{ font-size:14.5px; font-weight:700; color:#fff; margin:0; }
+  .biz-sub{ font-size:11px; color:var(--text-faint); margin:2px 0 0; }
+
+  .quick-actions{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:22px; }
+  .qa-tile{
+    display:flex; flex-direction:column; align-items:flex-start; gap:10px; padding:16px;
+    border-radius:18px; background:var(--navy-card); border:1px solid var(--navy-line);
+  }
+  .qa-icon{ width:38px; height:38px; border-radius:11px; background:rgba(212,160,23,0.12); display:flex; align-items:center; justify-content:center; }
+  .qa-icon svg{ color:var(--gold); width:18px; height:18px; }
+  .qa-title{ font-size:13px; font-weight:700; color:#fff; margin:0; }
+  .qa-sub{ font-size:10.5px; color:var(--text-faint); line-height:1.3; margin:0; }
+
+  .section-label{ font-size:12px; font-weight:700; letter-spacing:0.6px; color:var(--text-faint); text-transform:uppercase; margin:4px 4px 12px; }
+
+  .mini-stats{ display:flex; gap:10px; margin-bottom:22px; }
+  .mini-stat{ flex:1; background:var(--navy-card); border:1px solid var(--navy-line); border-radius:16px; padding:13px; text-align:center; }
+  .mini-stat-value{ font-size:16px; font-weight:700; color:#fff; margin:0; }
+  .mini-stat-label{ font-size:10px; color:var(--text-faint); margin:4px 0 0; }
+
+  .web-redirect-card{
+    border-radius:20px; padding:18px; background:rgba(212,160,23,0.06); border:1.5px solid var(--gold); text-align:center;
+  }
+  .web-icon{ width:44px; height:44px; border-radius:13px; background:rgba(212,160,23,0.14); display:flex; align-items:center; justify-content:center; margin:0 auto 12px; }
+  .web-icon svg{ color:var(--gold); width:20px; height:20px; }
+  .web-title{ font-size:13.5px; font-weight:700; color:#fff; margin:0 0 6px; }
+  .web-sub{ font-size:11.5px; color:var(--text-dim); line-height:1.5; margin:0 0 14px; }
+  .web-btn{ padding:11px 22px; border-radius:14px; background:var(--gold); color:var(--navy); font-size:12.5px; font-weight:700; border:none; cursor:pointer; display:inline-flex; align-items:center; gap:7px; }
+
+  .footer-copy{ text-align:center; font-size:10px; color:#3A3A56; padding:18px 0 6px; }
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"></div>
+  <div class="header">
+    <div class="back-btn"><svg viewBox="0 0 24 24" width="17" height="17" color="#fff"><polyline points="15 18 9 12 15 6"/></svg></div>
+    <h1>Business Hub</h1>
+  </div>
+
+  <div class="scrollarea">
+    <div class="business-card">
+      <div class="biz-avatar">EM</div>
+      <div>
+        <div class="biz-name-row">
+          <p class="biz-name">Emef Estates Ltd</p>
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="#D4A017" stroke="#08081A"><path d="M12 2l2.4 2.6 3.5-.6.6 3.5L21.1 9l-2 3 2 3-3.6 1.5-.6 3.5-3.5-.6L12 22l-2.4-2.6-3.5.6-.6-3.5L2 15l2-3-2-3 3.6-1.5.6-3.5 3.5.6z"/><polyline points="8.5 12 11 14.5 15.5 9.5" stroke="#08081A" stroke-width="1.6" fill="none"/></svg>
+        </div>
+        <p class="biz-sub">Gold Verified Business</p>
+      </div>
+    </div>
+
+    <p class="section-label">Quick Actions</p>
+    <div class="quick-actions">
+      <div class="qa-tile">
+        <div class="qa-icon"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4z"/></svg></div>
+        <p class="qa-title">Post to Spotlight</p>
+        <p class="qa-sub">Promote your business in the feed</p>
+      </div>
+      <div class="qa-tile">
+        <div class="qa-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+        <p class="qa-title">Hire a Worker</p>
+        <p class="qa-sub">Book directly from the marketplace</p>
+      </div>
+      <div class="qa-tile">
+        <div class="qa-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+        <p class="qa-title">Active Bookings</p>
+        <p class="qa-sub">3 workers currently on jobs</p>
+      </div>
+      <div class="qa-tile">
+        <div class="qa-icon"><svg viewBox="0 0 24 24"><path d="M12 2l2.4 2.6 3.5-.6.6 3.5L21.1 9l-2 3 2 3-3.6 1.5-.6 3.5-3.5-.6L12 22l-2.4-2.6-3.5.6-.6-3.5L2 15l2-3-2-3 3.6-1.5.6-3.5 3.5.6z"/></svg></div>
+        <p class="qa-title">Business Badge</p>
+        <p class="qa-sub">Gold Checkmark active</p>
+      </div>
+    </div>
+
+    <p class="section-label">This Month</p>
+    <div class="mini-stats">
+      <div class="mini-stat"><p class="mini-stat-value">7</p><p class="mini-stat-label">Workers Hired</p></div>
+      <div class="mini-stat"><p class="mini-stat-value">2.1k</p><p class="mini-stat-label">Spotlight Views</p></div>
+      <div class="mini-stat"><p class="mini-stat-value">GHS 4.2k</p><p class="mini-stat-label">Spent</p></div>
+    </div>
+
+    <div class="web-redirect-card">
+      <div class="web-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
+      <p class="web-title">Full Business Dashboard</p>
+      <p class="web-sub">Team management, bulk bookings, and advanced analytics are available on the WiamApp business portal.</p>
+      <button class="web-btn">
+        Open WiamApp.com/business
+        <svg viewBox="0 0 24 24" width="14" height="14" color="#08081A"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+      </button>
+    </div>
+
+    <p class="footer-copy">© 2026 WiamApp · Powered by WiamLabs</p>
+  </div>
+</div>
+
+</body>
+</html>

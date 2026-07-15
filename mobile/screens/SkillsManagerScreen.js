@@ -10,17 +10,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Colors, goldGradient } from '../constants/colors';
 
 import { searchWiamAppSkills, resolveWiamAppSkill } from '../constants/skills';
 
-const NAVY    = '#0D0D2B';
-const NAVY2   = '#12123A';
-const GOLD    = '#D4A017';
-const GOLD_BG = 'rgba(212,160,23,0.10)';
-const GOLD_BD = 'rgba(212,160,23,0.25)';
-const WHITE   = '#FFFFFF';
-const MUTED   = 'rgba(255,255,255,0.45)';
-const BORDER  = 'rgba(255,255,255,0.08)';
+const PAD = Colors.screenPad;
 const BACKEND = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 const SUGGESTED_SKILLS = {
@@ -99,17 +94,17 @@ export default function SkillsManagerScreen({ navigation, route }) {
   };
 
   return (
-    <SafeAreaView style={s.safe}>
-      <StatusBar barStyle="light-content" backgroundColor={NAVY} />
+    <SafeAreaView style={s.safe} edges={['top']}>
+      <StatusBar barStyle="light-content" backgroundColor={Colors.navy} />
       <View style={s.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={22} color={WHITE} />
+        <TouchableOpacity onPress={() => navigation.goBack()} style={s.backBtn}>
+          <Ionicons name="arrow-back" size={22} color={Colors.white} />
         </TouchableOpacity>
-        <Text style={s.headerTitle}>Skills</Text>
+        <Text style={s.headerTitle}>Skills & Categories</Text>
         <Text style={s.skillCount}>{skills.length} selected</Text>
       </View>
 
-      {loading ? <ActivityIndicator color={GOLD} style={{ marginTop: 60 }} /> : (
+      {loading ? <ActivityIndicator color={Colors.gold} style={{ marginTop: 60 }} /> : (
         <ScrollView contentContainerStyle={s.container} showsVerticalScrollIndicator={false}>
 
           <Text style={s.intro}>
@@ -124,7 +119,7 @@ export default function SkillsManagerScreen({ navigation, route }) {
                 {skills.map(skill => (
                   <TouchableOpacity key={skill} style={s.tagSelected} onPress={() => toggleSkill(skill)}>
                     <Text style={s.tagSelectedText}>{skill}</Text>
-                    <Ionicons name="close" size={13} color={NAVY} />
+                    <Ionicons name="close" size={13} color={Colors.navy} />
                   </TouchableOpacity>
                 ))}
               </View>
@@ -136,7 +131,7 @@ export default function SkillsManagerScreen({ navigation, route }) {
           <View style={s.tagsWrap}>
             {suggested.filter(s => !skills.includes(s)).map(skill => (
               <TouchableOpacity key={skill} style={s.tagSuggested} onPress={() => toggleSkill(skill)}>
-                <Ionicons name="add" size={13} color={GOLD} />
+                <Ionicons name="add" size={13} color={Colors.gold} />
                 <Text style={s.tagSuggestedText}>{skill}</Text>
               </TouchableOpacity>
             ))}
@@ -146,7 +141,7 @@ export default function SkillsManagerScreen({ navigation, route }) {
           <Text style={s.sectionLabel}>ADD A WIAMAPP SKILL</Text>
           {showTip && (
             <View style={s.tipBox}>
-              <Ionicons name="information-circle-outline" size={15} color={GOLD} />
+              <Ionicons name="information-circle-outline" size={15} color={Colors.gold} />
               <Text style={s.tipText}>
                 Type a skill WiamApp offers (e.g. Electrician, Barber). The tip disappears when you type — pick a suggestion so customers can find you.
               </Text>
@@ -156,7 +151,7 @@ export default function SkillsManagerScreen({ navigation, route }) {
             <TextInput
               style={s.customInput}
               placeholder="Type a skill..."
-              placeholderTextColor={MUTED}
+              placeholderTextColor={Colors.textDim}
               value={custom}
               onChangeText={onCustomChange}
               onSubmitEditing={addCustom}
@@ -192,18 +187,21 @@ export default function SkillsManagerScreen({ navigation, route }) {
           )}
 
           {/* Save */}
-          <TouchableOpacity
-            style={[s.saveBtn, saved && s.saveBtnDone]}
-            onPress={handleSave}
-            disabled={saving}
-          >
-            {saving
-              ? <ActivityIndicator color={NAVY} />
-              : <>
-                  <Ionicons name={saved ? 'checkmark-circle' : 'save-outline'} size={17} color={NAVY} />
-                  <Text style={s.saveBtnText}>{saved ? 'Skills Saved!' : 'Save Skills'}</Text>
-                </>
-            }
+          <TouchableOpacity onPress={handleSave} disabled={saving} activeOpacity={0.85}>
+            <LinearGradient
+              colors={saved ? [Colors.success, Colors.success] : goldGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={s.saveBtn}
+            >
+              {saving
+                ? <ActivityIndicator color={Colors.navy} />
+                : <>
+                    <Ionicons name={saved ? 'checkmark-circle' : 'save-outline'} size={17} color={Colors.navy} />
+                    <Text style={s.saveBtnText}>{saved ? 'Skills Saved!' : 'Save Skills'}</Text>
+                  </>
+              }
+            </LinearGradient>
           </TouchableOpacity>
           <View style={{ height: 30 }} />
         </ScrollView>
@@ -213,56 +211,56 @@ export default function SkillsManagerScreen({ navigation, route }) {
 }
 
 const s = StyleSheet.create({
-  safe:        { flex: 1, backgroundColor: NAVY },
-  header:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 14 },
-  headerTitle: { color: WHITE, fontSize: 17, fontWeight: '700' },
-  skillCount:  { color: GOLD, fontSize: 13, fontWeight: '600' },
-  container:   { flexGrow: 1, padding: 20 },
-  intro:       { color: MUTED, fontSize: 13, lineHeight: 20, marginBottom: 20 },
-  sectionLabel:{ color: GOLD, fontSize: 10, fontWeight: '700', letterSpacing: 1.5, marginBottom: 12, marginTop: 8 },
+  safe:        { flex: 1, backgroundColor: Colors.navy },
+  header:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: PAD, paddingVertical: 14 },
+  backBtn:     { width: 36, height: 36, borderRadius: 18, backgroundColor: Colors.navyCard, alignItems: 'center', justifyContent: 'center' },
+  headerTitle: { color: Colors.white, fontSize: 17, fontWeight: '700', flex: 1, marginLeft: 12 },
+  skillCount:  { color: Colors.gold, fontSize: 13, fontWeight: '600' },
+  container:   { flexGrow: 1, padding: PAD },
+  intro:       { color: Colors.textDim, fontSize: 13, lineHeight: 20, marginBottom: 20 },
+  sectionLabel:{ color: Colors.gold, fontSize: 10, fontWeight: '700', letterSpacing: 1.5, marginBottom: 12, marginTop: 8 },
   tagsWrap:    { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
   tagSelected: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
-    backgroundColor: GOLD, borderRadius: 20,
+    backgroundColor: Colors.gold, borderRadius: 20,
     paddingHorizontal: 12, paddingVertical: 8,
   },
-  tagSelectedText: { color: NAVY, fontSize: 13, fontWeight: '600' },
+  tagSelectedText: { color: Colors.navy, fontSize: 13, fontWeight: '600' },
   tagSuggested: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
-    backgroundColor: GOLD_BG, borderWidth: 0.5, borderColor: GOLD_BD,
+    backgroundColor: 'rgba(212,160,23,0.10)', borderWidth: 1, borderColor: 'rgba(212,160,23,0.25)',
     borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8,
   },
-  tagSuggestedText: { color: GOLD, fontSize: 13 },
+  tagSuggestedText: { color: Colors.gold, fontSize: 13 },
   customRow:  { flexDirection: 'row', gap: 8, marginBottom: 24 },
   customInput:{
-    flex: 1, backgroundColor: 'rgba(255,255,255,0.07)',
-    borderRadius: 12, borderWidth: 0.5, borderColor: BORDER,
-    padding: 13, color: WHITE, fontSize: 14,
+    flex: 1, backgroundColor: Colors.navySoft,
+    borderRadius: 12, borderWidth: 1, borderColor: Colors.navyLine,
+    padding: 13, color: Colors.white, fontSize: 14,
   },
-  addBtn:         { backgroundColor: GOLD, borderRadius: 12, paddingHorizontal: 18, alignItems: 'center', justifyContent: 'center' },
+  addBtn:         { backgroundColor: Colors.gold, borderRadius: 12, paddingHorizontal: 18, alignItems: 'center', justifyContent: 'center' },
   addBtnDisabled: { backgroundColor: 'rgba(212,160,23,0.25)' },
-  addBtnText:     { color: NAVY, fontSize: 14, fontWeight: '700' },
+  addBtnText:     { color: Colors.navy, fontSize: 14, fontWeight: '700' },
   tipBox: {
     flexDirection: 'row', gap: 8, alignItems: 'flex-start',
-    backgroundColor: GOLD_BG, borderWidth: 1, borderColor: GOLD_BD,
-    borderRadius: 12, padding: 12, marginBottom: 10,
+    backgroundColor: 'rgba(212,160,23,0.10)', borderWidth: 1, borderColor: 'rgba(212,160,23,0.25)',
+    borderRadius: 14, padding: 12, marginBottom: 10,
   },
-  tipText: { flex: 1, color: 'rgba(255,255,255,0.7)', fontSize: 12.5, lineHeight: 18 },
-  errText: { color: '#EF4444', fontSize: 12, marginBottom: 8 },
+  tipText: { flex: 1, color: Colors.textDim, fontSize: 12.5, lineHeight: 18 },
+  errText: { color: Colors.error, fontSize: 12, marginBottom: 8 },
   matchList: {
-    backgroundColor: NAVY2, borderRadius: 12, borderWidth: 1, borderColor: BORDER,
+    backgroundColor: Colors.navyCard, borderRadius: 12, borderWidth: 1, borderColor: Colors.navyLine,
     marginBottom: 16, overflow: 'hidden',
   },
   matchRow: {
     paddingHorizontal: 14, paddingVertical: 12,
-    borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.06)',
+    borderBottomWidth: 1, borderBottomColor: Colors.navyLine,
   },
-  matchName: { color: WHITE, fontSize: 14, fontWeight: '600' },
-  matchCat: { color: MUTED, fontSize: 11, marginTop: 2 },
+  matchName: { color: Colors.white, fontSize: 14, fontWeight: '600' },
+  matchCat: { color: Colors.textDim, fontSize: 11, marginTop: 2 },
   saveBtn: {
-    backgroundColor: GOLD, borderRadius: 13, paddingVertical: 15,
+    borderRadius: 14, paddingVertical: 15,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
   },
-  saveBtnDone: { backgroundColor: '#22C55E' },
-  saveBtnText: { color: NAVY, fontSize: 15, fontWeight: '700' },
+  saveBtnText: { color: Colors.navy, fontSize: 15, fontWeight: '700' },
 });

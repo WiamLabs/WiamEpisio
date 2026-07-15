@@ -1,68 +1,75 @@
 // © 2026 WiamApp. Powered by WiamLabs
-// screens/EarningsScreen.js — PRODUCTION real Supabase data
+// screens/EarningsScreen.js — Part 13 Worker Earnings
 
 import React, { useState, useCallback } from 'react';
 import {
-  View, Text, TouchableOpacity, StyleSheet, StatusBar, ScrollView, FlatList,
+  View, Text, TouchableOpacity, StyleSheet, StatusBar, ScrollView,
   ActivityIndicator, RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-import { Colors } from '../constants/colors';
+import { Colors, goldGradient } from '../constants/colors';
 import { useAuth } from '../lib/AuthContext';
 import { supabase } from '../lib/supabase';
 
-const NAVY  = Colors.navyDeep;
-const NAVY2 = Colors.navyMid;
-const GOLD  = Colors.gold;
-const WHITE = Colors.white;
-const MUTED = 'rgba(255,255,255,0.45)';
-const BORDER= 'rgba(255,255,255,0.09)';
+const PAD = Colors.screenPad;
 
-const PERIODS = ['This Week', 'This Month', 'All Time'];
+function relativeDate(dateStr) {
+  const d = new Date(dateStr);
+  const diff = Date.now() - d.getTime();
+  const days = Math.floor(diff / 86400000);
+  if (days === 0) return 'Today';
+  if (days === 1) return 'Yesterday';
+  if (days < 7) return `${days} days ago`;
+  return d.toLocaleDateString('en-GH', { day: 'numeric', month: 'short' });
+}
 
 export default function EarningsScreen({ navigation }) {
   const { profile } = useAuth();
-  const [period,     setPeriod]     = useState('This Month');
-  const [earnings,   setEarnings]   = useState({ total: 0, pending: 0, jobs: 0, avgPerJob: 0 });
-  const [history,    setHistory]    = useState([]);
-  const [loading,    setLoading]    = useState(true);
+  const [earnings, setEarnings] = useState({
+    balance: 0,
+    monthTotal: 0,
+    pending: 0,
+    totalEarned: 0,
+    jobs: 0,
+  });
+  const [history, setHistory] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const load = async () => {
     if (!profile?.id) { setLoading(false); return; }
     try {
-      // Date range
-      const now  = new Date();
-      let since  = new Date(0);
-      if (period === 'This Week') {
-        since = new Date(now);
-        since.setDate(now.getDate() - now.getDay());
-        since.setHours(0, 0, 0, 0);
-      } else if (period === 'This Month') {
-        since = new Date(now.getFullYear(), now.getMonth(), 1);
-      }
-
       const { data, error } = await supabase
         .from('bookings')
         .select('id, description, agreed_price, currency, status, scheduled_date, created_at, users!bookings_customer_id_fkey(full_name), categories(name)')
         .eq('worker_id', profile.id)
-        .gte('created_at', since.toISOString())
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      const all       = data || [];
-      const completed = all.filter(b => b.status === 'completed');
-      const pending   = all.filter(b => ['accepted', 'in_progress'].includes(b.status));
+      const all = data || [];
+      const completed = all.filter((b) => b.status === 'completed');
+      const pending = all.filter((b) => ['accepted', 'in_progress'].includes(b.status));
 
-      const totalEarned  = completed.reduce((s, b) => s + parseFloat(b.agreed_price || 0), 0);
-      const pendingEarned= pending.reduce(  (s, b) => s + parseFloat(b.agreed_price || 0), 0);
-      const avgPerJob    = completed.length ? totalEarned / completed.length : 0;
+      const now = new Date();
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const monthCompleted = completed.filter((b) => new Date(b.created_at) >= monthStart);
 
-      setEarnings({ total: totalEarned, pending: pendingEarned, jobs: completed.length, avgPerJob });
-      setHistory(all);
+      const totalEarned = completed.reduce((s, b) => s + parseFloat(b.agreed_price || 0), 0);
+      const pendingEarned = pending.reduce((s, b) => s + parseFloat(b.agreed_price || 0), 0);
+      const monthTotal = monthCompleted.reduce((s, b) => s + parseFloat(b.agreed_price || 0), 0);
+
+      setEarnings({
+        balance: totalEarned,
+        monthTotal,
+        pending: pendingEarned,
+        totalEarned,
+        jobs: completed.length,
+      });
+      setHistory(all.slice(0, 30));
     } catch (e) {
       console.warn('Earnings load error:', e.message);
     } finally {
@@ -71,169 +78,206 @@ export default function EarningsScreen({ navigation }) {
     }
   };
 
-  useFocusEffect(useCallback(() => { load(); }, [profile?.id, period]));
-
-  const STATUS_COLOR = {
-    completed:   Colors.success,
-    in_progress: GOLD,
-    accepted:    '#3B82F6',
-    cancelled:   Colors.error,
-    rejected:    Colors.error,
-    pending:     Colors.warning,
-  };
+  useFocusEffect(useCallback(() => { load(); }, [profile?.id]));
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.safe}>
-        <ActivityIndicator color={GOLD} style={{ marginTop: 80 }} />
+      <SafeAreaView style={styles.safe} edges={['top']}>
+        <StatusBar barStyle="light-content" backgroundColor={Colors.navy} />
+        <ActivityIndicator color={Colors.gold} style={{ marginTop: 80 }} />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <StatusBar barStyle="light-content" backgroundColor={NAVY} />
+    <SafeAreaView style={styles.safe} edges={['top']}>
+      <StatusBar barStyle="light-content" backgroundColor={Colors.navy} />
 
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={22} color={WHITE} />
+          <Ionicons name="chevron-back" size={17} color={Colors.white} />
         </TouchableOpacity>
-        <Text style={styles.title}>My Earnings</Text>
+        <Text style={styles.title}>Earnings</Text>
       </View>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={GOLD} />}
+        contentContainerStyle={styles.scroll}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => { setRefreshing(true); load(); }}
+            tintColor={Colors.gold}
+          />
+        }
       >
-        {/* Period tabs */}
-        <View style={styles.periodRow}>
-          {PERIODS.map(p => (
-            <TouchableOpacity
-              key={p}
-              style={[styles.periodTab, period === p && styles.periodTabActive]}
-              onPress={() => setPeriod(p)}
-            >
-              <Text style={[styles.periodText, period === p && styles.periodTextActive]}>{p}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Big total */}
-        <View style={styles.totalCard}>
-          <Text style={styles.totalLabel}>Total Earned ({period})</Text>
-          <Text style={styles.totalAmount}>GHS {earnings.total.toFixed(2)}</Text>
-          <View style={styles.pendingRow}>
-            <Ionicons name="time-outline" size={14} color={GOLD} />
-            <Text style={styles.pendingText}>GHS {earnings.pending.toFixed(2)} pending release</Text>
-          </View>
-        </View>
-
-        {/* Stats grid */}
-        <View style={styles.statsGrid}>
-          <View style={styles.statCard}>
-            <Ionicons name="briefcase-outline" size={22} color={GOLD} />
-            <Text style={styles.statVal}>{earnings.jobs}</Text>
-            <Text style={styles.statLabel}>Jobs Completed</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Ionicons name="trending-up-outline" size={22} color={Colors.success} />
-            <Text style={[styles.statVal, { color: Colors.success }]}>GHS {earnings.avgPerJob.toFixed(0)}</Text>
-            <Text style={styles.statLabel}>Avg Per Job</Text>
-          </View>
-        </View>
-
-        {/* Payout info */}
-        <View style={styles.payoutCard}>
-          <View style={styles.payoutLeft}>
-            <Ionicons name="wallet-outline" size={20} color={GOLD} />
-            <View>
-              <Text style={styles.payoutTitle}>Payout Method</Text>
-              <Text style={styles.payoutSub}>Mobile Money · MTN / Vodafone</Text>
-            </View>
-          </View>
-          <TouchableOpacity style={styles.payoutBtn}>
-            <Text style={styles.payoutBtnText}>Edit</Text>
+        <LinearGradient
+          colors={goldGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.balanceCard}
+        >
+          <View style={styles.balanceGlow} />
+          <Text style={styles.balanceLabel}>Available balance</Text>
+          <Text style={styles.balanceAmount}>GHS {earnings.balance.toFixed(2)}</Text>
+          <TouchableOpacity style={styles.withdrawBtn} activeOpacity={0.9}>
+            <Text style={styles.withdrawText}>Withdraw to Mobile Money</Text>
           </TouchableOpacity>
+        </LinearGradient>
+
+        <View style={styles.miniStats}>
+          <View style={styles.miniStat}>
+            <Text style={styles.miniStatLabel}>This month</Text>
+            <Text style={[styles.miniStatValue, styles.miniStatGreen]}>
+              GHS {Math.round(earnings.monthTotal)}
+            </Text>
+          </View>
+          <View style={styles.miniStat}>
+            <Text style={styles.miniStatLabel}>Pending</Text>
+            <Text style={styles.miniStatValue}>GHS {Math.round(earnings.pending)}</Text>
+          </View>
+          <View style={styles.miniStat}>
+            <Text style={styles.miniStatLabel}>Total earned</Text>
+            <Text style={styles.miniStatValue}>GHS {Math.round(earnings.totalEarned)}</Text>
+          </View>
         </View>
 
-        {/* Transaction history */}
-        <Text style={styles.sectionTitle}>Transaction History</Text>
+        <Text style={styles.sectionLabel}>Recent Transactions</Text>
+
         {history.length === 0 ? (
           <View style={styles.emptyHistory}>
-            <Ionicons name="receipt-outline" size={40} color={MUTED} />
-            <Text style={styles.emptyText}>No transactions for this period</Text>
+            <Ionicons name="receipt-outline" size={40} color={Colors.textFaint} />
+            <Text style={styles.emptyText}>No transactions yet</Text>
           </View>
         ) : (
-          history.map(item => {
+          history.map((item) => {
             const isEarning = item.status === 'completed';
             const isPending = ['accepted', 'in_progress'].includes(item.status);
+            const categoryName = item.categories?.name || 'Service';
+            const customerName = item.users?.full_name || 'Customer';
+
             return (
-              <View key={item.id} style={styles.txRow}>
-                <View style={[styles.txIcon, { backgroundColor: isEarning ? 'rgba(34,197,94,0.12)' : isPending ? 'rgba(212,160,23,0.1)' : 'rgba(255,255,255,0.05)' }]}>
+              <View key={item.id} style={styles.txnRow}>
+                <View style={[
+                  styles.txnIcon,
+                  !isEarning && isPending && styles.txnIconPending,
+                  !isEarning && !isPending && styles.txnIconMuted,
+                ]}>
                   <Ionicons
-                    name={isEarning ? 'checkmark-circle-outline' : isPending ? 'time-outline' : 'close-circle-outline'}
-                    size={18}
-                    color={isEarning ? Colors.success : isPending ? GOLD : Colors.error}
+                    name={isEarning ? 'arrow-up' : isPending ? 'time-outline' : 'close-circle-outline'}
+                    size={16}
+                    color={isEarning ? Colors.success : isPending ? Colors.gold : Colors.textFaint}
                   />
                 </View>
-                <View style={styles.txInfo}>
-                  <Text style={styles.txCustomer}>{item.users?.full_name || 'Customer'}</Text>
-                  <Text style={styles.txService} numberOfLines={1}>{item.description}</Text>
-                  <Text style={styles.txDate}>{new Date(item.scheduled_date).toLocaleDateString('en-GH', { day:'numeric', month:'short' })}</Text>
-                </View>
-                <View style={{ alignItems: 'flex-end' }}>
-                  <Text style={[styles.txAmount, { color: isEarning ? Colors.success : isPending ? GOLD : MUTED }]}>
-                    {isEarning ? '+' : ''}GHS {parseFloat(item.agreed_price).toFixed(0)}
+                <View style={styles.txnInfo}>
+                  <Text style={styles.txnTitle}>
+                    {isEarning ? `Payment from ${customerName}` : item.description || 'Booking'}
                   </Text>
-                  <Text style={[styles.txStatus, { color: STATUS_COLOR[item.status] || MUTED }]}>
-                    {item.status.replace('_', ' ')}
+                  <Text style={styles.txnSub} numberOfLines={1}>
+                    {categoryName} · {relativeDate(item.scheduled_date || item.created_at)}
                   </Text>
                 </View>
+                <Text style={[
+                  styles.txnAmount,
+                  isEarning && styles.txnAmountIn,
+                  !isEarning && !isPending && styles.txnAmountOut,
+                ]}>
+                  {isEarning ? '+' : ''}GHS {parseFloat(item.agreed_price || 0).toFixed(0)}
+                </Text>
               </View>
             );
           })
         )}
 
-        <View style={{ height: 60 }} />
+        <Text style={styles.footer}>© 2026 WiamApp · Powered by WiamLabs</Text>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safe:         { flex: 1, backgroundColor: NAVY },
-  header:       { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 16, paddingBottom: 14, gap: 12 },
-  backBtn:      { padding: 4 },
-  title:        { fontSize: 20, fontWeight: '700', color: WHITE },
-  periodRow:    { flexDirection: 'row', marginHorizontal: 20, marginBottom: 16, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 12, padding: 4, gap: 4 },
-  periodTab:    { flex: 1, paddingVertical: 9, alignItems: 'center', borderRadius: 9 },
-  periodTabActive:{ backgroundColor: GOLD },
-  periodText:   { fontSize: 13, color: MUTED },
-  periodTextActive:{ color: NAVY, fontWeight: '700' },
-  totalCard:    { backgroundColor: NAVY2, marginHorizontal: 20, borderRadius: 16, padding: 24, alignItems: 'center', marginBottom: 14, borderWidth: 1, borderColor: 'rgba(212,160,23,0.2)' },
-  totalLabel:   { fontSize: 13, color: MUTED, marginBottom: 8 },
-  totalAmount:  { fontSize: 38, fontWeight: '800', color: GOLD, marginBottom: 10 },
-  pendingRow:   { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  pendingText:  { fontSize: 13, color: MUTED },
-  statsGrid:    { flexDirection: 'row', marginHorizontal: 20, gap: 12, marginBottom: 14 },
-  statCard:     { flex: 1, backgroundColor: NAVY2, borderRadius: 14, padding: 16, alignItems: 'center', gap: 8, borderWidth: 1, borderColor: BORDER },
-  statVal:      { fontSize: 22, fontWeight: '800', color: WHITE },
-  statLabel:    { fontSize: 12, color: MUTED, textAlign: 'center' },
-  payoutCard:   { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: NAVY2, marginHorizontal: 20, borderRadius: 14, padding: 16, marginBottom: 20, borderWidth: 1, borderColor: BORDER },
-  payoutLeft:   { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  payoutTitle:  { fontSize: 14, fontWeight: '700', color: WHITE },
-  payoutSub:    { fontSize: 12, color: MUTED, marginTop: 2 },
-  payoutBtn:    { borderWidth: 1, borderColor: GOLD, borderRadius: 8, paddingHorizontal: 14, paddingVertical: 7 },
-  payoutBtnText:{ fontSize: 13, color: GOLD, fontWeight: '600' },
-  sectionTitle: { fontSize: 15, fontWeight: '700', color: WHITE, paddingHorizontal: 20, marginBottom: 10 },
+  safe: { flex: 1, backgroundColor: Colors.navy },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: PAD,
+    paddingBottom: 14,
+  },
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.navyCard,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  title: { fontSize: 17, fontWeight: '700', color: Colors.white },
+  scroll: { paddingHorizontal: PAD, paddingBottom: 24 },
+  balanceCard: {
+    borderRadius: Colors.cardRadius,
+    padding: 22,
+    marginBottom: 16,
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  balanceGlow: {
+    position: 'absolute',
+    right: -30,
+    top: -40,
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: Colors.navy,
+    opacity: 0.14,
+  },
+  balanceLabel: { fontSize: 12, color: '#3A2E05', marginBottom: 4 },
+  balanceAmount: { fontSize: 32, fontWeight: '800', color: Colors.navy, marginBottom: 16 },
+  withdrawBtn: {
+    backgroundColor: Colors.navy,
+    paddingVertical: 11,
+    paddingHorizontal: 24,
+    borderRadius: 14,
+  },
+  withdrawText: { fontSize: 13, fontWeight: '700', color: Colors.gold },
+  miniStats: { flexDirection: 'row', gap: 10, marginBottom: 20 },
+  miniStat: {
+    flex: 1,
+    backgroundColor: Colors.navyCard,
+    borderWidth: 1,
+    borderColor: Colors.navyLine,
+    borderRadius: 16,
+    padding: 13,
+  },
+  miniStatLabel: { fontSize: 10.5, color: Colors.textFaint, marginBottom: 4 },
+  miniStatValue: { fontSize: 16, fontWeight: '700', color: Colors.white },
+  miniStatGreen: { color: Colors.success },
+  sectionLabel: { fontSize: 13, fontWeight: '600', color: Colors.white, marginBottom: 12 },
   emptyHistory: { alignItems: 'center', paddingVertical: 30, gap: 10 },
-  emptyText:    { color: MUTED, fontSize: 14 },
-  txRow:        { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: BORDER },
-  txIcon:       { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  txInfo:       { flex: 1 },
-  txCustomer:   { fontSize: 14, fontWeight: '600', color: WHITE },
-  txService:    { fontSize: 12, color: MUTED, marginTop: 2 },
-  txDate:       { fontSize: 11, color: MUTED, marginTop: 3 },
-  txAmount:     { fontSize: 15, fontWeight: '700' },
-  txStatus:     { fontSize: 11, marginTop: 3, textTransform: 'capitalize' },
+  emptyText: { color: Colors.textFaint, fontSize: 14 },
+  txnRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.navyLine,
+  },
+  txnIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: 'rgba(34,197,94,0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  txnIconPending: { backgroundColor: 'rgba(212,160,23,0.12)' },
+  txnIconMuted: { backgroundColor: 'rgba(255,255,255,0.05)' },
+  txnInfo: { flex: 1, minWidth: 0 },
+  txnTitle: { fontSize: 13, fontWeight: '600', color: Colors.white },
+  txnSub: { fontSize: 11, color: Colors.textFaint, marginTop: 2 },
+  txnAmount: { fontSize: 13.5, fontWeight: '700', flexShrink: 0 },
+  txnAmountIn: { color: Colors.success },
+  txnAmountOut: { color: '#B8B8CC' },
+  footer: { textAlign: 'center', fontSize: 10, color: '#3A3A56', paddingVertical: 18 },
 });

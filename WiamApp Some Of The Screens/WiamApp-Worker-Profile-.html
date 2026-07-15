@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamApp — Worker Profile</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810;
+    --text-dim:#7D7D97; --text-faint:#5A5A75;
+    --success:#22C55E; --warning:#F59E0B; --error:#EF4444;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:'Inter',sans-serif; background:#0a0a0f;
+    display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0;
+  }
+  .phone{
+    width:390px; height:844px; background:var(--navy); border-radius:46px;
+    overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5);
+  }
+  .statusbar{ height:44px; }
+
+  .scrollarea{ height:calc(100% - 44px - 84px); overflow-y:auto; padding:0 20px 20px; }
+
+  .page-title{ font-size:20px; font-weight:700; color:#fff; margin:4px 0 18px; }
+
+  /* Profile header card */
+  .profile-hero{
+    border-radius:24px; padding:22px 18px; margin-bottom:18px; text-align:center;
+    background:linear-gradient(180deg, var(--navy-card), var(--navy-soft));
+    border:1px solid var(--navy-line); position:relative;
+  }
+  .avatar-wrap{ position:relative; width:74px; height:74px; margin:0 auto 12px; }
+  .avatar-big{
+    width:74px; height:74px; border-radius:50%;
+    background:linear-gradient(135deg,var(--gold),var(--gold-dark));
+    display:flex; align-items:center; justify-content:center;
+    color:var(--navy); font-weight:800; font-size:28px; border:3px solid var(--navy-line);
+  }
+  .cam-badge{
+    position:absolute; bottom:-2px; right:-2px; width:26px; height:26px; border-radius:50%;
+    background:var(--gold); border:3px solid var(--navy-card);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .profile-name{ font-size:18px; font-weight:700; color:#fff; margin:0; display:flex; align-items:center; justify-content:center; gap:5px; }
+  .profile-role{ font-size:12.5px; color:var(--text-dim); margin:3px 0 10px; }
+  .badge-row{ display:flex; justify-content:center; gap:8px; }
+  .badge{
+    font-size:10.5px; font-weight:600; padding:4px 11px; border-radius:999px;
+    display:flex; align-items:center; gap:4px;
+  }
+  .badge-warn{ background:rgba(245,158,11,0.14); color:var(--warning); }
+
+  .stat-row{ display:flex; margin-top:18px; border-top:1px solid var(--navy-line); padding-top:16px; }
+  .stat-col{ flex:1; text-align:center; }
+  .stat-col:not(:last-child){ border-right:1px solid var(--navy-line); }
+  .stat-num{ font-size:16px; font-weight:700; color:#fff; margin:0; }
+  .stat-cap{ font-size:10px; color:var(--text-faint); margin:3px 0 0; }
+
+  /* Section label */
+  .section-label{
+    font-size:11px; font-weight:700; letter-spacing:0.8px; color:var(--text-faint);
+    text-transform:uppercase; margin:22px 4px 10px;
+  }
+
+  .menu-group{ border-radius:20px; background:var(--navy-card); border:1px solid var(--navy-line); overflow:hidden; }
+  .menu-row{
+    display:flex; align-items:center; gap:13px; padding:14px 16px;
+    border-bottom:1px solid var(--navy-line); cursor:pointer;
+  }
+  .menu-row:last-child{ border-bottom:none; }
+  .menu-icon{
+    width:36px; height:36px; border-radius:11px; background:rgba(212,160,23,0.1);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .menu-icon svg{ width:17px; height:17px; color:var(--gold); }
+  .menu-text{ flex:1; }
+  .menu-title{ font-size:13.5px; font-weight:500; color:#fff; margin:0; }
+  .menu-sub{ font-size:11px; color:var(--text-faint); margin:2px 0 0; }
+  .menu-chevron{ color:var(--text-faint); flex-shrink:0; }
+  .menu-pill{
+    font-size:10px; font-weight:600; padding:3px 9px; border-radius:999px;
+    background:rgba(34,197,94,0.12); color:var(--success); margin-right:6px; flex-shrink:0;
+  }
+
+  .signout-btn{
+    width:100%; margin-top:24px; padding:14px; border-radius:16px;
+    background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.25);
+    color:var(--error); font-size:13.5px; font-weight:600; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+  }
+  .footer-copy{ text-align:center; font-size:10px; color:#3A3A56; padding:18px 0 6px; }
+
+  .bottomnav{
+    position:absolute; bottom:0; left:0; right:0; height:84px;
+    background:var(--navy-soft); border-top:1px solid #1C1C38;
+    display:flex; align-items:flex-start; justify-content:space-around; padding-top:12px;
+  }
+  .navitem{ display:flex; flex-direction:column; align-items:center; gap:4px; width:56px; }
+  .navitem span{ font-size:9.5px; color:var(--text-faint); }
+  .navitem.active span{ color:var(--gold); }
+  .navitem svg{ width:19px; height:19px; }
+
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"></div>
+  <div class="scrollarea">
+    <p class="page-title">Profile</p>
+
+    <!-- Profile hero -->
+    <div class="profile-hero">
+      <div class="avatar-wrap">
+        <div class="avatar-big">K</div>
+        <div class="cam-badge">
+          <svg viewBox="0 0 24 24" width="13" height="13" stroke="#08081A" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        </div>
+      </div>
+      <p class="profile-name">
+        Khoby Wise
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="#D4A017" stroke="#08081A"><path d="M12 2l2.4 2.6 3.5-.6.6 3.5L21.1 9l-2 3 2 3-3.6 1.5-.6 3.5-3.5-.6L12 22l-2.4-2.6-3.5.6-.6-3.5L2 15l2-3-2-3 3.6-1.5.6-3.5 3.5.6z"/><polyline points="8.5 12 11 14.5 15.5 9.5" stroke="#08081A" stroke-width="1.6" fill="none"/></svg>
+      </p>
+      <p class="profile-role">Electrician · GQ-285-1104, Community 18</p>
+      <div class="badge-row">
+        <span class="badge badge-warn">
+          <svg viewBox="0 0 24 24" width="11" height="11"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Pending Review
+        </span>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat-col"><p class="stat-num">0</p><p class="stat-cap">Jobs Done</p></div>
+        <div class="stat-col"><p class="stat-num">New</p><p class="stat-cap">Rating</p></div>
+        <div class="stat-col"><p class="stat-num">GHS 0</p><p class="stat-cap">Earned</p></div>
+      </div>
+    </div>
+
+    <!-- Grow your business -->
+    <p class="section-label">Grow Your Business</p>
+    <div class="menu-group">
+      <div class="menu-row">
+        <div class="menu-icon"><svg viewBox="0 0 24 24"><polygon points="12 2 15 9 22 9.5 16.5 14.3 18.2 21 12 17.3 5.8 21 7.5 14.3 2 9.5 9 9"/></svg></div>
+        <div class="menu-text"><p class="menu-title">Upgrade Plan</p><p class="menu-sub">Basic or Pro — lower commission, more visibility</p></div>
+        <svg class="menu-chevron" viewBox="0 0 24 24" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div class="menu-row">
+        <div class="menu-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></div>
+        <div class="menu-text"><p class="menu-title">Portfolio</p></div>
+        <svg class="menu-chevron" viewBox="0 0 24 24" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div class="menu-row">
+        <div class="menu-icon"><svg viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.6z"/></svg></div>
+        <div class="menu-text"><p class="menu-title">Skills & Categories</p></div>
+        <svg class="menu-chevron" viewBox="0 0 24 24" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div class="menu-row">
+        <div class="menu-icon"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4z"/></svg></div>
+        <div class="menu-text"><p class="menu-title">Spotlight Posts</p></div>
+        <svg class="menu-chevron" viewBox="0 0 24 24" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+    </div>
+
+    <!-- Activity -->
+    <p class="section-label">Activity</p>
+    <div class="menu-group">
+      <div class="menu-row">
+        <div class="menu-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+        <div class="menu-text"><p class="menu-title">Availability</p></div>
+        <svg class="menu-chevron" viewBox="0 0 24 24" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div class="menu-row">
+        <div class="menu-icon"><svg viewBox="0 0 24 24"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg></div>
+        <div class="menu-text"><p class="menu-title">Earnings</p></div>
+        <svg class="menu-chevron" viewBox="0 0 24 24" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div class="menu-row">
+        <div class="menu-icon"><svg viewBox="0 0 24 24"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10l1 8a5 5 0 0 1-5 5h-2a5 5 0 0 1-5-5z"/></svg></div>
+        <div class="menu-text"><p class="menu-title">My Rankings</p></div>
+        <svg class="menu-chevron" viewBox="0 0 24 24" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+    </div>
+
+    <!-- Account -->
+    <p class="section-label">Account</p>
+    <div class="menu-group">
+      <div class="menu-row">
+        <div class="menu-icon"><svg viewBox="0 0 24 24"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/></svg></div>
+        <div class="menu-text"><p class="menu-title">Subscription</p><p class="menu-sub">Free plan</p></div>
+        <svg class="menu-chevron" viewBox="0 0 24 24" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div class="menu-row">
+        <div class="menu-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <div class="menu-text"><p class="menu-title">Safety & SOS</p></div>
+        <svg class="menu-chevron" viewBox="0 0 24 24" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div class="menu-row">
+        <div class="menu-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></div>
+        <div class="menu-text"><p class="menu-title">Verification Status</p></div>
+        <span class="badge badge-warn" style="margin-right:6px;">Pending</span>
+        <svg class="menu-chevron" viewBox="0 0 24 24" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div class="menu-row">
+        <div class="menu-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
+        <div class="menu-text"><p class="menu-title">Settings</p></div>
+        <svg class="menu-chevron" viewBox="0 0 24 24" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+    </div>
+
+    <button class="signout-btn">
+      <svg viewBox="0 0 24 24" width="16" height="16"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Sign Out
+    </button>
+
+    <p class="footer-copy">© 2026 WiamApp · Powered by WiamLabs</p>
+  </div>
+
+  <div class="bottomnav">
+    <div class="navitem" style="color:#5A5A75">
+      <svg viewBox="0 0 24 24" width="19" height="19"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+      <span>Home</span>
+    </div>
+    <div class="navitem" style="color:#5A5A75">
+      <svg viewBox="0 0 24 24" width="19" height="19"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+      <span>Jobs</span>
+    </div>
+    <div class="navitem" style="color:#5A5A75">
+      <svg viewBox="0 0 24 24" width="19" height="19"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg>
+      <span>Earnings</span>
+    </div>
+    <div class="navitem" style="color:#5A5A75">
+      <svg viewBox="0 0 24 24" width="19" height="19"><path d="M21 11.5a8.4 8.4 0 0 1-8.9 8.4 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7A8.5 8.5 0 0 1 3.5 11 8.4 8.4 0 0 1 12 3a8.4 8.4 0 0 1 9 8.5z"/></svg>
+      <span>Chat</span>
+    </div>
+    <div class="navitem active">
+      <div style="width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#D4A017,#A07810);display:flex;align-items:center;justify-content:center;color:#08081A;font-size:9px;font-weight:700;">K</div>
+      <span style="color:#D4A017">Profile</span>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

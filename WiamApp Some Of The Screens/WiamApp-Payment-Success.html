@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamApp — Payment Success</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75; --success:#22C55E;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); display:flex; flex-direction:column; }
+  .statusbar{ height:44px; flex-shrink:0; }
+
+  .scrollarea{ flex:1; overflow-y:auto; padding:10px 20px 0; }
+
+  .success-hero{ text-align:center; padding:20px 10px 24px; }
+  .check-circle{
+    width:80px; height:80px; border-radius:50%; background:rgba(34,197,94,0.12); border:2px solid var(--success);
+    display:flex; align-items:center; justify-content:center; margin:0 auto 18px; position:relative;
+  }
+  .check-circle::before{
+    content:''; position:absolute; inset:-8px; border-radius:50%; border:1.5px solid rgba(34,197,94,0.25);
+  }
+  .check-circle svg{ color:var(--success); width:36px; height:36px; }
+  .success-hero h1{ font-size:20px; font-weight:800; color:#fff; margin:0 0 6px; }
+  .success-hero p{ font-size:12.5px; color:var(--text-dim); line-height:1.5; margin:0; }
+
+  .amount-block{ text-align:center; padding:6px 0 20px; }
+  .amount-label{ font-size:11.5px; color:var(--text-faint); margin:0 0 4px; }
+  .amount-value{ font-size:32px; font-weight:800; color:var(--gold); margin:0; }
+
+  .receipt-card{ background:var(--navy-card); border:1px solid var(--navy-line); border-radius:20px; padding:18px; margin-bottom:16px; }
+  .receipt-row{ display:flex; justify-content:space-between; padding:8px 0; }
+  .receipt-row span:first-child{ font-size:12px; color:var(--text-dim); }
+  .receipt-row span:last-child{ font-size:12px; color:#fff; font-weight:500; text-align:right; }
+  .receipt-divider{ height:1px; background:var(--navy-line); margin:8px 0; }
+  .receipt-row.total span:first-child{ font-size:13.5px; font-weight:700; color:#fff; }
+  .receipt-row.total span:last-child{ font-size:14.5px; font-weight:800; color:var(--gold); }
+
+  .escrow-note{ display:flex; gap:9px; padding:13px; border-radius:14px; background:rgba(212,160,23,0.08); border:1px solid rgba(212,160,23,0.2); margin-bottom:16px; }
+  .escrow-note svg{ color:var(--gold); flex-shrink:0; width:15px; height:15px; }
+  .escrow-note p{ font-size:11px; color:#D9BE6E; line-height:1.5; margin:0; }
+
+  .worker-mini{ display:flex; align-items:center; gap:11px; background:var(--navy-card); border:1px solid var(--navy-line); border-radius:16px; padding:13px; margin-bottom:20px; }
+  .worker-mini-avatar{ width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); display:flex; align-items:center; justify-content:center; color:var(--navy); font-weight:700; font-size:14px; }
+  .worker-mini-name{ font-size:13px; font-weight:600; color:#fff; margin:0; }
+  .worker-mini-sub{ font-size:11px; color:var(--text-faint); margin:1px 0 0; }
+
+  .footer-copy{ text-align:center; font-size:10px; color:#3A3A56; padding:6px 0 16px; }
+
+  .actionbar{ flex-shrink:0; display:flex; flex-direction:column; gap:10px; padding:14px 20px 24px; background:var(--navy-soft); border-top:1px solid #1C1C38; }
+  .btn-primary{ padding:14px; border-radius:16px; background:var(--gold); color:var(--navy); font-size:14px; font-weight:700; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; }
+  .btn-secondary{ padding:13px; border-radius:16px; background:none; color:#C9C9DE; font-size:13px; font-weight:600; border:1px solid var(--navy-line); cursor:pointer; }
+
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"></div>
+
+  <div class="scrollarea">
+    <div class="success-hero">
+      <div class="check-circle">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <h1>Payment Successful</h1>
+      <p>Your payment is safely held in escrow until<br/>the job is confirmed complete.</p>
+    </div>
+
+    <div class="amount-block">
+      <p class="amount-label">Amount Paid</p>
+      <p class="amount-value">GHS 450.00</p>
+    </div>
+
+    <div class="worker-mini">
+      <div class="worker-mini-avatar">KO</div>
+      <div>
+        <p class="worker-mini-name">Kwabena Owusu</p>
+        <p class="worker-mini-sub">Electrical & Power · Tomorrow, 2:00 PM</p>
+      </div>
+    </div>
+
+    <div class="receipt-card">
+      <div class="receipt-row"><span>Transaction ID</span><span>WA-2607145821</span></div>
+      <div class="receipt-row"><span>Payment method</span><span>Visa •••• 4694</span></div>
+      <div class="receipt-row"><span>Date</span><span>14 Jul 2026, 5:21 PM</span></div>
+      <div class="receipt-divider"></div>
+      <div class="receipt-row"><span>Service amount</span><span>GHS 450.00</span></div>
+      <div class="receipt-row"><span>WiamApp escrow fee</span><span>GHS 0.00</span></div>
+      <div class="receipt-divider"></div>
+      <div class="receipt-row total"><span>Total Paid</span><span>GHS 450.00</span></div>
+    </div>
+
+    <div class="escrow-note">
+      <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      <p>Kwabena will receive GHS 405 (90%) automatically once you confirm the job is done in the Bookings tab.</p>
+    </div>
+
+    <p class="footer-copy">© 2026 WiamApp · Powered by WiamLabs</p>
+  </div>
+
+  <div class="actionbar">
+    <button class="btn-primary">
+      <svg viewBox="0 0 24 24" width="16" height="16"><path d="M21 11.5a8.4 8.4 0 0 1-8.9 8.4 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7A8.5 8.5 0 0 1 3.5 11 8.4 8.4 0 0 1 12 3a8.4 8.4 0 0 1 9 8.5z"/></svg>
+      Chat with Kwabena
+    </button>
+    <button class="btn-secondary">View Booking Details</button>
+  </div>
+</div>
+
+</body>
+</html>

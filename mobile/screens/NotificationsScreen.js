@@ -1,7 +1,7 @@
 // © 2026 WiamApp. Powered by WiamLabs
-// screens/NotificationsScreen.js — PRODUCTION real Supabase data
+// screens/NotificationsScreen.js — Part 13 Notifications
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, StatusBar, FlatList,
   ActivityIndicator, RefreshControl,
@@ -13,18 +13,38 @@ import { Colors } from '../constants/colors';
 import { useAuth } from '../lib/AuthContext';
 import { getNotifications, markNotificationRead, markAllNotificationsRead, subscribeToNotifications } from '../lib/api/notifications';
 
-const C    = Colors.light;
-const GOLD = Colors.gold;
-const NAVY = Colors.navy;
+const PAD = Colors.screenPad;
 
 const NOTIF_ICONS = {
-  booking:  { icon: 'briefcase-outline',        color: '#3B82F6' },
-  payment:  { icon: 'cash-outline',             color: Colors.success },
-  review:   { icon: 'star-outline',             color: GOLD },
-  message:  { icon: 'chatbubble-outline',       color: Colors.navy },
-  safety:   { icon: 'shield-outline',           color: Colors.error },
-  system:   { icon: 'information-circle-outline', color: '#6B7280' },
+  booking:  { icon: 'briefcase-outline',        color: Colors.info,    style: 'info' },
+  payment:  { icon: 'cash-outline',             color: Colors.success, style: 'success' },
+  review:   { icon: 'star-outline',             color: Colors.gold,    style: 'gold' },
+  message:  { icon: 'chatbubble-outline',       color: Colors.gold,    style: 'gold' },
+  safety:   { icon: 'shield-outline',           color: Colors.error,   style: 'warning' },
+  system:   { icon: 'information-circle-outline', color: Colors.info,    style: 'info' },
 };
+
+function getTimeAgo(dateStr) {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1)  return 'Just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24)  return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 7)  return `${days}d ago`;
+  return new Date(dateStr).toLocaleDateString('en-GH', { day: 'numeric', month: 'short' });
+}
+
+function getDayLabel(dateStr) {
+  const d = new Date(dateStr);
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  if (d.toDateString() === today.toDateString()) return 'Today';
+  if (d.toDateString() === yesterday.toDateString()) return 'Yesterday';
+  return d.toLocaleDateString('en-GH', { weekday: 'long', day: 'numeric', month: 'short' });
+}
 
 export default function NotificationsScreen({ navigation }) {
   const { user } = useAuth();
@@ -47,7 +67,6 @@ export default function NotificationsScreen({ navigation }) {
 
   useFocusEffect(useCallback(() => { load(); }, [user?.id]));
 
-  // Real-time new notifications
   React.useEffect(() => {
     if (!user?.id) return;
     const sub = subscribeToNotifications(user.id, (newNotif) => {
@@ -57,12 +76,10 @@ export default function NotificationsScreen({ navigation }) {
   }, [user?.id]);
 
   const handlePress = async (notif) => {
-    // Mark as read
     if (!notif.is_read) {
       await markNotificationRead(notif.id).catch(() => {});
       setNotifs(prev => prev.map(n => n.id === notif.id ? { ...n, is_read: true } : n));
     }
-    // Navigate based on type
     const data = notif.data || {};
     if (notif.type === 'booking' && data.booking_id) {
       navigation.navigate('BookingDetail', { bookingId: data.booking_id });
@@ -80,20 +97,46 @@ export default function NotificationsScreen({ navigation }) {
 
   const unreadCount = notifs.filter(n => !n.is_read).length;
 
+  const sections = useMemo(() => {
+    const groups = [];
+    let lastLabel = null;
+    notifs.forEach((item) => {
+      const label = getDayLabel(item.created_at);
+      if (label !== lastLabel) {
+        groups.push({ type: 'header', id: `h-${label}`, label });
+        lastLabel = label;
+      }
+      groups.push({ type: 'item', ...item });
+    });
+    return groups;
+  }, [notifs]);
+
+  const iconBg = (style) => ({
+    success: 'rgba(34,197,94,0.14)',
+    warning: 'rgba(245,158,11,0.14)',
+    info:    'rgba(59,130,246,0.14)',
+    gold:    'rgba(212,160,23,0.14)',
+  }[style] || 'rgba(59,130,246,0.14)');
+
   const renderItem = ({ item }) => {
+    if (item.type === 'header') {
+      return <Text style={styles.dayLabel}>{item.label}</Text>;
+    }
+
     const config = NOTIF_ICONS[item.type] || NOTIF_ICONS.system;
     const timeAgo = getTimeAgo(item.created_at);
 
     return (
       <TouchableOpacity
-        style={[styles.notifCard, !item.is_read && styles.notifCardUnread]}
+        style={[styles.notifRow, !item.is_read && styles.notifRowUnread]}
         onPress={() => handlePress(item)}
+        activeOpacity={0.85}
       >
-        <View style={[styles.notifIcon, { backgroundColor: `${config.color}15` }]}>
-          <Ionicons name={config.icon} size={20} color={config.color} />
+        <View style={[styles.notifIcon, { backgroundColor: iconBg(config.style) }]}>
+          <Ionicons name={config.icon} size={18} color={config.color} />
         </View>
         <View style={styles.notifContent}>
-          <Text style={[styles.notifTitle, !item.is_read && { fontWeight: '700' }]}>{item.title}</Text>
+          <Text style={[styles.notifTitle, !item.is_read && styles.notifTitleUnread]}>{item.title}</Text>
           <Text style={styles.notifBody} numberOfLines={2}>{item.body}</Text>
           <Text style={styles.notifTime}>{timeAgo}</Text>
         </View>
@@ -104,75 +147,75 @@ export default function NotificationsScreen({ navigation }) {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.safe}>
-        <ActivityIndicator color={GOLD} style={{ marginTop: 80 }} />
+      <SafeAreaView style={styles.safe} edges={['top']}>
+        <StatusBar barStyle="light-content" backgroundColor={Colors.navy} />
+        <ActivityIndicator color={Colors.gold} style={{ marginTop: 80 }} />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <StatusBar barStyle="dark-content" backgroundColor={C.background} />
+    <SafeAreaView style={styles.safe} edges={['top']}>
+      <StatusBar barStyle="light-content" backgroundColor={Colors.navy} />
 
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={22} color={NAVY} />
-        </TouchableOpacity>
-        <Text style={styles.title}>Notifications</Text>
-        {unreadCount > 0 && (
-          <TouchableOpacity onPress={handleMarkAllRead}>
-            <Text style={styles.markAllText}>Mark all read</Text>
+      <View style={styles.topFixed}>
+        <View style={styles.titleRow}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+            <Ionicons name="arrow-back" size={22} color={Colors.white} />
           </TouchableOpacity>
-        )}
+          <Text style={styles.pageTitle}>Notifications</Text>
+          {unreadCount > 0 ? (
+            <TouchableOpacity onPress={handleMarkAllRead}>
+              <Text style={styles.markAllText}>Mark all read</Text>
+            </TouchableOpacity>
+          ) : <View style={{ width: 80 }} />}
+        </View>
       </View>
 
       <FlatList
-        data={notifs}
-        keyExtractor={i => i.id}
+        data={sections}
+        keyExtractor={(i) => i.id || i.type + i.label}
         renderItem={renderItem}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={GOLD} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={Colors.gold} />}
         contentContainerStyle={notifs.length === 0 ? styles.emptyContainer : styles.list}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Ionicons name="notifications-outline" size={52} color={C.border} />
+            <Ionicons name="notifications-outline" size={52} color={Colors.navyLine} />
             <Text style={styles.emptyTitle}>No notifications yet</Text>
             <Text style={styles.emptyText}>You'll see booking updates and messages here</Text>
           </View>
+        }
+        ListFooterComponent={
+          notifs.length > 0 ? (
+            <Text style={styles.footer}>© 2026 WiamApp · Powered by WiamLabs</Text>
+          ) : null
         }
       />
     </SafeAreaView>
   );
 }
 
-function getTimeAgo(dateStr) {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1)  return 'Just now';
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24)  return `${hrs}h ago`;
-  const days = Math.floor(hrs / 24);
-  if (days < 7)  return `${days}d ago`;
-  return new Date(dateStr).toLocaleDateString('en-GH', { day: 'numeric', month: 'short' });
-}
-
 const styles = StyleSheet.create({
-  safe:              { flex: 1, backgroundColor: C.background },
-  header:            { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 16, paddingBottom: 14, gap: 12 },
+  safe:              { flex: 1, backgroundColor: Colors.navy },
+  topFixed:          { paddingHorizontal: PAD, paddingBottom: 8 },
+  titleRow:          { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 4 },
   backBtn:           { padding: 4 },
-  title:             { flex: 1, fontSize: 20, fontWeight: '700', color: NAVY },
-  markAllText:       { fontSize: 13, color: GOLD, fontWeight: '600' },
-  list:              { paddingBottom: 40 },
+  pageTitle:         { flex: 1, fontSize: 20, fontWeight: '700', color: Colors.white },
+  markAllText:       { fontSize: 12, color: Colors.gold, fontWeight: '500' },
+  list:              { paddingHorizontal: PAD, paddingBottom: 40 },
   emptyContainer:    { flex: 1 },
   empty:             { alignItems: 'center', justifyContent: 'center', paddingTop: 80, gap: 10 },
-  emptyTitle:        { fontSize: 16, fontWeight: '600', color: C.textSecondary },
-  emptyText:         { fontSize: 13, color: C.textSecondary, textAlign: 'center', paddingHorizontal: 30 },
-  notifCard:         { flexDirection: 'row', alignItems: 'flex-start', gap: 14, paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: C.border },
-  notifCardUnread:   { backgroundColor: 'rgba(212,160,23,0.04)' },
-  notifIcon:         { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
-  notifContent:      { flex: 1 },
-  notifTitle:        { fontSize: 14, fontWeight: '500', color: NAVY, marginBottom: 3 },
-  notifBody:         { fontSize: 13, color: C.textSecondary, lineHeight: 19 },
-  notifTime:         { fontSize: 11, color: C.textSecondary, marginTop: 5 },
-  unreadDot:         { width: 8, height: 8, borderRadius: 4, backgroundColor: GOLD, marginTop: 4, flexShrink: 0 },
+  emptyTitle:        { fontSize: 16, fontWeight: '600', color: Colors.textDim },
+  emptyText:         { fontSize: 13, color: Colors.textDim, textAlign: 'center', paddingHorizontal: 30 },
+  dayLabel:          { fontSize: 11, fontWeight: '700', letterSpacing: 0.6, color: Colors.textFaint, textTransform: 'uppercase', marginTop: 16, marginBottom: 8, marginLeft: 4 },
+  notifRow:          { flexDirection: 'row', alignItems: 'flex-start', gap: 12, padding: 13, borderRadius: 18, marginBottom: 8, position: 'relative' },
+  notifRowUnread:    { backgroundColor: Colors.navyCard },
+  notifIcon:         { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  notifContent:      { flex: 1, minWidth: 0 },
+  notifTitle:        { fontSize: 13, fontWeight: '600', color: Colors.white, lineHeight: 18 },
+  notifTitleUnread:  { fontWeight: '700' },
+  notifBody:         { fontSize: 12, color: Colors.textDim, lineHeight: 17, marginTop: 3 },
+  notifTime:         { fontSize: 10.5, color: Colors.textFaint, marginTop: 5 },
+  unreadDot:         { position: 'absolute', top: 14, right: 12, width: 7, height: 7, borderRadius: 4, backgroundColor: Colors.gold },
+  footer:            { textAlign: 'center', fontSize: 10, color: '#3A3A56', paddingVertical: 18 },
 });

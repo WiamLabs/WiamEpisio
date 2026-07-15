@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamApp — Search</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); }
+  .statusbar{ height:44px; }
+
+  .topfixed{ padding:0 20px 12px; }
+  .page-title{ font-size:20px; font-weight:700; color:#fff; margin:4px 0 14px; }
+  .search-bar{ display:flex; align-items:center; gap:9px; background:var(--navy-card); border-radius:16px; padding:12px 15px; border:1px solid var(--navy-line); }
+  .search-bar svg{ color:var(--text-faint); width:16px; height:16px; flex-shrink:0; }
+  .search-bar input{ background:none; border:none; outline:none; color:#fff; font-size:13.5px; font-family:inherit; width:100%; }
+  .search-bar input::placeholder{ color:var(--text-faint); }
+  .filter-btn{ width:38px; height:38px; border-radius:12px; background:var(--gold); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+
+  .filter-row{ display:flex; gap:8px; margin-top:12px; overflow-x:auto; }
+  .fchip{ flex-shrink:0; display:flex; align-items:center; gap:6px; padding:8px 13px; border-radius:999px; background:var(--navy-card); border:1px solid var(--navy-line); color:#B8B8CC; font-size:11.5px; font-weight:500; }
+  .fchip.active{ background:rgba(212,160,23,0.12); border-color:var(--gold); color:var(--gold); }
+  .fchip svg{ width:12px; height:12px; }
+
+  .scrollarea{ height:calc(100% - 44px - 128px - 84px); overflow-y:auto; padding:0 20px; }
+  .results-count{ font-size:12px; color:var(--text-faint); margin:4px 0 12px; }
+
+  .worker-row{ display:flex; align-items:center; gap:10px; padding:12px; border-radius:18px; background:var(--navy-card); border:1px solid var(--navy-line); margin-bottom:10px; }
+  .worker-avatar-wrap{ position:relative; flex-shrink:0; }
+  .worker-avatar{ width:50px; height:50px; border-radius:16px; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); display:flex; align-items:center; justify-content:center; color:var(--navy); font-weight:700; font-size:17px; }
+  .online-dot{ position:absolute; bottom:-2px; right:-2px; width:14px; height:14px; border-radius:50%; background:#22C55E; border:2.5px solid var(--navy-card); }
+  .verified-badge{ width:22px; height:22px; border-radius:50%; background:rgba(212,160,23,0.14); border:1px solid rgba(212,160,23,0.35); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .verified-badge svg{ width:12px; height:12px; color:var(--gold); }
+  .worker-info{ flex:1; min-width:0; }
+  .worker-name-row{ display:flex; align-items:center; gap:4px; }
+  .worker-name{ font-size:13.5px; font-weight:600; color:#fff; margin:0; }
+  .worker-cat{ font-size:11.5px; color:var(--text-dim); margin:2px 0 4px; }
+  .worker-meta{ display:flex; align-items:center; gap:10px; }
+  .wm-item{ display:flex; align-items:center; gap:3px; }
+  .wm-item svg{ width:11px; height:11px; color:var(--gold); }
+  .wm-item span{ font-size:11px; color:#B8B8CC; }
+
+  .footer-copy{ text-align:center; font-size:10px; color:#3A3A56; padding:8px 0 20px; }
+
+  .bottomnav{ position:absolute; bottom:0; left:0; right:0; height:84px; background:var(--navy-soft); border-top:1px solid #1C1C38; display:flex; align-items:flex-start; justify-content:space-around; padding-top:12px; }
+  .navitem{ display:flex; flex-direction:column; align-items:center; gap:4px; width:56px; }
+  .navitem span{ font-size:9.5px; color:var(--text-faint); }
+  .navitem.active span{ color:var(--gold); }
+  .navitem svg{ width:19px; height:19px; }
+
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"></div>
+  <div class="topfixed">
+    <p class="page-title">Search</p>
+    <div class="search-bar">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input placeholder="Search electricians, plumbers, braiders..." />
+      <div class="filter-btn"><svg viewBox="0 0 24 24" width="16" height="16" color="#08081A"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg></div>
+    </div>
+    <div class="filter-row">
+      <div class="fchip active"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Available now</div>
+      <div class="fchip"><svg viewBox="0 0 24 24" fill="#D4A017" stroke="none"><polygon points="12 2 15 9 22 9.5 16.5 14.3 18.2 21 12 17.3 5.8 21 7.5 14.3 2 9.5 9 9"/></svg>4.5+ rating</div>
+      <div class="fchip"><svg viewBox="0 0 24 24"><path d="M12 2l2.4 2.6 3.5-.6.6 3.5L21.1 9l-2 3 2 3-3.6 1.5-.6 3.5-3.5-.6L12 22l-2.4-2.6-3.5.6-.6-3.5L2 15l2-3-2-3 3.6-1.5.6-3.5 3.5.6z"/></svg>Verified</div>
+      <div class="fchip"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 12-9 12S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Nearby</div>
+    </div>
+  </div>
+
+  <div class="scrollarea">
+    <p class="results-count">24 workers found near Lashibi</p>
+
+    <div class="worker-row">
+      <div class="worker-avatar-wrap">
+        <div class="worker-avatar">KO</div>
+        <span class="online-dot"></span>
+      </div>
+      <div class="verified-badge">
+        <svg viewBox="0 0 24 24" fill="#D4A017" stroke="none"><path d="M12 2l2.4 2.6 3.5-.6.6 3.5L21.1 9l-2 3 2 3-3.6 1.5-.6 3.5-3.5-.6L12 22l-2.4-2.6-3.5.6-.6-3.5L2 15l2-3-2-3 3.6-1.5.6-3.5 3.5.6z"/><polyline points="8.5 12 11 14.5 15.5 9.5" stroke="#08081A" stroke-width="1.8" fill="none"/></svg>
+      </div>
+      <div class="worker-info">
+        <div class="worker-name-row"><p class="worker-name">Kwabena Owusu</p></div>
+        <p class="worker-cat">Electrician · East Legon</p>
+        <div class="worker-meta">
+          <div class="wm-item"><svg viewBox="0 0 24 24" fill="#D4A017" stroke="none"><polygon points="12 2 15 9 22 9.5 16.5 14.3 18.2 21 12 17.3 5.8 21 7.5 14.3 2 9.5 9 9"/></svg><span>4.9</span></div>
+          <div class="wm-item"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg><span>63 jobs</span></div>
+          <div class="wm-item"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 12-9 12S3 17 3 10a9 9 0 0 1 18 0z"/></svg><span>2.1km</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="worker-row">
+      <div class="worker-avatar-wrap">
+        <div class="worker-avatar">AS</div>
+        <span class="online-dot"></span>
+      </div>
+      <div class="verified-badge">
+        <svg viewBox="0 0 24 24" fill="#D4A017" stroke="none"><path d="M12 2l2.4 2.6 3.5-.6.6 3.5L21.1 9l-2 3 2 3-3.6 1.5-.6 3.5-3.5-.6L12 22l-2.4-2.6-3.5.6-.6-3.5L2 15l2-3-2-3 3.6-1.5.6-3.5 3.5.6z"/><polyline points="8.5 12 11 14.5 15.5 9.5" stroke="#08081A" stroke-width="1.8" fill="none"/></svg>
+      </div>
+      <div class="worker-info">
+        <div class="worker-name-row"><p class="worker-name">Ama Serwaa</p></div>
+        <p class="worker-cat">Braider · Adenta</p>
+        <div class="worker-meta">
+          <div class="wm-item"><svg viewBox="0 0 24 24" fill="#D4A017" stroke="none"><polygon points="12 2 15 9 22 9.5 16.5 14.3 18.2 21 12 17.3 5.8 21 7.5 14.3 2 9.5 9 9"/></svg><span>5.0</span></div>
+          <div class="wm-item"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg><span>128 jobs</span></div>
+          <div class="wm-item"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 12-9 12S3 17 3 10a9 9 0 0 1 18 0z"/></svg><span>5.4km</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="worker-row">
+      <div class="worker-avatar-wrap">
+        <div class="worker-avatar">NY</div>
+      </div>
+      <div class="worker-info">
+        <div class="worker-name-row"><p class="worker-name">Nana Yeboah</p></div>
+        <p class="worker-cat">Mason · Tema</p>
+        <div class="worker-meta">
+          <div class="wm-item"><svg viewBox="0 0 24 24" fill="#D4A017" stroke="none"><polygon points="12 2 15 9 22 9.5 16.5 14.3 18.2 21 12 17.3 5.8 21 7.5 14.3 2 9.5 9 9"/></svg><span>4.6</span></div>
+          <div class="wm-item"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg><span>21 jobs</span></div>
+          <div class="wm-item"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 12-9 12S3 17 3 10a9 9 0 0 1 18 0z"/></svg><span>7.8km</span></div>
+        </div>
+      </div>
+    </div>
+
+    <p class="footer-copy">© 2026 WiamApp · Powered by WiamLabs</p>
+  </div>
+
+  <div class="bottomnav">
+    <div class="navitem" style="color:#5A5A75">
+      <svg viewBox="0 0 24 24" width="19" height="19"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+      <span>Home</span>
+    </div>
+    <div class="navitem active">
+      <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="#D4A017" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <span style="color:#D4A017">Search</span>
+    </div>
+    <div class="navitem" style="color:#5A5A75">
+      <svg viewBox="0 0 24 24" width="19" height="19"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span>Bookings</span>
+    </div>
+    <div class="navitem" style="color:#5A5A75">
+      <svg viewBox="0 0 24 24" width="19" height="19"><path d="M21 11.5a8.4 8.4 0 0 1-8.9 8.4 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7A8.5 8.5 0 0 1 3.5 11 8.4 8.4 0 0 1 12 3a8.4 8.4 0 0 1 9 8.5z"/></svg>
+      <span>Chat</span>
+    </div>
+    <div class="navitem" style="color:#5A5A75">
+      <div style="width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#D4A017,#A07810);display:flex;align-items:center;justify-content:center;color:#08081A;font-size:9px;font-weight:700;">M</div>
+      <span>Profile</span>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

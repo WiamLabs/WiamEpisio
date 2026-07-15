@@ -1,47 +1,39 @@
 // © 2026 WiamApp. Powered by WiamLabs
-// screens/CategoryScreen.js
-// Shows all workers in a specific category with rankings
-// Backend: GET /api/workers?category=&city=&sort=rating
+// screens/CategoryScreen.js — Part 13 Category workers list
 
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, StatusBar, FlatList,
-  ActivityIndicator, Image,
+  ActivityIndicator, ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import VerifiedBadge from '../components/VerifiedBadge';
+import GoldAvatar from '../components/ui/GoldAvatar';
+import { Colors } from '../constants/colors';
 
-const BG      = '#FFFFFF';
-const NAVY    = '#0D0D2B';
-const GOLD    = '#D4A017';
-const GOLD_BG = 'rgba(212,160,23,0.10)';
-const BORDER  = '#EBEBEB';
-const MUTED   = '#888899';
+const PAD = Colors.screenPad;
 const BACKEND = process.env.EXPO_PUBLIC_BACKEND_URL;
 
-const RANK_ICONS = ['trophy', 'medal', 'medal'];
-const RANK_COLORS = ['#D4A017', '#C0C0C0', '#CD7F32'];
+const SORTS = [
+  { id: 'rating', label: 'Top rated' },
+  { id: 'jobs', label: 'Most jobs' },
+  { id: 'trust', label: 'WiamTrust' },
+  { id: 'online', label: 'Online now' },
+  { id: 'price_asc', label: 'Price ↑' },
+];
 
 export default function CategoryScreen({ navigation, route }) {
   const { categoryId, categoryName } = route?.params || {};
-  const [workers,  setWorkers]  = useState([]);
-  const [loading,  setLoading]  = useState(true);
-  const [sort,     setSort]     = useState('rating');
-
-  const SORTS = [
-    { id: 'rating',    label: 'Top Rated' },
-    { id: 'jobs',      label: 'Most Jobs' },
-    { id: 'trust',     label: 'WiamTrust' },
-    { id: 'online',    label: 'Online Now' },
-    { id: 'price_asc', label: 'Price ↑' },
-  ];
+  const [workers, setWorkers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [sort, setSort] = useState('rating');
 
   useEffect(() => {
     const fetchWorkers = async () => {
       setLoading(true);
       try {
-        const res  = await fetch(`${BACKEND}/api/workers?category=${categoryId}&sort=${sort}&limit=30`);
+        const res = await fetch(`${BACKEND}/api/workers?category=${categoryId}&sort=${sort}&limit=30`);
         const data = await res.json();
         setWorkers(data.data || []);
       } catch {
@@ -53,162 +45,188 @@ export default function CategoryScreen({ navigation, route }) {
     fetchWorkers();
   }, [categoryId, sort]);
 
-  const renderWorker = ({ item, index }) => (
+  const sortLabel = SORTS.find((s) => s.id === sort)?.label || 'Top rated';
+
+  const cycleSort = () => {
+    const idx = SORTS.findIndex((s) => s.id === sort);
+    setSort(SORTS[(idx + 1) % SORTS.length].id);
+  };
+
+  const renderWorker = ({ item }) => (
     <TouchableOpacity
-      style={s.workerRow}
+      style={styles.workerCard}
       onPress={() => navigation.navigate('WorkerProfile', { workerId: item.id })}
       activeOpacity={0.85}
     >
-      {/* Rank badge for top 3 */}
-      <View style={s.rankWrap}>
-        {index < 3
-          ? <Ionicons name={RANK_ICONS[index]} size={16} color={RANK_COLORS[index]} />
-          : <Text style={s.rankNum}>{index + 1}</Text>
-        }
-      </View>
-
-      {/* Avatar */}
-      <View style={s.avatarWrap}>
-        {item.users?.avatar_url
-          ? <Image source={{ uri: item.users.avatar_url }} style={s.avatar} />
-          : <View style={[s.avatar, s.avatarFallback]}>
-              <Text style={s.avatarInitial}>{item.users?.full_name?.[0]?.toUpperCase() || 'W'}</Text>
+      <GoldAvatar
+        name={item.users?.full_name}
+        uri={item.users?.avatar_url}
+        size={50}
+        online={!!item.is_online}
+      />
+      {item.verified_badge ? (
+        <View style={styles.verifiedWrap}>
+          <VerifiedBadge color="blue" size={14} />
+        </View>
+      ) : null}
+      <View style={styles.workerInfo}>
+        <Text style={styles.workerName} numberOfLines={1}>{item.users?.full_name}</Text>
+        <Text style={styles.workerCat}>{item.users?.city || 'Accra'}</Text>
+        <View style={styles.workerMeta}>
+          <View style={styles.metaItem}>
+            <Ionicons name="star" size={11} color={Colors.gold} />
+            <Text style={styles.metaText}>{item.average_rating?.toFixed(1) || '–'}</Text>
+          </View>
+          <View style={styles.metaItem}>
+            <Ionicons name="checkmark" size={11} color={Colors.gold} />
+            <Text style={styles.metaText}>{item.total_jobs_done || 0} jobs</Text>
+          </View>
+          {item.eligibility_score > 0 ? (
+            <View style={styles.metaItem}>
+              <Ionicons name="trophy-outline" size={11} color={Colors.gold} />
+              <Text style={styles.metaText}>{Math.round(item.eligibility_score)}</Text>
             </View>
-        }
-        {item.is_online && <View style={s.onlineDot} />}
-      </View>
-
-      {/* Info */}
-      <View style={s.info}>
-        <View style={s.nameRow}>
-          <Text style={s.name} numberOfLines={1}>{item.users?.full_name}</Text>
-          {item.verified_badge && (
-            <VerifiedBadge color="blue" size={13} />
-          )}
+          ) : null}
         </View>
-        <Text style={s.city}>{item.users?.city}</Text>
-        <View style={s.statsRow}>
-          <Ionicons name="star" size={11} color={GOLD} />
-          <Text style={s.rating}>{item.average_rating?.toFixed(1) || '–'}</Text>
-          <Text style={s.dot}>·</Text>
-          <Text style={s.jobs}>{item.total_jobs_done || 0} jobs</Text>
-          {item.eligibility_score > 0 && (
-            <>
-              <Text style={s.dot}>·</Text>
-              <Ionicons name="trophy-outline" size={10} color={GOLD} />
-              <Text style={s.trust}>{Math.round(item.eligibility_score)}</Text>
-            </>
-          )}
-        </View>
-      </View>
-
-      {/* Rate */}
-      <View style={s.rateWrap}>
-        <Text style={s.rate}>{item.currency || 'GHS'} {item.hourly_rate || '–'}</Text>
-        <Text style={s.rateLabel}>/hr</Text>
       </View>
     </TouchableOpacity>
   );
 
   return (
-    <SafeAreaView style={s.safe}>
-      <StatusBar barStyle="dark-content" backgroundColor={BG} />
+    <SafeAreaView style={styles.safe} edges={['top']}>
+      <StatusBar barStyle="light-content" backgroundColor={Colors.navy} />
 
-      {/* Header */}
-      <View style={s.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={s.backBtn}>
-          <Ionicons name="arrow-back" size={22} color={NAVY} />
-        </TouchableOpacity>
-        <Text style={s.title}>{categoryName}</Text>
-        <TouchableOpacity onPress={() => navigation.navigate('Search', { categoryId })}>
-          <Ionicons name="search-outline" size={22} color={NAVY} />
-        </TouchableOpacity>
-      </View>
-
-      {/* Sort pills */}
-      <View style={s.sortRow}>
-        {SORTS.map(opt => (
-          <TouchableOpacity
-            key={opt.id}
-            style={[s.sortPill, sort === opt.id && s.sortPillActive]}
-            onPress={() => setSort(opt.id)}
-          >
-            <Text style={[s.sortPillText, sort === opt.id && s.sortPillTextActive]}>
-              {opt.label}
-            </Text>
+      <View style={styles.topFixed}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+            <Ionicons name="chevron-back" size={17} color={Colors.white} />
           </TouchableOpacity>
-        ))}
+          <Text style={styles.title} numberOfLines={1}>{categoryName}</Text>
+          <TouchableOpacity onPress={() => navigation.navigate('Search', { categoryId })} style={styles.searchBtn}>
+            <Ionicons name="search-outline" size={18} color={Colors.white} />
+          </TouchableOpacity>
+        </View>
+
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.sortChips}>
+          {SORTS.map((opt) => (
+            <TouchableOpacity
+              key={opt.id}
+              style={[styles.subtypeChip, sort === opt.id && styles.subtypeChipActive]}
+              onPress={() => setSort(opt.id)}
+            >
+              <Text style={[styles.subtypeText, sort === opt.id && styles.subtypeTextActive]}>
+                {opt.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
       </View>
 
-      {/* Workers list */}
+      <View style={styles.sortRow}>
+        <Text style={styles.resultsCount}>
+          {workers.length} {categoryName?.toLowerCase() || 'workers'} found
+        </Text>
+        <TouchableOpacity style={styles.sortBtn} onPress={cycleSort}>
+          <Ionicons name="options-outline" size={13} color={Colors.gold} />
+          <Text style={styles.sortBtnText}>Sort: {sortLabel}</Text>
+        </TouchableOpacity>
+      </View>
+
       {loading ? (
-        <ActivityIndicator color={GOLD} style={{ marginTop: 40 }} />
+        <ActivityIndicator color={Colors.gold} style={{ marginTop: 40 }} />
       ) : workers.length === 0 ? (
-        <View style={s.empty}>
-          <Ionicons name="people-outline" size={48} color="#DDD" />
-          <Text style={s.emptyText}>No workers in {categoryName} yet</Text>
+        <View style={styles.empty}>
+          <Ionicons name="people-outline" size={48} color={Colors.navyLine} />
+          <Text style={styles.emptyText}>No workers in {categoryName} yet</Text>
         </View>
       ) : (
         <FlatList
           data={workers}
-          keyExtractor={w => w.id}
+          keyExtractor={(w) => w.id}
           renderItem={renderWorker}
-          ItemSeparatorComponent={() => <View style={s.separator} />}
-          contentContainerStyle={{ paddingBottom: 20 }}
+          contentContainerStyle={styles.list}
+          ListFooterComponent={
+            <Text style={styles.footer}>© 2026 WiamApp · Powered by WiamLabs</Text>
+          }
         />
       )}
     </SafeAreaView>
   );
 }
 
-const s = StyleSheet.create({
-  safe:    { flex: 1, backgroundColor: BG },
-  header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 16, paddingVertical: 14,
-    borderBottomWidth: 0.5, borderBottomColor: BORDER,
+const styles = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: Colors.navy },
+  topFixed: { paddingHorizontal: PAD, paddingBottom: 12 },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 },
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.navyCard,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  backBtn: { width: 36 },
-  title:   { color: NAVY, fontSize: 17, fontWeight: '700' },
-
+  title: { flex: 1, fontSize: 17, fontWeight: '700', color: Colors.white },
+  searchBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.navyCard,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sortChips: { gap: 8 },
+  subtypeChip: {
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 999,
+    backgroundColor: Colors.navyCard,
+    borderWidth: 1,
+    borderColor: Colors.navyLine,
+  },
+  subtypeChipActive: { backgroundColor: Colors.gold, borderColor: Colors.gold },
+  subtypeText: { fontSize: 12, fontWeight: '500', color: '#B8B8CC' },
+  subtypeTextActive: { color: Colors.navy, fontWeight: '700' },
   sortRow: {
-    flexDirection: 'row', gap: 8, paddingHorizontal: 16,
-    paddingVertical: 10, borderBottomWidth: 0.5, borderBottomColor: BORDER,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: PAD,
+    paddingTop: 14,
+    paddingBottom: 6,
   },
-  sortPill:          { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, backgroundColor: '#F5F5F8', borderWidth: 0.5, borderColor: BORDER },
-  sortPillActive:    { backgroundColor: NAVY },
-  sortPillText:      { color: MUTED, fontSize: 12 },
-  sortPillTextActive:{ color: '#FFF', fontWeight: '600' },
-
-  workerRow: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 16, paddingVertical: 12, gap: 10,
+  resultsCount: { fontSize: 12, color: Colors.textFaint },
+  sortBtn: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  sortBtnText: { fontSize: 12, color: Colors.gold, fontWeight: '600' },
+  list: { paddingHorizontal: PAD, paddingBottom: 28 },
+  workerCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    padding: 12,
+    borderRadius: 18,
+    backgroundColor: Colors.navyCard,
+    borderWidth: 1,
+    borderColor: Colors.navyLine,
+    marginBottom: 10,
   },
-  rankWrap:   { width: 28, alignItems: 'center' },
-  rankNum:    { color: MUTED, fontSize: 13, fontWeight: '600' },
-  avatarWrap: { position: 'relative' },
-  avatar:     { width: 50, height: 50, borderRadius: 13 },
-  avatarFallback: { backgroundColor: GOLD_BG, alignItems: 'center', justifyContent: 'center' },
-  avatarInitial:  { color: GOLD, fontSize: 18, fontWeight: '700' },
-  onlineDot: {
-    width: 10, height: 10, borderRadius: 5,
-    backgroundColor: '#22C55E', borderWidth: 2, borderColor: BG,
-    position: 'absolute', bottom: 0, right: 0,
+  verifiedWrap: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: 'rgba(212,160,23,0.14)',
+    borderWidth: 1,
+    borderColor: 'rgba(212,160,23,0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  info:     { flex: 1 },
-  nameRow:  { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 },
-  name:     { color: NAVY, fontSize: 14, fontWeight: '600', flex: 1 },
-  badge:    { fontSize: 12 },
-  city:     { color: MUTED, fontSize: 11, marginBottom: 3 },
-  statsRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  rating:   { color: NAVY, fontSize: 11, fontWeight: '600' },
-  dot:      { color: MUTED, fontSize: 11 },
-  jobs:     { color: MUTED, fontSize: 11 },
-  trust:    { color: '#EF4444', fontSize: 11, fontWeight: '600' },
-  rateWrap: { alignItems: 'flex-end' },
-  rate:     { color: GOLD, fontSize: 14, fontWeight: '700' },
-  rateLabel:{ color: MUTED, fontSize: 10 },
-  separator:{ height: 0.5, backgroundColor: BORDER, marginLeft: 80 },
-  empty:    { flex: 1, alignItems: 'center', justifyContent: 'center', paddingBottom: 80 },
-  emptyText:{ color: MUTED, fontSize: 15, marginTop: 14 },
+  workerInfo: { flex: 1, minWidth: 0 },
+  workerName: { fontSize: 13.5, fontWeight: '600', color: Colors.white },
+  workerCat: { fontSize: 11.5, color: Colors.textDim, marginTop: 2, marginBottom: 4 },
+  workerMeta: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  metaItem: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  metaText: { fontSize: 11, color: '#B8B8CC' },
+  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingBottom: 80 },
+  emptyText: { color: Colors.textDim, fontSize: 15, marginTop: 14 },
+  footer: { textAlign: 'center', fontSize: 10, color: '#3A3A56', paddingVertical: 12 },
 });

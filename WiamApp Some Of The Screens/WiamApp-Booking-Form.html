@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamApp — Booking Form</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); }
+  .statusbar{ height:44px; }
+
+  .header{ display:flex; align-items:center; gap:12px; padding:0 20px 14px; }
+  .back-btn{ width:36px; height:36px; border-radius:50%; background:var(--navy-card); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .header h1{ font-size:17px; font-weight:700; color:#fff; margin:0; }
+
+  .scrollarea{ height:calc(100% - 44px - 58px - 100px); overflow-y:auto; padding:0 20px; }
+
+  .worker-mini{ display:flex; align-items:center; gap:11px; background:var(--navy-card); border:1px solid var(--navy-line); border-radius:16px; padding:12px; margin-bottom:20px; }
+  .worker-mini-avatar{ width:38px; height:38px; border-radius:50%; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); display:flex; align-items:center; justify-content:center; color:var(--navy); font-weight:700; font-size:14px; }
+  .worker-mini-name{ font-size:13px; font-weight:600; color:#fff; margin:0; }
+  .worker-mini-role{ font-size:11px; color:var(--text-dim); margin:1px 0 0; }
+
+  .field-group{ margin-bottom:18px; }
+  .field-label{ font-size:12.5px; font-weight:600; color:#fff; margin:0 0 8px; display:block; }
+  .field-box{
+    background:var(--navy-card); border:1px solid var(--navy-line); border-radius:14px;
+    padding:12px 14px; display:flex; align-items:center; gap:10px;
+  }
+  .field-box svg{ color:var(--gold); flex-shrink:0; width:16px; height:16px; }
+  .field-box input, .field-box textarea{
+    background:none; border:none; outline:none; color:#fff; font-size:13px;
+    font-family:inherit; width:100%; resize:none;
+  }
+  .field-box input::placeholder, .field-box textarea::placeholder{ color:var(--text-faint); }
+  textarea.field-box{ align-items:flex-start; }
+
+  .row-2{ display:flex; gap:10px; }
+  .row-2 .field-group{ flex:1; }
+
+  .budget-hint{ font-size:11px; color:var(--text-faint); margin:6px 2px 0; }
+
+  .chip-select{ display:flex; gap:8px; flex-wrap:wrap; }
+  .time-chip{
+    padding:9px 14px; border-radius:12px; background:var(--navy-card); border:1px solid var(--navy-line);
+    font-size:12px; color:#B8B8CC; cursor:pointer;
+  }
+  .time-chip.selected{ background:var(--gold); color:var(--navy); border-color:var(--gold); font-weight:600; }
+
+  .footer-copy{ text-align:center; font-size:10px; color:#3A3A56; padding:6px 0 20px; }
+
+  .submitbar{
+    position:absolute; bottom:0; left:0; right:0; height:100px; background:var(--navy-soft);
+    border-top:1px solid #1C1C38; display:flex; flex-direction:column; justify-content:center; padding:0 20px;
+  }
+  .submit-btn{ padding:14px; border-radius:16px; background:var(--gold); color:var(--navy); font-size:14px; font-weight:700; border:none; cursor:pointer; }
+  .submit-note{ text-align:center; font-size:10.5px; color:var(--text-faint); margin:8px 0 0; }
+
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"></div>
+
+  <div class="header">
+    <div class="back-btn"><svg viewBox="0 0 24 24" width="17" height="17" color="#fff"><polyline points="15 18 9 12 15 6"/></svg></div>
+    <h1>Book a Service</h1>
+  </div>
+
+  <div class="scrollarea">
+    <div class="worker-mini">
+      <div class="worker-mini-avatar">KO</div>
+      <div>
+        <p class="worker-mini-name">Kwabena Owusu</p>
+        <p class="worker-mini-role">Electrician · East Legon</p>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label">What do you need done?</label>
+      <div class="field-box" style="align-items:flex-start;">
+        <svg viewBox="0 0 24 24" style="margin-top:2px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <textarea rows="3" placeholder="e.g. Full house rewiring for a 3-bedroom home, some sockets not working"></textarea>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label">Location</label>
+      <div class="field-box">
+        <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 12-9 12S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <input placeholder="Lashibi, Greater Accra" value="Lashibi, Greater Accra" />
+      </div>
+    </div>
+
+    <div class="row-2">
+      <div class="field-group">
+        <label class="field-label">Date</label>
+        <div class="field-box">
+          <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <input placeholder="Tomorrow" />
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Preferred time</label>
+        <div class="field-box">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <input placeholder="2:00 PM" />
+        </div>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label">Time of day</label>
+      <div class="chip-select">
+        <div class="time-chip">Morning</div>
+        <div class="time-chip selected">Afternoon</div>
+        <div class="time-chip">Evening</div>
+        <div class="time-chip">Flexible</div>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label">Your budget (GHS)</label>
+      <div class="field-box">
+        <svg viewBox="0 0 24 24"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg>
+        <input placeholder="450" value="450" />
+      </div>
+      <p class="budget-hint">Kwabena's listed rate starts from GHS 150. Final price is agreed together in chat.</p>
+    </div>
+
+    <p class="footer-copy">© 2026 WiamApp · Powered by WiamLabs</p>
+  </div>
+
+  <div class="submitbar">
+    <button class="submit-btn">Send Booking Request</button>
+    <p class="submit-note">Kwabena has 2 hours to accept — you won't be charged yet</p>
+  </div>
+</div>
+
+</body>
+</html>

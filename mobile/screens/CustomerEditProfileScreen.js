@@ -11,33 +11,42 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
+import { Colors } from '../constants/colors';
 import { useAuth } from '../lib/AuthContext';
 import { supabase } from '../lib/supabase';
 import { uploadImage } from '../lib/api/uploads';
 import { confirmLocationSetup } from '../lib/locationWarning';
 import { reverseGeocodePlace } from '../lib/reverseGeocode';
+import GoldAvatar from '../components/ui/GoldAvatar';
 
-const NAVY = '#0D0D2B';
-const GOLD = '#D4A017';
-const WHITE = '#FFFFFF';
-const MUTED = '#888899';
-const BORDER = '#EBEBEB';
-const GOLD_BG = 'rgba(212,160,23,0.10)';
-const GOLD_BD = 'rgba(212,160,23,0.35)';
+const PAD = Colors.screenPad;
+
+function FieldGroup({ label, icon, children, locked, note }) {
+  return (
+    <View style={s.fieldGroup}>
+      <Text style={s.fieldLabel}>{label}</Text>
+      <View style={[s.fieldBox, locked && s.fieldBoxLocked]}>
+        {icon ? <Ionicons name={icon} size={15} color={Colors.gold} /> : null}
+        {children}
+      </View>
+      {note ? <Text style={s.lockNote}>{note}</Text> : null}
+    </View>
+  );
+}
 
 export default function CustomerEditProfileScreen({ navigation }) {
   const { user, refreshUser } = useAuth();
 
   const [fullName, setFullName] = useState(user?.full_name || '');
-  const [phone,    setPhone]    = useState(user?.phone || '');
-  const [city,     setCity]     = useState(user?.city || '');
+  const [phone, setPhone] = useState(user?.phone || '');
+  const [city, setCity] = useState(user?.city || '');
   const [avatarUrl, setAvatarUrl] = useState(user?.avatar_url || null);
-  const [coverUrl,  setCoverUrl]  = useState(user?.cover_url || null);
-  const [coords,   setCoords]   = useState(null);
+  const [coverUrl, setCoverUrl] = useState(user?.cover_url || null);
+  const [coords, setCoords] = useState(null);
   const [locating, setLocating] = useState(false);
-  const [saving,   setSaving]   = useState(false);
+  const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
-  const [uploadingCover,  setUploadingCover]  = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
 
   const pickAndUpload = async (aspect, setLocalUrl, setUploading, folder) => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -58,10 +67,7 @@ export default function CustomerEditProfileScreen({ navigation }) {
       const url = await uploadImage(result.assets[0].uri, folder);
       setLocalUrl(url);
     } catch (e) {
-      Alert.alert(
-        'Could not upload your photo',
-        'Check your internet connection and try again.'
-      );
+      Alert.alert('Could not upload your photo', 'Check your internet connection and try again.');
       console.warn('Upload error:', e.message);
     } finally {
       setUploading(false);
@@ -86,21 +92,12 @@ export default function CustomerEditProfileScreen({ navigation }) {
       const { latitude, longitude, accuracy } = pos.coords;
       setCoords({ latitude, longitude });
       const place = await reverseGeocodePlace(latitude, longitude, { countryCode: 'GH' });
-      // Prefer district/city from GhanaPost; keep coords always
-      const cityLabel = place.city
-        || place.district
-        || place.landmark
-        || `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
+      const cityLabel = place.city || place.district || place.landmark || `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
       setCity(
-        place.digitalAddress
-          ? `${cityLabel} (${place.digitalAddress})`
-          : cityLabel
+        place.digitalAddress ? `${cityLabel} (${place.digitalAddress})` : cityLabel,
       );
       if (typeof accuracy === 'number' && accuracy > 150) {
-        Alert.alert(
-          'Weak GPS',
-          'Location accuracy is low. Edit the city if it looks wrong, or go outdoors and try again.',
-        );
+        Alert.alert('Weak GPS', 'Location accuracy is low. Edit the city if it looks wrong.');
       }
     } catch {
       Alert.alert('Location failed', 'Turn on GPS and try again, or type your city.');
@@ -129,7 +126,6 @@ export default function CustomerEditProfileScreen({ navigation }) {
         .eq('id', user.id);
 
       if (error) throw error;
-
       if (refreshUser) await refreshUser();
       Alert.alert('Saved', 'Your profile has been updated.', [
         { text: 'OK', onPress: () => navigation.goBack() },
@@ -142,132 +138,163 @@ export default function CustomerEditProfileScreen({ navigation }) {
   };
 
   return (
-    <SafeAreaView style={s.safe}>
-      <StatusBar barStyle="light-content" backgroundColor={NAVY} />
+    <SafeAreaView style={s.safe} edges={['top']}>
+      <StatusBar barStyle="light-content" backgroundColor={Colors.navy} />
+
       <View style={s.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={s.backBtn}>
-          <Ionicons name="arrow-back" size={22} color={WHITE} />
+        <TouchableOpacity style={s.backBtn} onPress={() => navigation.goBack()}>
+          <Ionicons name="chevron-back" size={20} color={Colors.white} />
         </TouchableOpacity>
         <Text style={s.headerTitle}>Edit Profile</Text>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
-
-        {/* Cover photo */}
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scroll}>
         <TouchableOpacity
-          style={s.coverWrap}
-          onPress={() => pickAndUpload([16, 9], setCoverUrl, setUploadingCover, 'covers')}
+          style={s.avatarEdit}
+          onPress={() => pickAndUpload([1, 1], setAvatarUrl, setUploadingAvatar, 'avatars')}
           activeOpacity={0.85}
         >
-          {coverUrl
-            ? <Image source={{ uri: coverUrl }} style={s.coverImage} />
-            : <View style={s.coverPlaceholder} />
-          }
-          <View style={s.coverEditBadge}>
-            {uploadingCover
-              ? <ActivityIndicator color={WHITE} size="small" />
-              : <Ionicons name="camera" size={16} color={WHITE} />
-            }
-          </View>
-
-          {/* Avatar overlaps the bottom of the cover */}
-          <TouchableOpacity
-            style={s.avatarWrap}
-            onPress={() => pickAndUpload([1, 1], setAvatarUrl, setUploadingAvatar, 'avatars')}
-          >
-            {avatarUrl
-              ? <Image source={{ uri: avatarUrl }} style={s.avatar} />
-              : <View style={[s.avatar, s.avatarFallback]}>
-                  <Text style={s.avatarInitial}>{(fullName || 'C')[0]?.toUpperCase()}</Text>
-                </View>
-            }
-            <View style={s.avatarEditBadge}>
-              {uploadingAvatar
-                ? <ActivityIndicator color={WHITE} size="small" />
-                : <Ionicons name="camera" size={13} color={WHITE} />
-              }
+          <View style={s.avatarWrap}>
+            {avatarUrl ? (
+              <Image source={{ uri: avatarUrl }} style={s.avatarImage} />
+            ) : (
+              <GoldAvatar name={fullName} size={84} />
+            )}
+            <View style={s.camBadge}>
+              {uploadingAvatar ? (
+                <ActivityIndicator color={Colors.navy} size="small" />
+              ) : (
+                <Ionicons name="camera" size={13} color={Colors.navy} />
+              )}
             </View>
-          </TouchableOpacity>
+          </View>
+          <Text style={s.changePhoto}>Change photo</Text>
         </TouchableOpacity>
 
-        <View style={s.form}>
-          <Text style={s.label}>Full Name *</Text>
-          <TextInput style={s.input} value={fullName} onChangeText={setFullName} placeholder="Your name" placeholderTextColor={MUTED} />
+        <FieldGroup label="Full name" icon="person-outline">
+          <TextInput
+            style={s.fieldInput}
+            value={fullName}
+            onChangeText={setFullName}
+            placeholder="Your name"
+            placeholderTextColor={Colors.textFaint}
+          />
+        </FieldGroup>
 
-          <Text style={s.label}>Phone Number</Text>
-          <TextInput style={s.input} value={phone} onChangeText={setPhone} placeholder="+233 XX XXX XXXX" placeholderTextColor={MUTED} keyboardType="phone-pad" />
+        <FieldGroup label="Email address" icon="mail-outline" locked note="Contact support to change your email">
+          <Text style={s.disabledText}>{user?.email}</Text>
+        </FieldGroup>
 
-          <Text style={s.label}>City</Text>
-          <TextInput style={s.input} value={city} onChangeText={setCity} placeholder="e.g. Accra" placeholderTextColor={MUTED} />
-          <TouchableOpacity style={s.locBtn} onPress={useMyLocation} disabled={locating}>
-            <Ionicons name={coords ? 'checkmark-circle' : 'locate-outline'} size={16} color={coords ? '#22C55E' : GOLD} />
-            <Text style={[s.locBtnText, coords && { color: '#22C55E' }]}>
-              {locating ? 'Getting GPS…' : coords ? 'Service location updated ✓' : 'Use my current location'}
-            </Text>
-          </TouchableOpacity>
+        <FieldGroup label="Phone number" icon="call-outline">
+          <TextInput
+            style={s.fieldInput}
+            value={phone}
+            onChangeText={setPhone}
+            placeholder="+233 XX XXX XXXX"
+            placeholderTextColor={Colors.textFaint}
+            keyboardType="phone-pad"
+          />
+        </FieldGroup>
 
-          <Text style={s.label}>Email</Text>
-          <View style={[s.input, s.inputDisabled]}>
-            <Text style={s.disabledText}>{user?.email}</Text>
-          </View>
-          <Text style={s.hint}>Email can't be changed here. Contact support if you need to update it.</Text>
+        <FieldGroup label="City / Location" icon="location-outline">
+          <TextInput
+            style={s.fieldInput}
+            value={city}
+            onChangeText={setCity}
+            placeholder="e.g. Accra"
+            placeholderTextColor={Colors.textFaint}
+          />
+        </FieldGroup>
 
-          <TouchableOpacity
-            style={[s.saveBtn, saving && { opacity: 0.7 }]}
-            onPress={handleSave}
-            disabled={saving || uploadingAvatar || uploadingCover}
-          >
-            {saving
-              ? <ActivityIndicator color={NAVY} />
-              : <Text style={s.saveBtnText}>Save Changes</Text>
-            }
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity style={s.locBtn} onPress={useMyLocation} disabled={locating}>
+          <Ionicons name={coords ? 'checkmark-circle' : 'locate-outline'} size={16} color={coords ? Colors.success : Colors.gold} />
+          <Text style={[s.locBtnText, coords && { color: Colors.success }]}>
+            {locating ? 'Getting GPS…' : coords ? 'Service location updated ✓' : 'Use my current location'}
+          </Text>
+        </TouchableOpacity>
 
-        <View style={{ height: 40 }} />
+        <TouchableOpacity
+          style={s.coverBtn}
+          onPress={() => pickAndUpload([16, 9], setCoverUrl, setUploadingCover, 'covers')}
+        >
+          {uploadingCover ? (
+            <ActivityIndicator color={Colors.gold} />
+          ) : (
+            <>
+              <Ionicons name="image-outline" size={16} color={Colors.gold} />
+              <Text style={s.coverBtnText}>{coverUrl ? 'Change cover photo' : 'Add cover photo (optional)'}</Text>
+            </>
+          )}
+        </TouchableOpacity>
+
+        <Text style={s.footerCopy}>© 2026 WiamApp · Powered by WiamLabs</Text>
       </ScrollView>
+
+      <View style={s.saveBar}>
+        <TouchableOpacity
+          style={[s.saveBtn, (saving || uploadingAvatar || uploadingCover) && { opacity: 0.7 }]}
+          onPress={handleSave}
+          disabled={saving || uploadingAvatar || uploadingCover}
+        >
+          {saving ? (
+            <ActivityIndicator color={Colors.navy} />
+          ) : (
+            <Text style={s.saveBtnText}>Save Changes</Text>
+          )}
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 }
 
 const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: WHITE },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: NAVY, paddingHorizontal: 16, paddingVertical: 14 },
-  backBtn: { padding: 2 },
-  headerTitle: { color: WHITE, fontSize: 17, fontWeight: '700' },
-
-  coverWrap: { height: 150, backgroundColor: '#EAEAEE', position: 'relative', marginBottom: 50 },
-  coverImage: { width: '100%', height: '100%', resizeMode: 'cover' },
-  coverPlaceholder: { width: '100%', height: '100%', backgroundColor: NAVY },
-  coverEditBadge: {
-    position: 'absolute', top: 12, right: 12, width: 32, height: 32, borderRadius: 16,
-    backgroundColor: 'rgba(13,13,43,0.65)', alignItems: 'center', justifyContent: 'center',
+  safe: { flex: 1, backgroundColor: Colors.navy },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: PAD, paddingBottom: 14 },
+  backBtn: {
+    width: 36, height: 36, borderRadius: 18,
+    backgroundColor: Colors.navyCard, alignItems: 'center', justifyContent: 'center',
   },
-  avatarWrap: {
-    position: 'absolute', bottom: -45, left: 20, width: 90, height: 90, borderRadius: 45,
-    borderWidth: 4, borderColor: WHITE, backgroundColor: WHITE,
-  },
-  avatar: { width: '100%', height: '100%', borderRadius: 45, resizeMode: 'cover' },
-  avatarFallback: { alignItems: 'center', justifyContent: 'center', backgroundColor: NAVY },
-  avatarInitial: { color: GOLD, fontSize: 30, fontWeight: '700' },
-  avatarEditBadge: {
+  headerTitle: { fontSize: 17, fontWeight: '700', color: Colors.white },
+  scroll: { paddingHorizontal: PAD, paddingBottom: 110 },
+  avatarEdit: { alignItems: 'center', marginBottom: 22 },
+  avatarWrap: { position: 'relative', width: 84, height: 84 },
+  avatarImage: { width: 84, height: 84, borderRadius: 42, borderWidth: 3, borderColor: Colors.navyLine },
+  camBadge: {
     position: 'absolute', bottom: 0, right: 0, width: 28, height: 28, borderRadius: 14,
-    backgroundColor: GOLD, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: WHITE,
+    backgroundColor: Colors.gold, borderWidth: 3, borderColor: Colors.navy,
+    alignItems: 'center', justifyContent: 'center',
   },
-
-  form: { paddingHorizontal: 20 },
-  label: { fontSize: 12.5, fontWeight: '700', color: NAVY, marginBottom: 7, marginTop: 16 },
-  input: { backgroundColor: '#F6F6F8', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 13, fontSize: 15, color: NAVY, borderWidth: 1, borderColor: BORDER },
+  changePhoto: { fontSize: 12, color: Colors.gold, fontWeight: '600', marginTop: 10 },
+  fieldGroup: { marginBottom: 16 },
+  fieldLabel: { fontSize: 12, fontWeight: '600', color: '#B8B8CC', marginBottom: 8 },
+  fieldBox: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    backgroundColor: Colors.navyCard, borderWidth: 1, borderColor: Colors.navyLine,
+    borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12,
+  },
+  fieldBoxLocked: { opacity: 0.6 },
+  fieldInput: { flex: 1, color: Colors.white, fontSize: 13 },
+  disabledText: { flex: 1, color: Colors.textDim, fontSize: 13 },
+  lockNote: { fontSize: 10.5, color: Colors.textFaint, marginTop: 4 },
   locBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    borderWidth: 1, borderColor: GOLD_BD, backgroundColor: GOLD_BG,
-    borderRadius: 10, paddingVertical: 12, marginTop: 10,
+    borderWidth: 1, borderColor: 'rgba(212,160,23,0.35)', backgroundColor: 'rgba(212,160,23,0.08)',
+    borderRadius: 14, paddingVertical: 12, marginBottom: 12,
   },
-  locBtnText: { color: GOLD, fontSize: 13.5, fontWeight: '600' },
-  inputDisabled: { backgroundColor: '#F0F0F2' },
-  disabledText: { fontSize: 15, color: MUTED },
-  hint: { fontSize: 11.5, color: MUTED, marginTop: 6 },
-
-  saveBtn: { backgroundColor: GOLD, borderRadius: 12, paddingVertical: 15, alignItems: 'center', marginTop: 28 },
-  saveBtnText: { color: NAVY, fontSize: 15, fontWeight: '700' },
+  locBtnText: { color: Colors.gold, fontSize: 13.5, fontWeight: '600' },
+  coverBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    paddingVertical: 12, marginBottom: 8,
+  },
+  coverBtnText: { color: Colors.gold, fontSize: 13, fontWeight: '600' },
+  footerCopy: { textAlign: 'center', fontSize: 10, color: '#3A3A56', marginTop: 16 },
+  saveBar: {
+    position: 'absolute', bottom: 0, left: 0, right: 0,
+    backgroundColor: Colors.navySoft, borderTopWidth: 1, borderTopColor: '#1C1C38',
+    paddingHorizontal: PAD, paddingVertical: 16,
+  },
+  saveBtn: {
+    backgroundColor: Colors.gold, borderRadius: 16, paddingVertical: 14, alignItems: 'center',
+  },
+  saveBtnText: { color: Colors.navy, fontSize: 14, fontWeight: '700' },
 });
