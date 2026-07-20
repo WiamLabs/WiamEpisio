@@ -1,0 +1,8 @@
+# Optional WiamEpisio season QC toolkit — install on a worker host, not required for API boot.
+# Main Render image keeps requirements.txt lean so deploys do not OOM/fail on opencv.
+opencv-python-headless==4.10.0.84
+numpy==1.26.4
+scenedetect[opencv]==0.6.4
+webrtcvad==2.0.10
+ImageHash==4.3.1
+# Host also needs: ffmpeg + ffprobe (libvmaf for Netflix VMAF when available)

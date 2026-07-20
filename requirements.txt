@@ -29,10 +29,4 @@ cloudinary==1.40.0
 bleach==6.1.0
 boto3==1.35.99
 
-# WiamEpisio season QC toolkit (install on API/worker host that runs review jobs)
-opencv-python-headless==4.10.0.84
-numpy==1.26.4
-scenedetect[opencv]==0.6.4
-webrtcvad==2.0.10
-ImageHash==4.3.1
-# Also on the host: ffmpeg + ffprobe with libvmaf (Netflix VMAF) if available
+# Optional QC toolkit: see requirements-qc.txt (kept out of Render boot image)
