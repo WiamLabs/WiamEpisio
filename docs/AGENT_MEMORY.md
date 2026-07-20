@@ -2,7 +2,9 @@
 
 Living journal the AI agent reads at the start of every session and updates as work progresses. Mutable — overwrite freely. Durable project facts live in `.cursor/rules/project-context.mdc` instead.
 
-**Last updated:** 2026-07-20 — **Creator/Watcher mood:** Profile Apply → Switch to Creator Mood (HTML switch interstitial). Creator mood replaces bottom nav (Home/Series/Analytics/Earnings/Profile). Channel edit only in Studio Profile. StudioHome rebuilt from WiamStudio-Home.html. Series create keyboard avoid fixed.
+**Last updated:** 2026-07-20 — **Standing order from Martin:** after finishing meaningful work, **commit + push to `master`** so Render auto-deploys. Do not leave shippable Episio/webapp changes only local.
+
+**Previous — Account delete auth + RLS SQL + hide CDN names in delete UI.** Creator/Watcher mood, media crop, episode preview also on `b428fef`.
 
 **Previous — Genres DB-driven + Origin split + FX + comments.**
 
