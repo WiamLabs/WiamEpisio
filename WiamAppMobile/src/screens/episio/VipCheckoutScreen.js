@@ -1,5 +1,5 @@
 /**
- * WiamEpisio-VIP-Checkout.html — plan picker → Paystack via CheckoutWeb.
+ * WiamEpisio-VIP-Checkout.html — plan picker → in-app payment.
  * Plans from route.params.plans or GET /vip/plans.
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';

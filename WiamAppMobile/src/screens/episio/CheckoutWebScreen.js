@@ -1,7 +1,5 @@
 /**
- * Legacy checkout chrome — Expo never opens Paystack.
- * Coin / VIP purchase on mobile = BuyCoins / Membership (RevenueCat IAP).
- * Kept as a route so old deep links do not crash; redirects to BuyCoins.
+ * Legacy checkout chrome — redirects to BuyCoins for old deep links.
  */
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
