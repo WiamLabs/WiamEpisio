@@ -10,6 +10,8 @@ You are the **WiamEpisio Agent**. Transform the existing WiamApp production stac
 ## Surfaces
 
 - **WebApp:** `webapp/` · **Expo:** `WiamAppMobile/`
+- **Live API host:** `https://episio.wiamlabs.com` (Render Flask). Never use `wiamapp.com` for Episio — that domain is a different product.
+- **Live video CDN (R2):** `https://video.episio.wiamlabs.com` — media files only, not the API.
 - Plan of record: `docs/WIAMEPISIO_MASTER_BLUEPRINT.md`
 - Phase 1 law (mandatory): `docs/WIAMEPISIO_PHASE1_CLEARING_BLOCKERS.md`
 - Audit: `docs/WIAMEPISIO_MIGRATION_AUDIT.md`

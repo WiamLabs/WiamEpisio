@@ -16,8 +16,10 @@ Persistent facts that survive across sessions. Read this first, then read `docs/
 ## Repo layout
 
 - Repo root: `C:\WiamLight` (Windows host, PowerShell shell — quote paths, prefer `curl.exe` over `curl`).
-- Backend: `webapp/` (Flask) → deployed to **Render** at `https://wiamapp.com`. DB is Postgres via `DATABASE_URL` (server-side only). **Production host = Supabase Postgres** (project `evwxgyiadhdsorqcpptc`) per Render env; **Neon is the legacy backup** — do NOT trust the committed `.env.render` (it points at the old Neon URL and the password there is leaked, must be rotated). Always verify the live host on Render before assuming. NOTE: `api.wiamapp.com` subdomain DNS is broken (resolves to 127.0.0.1) — all mobile traffic uses `wiamapp.com` directly.
-- Mobile app 1: `WiamAppMobile/` — Expo app, package `com.wiamapp.mobile`, deep-link host `wiamapp.com`, scheme `wiamapp`.
+- Backend: `webapp/` (Flask) → Render service custom domain **`https://episio.wiamlabs.com`** (NOT `wiamapp.com` — that host is a separate workers marketplace product).
+- Video CDN (Cloudflare R2 public media): **`https://video.episio.wiamlabs.com`** (`CLOUDFLARE_R2_PUBLIC_BASE_URL`). This is storage/CDN only — not the Flask API.
+- DB is Postgres via `DATABASE_URL` (server-side only). **Production host = Supabase Postgres** (project `evwxgyiadhdsorqcpptc`) per Render env; **Neon is the legacy backup**.
+- Mobile: `WiamAppMobile/` — Expo Episio app; API `https://episio.wiamlabs.com/api/v1`.
 - Mobile app 2: `WiamVoxMobile/` — Expo app, package `com.wiamlabs.wiamvox`, scheme `wiamvox`.
 - QA pipeline: `.github/workflows/qa-enterprise-ceo-rest-mode.yml` — cost-engineered for the 2000-min/month GitHub Actions free tier (every-2h cron, 3 jobs total). Do NOT add jobs without budgeting minutes first.
 - Bot: `scripts/qa/comprehensive_bot.py` (38-probe schedule-only QA bot).
@@ -25,15 +27,12 @@ Persistent facts that survive across sessions. Read this first, then read `docs/
 ## Build & release tooling
 
 - Mobile builds use **EAS Build** (cloud, not local). Invoke with `npx eas-cli ...` (already cached). Production builds: `eas build --profile production --platform android|ios`.
-- `WiamAppMobile/app.json` currently has placeholder `extra.eas.projectId: "wiamapp-mobile"` — `eas init` rewrites this to a real UUID on first run.
 - Mobile Play Store flow is documented in `WiamAppMobile/docs/PLAY_RELEASE_CHECKLIST.md`. Don't duplicate that checklist; track progress against it in `docs/AGENT_MEMORY.md`.
 - EAS build commands and local dev setup: `WiamAppMobile/docs/EXPO_BUILD.md`.
 
 ## Conventions
 
 - Don't break the QA workflow's free-tier budget (~1640m/month current, ~360m headroom). New scheduled jobs cost ~30 × runs/day minutes/month.
-- Production API base in mobile apps is `https://wiamapp.com/api/v1` (set via `EXPO_PUBLIC_API_URL` in `eas.json` per profile). The `api.wiamapp.com` subdomain is broken (DNS→127.0.0.1); do NOT use it.
-- The QA workflow's `playstore-readiness` step is the source of truth for "does WiamApp still pass static Play gates" — keep `app.json` aligned with it.
-- Privacy policy: `https://wiamapp.com/privacy` (must stay 200). Terms: `https://wiamapp.com/terms`.
+- **WiamEpisio production API:** `https://episio.wiamlabs.com/api/v1` (`EXPO_PUBLIC_API_URL` in eas.json). Never point Episio at `wiamapp.com`.
 - **Email roles:** `SUPPORT_EMAIL` (default `support@wiamapp.com`) = users / public policy / Play. `COMPANY_EMAIL` (default `labs@wiamapp.com`) = team accounts, QA dashboards, internal ops. Override via env on Render if needed.
-- **Deploy:** Pushing to GitHub (`master` on the connected repo) backs up the codebase and **Render deploys from that Git connection automatically**—do not add duplicate “trigger deploy” workflows unless auto-deploy is disabled in the Render dashboard.
+- **Deploy (Episio Flask on Render):** GitHub branches `episio-flask-deploy` / `master` @ latest ship. Auto-deploy may be OFF — verify in Render dashboard and use **Manual Deploy** if needed. Probe live with `https://episio.wiamlabs.com/health` and `/api/v1/episio/media-specs` — never `wiamapp.com`.
