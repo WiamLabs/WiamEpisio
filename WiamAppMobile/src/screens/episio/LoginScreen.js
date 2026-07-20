@@ -16,6 +16,7 @@ import EpisioGoldButton from '../../components/episio/EpisioGoldButton';
 import authApi from '../../api/auth';
 import useAuthStore from '../../store/useAuthStore';
 import { GoogleSignInSlot } from '../../services/googleAuth';
+import { nextSignupGate } from '../../utils/authMembership';
 
 const LoginScreen = () => {
   const insets = useSafeAreaInsets();
@@ -35,6 +36,24 @@ const LoginScreen = () => {
 
   const finishAuth = async (data) => {
     await setAuth(data.user, data.token);
+    const gate = nextSignupGate(data.user);
+    if (gate === 'VerifyMethod') {
+      navigation.replace('VerifyMethod', {
+        fromRegister: true,
+        email: data.user?.email,
+        dateOfBirth: data.user?.date_of_birth,
+        sticky: true,
+      });
+      return;
+    }
+    if (gate === 'AgeGate') {
+      navigation.replace('AgeGate', {
+        fromRegister: true,
+        dateOfBirth: data.user?.date_of_birth,
+        sticky: true,
+      });
+      return;
+    }
     if (returnTo) {
       navigation.replace(returnTo, returnParams);
       return;

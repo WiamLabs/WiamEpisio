@@ -13,13 +13,13 @@ import EpisioGoldButton from '../../components/episio/EpisioGoldButton';
 import { COLORS, FONTS } from '../../constants/theme';
 import studioEpisioApi from '../../api/studioEpisio';
 import resolveUrl from '../../utils/resolveUrl';
-import { pickCroppedImage } from '../../utils/pickMedia';
+import { pickImageAsIs } from '../../utils/pickMedia';
 
 const CHECKS = [
-  '2:3 portrait ratio',
+  '2:3 portrait ratio (upload your full flyer)',
   'Resolution above 600×900',
   'No embedded text or logos',
-  'File under 5 MB',
+  'File under 5 MB — system validates size/ratio',
 ];
 
 const TIPS = [
@@ -44,10 +44,15 @@ const StudioCoverScreen = () => {
     try {
       const d = await studioEpisioApi.getSeries(seriesId);
       setSeries(d?.series);
-      const url = resolveUrl(d?.series?.cover_url || d?.series?.poster_url);
+      const url = d?.series?.has_cover
+        ? resolveUrl(d?.series?.cover_url || d?.series?.poster_url)
+        : null;
       if (url) {
         setPreviewUri(url);
         setPass(true);
+      } else {
+        setPreviewUri(null);
+        setPass(false);
       }
     } finally {
       setLoading(false);
@@ -57,7 +62,7 @@ const StudioCoverScreen = () => {
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
   const pickCover = async () => {
-    const uri = await pickCroppedImage([2, 3]);
+    const uri = await pickImageAsIs();
     if (!uri) return;
     setBusy(true);
     try {
@@ -91,7 +96,7 @@ const StudioCoverScreen = () => {
           <View style={styles.stepSeg} />
         </View>
         <Text style={styles.title}>Add your cover</Text>
-        <Text style={styles.sub}>This is what viewers see first on Home.</Text>
+        <Text style={styles.sub}>Upload your full 2:3 flyer — no crop. We validate size and ratio on upload.</Text>
       </View>
 
       {loading ? (

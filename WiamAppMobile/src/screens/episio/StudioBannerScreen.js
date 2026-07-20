@@ -13,7 +13,7 @@ import EpisioGoldButton from '../../components/episio/EpisioGoldButton';
 import { COLORS, FONTS } from '../../constants/theme';
 import studioEpisioApi from '../../api/studioEpisio';
 import resolveUrl from '../../utils/resolveUrl';
-import { pickCroppedImage } from '../../utils/pickMedia';
+import { pickImageAsIs } from '../../utils/pickMedia';
 
 const WHERE_USED = [
   { icon: BarChart2, text: 'Home page hero carousel, when your series is featured by the team' },
@@ -36,10 +36,13 @@ const StudioBannerScreen = () => {
     try {
       const d = await studioEpisioApi.getSeries(seriesId);
       setSeries(d?.series);
-      const url = resolveUrl(d?.series?.banner_url);
+      const url = d?.series?.has_banner ? resolveUrl(d?.series?.banner_url) : null;
       if (url) {
         setPreviewUri(url);
         setPass(true);
+      } else {
+        setPreviewUri(null);
+        setPass(false);
       }
     } finally {
       setLoading(false);
@@ -49,7 +52,7 @@ const StudioBannerScreen = () => {
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
   const pickBanner = async () => {
-    const uri = await pickCroppedImage('banner');
+    const uri = await pickImageAsIs();
     if (!uri) return;
     setBusy(true);
     try {
@@ -81,7 +84,8 @@ const StudioBannerScreen = () => {
         <ActivityIndicator color={COLORS.gold} style={{ marginTop: 40 }} />
       ) : (
         <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 20 }}>
-          <Text style={styles.optionalTag}>OPTIONAL</Text>
+          <Text style={styles.optionalTag}>OPTIONAL · 16:9</Text>
+          <Text style={styles.uploadHint}>Upload your full wide flyer — no crop. We validate size and ratio on upload.</Text>
 
           <View style={styles.bannerPreview}>
             {previewUri ? (
@@ -139,7 +143,10 @@ const styles = StyleSheet.create({
   optionalTag: {
     alignSelf: 'flex-start', fontSize: 9.5, fontFamily: FONTS.extraBold, color: COLORS.gold,
     backgroundColor: 'rgba(212,160,23,0.14)', paddingHorizontal: 9, paddingVertical: 3,
-    borderRadius: 6, marginBottom: 14, overflow: 'hidden',
+    borderRadius: 6, marginBottom: 8, overflow: 'hidden',
+  },
+  uploadHint: {
+    fontSize: 11.5, fontFamily: FONTS.regular, color: COLORS.textDim, lineHeight: 17, marginBottom: 14,
   },
   bannerPreview: {
     width: '100%', aspectRatio: 16 / 9, borderRadius: 16, overflow: 'hidden',

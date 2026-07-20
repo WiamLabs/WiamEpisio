@@ -4,7 +4,7 @@
  */
 import React, { useCallback, useState } from 'react';
 import {
-  View, Text, StyleSheet, ActivityIndicator, TouchableOpacity,
+  View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, Alert,
 } from 'react-native';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import { Check, X } from 'lucide-react-native';
@@ -53,12 +53,28 @@ const StudioCompletenessScreen = () => {
   const canSubmit = !!data?.can_submit;
   const canLock = !!data?.can_lock;
   const series = data?.series;
+  const unit = series?.unit_label || (series?.structure_mode === 'season' ? 'season' : 'series');
+  const unitCap = unit.charAt(0).toUpperCase() + unit.slice(1);
   const blocked = gates.find((g) => !g.ok);
   const blockedCount = gates.filter((g) => !g.ok).length;
   const ringPct = total ? Math.min(100, (green / total) * 100) : 0;
 
   const onFix = (gate) => {
     if (!gate || gate.ok) return;
+    if (gate.key === 'rights' || gate.fix === 'rights') {
+      Alert.alert(
+        'Confirm rights',
+        'Confirm you own or have licensed all content before lock. Open your series hub to confirm rights.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Open hub',
+            onPress: () => navigation.navigate('StudioSeriesDetail', { seriesId }),
+          },
+        ],
+      );
+      return;
+    }
     const r = fixRoute(gate, seriesId);
     navigation.navigate(r.name, r.params);
   };
@@ -73,13 +89,13 @@ const StudioCompletenessScreen = () => {
   const ctaLabel = canSubmit
     ? 'Submit for Live'
     : canLock
-      ? 'Lock complete season'
+      ? `Lock complete ${unit}`
       : 'Fix blocking items';
 
   return (
     <EpisioScreenShell
       title="Completeness Check"
-      subtitle={series?.title || 'Series'}
+      subtitle={series?.title || unitCap}
       footer={(
         <>
           <EpisioGoldButton

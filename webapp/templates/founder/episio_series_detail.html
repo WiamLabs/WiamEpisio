@@ -54,6 +54,36 @@
       <p style="margin-top:14px;"><a href="{{ url_for('founder_dash.episio_quality') }}" style="color:var(--gold);">Season QC queue →</a></p>
       {% endif %}
     </div>
+
+    <div class="dash-card" style="margin-top:16px;">
+      <h3>Review media</h3>
+      <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:12px;">
+        Preview trailer and episode uploads while this unit is under review. Signed URLs expire after ~1 hour.
+      </p>
+      {% if trailer_playback %}
+      <div style="margin-bottom:16px;">
+        <p style="font-size:0.85rem;font-weight:700;margin-bottom:6px;">Trailer</p>
+        <video controls playsinline preload="metadata" style="width:100%;max-width:320px;border-radius:10px;background:#000;" src="{{ trailer_playback }}"></video>
+      </div>
+      {% else %}
+      <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:14px;">No trailer uploaded yet.</p>
+      {% endif %}
+      {% if episode_media %}
+      <p style="font-size:0.85rem;font-weight:700;margin-bottom:8px;">Episodes</p>
+      {% for row in episode_media %}
+      <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,0.06);">
+        <p style="font-size:0.8rem;margin-bottom:6px;">
+          EP {{ row.episode.episode_number }} — {{ row.episode.title }}
+          · {{ row.episode.transcode_status or '—' }}
+          · QC {{ row.episode.asset_qc_status or '—' }}
+        </p>
+        <video controls playsinline preload="metadata" style="width:100%;max-width:320px;border-radius:10px;background:#000;" src="{{ row.playback_url }}"></video>
+      </div>
+      {% endfor %}
+      {% else %}
+      <p style="font-size:0.82rem;color:var(--text-muted);">No episode video files ready for preview.</p>
+      {% endif %}
+    </div>
   </div>
   <div class="col-lg-7">
     <div class="dash-card">

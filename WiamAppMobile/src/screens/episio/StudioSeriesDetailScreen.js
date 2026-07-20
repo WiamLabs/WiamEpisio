@@ -67,34 +67,44 @@ const StudioSeriesDetailScreen = () => {
     }
   };
 
-  const pickImage = async (kind) => {
-    const { pickCroppedImage } = await import('../../utils/pickMedia');
-    const uri = await pickCroppedImage(kind === 'banner' ? 'banner' : [2, 3]);
-    if (!uri) return;
-    if (kind === 'banner') {
-      await run('banner', () => studioEpisioApi.uploadBanner(seriesId, uri));
-    } else {
-      await run('cover', () => studioEpisioApi.uploadCover(seriesId, uri));
-    }
-  };
-
   const series = data?.series;
   const readiness = data?.readiness;
   const locked = !!series?.season_locked;
   const fixOpen = !!series?.fix_window_open;
   const state = series?.pipeline_state || 'building';
-  const poster = resolveUrl(series?.poster_url || series?.cover_url);
+  const hasCover = !!series?.has_cover;
+  const hasBanner = !!series?.has_banner;
+  const poster = hasCover ? resolveUrl(series?.poster_url || series?.cover_url) : null;
   const gatesGreen = readiness?.gates_green || 0;
   const gatesTotal = readiness?.gates_total || 0;
 
   const unit = series?.unit_label || (series?.structure_mode === 'season' ? 'season' : 'series');
+
+  const confirmRights = () => {
+    if (series?.rights_confirmed) {
+      Alert.alert('Rights confirmed', 'You already confirmed ownership for this series.');
+      return;
+    }
+    Alert.alert(
+      'Confirm rights',
+      'I confirm I own or have licensed all content in this series, including music and likeness.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Confirm',
+          onPress: () => run('rights', () => studioEpisioApi.patchSeries(seriesId, { rights_confirmed: true })),
+        },
+      ],
+    );
+  };
+
   const hubActions = [
     { key: 'episodes', label: 'Episodes', detail: `${series?.ready_episodes || 0}/${series?.planned_episode_count || 0} ready · ${series?.final_episodes || 0} final`, onPress: () => navigation.navigate('StudioEpisodeList', { seriesId }) },
     { key: 'trailer', label: 'Trailer + QA', detail: `Status: ${series?.trailer_qa_status || 'none'}`, onPress: () => navigation.navigate('StudioTrailer', { seriesId }) },
     { key: 'teaser', label: 'Teaser public preview', detail: 'How soft-interest viewers see you', onPress: () => navigation.navigate('StudioTeaserPreview', { seriesId }) },
-    { key: 'cover', label: 'Cover (2:3)', detail: series?.cover_url ? 'Uploaded' : 'Required', onPress: () => navigation.navigate('StudioCover', { seriesId }), disabled: locked && !fixOpen },
-    { key: 'banner', label: 'Banner / hero', detail: series?.banner_url ? 'Uploaded' : 'Add banner', onPress: () => navigation.navigate('StudioBanner', { seriesId }), disabled: locked && !fixOpen },
-    { key: 'rights', label: 'Confirm rights', detail: series?.rights_confirmed ? 'Confirmed' : 'Required before lock', onPress: () => run('rights', () => studioEpisioApi.patchSeries(seriesId, { rights_confirmed: true })), busyKey: 'rights' },
+    { key: 'cover', label: 'Cover (2:3)', detail: hasCover ? 'Uploaded' : 'Required', onPress: () => navigation.navigate('StudioCover', { seriesId }), disabled: locked && !fixOpen },
+    { key: 'banner', label: 'Banner / hero', detail: hasBanner ? 'Uploaded' : 'Add banner', onPress: () => navigation.navigate('StudioBanner', { seriesId }), disabled: locked && !fixOpen },
+    { key: 'rights', label: 'Confirm rights', detail: series?.rights_confirmed ? 'Confirmed' : 'Required before lock', onPress: confirmRights, busyKey: 'rights' },
     { key: 'complete', label: 'Completeness gate', detail: `${gatesGreen}/${gatesTotal} green`, onPress: () => navigation.navigate('StudioCompleteness', { seriesId }) },
     { key: 'lock', label: locked ? `${unit} locked ✓` : `Lock complete ${unit}`, detail: locked ? 'Before live: Needs Changes. After live: Revision Request (legal/rights/factual)' : 'Irreversible commitment to the WiamEpisio team', onPress: () => navigation.navigate('StudioSeasonLock', { seriesId }) },
     { key: 'soft', label: 'Soft interest', detail: 'Followers / Remind-me before our team spends review time', onPress: () => navigation.navigate('StudioSoftInterest', { seriesId }) },

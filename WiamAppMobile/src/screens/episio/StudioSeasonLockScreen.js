@@ -46,9 +46,18 @@ const StudioSeasonLockScreen = () => {
       Alert.alert('Confirm first', 'Check the box to confirm this is the complete story.');
       return;
     }
+    if (!canLock) {
+      Alert.alert(
+        'Not ready',
+        `Upload all ${planned} planned episodes before locking (${ready} ready).`,
+      );
+      return;
+    }
     setBusy(true);
     try {
-      await studioEpisioApi.lockSeason(seriesId, { confirm: true, rights_confirmed: true });
+      const payload = { confirm: true };
+      if (series?.rights_confirmed) payload.rights_confirmed = true;
+      await studioEpisioApi.lockSeason(seriesId, payload);
       navigation.replace('StudioSoftInterest', { seriesId });
     } catch (e) {
       Alert.alert('Cannot lock yet', e?.data?.message || e?.message || 'Finish all gates first.');
@@ -60,7 +69,12 @@ const StudioSeasonLockScreen = () => {
 
   const planned = series?.planned_episode_count || 0;
   const ready = series?.ready_episodes || 0;
-  const poster = resolveUrl(series?.poster_url || series?.cover_url);
+  const unit = series?.unit_label || (series?.structure_mode === 'season' ? 'season' : 'series');
+  const unitCap = unit.charAt(0).toUpperCase() + unit.slice(1);
+  const canLock = planned > 0 && ready >= planned;
+  const poster = series?.has_cover
+    ? resolveUrl(series?.poster_url || series?.cover_url)
+    : null;
 
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
@@ -68,7 +82,7 @@ const StudioSeasonLockScreen = () => {
         <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.goBack()}>
           <ChevronLeft size={15} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.h1}>Confirm Complete Season</Text>
+        <Text style={styles.h1}>Confirm Complete {unitCap}</Text>
       </View>
 
       {loading ? <ActivityIndicator color={COLORS.gold} style={{ marginTop: 40 }} /> : (
@@ -80,7 +94,7 @@ const StudioSeasonLockScreen = () => {
               </View>
               <Text style={styles.heroTitle}>Is this the complete story?</Text>
               <Text style={styles.heroSub}>
-                Once you lock this season,{' '}
+                Once you lock this {unit},{' '}
                 <Text style={{ color: '#fff', fontFamily: FONTS.bold }}>you cannot edit or remove episodes</Text>
                 . This keeps every promise WiamEpisio makes to viewers — every series here has an ending.
               </Text>
@@ -106,14 +120,14 @@ const StudioSeasonLockScreen = () => {
                 <AlertTriangle size={16} color="#E4573D" />
                 <Text style={styles.warningTitleText}>This cannot be undone</Text>
               </View>
-              <Text style={styles.warningItem}>No new episodes can be added to this season after locking</Text>
+              <Text style={styles.warningItem}>No new episodes can be added to this {unit} after locking</Text>
               <Text style={styles.warningItem}>Existing episodes can't be replaced or removed directly</Text>
               <Text style={styles.warningItem}>Fixes only happen through a Revision Request, reviewed on just the change</Text>
             </View>
 
             <View style={styles.afterCard}>
               <Text style={styles.afterTitle}>After locking</Text>
-              <Text style={styles.afterItem}>Your season enters full QC — trailer + every episode + cover/banner — then founder publishes on the website</Text>
+              <Text style={styles.afterItem}>Your {unit} enters full QC — trailer + every episode + cover/banner — then founder publishes on the website</Text>
               <Text style={styles.afterItem}>Earnings only begin once it's live</Text>
             </View>
 
@@ -135,11 +149,16 @@ const StudioSeasonLockScreen = () => {
 
           <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 16) }]}>
             <EpisioGoldButton
-              label="Lock Season & Continue"
+              label={`Lock ${unitCap} & Continue`}
               onPress={lock}
               loading={busy}
-              disabled={!checked}
+              disabled={!checked || !canLock}
             />
+            {!canLock && planned > 0 ? (
+              <Text style={styles.lockHint}>
+                Upload all {planned} episodes first ({ready} ready).
+              </Text>
+            ) : null}
             <TouchableOpacity onPress={() => navigation.goBack()}>
               <Text style={styles.btnCancel}>Not yet — I need to add more episodes</Text>
             </TouchableOpacity>
@@ -207,6 +226,10 @@ const styles = StyleSheet.create({
   },
   btnLockText: { fontSize: 15, fontFamily: FONTS.extraBold, color: COLORS.navy },
   btnCancel: { textAlign: 'center', color: COLORS.textDim, fontFamily: FONTS.semi, fontSize: 12.5, paddingVertical: 13 },
+  lockHint: {
+    textAlign: 'center', color: '#E0A79A', fontFamily: FONTS.regular, fontSize: 11.5,
+    marginTop: 8, lineHeight: 17,
+  },
 });
 
 export default StudioSeasonLockScreen;

@@ -679,7 +679,10 @@ def _run_safe_migrations(app):
         # Enhanced profile fields
         """ALTER TABLE users ADD COLUMN IF NOT EXISTS bio TEXT""",
         """ALTER TABLE users ADD COLUMN IF NOT EXISTS date_of_birth DATE""",
+        """ALTER TABLE users ADD COLUMN IF NOT EXISTS age_confirmed_at TIMESTAMP""",
         """ALTER TABLE users ADD COLUMN IF NOT EXISTS dob_visible BOOLEAN DEFAULT FALSE""",
+        """ALTER TABLE users ADD COLUMN IF NOT EXISTS privacy_show_email BOOLEAN DEFAULT FALSE""",
+        """ALTER TABLE users ADD COLUMN IF NOT EXISTS privacy_show_phone BOOLEAN DEFAULT FALSE""",
         """ALTER TABLE users ADD COLUMN IF NOT EXISTS pronouns TEXT""",
         """ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT""",
         """ALTER TABLE users ADD COLUMN IF NOT EXISTS account_region TEXT""",

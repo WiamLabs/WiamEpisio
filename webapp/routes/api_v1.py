@@ -272,12 +272,19 @@ def _me_json(user):
     # Extended profile fields for Account tab
     data['phone'] = user.phone or ''
     data['date_of_birth'] = user.date_of_birth.isoformat() if getattr(user, 'date_of_birth', None) else None
+    data['age_confirmed'] = bool(getattr(user, 'age_confirmed_at', None))
+    data['age_confirmed_at'] = (
+        user.age_confirmed_at.isoformat() if getattr(user, 'age_confirmed_at', None) else None
+    )
     data['dob_visible'] = bool(getattr(user, 'dob_visible', False))
+    data['privacy_show_email'] = bool(getattr(user, 'privacy_show_email', False))
+    data['privacy_show_phone'] = bool(getattr(user, 'privacy_show_phone', False))
     data['pronouns'] = getattr(user, 'pronouns', None) or ''
     data['show_pronouns'] = bool(getattr(user, 'show_pronouns', False))
     data['account_region'] = getattr(user, 'account_region', None) or ''
     data['two_factor_enabled'] = bool(getattr(user, 'two_factor_enabled', False))
     data['notif_sound'] = getattr(user, 'notif_sound', 'chime') or 'chime'
+    data['username'] = getattr(user, 'username', None) or ''
     return data
 
 
@@ -403,6 +410,7 @@ def health_email():
     """Report whether outbound email credentials are configured (no secrets)."""
     from ..services.email_service import email_delivery_configured, _cfg
     resend = bool((_cfg('RESEND_API_KEY') or '').strip())
+    brevo = bool((_cfg('BREVO_API_KEY') or _cfg('SENDINBLUE_API_KEY') or '').strip())
     smtp = bool(
         (_cfg('SMTP_HOST') or '').strip()
         and (_cfg('SMTP_USER') or '').strip()
@@ -412,8 +420,9 @@ def health_email():
     return jsonify({
         'ok': ok,
         'resend_configured': resend,
+        'brevo_configured': brevo,
         'smtp_configured': smtp,
-        'hint': None if ok else 'Set RESEND_API_KEY (+ RESEND_FROM) or SMTP_* on the host',
+        'hint': None if ok else 'Set RESEND_API_KEY and/or BREVO_API_KEY (or SMTP_*) on the host',
     }), (200 if ok else 503)
 
 
@@ -839,6 +848,33 @@ def auth_send_verify_code():
         log.exception('send-verify-code failed for user_id=%s', getattr(user, 'id', None))
         return jsonify({'error': 'Could not send verification email. Try again shortly.'}), 502
     return jsonify({'ok': True, 'message': 'Verification code sent', 'email': email})
+
+
+@api_v1.route('/auth/confirm-age', methods=['POST'])
+@jwt_required
+def auth_confirm_age():
+    """Persist age confirmation after sticky AgeGate (must match registration DOB age)."""
+    user = request.api_user
+    data = request.get_json(silent=True) or {}
+    typed = data.get('age')
+    try:
+        typed_age = int(typed)
+    except (TypeError, ValueError):
+        return jsonify({'error': 'Enter your age in years'}), 400
+    if typed_age < 18:
+        return jsonify({'error': 'WiamEpisio is for viewers 18 and older'}), 403
+    if typed_age > 120:
+        return jsonify({'error': 'Enter a valid age'}), 400
+    dob = getattr(user, 'date_of_birth', None)
+    if not dob:
+        return jsonify({'error': 'Date of birth missing from your account — complete registration again'}), 400
+    today = date.today()
+    expected = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+    if typed_age != expected:
+        return jsonify({'error': 'That age does not match the date of birth you gave at sign-up'}), 400
+    user.age_confirmed_at = datetime.utcnow()
+    db.session.commit()
+    return jsonify({'ok': True, 'user': _me_json(user)})
 
 
 @api_v1.route('/auth/verify-email', methods=['POST'])
@@ -6411,6 +6447,8 @@ def user_settings():
             'show_reading_activity': bool(getattr(user, 'privacy_show_reading_activity', True)),
             'show_library': bool(getattr(user, 'privacy_show_library', True)),
             'show_favorites': bool(getattr(user, 'privacy_show_favorites', False)),
+            'show_email': bool(getattr(user, 'privacy_show_email', False)),
+            'show_phone': bool(getattr(user, 'privacy_show_phone', False)),
         },
     })
 
@@ -6475,6 +6513,10 @@ def update_user_settings():
         'show_reading_activity': 'privacy_show_reading_activity',
         'show_library': 'privacy_show_library',
         'show_favorites': 'privacy_show_favorites',
+        'show_email': 'privacy_show_email',
+        'show_phone': 'privacy_show_phone',
+        'privacy_show_email': 'privacy_show_email',
+        'privacy_show_phone': 'privacy_show_phone',
     }
     for in_key, col in _PRIVACY_KEYS.items():
         if in_key in data:

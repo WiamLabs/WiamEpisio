@@ -14,6 +14,7 @@ import { COLORS, FONTS } from '../../constants/theme';
 import LogoBadge from '../../components/episio/LogoBadge';
 import EpisioGoldButton from '../../components/episio/EpisioGoldButton';
 import useAuthStore from '../../store/useAuthStore';
+import authApi from '../../api/auth';
 
 const MIN_AGE = 18;
 
@@ -33,6 +34,7 @@ const AgeGateScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const user = useAuthStore((s) => s.user);
+  const patchUser = useAuthStore((s) => s.patchUser);
   const sticky = route.params?.sticky !== false;
   const dob = route.params?.dateOfBirth
     || user?.date_of_birth
@@ -103,12 +105,16 @@ const AgeGateScreen = () => {
 
     setBusy(true);
     try {
-      /* age confirmed against registration DOB */
+      const data = await authApi.confirmAge(typed);
+      if (data?.user) await patchUser(data.user);
+      else await patchUser({ age_confirmed: true, age_confirmed_at: new Date().toISOString() });
+      setDone(true);
+      navigation.replace('Main');
+    } catch (e) {
+      setError(typeof e === 'string' ? e : (e?.message || 'Could not confirm age'));
     } finally {
       setBusy(false);
     }
-    setDone(true);
-    navigation.replace('Main');
   };
 
   return (

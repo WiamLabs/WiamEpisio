@@ -2,12 +2,17 @@ import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Easing, Image } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { COLORS, FONTS } from '../../constants/theme';
+import useAuthStore from '../../store/useAuthStore';
+import { nextSignupGate } from '../../utils/authMembership';
 
 /** Splash uses the transparent / black-plate logo on brand navy. */
 const SplashScreen = ({ navigation }) => {
   const pulse = useRef(new Animated.Value(1)).current;
   const load = useRef(new Animated.Value(0)).current;
   const pop = useRef(new Animated.Value(0.4)).current;
+  const user = useAuthStore((s) => s.user);
+  const token = useAuthStore((s) => s.token);
+  const isLoading = useAuthStore((s) => s.isLoading);
 
   useEffect(() => {
     Animated.spring(pop, { toValue: 1, friction: 5, tension: 80, useNativeDriver: true }).start();
@@ -26,11 +31,33 @@ const SplashScreen = ({ navigation }) => {
       }),
     ).start();
 
+    if (isLoading) return undefined;
+
     const t = setTimeout(() => {
+      if (token && user) {
+        const gate = nextSignupGate(user);
+        if (gate === 'VerifyMethod') {
+          navigation.replace('VerifyMethod', {
+            fromRegister: true,
+            email: user.email,
+            dateOfBirth: user.date_of_birth,
+            sticky: true,
+          });
+          return;
+        }
+        if (gate === 'AgeGate') {
+          navigation.replace('AgeGate', {
+            fromRegister: true,
+            dateOfBirth: user.date_of_birth,
+            sticky: true,
+          });
+          return;
+        }
+      }
       navigation.replace('Main');
     }, 1600);
     return () => clearTimeout(t);
-  }, [navigation, pulse, load, pop]);
+  }, [navigation, pulse, load, pop, isLoading, token, user]);
 
   const loadX = load.interpolate({
     inputRange: [0, 1],

@@ -10,7 +10,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import {
-  X, Mail, Lock, User, Calendar, Coins, Eye, EyeOff, Phone, AtSign,
+  X, Mail, Lock, User, Calendar, Coins, Eye, EyeOff, Phone,
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS, FONTS } from '../../constants/theme';
@@ -90,11 +90,11 @@ const AuthRegisterScreen = () => {
     });
   };
 
-  // Suggest username from name until user edits it
+  // Suggest @khobywise from First + Last until user edits the handle
   useEffect(() => {
     if (usernameEdited) return;
     const suggested = suggestUsername(firstName, lastName);
-    if (suggested.length >= 3) setUsername(suggested);
+    setUsername(suggested.length >= 3 ? suggested : '');
   }, [firstName, lastName, usernameEdited]);
 
   useEffect(() => {
@@ -296,7 +296,6 @@ const AuthRegisterScreen = () => {
 
         <Text style={styles.fieldLabel}>Username</Text>
         <View style={styles.field}>
-          <AtSign size={15} color={COLORS.gold} />
           <Text style={styles.atPrefix}>@</Text>
           <TextInput
             style={styles.input}

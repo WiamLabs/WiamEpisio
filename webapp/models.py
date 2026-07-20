@@ -41,7 +41,10 @@ class User(db.Model, UserMixin):
     registration_completed = db.Column(db.Boolean, default=True)  # False until mobile finishes avatar/profile tail
     bio = db.Column(db.Text, nullable=True)
     date_of_birth = db.Column(db.Date, nullable=True)
+    age_confirmed_at = db.Column(db.DateTime, nullable=True)
     dob_visible = db.Column(db.Boolean, default=False)
+    privacy_show_email = db.Column(db.Boolean, default=False)
+    privacy_show_phone = db.Column(db.Boolean, default=False)
     pronouns = db.Column(db.Text, nullable=True)  # he/him, she/her, they/them
     show_pronouns = db.Column(db.Boolean, default=False)
     avatar_url = db.Column(db.Text, nullable=True)

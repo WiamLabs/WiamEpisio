@@ -33,11 +33,11 @@ function SeriesCard({ item, onPress }) {
   const planned = item.planned_episode_count || 0;
   const ready = item.ready_episodes || item.uploaded_episodes || 0;
   const pct = planned > 0 ? Math.min(100, Math.round((ready / planned) * 100)) : 0;
-  const cover = resolveUrl(item.poster_url || item.cover_url);
+  const hasCover = !!item.has_cover;
+  const cover = hasCover ? resolveUrl(item.poster_url || item.cover_url) : null;
   const trailerOk = ['pass', 'passed', 'approved', 'ok'].includes(
     String(item.trailer_qa_status || '').toLowerCase(),
   );
-  const hasCover = !!(item.cover_url || item.poster_url);
 
   return (
     <TouchableOpacity style={styles.seriesCard} onPress={onPress} activeOpacity={0.8}>
@@ -362,11 +362,11 @@ const StudioHomeScreen = () => {
               {[
                 'Complete series (all planned episodes)',
                 'Trailer passes quality check',
-                '50 followers or 200 remind-me on teaser',
+                'Optional: soft interest after Coming Soon listing',
                 'Reviewer approval (or auto if gates pass)',
               ].map((line) => (
                 <View key={line} style={styles.checklistItem}>
-                  <Check size={14} color={COLORS.gold} />
+                  <Info size={14} color={COLORS.textFaint} />
                   <Text style={styles.checklistText}>{line}</Text>
                 </View>
               ))}

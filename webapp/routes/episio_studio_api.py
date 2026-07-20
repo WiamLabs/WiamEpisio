@@ -26,7 +26,7 @@ from ..services.episode_access import free_episode_count_for
 from ..services.series_publish_gate import (
     can_go_live, can_submit_for_review, refresh_completeness,
     build_completeness_gates, soft_interest_counts, count_ready_episodes,
-    pre_live_fix_window, parse_change_items,
+    pre_live_fix_window, parse_change_items, _has_cover, _has_banner,
 )
 from ..services.trailer_qa import gate_enabled
 from ..services.platform_notify import notify_episio_series_submitted
@@ -75,6 +75,22 @@ def _drama_q():
     )
 
 
+def _card_cover_url(c: Content):
+    """Return cover URL for API cards only — null when no real upload (not default art)."""
+    if not _has_cover(c):
+        return None
+    poster = getattr(c, 'poster_url', None)
+    if poster and 'default_cover' not in str(poster).lower():
+        return _abs_url(poster)
+    try:
+        raw = c.cover_url
+    except Exception:
+        raw = None
+    if raw and 'default_cover' not in str(raw).lower():
+        return _abs_url(raw)
+    return None
+
+
 def _series_card(c: Content, user=None):
     ep_count = Episode.query.filter_by(content_id=c.id).count()
     ready = Episode.query.filter_by(content_id=c.id, transcode_status='ready').count()
@@ -97,9 +113,11 @@ def _series_card(c: Content, user=None):
         'status': c.status,
         'review_status': getattr(c, 'review_status', None) or 'unreviewed',
         'format': getattr(c, 'format', None) or 'drama',
-        'cover_url': _abs_url(c.cover_url),
-        'poster_url': _abs_url(getattr(c, 'poster_url', None) or c.cover_url),
-        'banner_url': _abs_url(getattr(c, 'banner_url', None)),
+        'cover_url': _card_cover_url(c),
+        'poster_url': _card_cover_url(c),
+        'banner_url': _abs_url(getattr(c, 'banner_url', None)) if _has_banner(c) else None,
+        'has_cover': _has_cover(c),
+        'has_banner': _has_banner(c),
         'planned_episode_count': int(getattr(c, 'planned_episode_count', 0) or 0),
         'structure_mode': getattr(c, 'structure_mode', None) or 'series',
         'season_number': int(getattr(c, 'season_number', 1) or 1),
@@ -363,8 +381,8 @@ def episio_apply():
         return jsonify({'error': 'Sample clip URL, past-work link, or trailer draft URL required'}), 400
 
     planned = int(data.get('planned_episode_count') or 20)
-    if planned < 20:
-        return jsonify({'error': 'First series must plan at least 20 episodes'}), 400
+    if planned < 5:
+        return jsonify({'error': 'First series must plan at least 5 episodes'}), 400
 
     genres = data.get('genres') or []
     if isinstance(genres, str):
@@ -967,8 +985,8 @@ def studio_series_list_or_create():
     if len(title) < 2:
         return jsonify({'error': 'Title required'}), 400
     planned = int(data.get('planned_episode_count') or 20)
-    if planned < 20:
-        return jsonify({'error': 'planned_episode_count must be at least 20'}), 400
+    if planned < 5:
+        return jsonify({'error': 'planned_episode_count must be at least 5'}), 400
     if planned > 200:
         return jsonify({'error': 'planned_episode_count max is 200 for one unit'}), 400
 
@@ -1052,7 +1070,7 @@ def studio_series_detail(series_id):
 
     refresh_completeness(c)
     ok_hard, reason_hard, details = can_go_live(c)
-    soft_required = (os.environ.get('EPISIO_SOFT_INTEREST') or '1').strip() != '0'
+    soft_required = (os.environ.get('EPISIO_SOFT_INTEREST') or '0').strip() == '1'
     if getattr(user, 'is_founder', False):
         soft_required = False
     ok_submit, reason_submit, details_submit = can_submit_for_review(c, soft_required=soft_required)
@@ -1155,9 +1173,22 @@ def studio_lock_season(series_id):
     if getattr(c, 'season_locked', False):
         return jsonify({'ok': True, 'already_locked': True, 'series': _series_card(c, user)})
 
-    # Rights can be confirmed at lock time
+    # Rights only when explicitly confirmed by creator (never forced on lock)
     if data.get('rights_confirmed'):
         c.rights_confirmed = True
+
+    planned = int(getattr(c, 'planned_episode_count', 0) or 0)
+    ready = count_ready_episodes(c.id)
+    if planned <= 0 or ready < planned:
+        return jsonify({
+            'error': 'episodes_incomplete',
+            'message': f'Upload all {planned} planned episodes before locking ({ready} ready).',
+            'details': {
+                'planned_episode_count': planned,
+                'ready_episodes': ready,
+            },
+            'gates': build_completeness_gates(c),
+        }), 400
 
     ok, reason, details = can_go_live(c)
     if not ok:
@@ -1176,7 +1207,6 @@ def studio_lock_season(series_id):
     c.season_locked_at = datetime.utcnow()
     c.season_locked_by = user.wiam_id or user.id
     c.season_qc_status = 'pending'
-    c.rights_confirmed = True
     db.session.commit()
     return jsonify({
         'ok': True,
@@ -1202,7 +1232,7 @@ def studio_completeness(series_id):
     refresh_completeness(c)
     gates = build_completeness_gates(c)
     soft = soft_interest_counts(c)
-    soft_required = (os.environ.get('EPISIO_SOFT_INTEREST') or '1').strip() != '0'
+    soft_required = (os.environ.get('EPISIO_SOFT_INTEREST') or '0').strip() == '1'
     if getattr(user, 'is_founder', False):
         soft_required = False
     ok_submit, reason, _ = can_submit_for_review(c, soft_required=soft_required)
@@ -1644,7 +1674,7 @@ def studio_submit_review(series_id):
         return jsonify({'error': 'forbidden'}), 403
 
     refresh_completeness(c)
-    soft_required = (os.environ.get('EPISIO_SOFT_INTEREST') or '1').strip() != '0'
+    soft_required = (os.environ.get('EPISIO_SOFT_INTEREST') or '0').strip() == '1'
     if getattr(user, 'is_founder', False):
         soft_required = False
     ok, reason_code, details = can_submit_for_review(c, soft_required=soft_required)

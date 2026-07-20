@@ -27,11 +27,14 @@ const SettingsScreen = () => {
       const data = await settingsApi.get();
       // Backend returns notification_preferences { push_enabled, new_chapter, coins, ... }
       const prefs = data?.notification_preferences || data?.settings || data || {};
+      const privacy = data?.privacy_preferences || {};
       setSettings({
         push_enabled: prefs.push_enabled ?? prefs.notif_push ?? true,
         new_chapter: prefs.new_chapter ?? prefs.notif_new_chapter ?? true,
         coins: prefs.coins ?? prefs.notif_coins ?? true,
         announcements: prefs.announcements ?? prefs.notif_announcements ?? true,
+        show_email: privacy.show_email ?? false,
+        show_phone: privacy.show_phone ?? false,
       });
     } catch {
       setError('Could not load settings');
@@ -75,11 +78,28 @@ const SettingsScreen = () => {
       ) : (
         <>
           {error ? <Text style={styles.error}>{error}</Text> : null}
+          <Text style={styles.section}>Notifications</Text>
           {[
             ['push_enabled', 'Push notifications'],
             ['new_chapter', 'New episode alerts'],
             ['coins', 'Coin updates'],
             ['announcements', 'Announcements'],
+          ].map(([key, label]) => (
+            <View key={key} style={styles.row}>
+              <Text style={styles.rowLabel}>{label}</Text>
+              <Switch
+                value={!!settings[key]}
+                onValueChange={() => toggle(key)}
+                trackColor={{ false: COLORS.navyLine, true: COLORS.goldDark }}
+                thumbColor={settings[key] ? COLORS.gold : '#888'}
+              />
+            </View>
+          ))}
+          <Text style={styles.section}>Privacy on profile</Text>
+          <Text style={styles.hint}>Off by default. Turn on only if you want others to see these.</Text>
+          {[
+            ['show_email', 'Show email on profile'],
+            ['show_phone', 'Show phone on profile'],
           ].map(([key, label]) => (
             <View key={key} style={styles.row}>
               <Text style={styles.rowLabel}>{label}</Text>

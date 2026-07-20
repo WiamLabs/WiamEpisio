@@ -20,6 +20,9 @@ import coinsApi from '../../api/coins';
 import authApi from '../../api/auth';
 import studioEpisioApi from '../../api/studioEpisio';
 import resolveUrl from '../../utils/resolveUrl';
+import {
+  isVerifiedMember, isEmailVerified, isAgeConfirmed, nextSignupGate,
+} from '../../utils/authMembership';
 
 const MenuRowIcon = ({ icon: Icon, title, sub, onPress, iconFill }) => (
   <TouchableOpacity style={styles.menuRow} onPress={onPress} activeOpacity={0.75}>
@@ -57,7 +60,9 @@ const ProfileScreen = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const user = useAuthStore((s) => s.user);
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const token = useAuthStore((s) => s.token);
+  const isAuthenticated = isVerifiedMember(user, token);
+  const pendingGate = token && user && !isAuthenticated ? nextSignupGate(user) : null;
   const logout = useAuthStore((s) => s.logout);
   const [balance, setBalance] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
@@ -98,16 +103,43 @@ const ProfileScreen = () => {
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={styles.guestRow} onPress={() => navigation.navigate('Login')} activeOpacity={0.85}>
+        <TouchableOpacity
+          style={styles.guestRow}
+          onPress={() => {
+            if (pendingGate === 'VerifyMethod') {
+              navigation.navigate('VerifyMethod', {
+                email: user?.email,
+                dateOfBirth: user?.date_of_birth,
+                sticky: true,
+              });
+            } else if (pendingGate === 'AgeGate') {
+              navigation.navigate('AgeGate', {
+                dateOfBirth: user?.date_of_birth,
+                sticky: true,
+              });
+            } else {
+              navigation.navigate('Login');
+            }
+          }}
+          activeOpacity={0.85}
+        >
           <View style={styles.guestAvatar}>
             <User size={24} color={COLORS.textFaint} />
           </View>
           <View>
             <View style={styles.loginLinkRow}>
-              <Text style={styles.loginLink}>Log in</Text>
+              <Text style={styles.loginLink}>
+                {pendingGate ? 'Finish signup' : 'Log in'}
+              </Text>
               <ChevronRight size={14} color={COLORS.textFaint} />
             </View>
-            <Text style={styles.idText}>ID Guest · Following 0</Text>
+            <Text style={styles.idText}>
+              {pendingGate
+                ? (!isEmailVerified(user)
+                  ? 'Guest · Verify email to unlock your account'
+                  : 'Guest · Confirm age to unlock your account')
+                : 'ID Guest · Following 0'}
+            </Text>
           </View>
         </TouchableOpacity>
 
@@ -230,7 +262,18 @@ const ProfileScreen = () => {
         <View style={{ flex: 1 }}>
           <Text style={styles.name} numberOfLines={1}>{name}</Text>
           <Text style={styles.handle} numberOfLines={1}>
-            {user?.phone || user?.email || `@${user?.username || 'member'}`}
+            @{user?.username || 'username'}
+          </Text>
+          {user?.privacy_show_email && user?.email ? (
+            <Text style={styles.handleMeta} numberOfLines={1}>{user.email}</Text>
+          ) : null}
+          {user?.privacy_show_phone && user?.phone ? (
+            <Text style={styles.handleMeta} numberOfLines={1}>{user.phone}</Text>
+          ) : null}
+          <Text style={styles.verifyMeta}>
+            {isEmailVerified(user) ? 'Email verified' : 'Email not verified'}
+            {' · '}
+            {isAgeConfirmed(user) ? 'Age confirmed' : 'Age not confirmed'}
           </Text>
           {isMember ? (
             <View style={styles.memberBadge}>
@@ -425,7 +468,9 @@ const styles = StyleSheet.create({
   avatarImg: { width: 64, height: 64, borderRadius: 32 },
   avatarLetter: { fontSize: 24, fontFamily: FONTS.extraBold, color: COLORS.navy },
   name: { fontSize: 17, fontFamily: FONTS.bold, color: '#fff' },
-  handle: { marginTop: 2, fontSize: 12, color: COLORS.textFaint, fontFamily: FONTS.regular },
+  handle: { marginTop: 2, fontSize: 13, color: COLORS.gold, fontFamily: FONTS.medium },
+  handleMeta: { marginTop: 2, fontSize: 11, color: COLORS.textFaint, fontFamily: FONTS.regular },
+  verifyMeta: { marginTop: 4, fontSize: 11, color: COLORS.textMuted || COLORS.textFaint, fontFamily: FONTS.regular },
   memberBadge: {
     alignSelf: 'flex-start',
     flexDirection: 'row',

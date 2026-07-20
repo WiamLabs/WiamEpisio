@@ -65,19 +65,14 @@ const useAuthStore = create((set, get) => ({
           isAuthenticated: true,
           isLoading: false,
         });
-        const cacheMissingSignupFlags =
-          parsed &&
-          (parsed.registration_completed === undefined ||
-            parsed.onboarding_completed === undefined);
-        if (cacheMissingSignupFlags) {
-          import('../api/auth')
-            .then((m) => m.default.me())
-            .then((data) => {
-              const u = data?.user || data;
-              if (u && typeof u === 'object') get().patchUser(u);
-            })
-            .catch(() => {});
-        }
+        // Refresh membership flags (email_verified, age_confirmed, privacy)
+        import('../api/auth')
+          .then((m) => m.default.me())
+          .then((data) => {
+            const u = data?.user || data;
+            if (u && typeof u === 'object') get().patchUser(u);
+          })
+          .catch(() => {});
         // Initialize RevenueCat on app restart if user is logged in
         if (parsed?.wiam_id && Platform.OS !== 'web') {
           import('../services/iap').then(m => m.initIAP(parsed.wiam_id)).catch(() => {});

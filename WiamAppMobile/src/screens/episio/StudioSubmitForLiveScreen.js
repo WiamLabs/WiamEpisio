@@ -36,20 +36,21 @@ const StudioSubmitForLiveScreen = () => {
   const series = data?.series;
   const soft = data?.soft_interest || {};
   const gates = data?.gates || [];
-  const poster = resolveUrl(series?.poster_url || series?.cover_url);
+  const hasCover = !!series?.has_cover;
+  const poster = hasCover ? resolveUrl(series?.poster_url || series?.cover_url) : null;
 
-  const gateOk = (keys) => {
-    const hit = gates.find((g) => keys.includes(g.key) || keys.some((k) => (g.title || '').toLowerCase().includes(k)));
-    if (hit) return !!hit.ok;
-    return null;
+  const gateOk = (key) => {
+    const hit = gates.find((g) => g.key === key);
+    return hit ? !!hit.ok : null;
   };
 
-  const coverOk = gateOk(['cover', 'metadata', 'cover_metadata']) ?? !!(series?.cover_url || series?.poster_url);
-  const trailerOk = gateOk(['trailer']) ?? series?.trailer_qa_status === 'passed';
-  const epsOk = gateOk(['episodes', 'all_episodes'])
+  const coverOk = gateOk('cover') ?? hasCover;
+  const metaOk = gateOk('metadata') ?? !!(series?.title && series?.genre && (series?.description || '').length >= 10);
+  const trailerOk = gateOk('trailer') ?? series?.trailer_qa_status === 'passed';
+  const epsOk = gateOk('episodes')
     ?? ((series?.ready_episodes || 0) >= (series?.planned_episode_count || 0) && (series?.planned_episode_count || 0) > 0);
   const lockOk = !!series?.season_locked;
-  const softOk = gateOk(['soft_interest']) ?? !!soft.ok;
+  const softOk = !!soft.soft_ok;
 
   const rows = [
     {
@@ -63,14 +64,20 @@ const StudioSubmitForLiveScreen = () => {
       ok: trailerOk,
     },
     {
-      label: 'Cover & metadata',
-      value: coverOk ? 'Complete' : 'Incomplete',
+      label: 'Cover (2:3)',
+      value: coverOk ? 'Uploaded' : 'Missing',
       ok: coverOk,
     },
     {
-      label: 'Soft interest',
+      label: 'Synopsis & metadata',
+      value: metaOk ? 'Complete' : 'Incomplete',
+      ok: metaOk,
+    },
+    {
+      label: 'Soft interest (optional)',
       value: `${soft.followers || 0} followers · ${soft.remind_count || 0} reminds`,
       ok: softOk,
+      optional: true,
     },
     {
       label: 'Rights / season lock',
@@ -126,9 +133,15 @@ const StudioSubmitForLiveScreen = () => {
           <View style={styles.summary}>
             {rows.map((r, idx) => (
               <View key={r.label} style={[styles.row, idx === rows.length - 1 && { borderBottomWidth: 0 }]}>
-                {r.ok ? <Check size={16} color="#3BB273" /> : <X size={16} color="#E4573D" />}
+                {r.ok ? (
+                  <Check size={16} color="#3BB273" />
+                ) : r.optional ? (
+                  <Clock size={16} color={COLORS.textFaint} />
+                ) : (
+                  <X size={16} color="#E4573D" />
+                )}
                 <Text style={styles.rowLabel}>{r.label}</Text>
-                <Text style={[styles.rowVal, !r.ok && { color: '#E0A79A' }]}>{r.value}</Text>
+                <Text style={[styles.rowVal, !r.ok && !r.optional && { color: '#E0A79A' }]}>{r.value}</Text>
               </View>
             ))}
           </View>

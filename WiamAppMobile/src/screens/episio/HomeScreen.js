@@ -23,6 +23,7 @@ import coinsApi from '../../api/coins';
 import useAuthStore from '../../store/useAuthStore';
 import resolveUrl from '../../utils/resolveUrl';
 import { useEpisioGenres } from '../../hooks/useEpisioGenres';
+import { isVerifiedMember, nextSignupGate } from '../../utils/authMembership';
 
 const TABS = ['Popular', 'Fresh', 'Rankings', 'Categories', 'Wiam Origin', 'Anime', 'VIP'];
 
@@ -57,7 +58,9 @@ function SectionHead({ title, onSeeAll }) {
 const HomeScreen = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const user = useAuthStore((s) => s.user);
+  const token = useAuthStore((s) => s.token);
+  const isAuthenticated = isVerifiedMember(user, token);
   const { genres: GENRES } = useEpisioGenres({ includeAll: true });
   const [tab, setTab] = useState('Popular');
   const [genre, setGenre] = useState('All');
@@ -173,7 +176,7 @@ const HomeScreen = () => {
       <View style={styles.topFixed}>
         <View style={styles.brandRow}>
           <View style={styles.brand}>
-            <LogoBadge size={38} />
+            <LogoBadge size={52} />
             <Text style={styles.brandName}>
               Wiam<Text style={{ color: COLORS.gold }}>Episio</Text>
             </Text>
@@ -187,8 +190,29 @@ const HomeScreen = () => {
               <Text style={styles.coinPillText}>{isAuthenticated ? balance : 'Buy'}</Text>
             </TouchableOpacity>
             {!isAuthenticated ? (
-              <TouchableOpacity style={styles.signInPill} onPress={() => navigation.navigate('Login')}>
-                <Text style={styles.signInText}>Sign In</Text>
+              <TouchableOpacity
+                style={styles.signInPill}
+                onPress={() => {
+                  const gate = token && user ? nextSignupGate(user) : null;
+                  if (gate === 'VerifyMethod') {
+                    navigation.navigate('VerifyMethod', {
+                      email: user?.email,
+                      dateOfBirth: user?.date_of_birth,
+                      sticky: true,
+                    });
+                  } else if (gate === 'AgeGate') {
+                    navigation.navigate('AgeGate', {
+                      dateOfBirth: user?.date_of_birth,
+                      sticky: true,
+                    });
+                  } else {
+                    navigation.navigate('Login');
+                  }
+                }}
+              >
+                <Text style={styles.signInText}>
+                  {token && user && !isAuthenticated ? 'Finish signup' : 'Sign In'}
+                </Text>
               </TouchableOpacity>
             ) : (
               <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('Notifications')}>
@@ -253,25 +277,6 @@ const HomeScreen = () => {
             );
           })}
         </ScrollView>
-
-        {isAuthenticated ? (
-          <View style={styles.quickRow}>
-            <TouchableOpacity
-              style={styles.quickChip}
-              onPress={() => navigation.navigate('DailyRewards')}
-              activeOpacity={0.85}
-            >
-              <Text style={styles.quickChipText}>Daily Rewards</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.quickChip}
-              onPress={() => navigation.navigate('MembershipOfferModal')}
-              activeOpacity={0.85}
-            >
-              <Text style={styles.quickChipText}>VIP Offer</Text>
-            </TouchableOpacity>
-          </View>
-        ) : null}
 
         <SectionHead title="Continue Watching" onSeeAll={() => navigation.navigate('MyList')} />
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.posterRow}>
@@ -397,7 +402,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 14,
   },
-  brand: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  brand: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   brandName: {
     fontSize: 17,
     fontFamily: FONTS.extraBold,

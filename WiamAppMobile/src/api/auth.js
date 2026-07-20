@@ -116,6 +116,15 @@ const authApi = {
     }
   },
 
+  confirmAge: async (age) => {
+    try {
+      const response = await apiClient.post('/auth/confirm-age', { age });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.error || 'Age confirmation failed';
+    }
+  },
+
   resetPassword: async (email, code, newPassword, confirmPassword) => {
     try {
       const response = await apiClient.post('/auth/reset-password', {

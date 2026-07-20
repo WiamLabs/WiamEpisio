@@ -2,7 +2,7 @@
 
 Living journal the AI agent reads at the start of every session and updates as work progresses. Mutable — overwrite freely. Durable project facts live in `.cursor/rules/project-context.mdc` instead.
 
-**Last updated:** 2026-07-20 — **Logo + email config truth + RLS.** In-app/splash use transparent logo (bigger); navy-plate logo reserved for store icons. Verify email fails when Render has no `RESEND_API_KEY`/`SMTP_*` — added `/api/v1/health/email` + clearer 503. RLS SQL for free-coin/genre tables.
+**Last updated:** 2026-07-21 — **Guest-until-verify + Studio truth + Brevo.** Unverified/no-age users stay Guest UI until email + age confirmed (persisted). Resend→Brevo→SMTP. Register @username from first+last; home logo larger; Daily Rewards/VIP chips removed. Studio: no cover crop, has_cover truth, Series/Season lock copy, min 5 eps, soft interest optional, founder series video preview, revision keyboard.
 
 **Standing order from Martin:** after finishing meaningful work, **commit + push to `master`** so Render auto-deploys. Do not leave shippable Episio/webapp changes only local.
 

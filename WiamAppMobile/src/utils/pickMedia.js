@@ -14,6 +14,18 @@ async function ensureLibraryPermission() {
   return true;
 }
 
+export async function pickImageAsIs() {
+  if (!(await ensureLibraryPermission())) return null;
+
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ['images'],
+    allowsEditing: false,
+    quality: 0.95,
+  });
+  if (result.canceled || !result.assets?.[0]?.uri) return null;
+  return result.assets[0].uri;
+}
+
 /**
  * @param {'avatar'|'banner'|number[]} kindOrAspect
  * @returns {Promise<string|null>} local uri after crop, or null if cancelled

@@ -24,7 +24,7 @@ const StudioSeriesCreateScreen = () => {
   const [title, setTitle] = useState('');
   const [synopsis, setSynopsis] = useState('');
   const [genre, setGenre] = useState('Drama');
-  const [planned, setPlanned] = useState('20');
+  const [planned, setPlanned] = useState('5');
   const [structure, setStructure] = useState('series'); // series | season
   const [seasonNumber, setSeasonNumber] = useState('1');
   const [busy, setBusy] = useState(false);
@@ -54,8 +54,8 @@ const StudioSeriesCreateScreen = () => {
       setError('Synopsis should be at least 40 characters when provided');
       return;
     }
-    if (Number(planned) < 20) {
-      setError('Plan at least 20 episodes for this series or season');
+    if (Number(planned) < 5) {
+      setError('Plan at least 5 episodes for this series or season');
       return;
     }
     if (Number(planned) > 200) {
@@ -193,7 +193,7 @@ const StudioSeriesCreateScreen = () => {
           <Text style={styles.requestGenre}>Don't see your genre? Request one</Text>
         </TouchableOpacity>
         <Text style={styles.label}>
-          Planned episodes for this {structure === 'season' ? 'season' : 'series'} (min 20 · max 200)
+          Planned episodes for this {structure === 'season' ? 'season' : 'series'} (min 5 · max 200)
         </Text>
         <TextInput
           style={styles.input}

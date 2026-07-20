@@ -40,7 +40,9 @@ const StudioTeaserPreviewScreen = () => {
     return () => { alive = false; };
   }, [seriesId]));
 
-  const poster = resolveUrl(series?.poster_url || series?.cover_url);
+  const poster = series?.has_cover
+    ? resolveUrl(series?.poster_url || series?.cover_url)
+    : null;
   const interested = soft?.combined || ((soft?.followers || 0) + (soft?.remind_count || 0));
   const publicUrl = `${CONFIG.SITE_ORIGIN || 'https://episio.wiamlabs.com'}/series/${seriesId}`;
 
@@ -75,7 +77,13 @@ const StudioTeaserPreviewScreen = () => {
           </View>
 
           <View style={styles.card}>
-            {poster ? <Image source={{ uri: poster }} style={styles.poster} /> : <View style={styles.poster} />}
+            {poster ? (
+              <Image source={{ uri: poster }} style={styles.poster} />
+            ) : (
+              <View style={[styles.poster, styles.posterEmpty]}>
+                <Text style={styles.posterEmptyText}>No cover yet</Text>
+              </View>
+            )}
             <View style={styles.comingSoon}>
               <Text style={styles.comingText}>COMING SOON</Text>
             </View>
@@ -100,7 +108,7 @@ const StudioTeaserPreviewScreen = () => {
 
           <View style={styles.creatorNote}>
             <Text style={styles.creatorNoteText}>
-              Viewers can tap Remind Me here — it counts toward your soft-interest threshold before Submit unlocks.
+              Soft interest is optional for submit. Share your teaser link — remind-me and follower counts apply once the team lists your series as Coming Soon.
             </Text>
           </View>
         </>
@@ -122,6 +130,8 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: COLORS.navyLine, alignItems: 'center',
   },
   poster: { width: 140, height: 200, borderRadius: 12, backgroundColor: COLORS.navySoft, marginBottom: 12 },
+  posterEmpty: { alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: COLORS.navyLine },
+  posterEmptyText: { fontFamily: FONTS.semi, color: COLORS.textFaint, fontSize: 11 },
   comingSoon: {
     backgroundColor: 'rgba(212,160,23,0.16)', paddingHorizontal: 10, paddingVertical: 4,
     borderRadius: 8, marginBottom: 8,

@@ -2,14 +2,14 @@
  * Layout: WiamStudio-Revision-Request.html (Wave 2)
  * LIVE only · legal / rights / factual — not quality
  */
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import {
   View, Text, StyleSheet, TextInput, Alert, TouchableOpacity, ActivityIndicator,
+  KeyboardAvoidingView, Platform, ScrollView,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
-import { Lock, Upload } from 'lucide-react-native';
-import EpisioScreenShell from '../../components/episio/EpisioScreenShell';
-import EpisioGoldButton from '../../components/episio/EpisioGoldButton';
+import { ChevronLeft, Lock, Upload } from 'lucide-react-native';
 import { COLORS, FONTS } from '../../constants/theme';
 import studioEpisioApi from '../../api/studioEpisio';
 
@@ -20,7 +20,9 @@ const CATS = [
 ];
 
 const StudioRevisionRequestScreen = () => {
+  const insets = useSafeAreaInsets();
   const navigation = useNavigation();
+  const scrollRef = useRef(null);
   const seriesId = useRoute().params?.seriesId;
   const [data, setData] = useState(null);
   const [past, setPast] = useState([]);
@@ -100,26 +102,42 @@ const StudioRevisionRequestScreen = () => {
     }
   };
 
+  const scrollToEnd = () => {
+    setTimeout(() => scrollRef.current?.scrollToEnd?.({ animated: true }), 120);
+  };
+
   return (
-    <EpisioScreenShell
-      title="Request a Revision"
-      subtitle={`${series?.title || 'Series'}${series?.season_locked ? ' — Locked Season' : ''}`}
-      footer={(
-        <EpisioGoldButton
-          label="Submit Revision Request"
-          onPress={submit}
-          loading={busy}
-          disabled={!live}
-        />
-      )}
+    <KeyboardAvoidingView
+      style={[styles.root, { paddingTop: insets.top }]}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
     >
+      <View style={styles.topbar}>
+        <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.goBack()}>
+          <ChevronLeft size={15} color="#fff" />
+        </TouchableOpacity>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.h1}>Request a Revision</Text>
+          <Text style={styles.sub}>
+            {series?.title || 'Series'}
+            {series?.season_locked ? ' — Locked' : ''}
+          </Text>
+        </View>
+      </View>
+
+      <ScrollView
+        ref={scrollRef}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: Math.max(insets.bottom, 24) }}
+      >
       {loading ? <ActivityIndicator color={COLORS.gold} style={{ marginTop: 40 }} /> : (
         <>
           <View style={styles.lockNote}>
             <Lock size={16} color={COLORS.gold} />
             <Text style={styles.lockText}>
-              This season is <Text style={styles.bold}>locked</Text>. Revision Requests are for{' '}
-              <Text style={styles.bold}>legal, rights, or factual</Text> corrections — not video/audio quality.
+              Revision Requests are for{' '}
+              <Text style={styles.bold}>LIVE series only</Text> — legal, rights, or factual fixes after publish.
+              Before go-live, use <Text style={styles.bold}>Needs Changes</Text> and resubmit the full unit.
             </Text>
           </View>
 
@@ -176,6 +194,7 @@ const StudioRevisionRequestScreen = () => {
             multiline
             value={reason}
             onChangeText={setReason}
+            onFocus={scrollToEnd}
             placeholder="e.g. Legal music swap — replacing licensed track in Episode 14"
             placeholderTextColor={COLORS.textFaint}
           />
@@ -212,13 +231,35 @@ const StudioRevisionRequestScreen = () => {
               ))}
             </>
           ) : null}
+
+          <TouchableOpacity
+            style={[styles.submitBtn, (!live || busy) && styles.submitBtnDisabled]}
+            onPress={submit}
+            disabled={!live || busy}
+            activeOpacity={0.85}
+          >
+            {busy ? (
+              <ActivityIndicator color={COLORS.navy} />
+            ) : (
+              <Text style={styles.submitBtnText}>Submit Revision Request</Text>
+            )}
+          </TouchableOpacity>
         </>
       )}
-    </EpisioScreenShell>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
+  root: { flex: 1, backgroundColor: COLORS.navy },
+  topbar: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingBottom: 12 },
+  iconBtn: {
+    width: 34, height: 34, borderRadius: 17, backgroundColor: COLORS.navyCard,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  h1: { fontFamily: FONTS.extraBold, color: '#fff', fontSize: 16 },
+  sub: { fontFamily: FONTS.regular, color: COLORS.textDim, fontSize: 11.5, marginTop: 2 },
   lockNote: {
     flexDirection: 'row', gap: 10, backgroundColor: 'rgba(212,160,23,0.1)',
     borderRadius: 14, padding: 12, borderWidth: 1, borderColor: 'rgba(212,160,23,0.35)', marginBottom: 16,
@@ -265,6 +306,12 @@ const styles = StyleSheet.create({
   },
   pastTitle: { fontFamily: FONTS.bold, color: '#fff', fontSize: 12 },
   pastSub: { marginTop: 3, fontFamily: FONTS.regular, color: COLORS.textFaint, fontSize: 11 },
+  submitBtn: {
+    marginTop: 18, paddingVertical: 16, borderRadius: 16, backgroundColor: COLORS.gold,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  submitBtnDisabled: { opacity: 0.45 },
+  submitBtnText: { fontFamily: FONTS.extraBold, color: COLORS.navy, fontSize: 15 },
 });
 
 export default StudioRevisionRequestScreen;

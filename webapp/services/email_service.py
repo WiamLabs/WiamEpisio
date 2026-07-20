@@ -238,9 +238,45 @@ def _is_deleted_user(email):
     return email.endswith('@deleted.wiamapp')
 
 
+def _send_via_brevo(to_email, subject, html_body, from_email):
+    """Send via Brevo (Sendinblue) HTTP API — HTTPS, works when SMTP is blocked.
+
+    Env: BREVO_API_KEY, optional BREVO_FROM (verified sender).
+    """
+    import requests as http_req
+    api_key = (_cfg('BREVO_API_KEY') or _cfg('SENDINBLUE_API_KEY') or '').strip()
+    if not api_key:
+        return None
+    brevo_from = (_cfg('BREVO_FROM') or '').strip() or from_email
+    try:
+        log.info("Brevo API: sending to %s from %s — %s", to_email, brevo_from, subject)
+        resp = http_req.post(
+            'https://api.brevo.com/v3/smtp/email',
+            headers={
+                'api-key': api_key,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+            json={
+                'sender': {'name': 'WiamEpisio', 'email': brevo_from},
+                'to': [{'email': to_email}],
+                'subject': subject,
+                'htmlContent': html_body,
+            },
+            timeout=15,
+        )
+        if resp.status_code in (200, 201, 202):
+            log.info("Email SENT via Brevo API to %s — %s", to_email, subject)
+            return True
+        log.error("Brevo API error %d: %s", resp.status_code, resp.text[:300])
+        return False
+    except Exception as e:
+        log.error("Brevo API exception: %s", e)
+        return False
+
+
 def send_email(to_email, subject, html_body):
-    """Send an email. Uses Resend HTTP API if RESEND_API_KEY is set (recommended
-    for Render/Railway where SMTP ports 587/465 are blocked). Falls back to SMTP.
+    """Send email: Resend → Brevo → SMTP. All HTTP providers use port 443 (no host block).
     """
     # Guard: never send to deleted-user placeholder addresses
     if _is_deleted_user(to_email):
@@ -254,20 +290,28 @@ def send_email(to_email, subject, html_body):
     smtp_pass = (_cfg('SMTP_PASS') or '').strip().replace(' ', '')
     from_email = (_cfg('SMTP_FROM') or smtp_user or 'noreply@wiamapp.com').strip()
 
-    # 1) Try Resend HTTP API first (works on Render — uses HTTPS port 443)
+    # 1) Resend
     resend_result = _send_via_resend(to_email, subject, html_body, from_email)
     if resend_result is True:
         return True
-    # If Resend is configured but failed, still try SMTP as a backup
     if resend_result is False:
-        log.warning("Resend delivery failed for %s — trying SMTP fallback", to_email)
+        log.warning("Resend delivery failed for %s — trying Brevo fallback", to_email)
 
-    # 2) Fall back to SMTP
+    # 2) Brevo (free-tier / Resend limit / Resend outage)
+    brevo_result = _send_via_brevo(to_email, subject, html_body, from_email)
+    if brevo_result is True:
+        return True
+    if brevo_result is False:
+        log.warning("Brevo delivery failed for %s — trying SMTP fallback", to_email)
+
+    # 3) SMTP
     smtp_port = int(_cfg('SMTP_PORT') or 587)
 
     if not smtp_host or not smtp_user or not smtp_pass:
-        log.warning("Email not configured (no RESEND_API_KEY and no SMTP) — email to %s not sent. Subject: %s",
-                     to_email, subject)
+        log.warning(
+            "Email not configured (no Resend/Brevo/SMTP) — email to %s not sent. Subject: %s",
+            to_email, subject,
+        )
         return False
 
     # Force IPv4 — Render/Railway lack IPv6, smtp.gmail.com AAAA causes Errno 101
@@ -560,12 +604,13 @@ def _verification_email_parts(email, code, purpose):
 
 
 def email_delivery_configured():
-    """True if Resend or SMTP credentials are present (does not prove delivery works)."""
-    api_key = (_cfg('RESEND_API_KEY') or '').strip()
+    """True if Resend, Brevo, or SMTP credentials are present (does not prove delivery works)."""
+    resend = bool((_cfg('RESEND_API_KEY') or '').strip())
+    brevo = bool((_cfg('BREVO_API_KEY') or _cfg('SENDINBLUE_API_KEY') or '').strip())
     smtp_host = (_cfg('SMTP_HOST') or '').strip()
     smtp_user = (_cfg('SMTP_USER') or '').strip()
     smtp_pass = (_cfg('SMTP_PASS') or '').strip().replace(' ', '')
-    return bool(api_key) or bool(smtp_host and smtp_user and smtp_pass)
+    return resend or brevo or bool(smtp_host and smtp_user and smtp_pass)
 
 
 def create_and_send_code(email, purpose, user_id=None):

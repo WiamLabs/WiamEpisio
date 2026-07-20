@@ -55,22 +55,29 @@ const StudioSoftInterestScreen = () => {
             variant="ghost"
           />
           <View style={{ height: 10 }} />
-          {soft.soft_ok && series?.season_locked ? (
+          {soft.soft_ok ? (
             <EpisioGoldButton
               label="Continue to Submit for Live"
               onPress={() => navigation.navigate('StudioSubmitForLive', { seriesId })}
             />
           ) : !series?.season_locked ? (
             <EpisioGoldButton
-              label="Lock complete season first"
+              label={`Lock complete ${series?.unit_label || 'series'} first`}
               onPress={() => navigation.navigate('StudioSeasonLock', { seriesId })}
             />
           ) : (
-            <EpisioGoldButton
-              label="Preview public teaser"
-              onPress={() => navigation.navigate('StudioTeaserPreview', { seriesId })}
-              variant="ghost"
-            />
+            <>
+              <EpisioGoldButton
+                label="Submit for Live (soft interest optional)"
+                onPress={() => navigation.navigate('StudioSubmitForLive', { seriesId })}
+              />
+              <View style={{ height: 10 }} />
+              <EpisioGoldButton
+                label="Preview public teaser"
+                onPress={() => navigation.navigate('StudioTeaserPreview', { seriesId })}
+                variant="ghost"
+              />
+            </>
           )}
         </>
       )}
@@ -83,11 +90,11 @@ const StudioSoftInterestScreen = () => {
             <View style={styles.miniBar}>
               <View style={[styles.miniFill, { width: `${pct}%` }]} />
             </View>
-            <Text style={styles.ringTitle}>{pct}% to launch-ready</Text>
+            <Text style={styles.ringTitle}>{pct}% toward optional threshold</Text>
             <Text style={styles.ringSub}>
               {soft.soft_ok
-                ? 'Threshold met — you can submit for live'
-                : `Need ${need} more followers or remind-me taps`}
+                ? 'Threshold met — share your teaser to keep momentum'
+                : `Optional before submit. Share your teaser link — counts work once listed as Coming Soon.`}
             </Text>
           </View>
 
@@ -105,9 +112,9 @@ const StudioSoftInterestScreen = () => {
           <View style={styles.thresholdCard}>
             <Text style={styles.thresholdTitle}>Why this matters</Text>
             <Text style={styles.thresholdText}>
-              Series need{' '}
-              <Text style={{ color: '#fff', fontFamily: FONTS.bold }}>50 followers or 200 combined remind-me + followers</Text>
-              {' '}before Submit unlocks. Hard quality (full season + trailer) still comes first.
+              Soft interest is{' '}
+              <Text style={{ color: '#fff', fontFamily: FONTS.bold }}>optional for submit</Text>
+              . Share your teaser link — remind-me and follower counts apply once the team lists your series as Coming Soon. Full season + trailer quality still required first.
             </Text>
           </View>
 

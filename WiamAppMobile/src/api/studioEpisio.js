@@ -132,11 +132,11 @@ const studioEpisioApi = {
     try { return (await apiClient.get(`/creator/studio/series/${seriesId}/completeness`)).data; }
     catch (e) { throw fmt(e, 'Failed to load completeness'); }
   },
-  lockSeason: async (seriesId, { confirm = true, rights_confirmed = true } = {}) => {
+  lockSeason: async (seriesId, { confirm = true, rights_confirmed } = {}) => {
     try {
-      return (await apiClient.post(`/creator/studio/series/${seriesId}/lock`, {
-        confirm, rights_confirmed,
-      })).data;
+      const body = { confirm };
+      if (rights_confirmed != null) body.rights_confirmed = rights_confirmed;
+      return (await apiClient.post(`/creator/studio/series/${seriesId}/lock`, body)).data;
     } catch (e) { throw fmt(e, 'Could not lock season'); }
   },
   trustTier: async () => {

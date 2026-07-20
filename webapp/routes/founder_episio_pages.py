@@ -87,10 +87,39 @@ def register_episio_founder_pages(bp, founder_required):
             )
         except Exception:
             db.session.rollback()
+        from ..services.video_service import get_video_service
+        vs = get_video_service()
+        trailer_key = series.trailer_storage_key or series.trailer_url
+        trailer_playback = None
+        if trailer_key or getattr(series, 'trailer_hls_url', None):
+            signed = vs.sign_playback_url(
+                storage_key=trailer_key,
+                hls_manifest_url=getattr(series, 'trailer_hls_url', None),
+                ttl=3600,
+            )
+            trailer_playback = signed.get('url') or signed.get('manifest_url')
+
+        episode_media = []
+        for ep in episodes:
+            if not (ep.video_url or ep.hls_manifest_url):
+                continue
+            signed = vs.sign_playback_url(
+                storage_key=ep.video_url,
+                episode_id=ep.id,
+                hls_manifest_url=ep.hls_manifest_url,
+                ttl=3600,
+            )
+            episode_media.append({
+                'episode': ep,
+                'playback_url': signed.get('url') or signed.get('manifest_url'),
+            })
+
         return render_template(
             'founder/episio_series_detail.html',
             series=series,
             episodes=episodes,
+            episode_media=episode_media,
+            trailer_playback=trailer_playback,
             creator=creator,
             qc_job=qc_job,
             active='series',

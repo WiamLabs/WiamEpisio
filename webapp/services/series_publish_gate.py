@@ -39,16 +39,22 @@ def refresh_completeness(content: Content) -> bool:
     return complete
 
 
+def _is_real_cover_url(url) -> bool:
+    if not url or not str(url).strip():
+        return False
+    return 'default_cover' not in str(url).lower()
+
+
 def _has_cover(content: Content) -> bool:
-    try:
-        cover = content.cover_url
-    except Exception:
-        cover = None
-    return bool(cover or getattr(content, 'poster_url', None) or getattr(content, 'cover_file_id', None))
+    if getattr(content, 'cover_file_id', None):
+        return True
+    poster = getattr(content, 'poster_url', None)
+    return _is_real_cover_url(poster)
 
 
 def _has_banner(content: Content) -> bool:
-    return bool(getattr(content, 'banner_url', None) or getattr(content, 'poster_url', None) or _has_cover(content))
+    banner = getattr(content, 'banner_url', None)
+    return bool(banner and str(banner).strip())
 
 
 def _has_metadata(content: Content) -> bool:
@@ -101,6 +107,8 @@ def build_completeness_gates(content: Content) -> List[dict]:
     qc = (getattr(content, 'season_qc_status', None) or 'none')
     final_n = Episode.query.filter_by(content_id=content.id, is_final=True).count()
     finals_ok = planned > 0 and final_n >= planned and ready >= planned
+    structure = getattr(content, 'structure_mode', None) or 'series'
+    unit = 'Season' if structure == 'season' else 'Series'
 
     gates = [
         {
@@ -137,8 +145,8 @@ def build_completeness_gates(content: Content) -> List[dict]:
             'key': 'banner',
             'title': 'Banner / hero art',
             'ok': banner_ok,
-            'detail': 'Banner or poster set' if banner_ok else 'Add banner or poster art',
-            'fix': 'cover',
+            'detail': 'Banner uploaded' if banner_ok else 'Upload banner art',
+            'fix': 'banner',
         },
         {
             'key': 'metadata',
@@ -156,16 +164,19 @@ def build_completeness_gates(content: Content) -> List[dict]:
         },
         {
             'key': 'season_lock',
-            'title': 'Season locked (complete story)',
+            'title': f'{unit} locked (complete story)',
             'ok': locked,
-            'detail': 'Season locked — no edits without revision' if locked else 'Confirm full season lock',
+            'detail': f'{unit} locked — no edits without revision' if locked else f'Confirm full {unit.lower()} lock',
             'fix': 'lock',
         },
         {
             'key': 'soft_interest',
-            'title': 'Soft interest threshold',
+            'title': 'Soft interest (optional)',
             'ok': soft['soft_ok'],
-            'detail': f"{soft['followers']} followers · {soft['remind_count']} remind-me",
+            'detail': (
+                f"{soft['followers']} followers · {soft['remind_count']} remind-me"
+                ' — optional; counts after Coming Soon listing'
+            ),
             'fix': 'soft_interest',
         },
         {
@@ -266,7 +277,7 @@ def parse_change_items(content: Content) -> list:
         return []
 
 
-def can_submit_for_review(content: Content, soft_required: bool = True) -> Tuple[bool, str, dict]:
+def can_submit_for_review(content: Content, soft_required: bool = False) -> Tuple[bool, str, dict]:
     """Creator submit path: hard gates + season lock + soft interest."""
     ok, reason, details = can_go_live(content)
     if not ok:
