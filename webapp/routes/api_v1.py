@@ -597,6 +597,16 @@ def auth_register():
         user.trial_used = True
     user.set_password(password)
     db.session.add(user)
+    db.session.flush()
+
+    # Optional friend invite code → referred_by (bonus on email verify)
+    raw_ref = data.get('referral_code') or data.get('invite_code')
+    if isinstance(raw_ref, str) and raw_ref.strip():
+        code = raw_ref.strip().upper()
+        referrer = User.query.filter_by(referral_code=code).first()
+        if referrer and (referrer.wiam_id or referrer.id) != (user.wiam_id or user.id):
+            user.referred_by = referrer.wiam_id or referrer.id
+
     db.session.commit()
 
     token = _create_token(user.id)
@@ -776,6 +786,64 @@ def auth_reset_password():
     user.set_password(new_password)
     db.session.commit()
     return jsonify({'message': 'Password reset successful. You can now sign in.'})
+
+
+@api_v1.route('/auth/send-verify-code', methods=['POST'])
+@jwt_required
+def auth_send_verify_code():
+    """Send email verification code (purpose=register). SMS not offered."""
+    user = request.api_user
+    email = (user.email or '').strip().lower()
+    if not email or not _EMAIL_RE.match(email):
+        return jsonify({'error': 'A valid email on your account is required'}), 400
+    if user.email_verified:
+        return jsonify({'ok': True, 'already_verified': True, 'message': 'Email already verified'})
+    try:
+        from ..services.email_service import create_and_send_code
+        vc = create_and_send_code(email, 'register', user_id=user.id)
+        if not vc:
+            return jsonify({'error': 'Could not send verification email. Try again shortly.'}), 502
+    except Exception:
+        return jsonify({'error': 'Could not send verification email. Try again shortly.'}), 502
+    return jsonify({'ok': True, 'message': 'Verification code sent', 'email': email})
+
+
+@api_v1.route('/auth/verify-email', methods=['POST'])
+@jwt_required
+def auth_verify_email_api():
+    """Verify email with 6-digit code; may credit friend-invite bonus to referrer."""
+    user = request.api_user
+    data = request.get_json(silent=True) or {}
+    code = (data.get('code') or '').strip()
+    email = (user.email or '').strip().lower()
+    if not email:
+        return jsonify({'error': 'No email on account'}), 400
+    if not code or len(code) < 4:
+        return jsonify({'error': 'Enter the verification code'}), 400
+    if user.email_verified:
+        return jsonify({'ok': True, 'already_verified': True, 'user': _me_json(user)})
+
+    from ..services.email_service import verify_code
+    vc = verify_code(email, code, 'register')
+    if not vc:
+        return jsonify({'error': 'Invalid or expired code'}), 400
+
+    user.email_verified = True
+    db.session.commit()
+
+    invite_bonus = None
+    try:
+        from ..services.ledger import credit_friend_invite_on_verify
+        invite_bonus = credit_friend_invite_on_verify(user.wiam_id or user.id)
+    except Exception:
+        invite_bonus = None
+
+    return jsonify({
+        'ok': True,
+        'message': 'Email verified',
+        'user': _me_json(user),
+        'invite_bonus': invite_bonus,
+    })
 
 
 @api_v1.route('/auth/me')
@@ -4007,6 +4075,58 @@ def rewards_status_api():
         'daily_base_coins': 5,
         'streak_bonuses': {3: 5, 7: 15, 14: 30, 30: 100},
     })
+
+
+@api_v1.route('/rewards/watch-complete', methods=['POST'])
+@jwt_required
+def rewards_watch_complete_api():
+    """+2 coins when an episode completes; paused when wallet balance >= 50."""
+    user = request.api_user
+    data = request.get_json(silent=True) or {}
+    episode_id = data.get('episode_id')
+    series_id = data.get('series_id')
+    if episode_id is None:
+        return jsonify({'error': 'episode_id required'}), 400
+    from ..services.ledger import claim_watch_episode_reward, claim_series_finish_bonus
+    uid = user.wiam_id or user.id
+    result = claim_watch_episode_reward(uid, int(episode_id), int(series_id) if series_id else None)
+    finish = None
+    if series_id and result.get('ok'):
+        try:
+            finish = claim_series_finish_bonus(uid, int(series_id))
+        except Exception:
+            finish = None
+    result['series_finish'] = finish
+    status = 200 if result.get('ok') or result.get('paused') or result.get('already') else 400
+    return jsonify(result), status
+
+
+@api_v1.route('/rewards/ad-coins', methods=['POST'])
+@jwt_required
+def rewards_ad_coins_api():
+    """+10 coins after a rewarded ad (max 3/day)."""
+    user = request.api_user
+    from ..services.ledger import claim_ad_coins
+    result = claim_ad_coins(user.wiam_id or user.id)
+    if result.get('ok'):
+        return jsonify(result)
+    return jsonify(result), 400
+
+
+@api_v1.route('/rewards/series-finish', methods=['POST'])
+@jwt_required
+def rewards_series_finish_api():
+    """+15 when series watch progress >= 90% (max 2/week)."""
+    user = request.api_user
+    data = request.get_json(silent=True) or {}
+    series_id = data.get('series_id')
+    if series_id is None:
+        return jsonify({'error': 'series_id required'}), 400
+    from ..services.ledger import claim_series_finish_bonus
+    result = claim_series_finish_bonus(user.wiam_id or user.id, int(series_id))
+    if result.get('ok') or result.get('already'):
+        return jsonify(result)
+    return jsonify(result), 400
 
 
 @api_v1.route('/rewards/first-mission/status')

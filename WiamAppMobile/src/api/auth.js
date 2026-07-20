@@ -29,6 +29,7 @@ const authApi = {
     username,
     dateOfBirth,
     phone,
+    referralCode,
   }) => {
     try {
       const deviceFingerprint = await getDeviceFingerprint();
@@ -41,6 +42,7 @@ const authApi = {
         username,
         date_of_birth: dateOfBirth,
         phone: phone || '',
+        referral_code: referralCode || undefined,
         device_fingerprint: deviceFingerprint,
         platform: Platform.OS,
         device_signal: deviceSignal,
@@ -96,6 +98,24 @@ const authApi = {
     }
   },
 
+  sendVerifyCode: async () => {
+    try {
+      const response = await apiClient.post('/auth/send-verify-code', { purpose: 'register' });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.error || 'Failed to send verification code';
+    }
+  },
+
+  verifyEmail: async (code) => {
+    try {
+      const response = await apiClient.post('/auth/verify-email', { code });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.error || 'Verification failed';
+    }
+  },
+
   resetPassword: async (email, code, newPassword, confirmPassword) => {
     try {
       const response = await apiClient.post('/auth/reset-password', {
@@ -118,6 +138,7 @@ const authApi = {
       if (fields.bio !== undefined) body.bio = fields.bio;
       if (fields.username !== undefined) body.username = fields.username;
       if (fields.pronouns !== undefined) body.pronouns = fields.pronouns;
+      if (fields.dateOfBirth !== undefined) body.date_of_birth = fields.dateOfBirth;
       if (fields.showPronouns !== undefined) body.show_pronouns = fields.showPronouns;
       if (fields.dobVisible !== undefined) body.dob_visible = fields.dobVisible;
       if (fields.phone !== undefined) body.phone = fields.phone;

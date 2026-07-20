@@ -566,11 +566,23 @@ def genres():
     legacy_genres = Genre.query.filter(
         db.or_(Genre.product == 'legacy', Genre.product.is_(None))
     ).order_by(Genre.name.asc()).all()
+    genre_requests = []
+    try:
+        genre_requests = db.session.execute(
+            db.text(
+                'SELECT id, creator_id, name, note, status, created_at '
+                'FROM w_genre_requests ORDER BY '
+                "CASE WHEN status='pending' THEN 0 ELSE 1 END, id DESC LIMIT 50"
+            )
+        ).mappings().all()
+    except Exception:
+        genre_requests = []
     return render_template(
         'founder/genres.html',
         episio_genres=episio_genres,
         legacy_genres=legacy_genres,
         genres=episio_genres,
+        genre_requests=genre_requests,
     )
 
 
@@ -589,6 +601,51 @@ def add_genre():
         flash(f'Genre "{name}" added for {product}.', 'success')
     except Exception as e:
         flash(str(e)[:200], 'error')
+    return redirect(url_for('founder_dash.genres'))
+
+
+@founder_bp.route('/genres/requests/<int:req_id>/approve', methods=['POST'])
+@founder_required
+def approve_genre_request(req_id):
+    from ..services.episio_genres import add_genre as add_g
+    from flask_login import current_user
+    row = db.session.execute(
+        db.text('SELECT id, name, status FROM w_genre_requests WHERE id=:id'),
+        {'id': req_id},
+    ).mappings().first()
+    if not row:
+        flash('Request not found.', 'error')
+        return redirect(url_for('founder_dash.genres'))
+    name = (row['name'] or '').strip()
+    try:
+        add_g(name, product='episio')
+    except Exception:
+        pass
+    decided = getattr(current_user, 'wiam_id', None) or getattr(current_user, 'id', None)
+    db.session.execute(
+        db.text(
+            'UPDATE w_genre_requests SET status=\'approved\', decided_at=NOW(), decided_by=:u WHERE id=:id'
+        ),
+        {'id': req_id, 'u': decided},
+    )
+    db.session.commit()
+    flash(f'Approved genre "{name}".', 'success')
+    return redirect(url_for('founder_dash.genres'))
+
+
+@founder_bp.route('/genres/requests/<int:req_id>/reject', methods=['POST'])
+@founder_required
+def reject_genre_request(req_id):
+    from flask_login import current_user
+    decided = getattr(current_user, 'wiam_id', None) or getattr(current_user, 'id', None)
+    db.session.execute(
+        db.text(
+            'UPDATE w_genre_requests SET status=\'rejected\', decided_at=NOW(), decided_by=:u WHERE id=:id'
+        ),
+        {'id': req_id, 'u': decided},
+    )
+    db.session.commit()
+    flash('Genre request rejected.', 'success')
     return redirect(url_for('founder_dash.genres'))
 
 

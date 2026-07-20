@@ -888,6 +888,61 @@ def founder_run_auto_payouts():
     return jsonify(run_automatic_payouts(force=force))
 
 
+@episio_studio_api.route('/creator/studio/genre-requests', methods=['GET', 'POST'])
+@jwt_required
+def studio_genre_requests():
+    """Creators can request a genre missing from the catalog."""
+    forbid = _creator_api_forbidden()
+    if forbid:
+        return forbid
+    user = request.api_user
+    uid = user.wiam_id or user.id
+
+    if request.method == 'GET':
+        rows = db.session.execute(
+            db.text(
+                'SELECT id, name, note, status, created_at FROM w_genre_requests '
+                'WHERE creator_id=:u ORDER BY id DESC LIMIT 40'
+            ),
+            {'u': uid},
+        ).mappings().all()
+        return jsonify({
+            'requests': [
+                {
+                    'id': r['id'],
+                    'name': r['name'],
+                    'note': r['note'] or '',
+                    'status': r['status'],
+                    'created_at': r['created_at'].isoformat() if r['created_at'] else None,
+                }
+                for r in rows
+            ],
+        })
+
+    data = request.get_json(silent=True) or {}
+    name = (data.get('name') or '').strip()
+    note = (data.get('note') or '').strip()[:500]
+    if len(name) < 2:
+        return jsonify({'error': 'Genre name required'}), 400
+    from ..models import Genre
+    exists = Genre.query.filter(
+        db.func.lower(Genre.name) == name.lower(),
+        Genre.product == 'episio',
+        Genre.is_active.is_(True),
+    ).first()
+    if exists:
+        return jsonify({'error': f'Genre "{exists.name}" already exists', 'genre': exists.name}), 409
+    db.session.execute(
+        db.text(
+            'INSERT INTO w_genre_requests (creator_id, name, note, status) '
+            'VALUES (:u, :n, :note, \'pending\')'
+        ),
+        {'u': uid, 'n': name[:80], 'note': note},
+    )
+    db.session.commit()
+    return jsonify({'ok': True, 'message': 'Genre request submitted for review'}), 201
+
+
 @episio_studio_api.route('/creator/studio/series', methods=['GET', 'POST'])
 @jwt_required
 def studio_series_list_or_create():

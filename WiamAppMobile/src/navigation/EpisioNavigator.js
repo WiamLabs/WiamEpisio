@@ -23,6 +23,7 @@ import OnboardingDoneScreen from '../screens/episio/OnboardingDoneScreen';
 import WelcomeBonusScreen from '../screens/episio/WelcomeBonusScreen';
 import AgeGateScreen from '../screens/episio/AgeGateScreen';
 import OtpVerifyScreen from '../screens/episio/OtpVerifyScreen';
+import VerifyMethodScreen from '../screens/episio/VerifyMethodScreen';
 import ResetPasswordScreen from '../screens/episio/ResetPasswordScreen';
 import HomeScreen from '../screens/episio/HomeScreen';
 import DiscoverScreen from '../screens/episio/DiscoverScreen';
@@ -231,7 +232,11 @@ const EpisioNavigator = () => {
         <Stack.Screen name="OnboardingGenres" component={OnboardingGenresScreen} />
         <Stack.Screen name="OnboardingDone" component={OnboardingDoneScreen} />
         <Stack.Screen name="WelcomeBonus" component={WelcomeBonusScreen} options={{ animation: 'fade' }} />
-        <Stack.Screen name="AgeGate" component={AgeGateScreen} options={{ presentation: 'modal' }} />
+        <Stack.Screen
+          name="AgeGate"
+          component={AgeGateScreen}
+          options={{ presentation: 'fullScreenModal', gestureEnabled: false }}
+        />
         <Stack.Screen name="Main" component={MainTabs} options={{ animation: 'fade' }} />
 
         <Stack.Screen name="SeriesDetail" component={SeriesDetailScreen} options={{ animation: 'slide_from_right' }} />
@@ -243,8 +248,17 @@ const EpisioNavigator = () => {
 
         <Stack.Screen name="Login" component={LoginScreen} options={{ presentation: 'modal' }} />
         <Stack.Screen name="AuthRegister" component={AuthRegisterScreen} options={{ presentation: 'modal' }} />
+        <Stack.Screen
+          name="VerifyMethod"
+          component={VerifyMethodScreen}
+          options={{ presentation: 'fullScreenModal', gestureEnabled: false }}
+        />
         <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} options={{ presentation: 'modal' }} />
-        <Stack.Screen name="OtpVerify" component={OtpVerifyScreen} options={{ presentation: 'modal' }} />
+        <Stack.Screen
+          name="OtpVerify"
+          component={OtpVerifyScreen}
+          options={{ presentation: 'fullScreenModal', gestureEnabled: false }}
+        />
         <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} options={{ presentation: 'modal' }} />
 
         <Stack.Screen name="BuyCoins" component={BuyCoinsScreen} options={{ presentation: 'modal' }} />

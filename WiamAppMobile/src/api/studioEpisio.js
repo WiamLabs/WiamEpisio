@@ -12,6 +12,15 @@ function fmt(error, fallback) {
 }
 
 const studioEpisioApi = {
+  requestGenre: async (name, note = '') => {
+    try {
+      return (await apiClient.post('/creator/studio/genre-requests', { name, note })).data;
+    } catch (e) { throw fmt(e, 'Could not request genre'); }
+  },
+  listGenreRequests: async () => {
+    try { return (await apiClient.get('/creator/studio/genre-requests')).data; }
+    catch (e) { throw fmt(e, 'Failed to load genre requests'); }
+  },
   mediaSpecs: async () => {
     try { return (await apiClient.get('/episio/media-specs')).data; }
     catch (e) { throw fmt(e, 'Failed to load media specs'); }

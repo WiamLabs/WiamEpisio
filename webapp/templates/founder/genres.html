@@ -23,6 +23,37 @@
   </form>
 </div>
 
+{% if genre_requests is defined and genre_requests %}
+<div class="dash-card" style="margin-bottom:16px;">
+  <h3>Creator genre requests ({{ genre_requests|length }})</h3>
+  <table class="dash-table">
+    <thead><tr><th>Name</th><th>Note</th><th>Creator</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for r in genre_requests %}
+    <tr>
+      <td>{{ r.name }}</td>
+      <td style="color:var(--text-muted);font-size:0.8rem;">{{ r.note or '—' }}</td>
+      <td>{{ r.creator_id }}</td>
+      <td>{{ r.status }}</td>
+      <td>
+        {% if r.status == 'pending' %}
+        <form method="post" action="{{ url_for('founder_dash.approve_genre_request', req_id=r.id) }}" style="display:inline">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn-dash btn-dash-sm btn-dash-primary">Approve → add</button>
+        </form>
+        <form method="post" action="{{ url_for('founder_dash.reject_genre_request', req_id=r.id) }}" style="display:inline">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn-dash btn-dash-sm">Reject</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
 <div class="dash-card" style="margin-bottom:16px;">
   <h3>Episio genres ({{ episio_genres|length }})</h3>
   <table class="dash-table">

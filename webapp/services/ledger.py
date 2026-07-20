@@ -1108,3 +1108,261 @@ def credit_referral_bonus(referrer_id, referred_id, referral_code):
     log.info("Growth: referral bonus referrer=%s referred=%s", referrer_id, referred_id)
     return {'ok': True, 'referrer_coins': REFERRAL_BONUS_REFERRER,
             'referred_coins': REFERRAL_BONUS_REFERRED}
+
+
+# ---------------------------------------------------------------------------
+# Episio free-coin rewards (capped)
+# ---------------------------------------------------------------------------
+
+WATCH_EPISODE_COINS = 2
+WATCH_REWARD_PAUSE_BALANCE = 50
+AD_COINS = 10
+AD_COINS_DAILY_LIMIT = 3
+SERIES_FINISH_COINS = 15
+SERIES_FINISH_WEEKLY_LIMIT = 2
+FRIEND_INVITE_COINS = 20
+FRIEND_INVITE_MONTHLY_LIMIT = 5
+
+
+def _credit_bonus(user_id, coins, description, reference, event_type='bonus'):
+    bal = _get_user_balance(user_id)
+    tx_group = str(uuid.uuid4())
+    now = datetime.utcnow()
+    bal.balance += coins
+    bal.total_purchased += coins
+    bal.updated_at = now
+    db.session.add(LedgerEntry(
+        tx_group=tx_group, account_type='user', account_id=user_id,
+        entry_type='credit', amount=coins, currency='coins',
+        balance_after=bal.balance,
+        description=description,
+        event_type=event_type, created_at=now, created_by=user_id,
+    ))
+    db.session.add(CoinTransaction(
+        user_id=user_id, type='bonus', amount=coins,
+        balance_after=bal.balance,
+        description=description,
+        reference=reference,
+        ledger_tx_group=tx_group, created_at=now,
+    ))
+    return bal
+
+
+def claim_watch_episode_reward(user_id, episode_id, series_id=None):
+    """+2 per completed episode; pause when balance >= 50. Idempotent per episode."""
+    from sqlalchemy import text
+    user = _get_user(user_id)
+    if not user:
+        return {'ok': False, 'error': 'User not found'}
+
+    exists = db.session.execute(
+        text('SELECT id FROM w_watch_episode_rewards WHERE user_id=:u AND episode_id=:e'),
+        {'u': user_id, 'e': episode_id},
+    ).first()
+    if exists:
+        bal = _get_user_balance(user_id)
+        return {'ok': True, 'already': True, 'granted': False, 'balance': bal.balance, 'coins': 0}
+
+    bal = _get_user_balance(user_id)
+    if bal.balance >= WATCH_REWARD_PAUSE_BALANCE:
+        return {
+            'ok': True, 'paused': True, 'granted': False,
+            'balance': bal.balance, 'coins': 0,
+            'pause_at': WATCH_REWARD_PAUSE_BALANCE,
+        }
+
+    try:
+        db.session.execute(
+            text(
+                'INSERT INTO w_watch_episode_rewards (user_id, episode_id, coins) '
+                'VALUES (:u, :e, :c)'
+            ),
+            {'u': user_id, 'e': episode_id, 'c': WATCH_EPISODE_COINS},
+        )
+    except Exception:
+        db.session.rollback()
+        bal = _get_user_balance(user_id)
+        return {'ok': True, 'already': True, 'granted': False, 'balance': bal.balance, 'coins': 0}
+
+    bal = _credit_bonus(
+        user_id, WATCH_EPISODE_COINS,
+        f'Watch reward episode {episode_id}',
+        f'watch_ep_{user_id}_{episode_id}',
+    )
+    db.session.commit()
+    return {
+        'ok': True, 'granted': True, 'coins': WATCH_EPISODE_COINS,
+        'balance': bal.balance, 'paused': False,
+    }
+
+
+def claim_ad_coins(user_id):
+    """+10 after rewarded ad; max 3 per calendar day (UTC)."""
+    from sqlalchemy import text
+    from datetime import date
+    user = _get_user(user_id)
+    if not user:
+        return {'ok': False, 'error': 'User not found'}
+
+    today = date.today()
+    row = db.session.execute(
+        text('SELECT id, claim_count FROM w_ad_coin_claims WHERE user_id=:u AND claim_date=:d'),
+        {'u': user_id, 'd': today.isoformat()},
+    ).first()
+    count = int(row.claim_count) if row else 0
+    if count >= AD_COINS_DAILY_LIMIT:
+        return {
+            'ok': False, 'error': 'Daily ad reward limit reached',
+            'daily_remaining': 0, 'daily_limit': AD_COINS_DAILY_LIMIT,
+        }
+
+    if row:
+        db.session.execute(
+            text('UPDATE w_ad_coin_claims SET claim_count = claim_count + 1 WHERE id=:id'),
+            {'id': row.id},
+        )
+    else:
+        db.session.execute(
+            text(
+                'INSERT INTO w_ad_coin_claims (user_id, claim_date, claim_count) '
+                'VALUES (:u, :d, 1)'
+            ),
+            {'u': user_id, 'd': today.isoformat()},
+        )
+
+    bal = _credit_bonus(
+        user_id, AD_COINS, 'Ad reward', f'ad_coins_{user_id}_{today.isoformat()}_{count + 1}',
+    )
+    db.session.commit()
+    return {
+        'ok': True, 'coins': AD_COINS, 'balance': bal.balance,
+        'daily_remaining': AD_COINS_DAILY_LIMIT - (count + 1),
+        'daily_limit': AD_COINS_DAILY_LIMIT,
+    }
+
+
+def claim_series_finish_bonus(user_id, series_id):
+    """+15 once per series when ~90% watched; max 2 series / rolling 7 days."""
+    from sqlalchemy import text
+    from ..models import WatchProgress, Episode
+
+    user = _get_user(user_id)
+    if not user:
+        return {'ok': False, 'error': 'User not found'}
+
+    already = db.session.execute(
+        text('SELECT id FROM w_series_finish_rewards WHERE user_id=:u AND series_id=:s'),
+        {'u': user_id, 's': series_id},
+    ).first()
+    if already:
+        bal = _get_user_balance(user_id)
+        return {'ok': True, 'already': True, 'granted': False, 'balance': bal.balance, 'coins': 0}
+
+    total = Episode.query.filter_by(content_id=series_id).count()
+    if total <= 0:
+        return {'ok': False, 'error': 'Series not found'}
+
+    ep_ids = [r[0] for r in db.session.query(Episode.id).filter_by(content_id=series_id).all()]
+    if not ep_ids:
+        return {'ok': False, 'error': 'No episodes'}
+
+    completed_ids = {
+        int(r.episode_id) for r in WatchProgress.query.filter(
+            WatchProgress.user_id == user_id,
+            WatchProgress.episode_id.in_(ep_ids),
+            WatchProgress.completed.is_(True),
+        ).all()
+    }
+    rewarded_rows = db.session.execute(
+        text('SELECT episode_id FROM w_watch_episode_rewards WHERE user_id=:u'),
+        {'u': user_id},
+    ).fetchall()
+    rewarded_set = {int(r[0]) for r in rewarded_rows if r and r[0] is not None}
+    done = len(completed_ids | (rewarded_set & set(ep_ids)))
+    if done / float(total) < 0.9:
+        return {'ok': False, 'error': 'Series not finished yet', 'progress': round(done / float(total), 2)}
+
+    week_count = db.session.execute(
+        text(
+            'SELECT COUNT(*) FROM w_series_finish_rewards '
+            'WHERE user_id=:u AND created_at >= NOW() - INTERVAL \'7 days\''
+        ),
+        {'u': user_id},
+    ).scalar() or 0
+    if int(week_count) >= SERIES_FINISH_WEEKLY_LIMIT:
+        return {
+            'ok': False, 'error': 'Weekly finish bonus limit reached',
+            'weekly_limit': SERIES_FINISH_WEEKLY_LIMIT,
+        }
+
+    try:
+        db.session.execute(
+            text(
+                'INSERT INTO w_series_finish_rewards (user_id, series_id, coins) '
+                'VALUES (:u, :s, :c)'
+            ),
+            {'u': user_id, 's': series_id, 'c': SERIES_FINISH_COINS},
+        )
+    except Exception:
+        db.session.rollback()
+        bal = _get_user_balance(user_id)
+        return {'ok': True, 'already': True, 'granted': False, 'balance': bal.balance, 'coins': 0}
+
+    bal = _credit_bonus(
+        user_id, SERIES_FINISH_COINS,
+        f'Series finish bonus {series_id}',
+        f'series_finish_{user_id}_{series_id}',
+    )
+    db.session.commit()
+    return {'ok': True, 'granted': True, 'coins': SERIES_FINISH_COINS, 'balance': bal.balance}
+
+
+def credit_friend_invite_on_verify(referred_user_id):
+    """When invitee verifies email, credit referrer +20 (max 5/month)."""
+    from sqlalchemy import text
+    referred = _get_user(referred_user_id)
+    if not referred:
+        return {'ok': False, 'error': 'User not found'}
+    referrer_id = getattr(referred, 'referred_by', None)
+    if not referrer_id:
+        return {'ok': False, 'skipped': True, 'reason': 'no_referrer'}
+
+    exists = db.session.execute(
+        text(
+            'SELECT id FROM w_friend_invite_bonuses '
+            'WHERE referrer_id=:r AND referred_id=:n'
+        ),
+        {'r': referrer_id, 'n': referred_user_id},
+    ).first()
+    if exists:
+        return {'ok': True, 'already': True}
+
+    month_count = db.session.execute(
+        text(
+            'SELECT COUNT(*) FROM w_friend_invite_bonuses '
+            'WHERE referrer_id=:r AND created_at >= date_trunc(\'month\', NOW())'
+        ),
+        {'r': referrer_id},
+    ).scalar() or 0
+    if int(month_count) >= FRIEND_INVITE_MONTHLY_LIMIT:
+        return {'ok': False, 'error': 'Monthly invite bonus limit', 'monthly_limit': FRIEND_INVITE_MONTHLY_LIMIT}
+
+    try:
+        db.session.execute(
+            text(
+                'INSERT INTO w_friend_invite_bonuses (referrer_id, referred_id, coins) '
+                'VALUES (:r, :n, :c)'
+            ),
+            {'r': referrer_id, 'n': referred_user_id, 'c': FRIEND_INVITE_COINS},
+        )
+    except Exception:
+        db.session.rollback()
+        return {'ok': True, 'already': True}
+
+    bal = _credit_bonus(
+        referrer_id, FRIEND_INVITE_COINS,
+        f'Friend invite bonus for user {referred_user_id}',
+        f'friend_invite_{referrer_id}_{referred_user_id}',
+    )
+    db.session.commit()
+    return {'ok': True, 'granted': True, 'coins': FRIEND_INVITE_COINS, 'balance': bal.balance, 'referrer_id': referrer_id}

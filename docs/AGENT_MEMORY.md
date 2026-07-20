@@ -2,9 +2,11 @@
 
 Living journal the AI agent reads at the start of every session and updates as work progresses. Mutable — overwrite freely. Durable project facts live in `.cursor/rules/project-context.mdc` instead.
 
-**Last updated:** 2026-07-20 — **Restored email signup (no SMS).** Guest: Buy Coins open from Home/Profile; downloads require signup; one-series watch unchanged. Checkout still needs email account so IAP credits wallet.
+**Last updated:** 2026-07-20 — **Auth + free coins + genres.** Email verify after register (SMS hidden); year-only sticky AgeGate; DOB picker + username gate; watch +2 (pause ≥50), ad +10 (3/day), series finish +15 (2/week), friend invite +20 (5/month); creator genre requests + founder approve.
 
 **Standing order from Martin:** after finishing meaningful work, **commit + push to `master`** so Render auto-deploys. Do not leave shippable Episio/webapp changes only local.
+
+**Previous — Restored email signup (no SMS).** Guest Buy Coins; downloads signup-only; one-series watch.
 
 **Previous — Account delete auth + RLS SQL + hide CDN names in delete UI.** Creator/Watcher mood, media crop, episode preview also on `b428fef`.
 

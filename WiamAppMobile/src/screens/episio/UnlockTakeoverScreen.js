@@ -1,20 +1,23 @@
 /**
  * Exact layout: WiamEpisio-Unlock-Takeover.html
+ * Unlock with coins, VIP, or watch ad for +10 coins (capped).
  */
 import React, { useState } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Share, Alert,
+  View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Share, Alert, Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
-  ChevronLeft, Coins, Bookmark, List, Share2, Crown,
+  ChevronLeft, Coins, Bookmark, List, Share2, Play,
 } from 'lucide-react-native';
 import { COLORS, FONTS } from '../../constants/theme';
 import episodesApi from '../../api/episodes';
 import studioEpisioApi from '../../api/studioEpisio';
+import walletApi from '../../api/wallet';
 import useAuthStore from '../../store/useAuthStore';
+import { useRewardedAd } from '../../components/ads/AdRewarded';
 
 const UnlockTakeoverScreen = () => {
   const insets = useSafeAreaInsets();
@@ -26,11 +29,12 @@ const UnlockTakeoverScreen = () => {
     unlockPrice = 10,
     episodeNumber,
     seriesTitle,
-    synopsis,
   } = route.params || {};
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const [busy, setBusy] = useState(false);
+  const [adBusy, setAdBusy] = useState(false);
   const [error, setError] = useState(null);
+  const { showRewardedAd, isReady, dailyRemaining } = useRewardedAd(seriesId || null);
 
   const close = () => {
     if (navigation.canGoBack()) navigation.goBack();
@@ -57,9 +61,59 @@ const UnlockTakeoverScreen = () => {
     }
   };
 
+  const watchAd = async () => {
+    if (!isAuthenticated) {
+      navigation.navigate('LoginRequiredSheet', {
+        title: 'Sign up to earn coins',
+        message: 'Watch an ad for free coins after you create a free account.',
+        returnTo: 'UnlockTakeover',
+        returnParams: route.params,
+      });
+      return;
+    }
+    if (Platform.OS === 'web' || !isReady) {
+      Alert.alert(
+        'Ads',
+        'Rewarded ads are available in a production install of WiamEpisio.',
+      );
+      return;
+    }
+    setAdBusy(true);
+    setError(null);
+    try {
+      const shown = await showRewardedAd(async () => {
+        try {
+          const res = await walletApi.claimAdCoins();
+          if (!res?.ok) {
+            setError(res?.error || 'Could not credit coins');
+            return;
+          }
+          try {
+            await episodesApi.unlockEpisode(episodeId);
+            navigation.replace('Player', { episodeId, seriesId });
+          } catch (e) {
+            if (e?.needCoins) {
+              Alert.alert('Coins added', `${res.coins || 10} coins added. Top up if you still need more.`);
+              navigation.navigate('BuyCoins');
+            } else {
+              setError(e?.message || 'Unlock failed after ad');
+            }
+          }
+        } catch (e) {
+          setError(typeof e === 'string' ? e : (e?.message || 'Could not credit coins'));
+        }
+      });
+      if (!shown) {
+        Alert.alert('Ads', 'Could not show an ad right now. Try again later.');
+      }
+    } finally {
+      setAdBusy(false);
+    }
+  };
+
   return (
     <View style={styles.root}>
-      <LinearGradient colors={['#1a1030', '#0d0d24', '#000']} style={StyleSheet.absoluteFill} />
+      <LinearGradient colors={[COLORS.navy, '#0d0d24', '#000']} style={StyleSheet.absoluteFill} />
 
       <View style={[styles.topBar, { top: insets.top + 8 }]}>
         <TouchableOpacity style={styles.backBtn} onPress={close}>
@@ -86,6 +140,28 @@ const UnlockTakeoverScreen = () => {
             </>
           )}
         </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.adBtn}
+          onPress={watchAd}
+          disabled={adBusy || busy}
+          activeOpacity={0.9}
+        >
+          {adBusy ? (
+            <ActivityIndicator color={COLORS.gold} />
+          ) : (
+            <>
+              <Play size={15} color={COLORS.gold} fill={COLORS.gold} />
+              <Text style={styles.adText}>Watch ad to continue · +10 coins</Text>
+            </>
+          )}
+        </TouchableOpacity>
+        {typeof dailyRemaining === 'number' && dailyRemaining < 3 ? (
+          <Text style={styles.adLeft}>
+            {dailyRemaining} ad reward{dailyRemaining === 1 ? '' : 's'} left today
+          </Text>
+        ) : null}
+
         <TouchableOpacity
           style={styles.vipHint}
           onPress={() => navigation.navigate('MembershipOfferModal', {
@@ -94,6 +170,10 @@ const UnlockTakeoverScreen = () => {
           })}
         >
           <Text style={styles.vipHintText}>Or join VIP — watch without coins</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => navigation.navigate('BuyCoins')} style={{ marginTop: 10 }}>
+          <Text style={styles.buyLink}>Buy coins</Text>
         </TouchableOpacity>
       </View>
 
@@ -123,32 +203,12 @@ const UnlockTakeoverScreen = () => {
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.railItem}
-          onPress={() => Share.share({ message: seriesTitle || 'WiamEpisio' }).catch(() => {})}
+          onPress={() => Share.share({
+            message: `Watch ${seriesTitle || 'this series'} on WiamEpisio`,
+          }).catch(() => {})}
         >
           <View style={styles.railIcon}><Share2 size={19} color="#fff" /></View>
           <Text style={styles.railLabel}>Share</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={[styles.bottomInfo, { bottom: 78 + insets.bottom }]}>
-        <Text style={styles.seriesTitle} numberOfLines={1}>{seriesTitle || 'Series'}</Text>
-        <Text style={styles.epCaption} numberOfLines={2}>
-          {synopsis || 'Unlock this episode to keep watching the story.'}
-        </Text>
-      </View>
-
-      <View style={[styles.bottombar, { paddingBottom: Math.max(insets.bottom, 10), height: 60 + insets.bottom }]}>
-        <TouchableOpacity
-          style={styles.memberPill}
-          onPress={() => navigation.navigate('VipCheckout')}
-        >
-          <Crown size={14} color={COLORS.gold} fill={COLORS.gold} />
-          <Text style={styles.memberText}>Join Membership</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate(isAuthenticated ? 'BuyCoins' : 'Login')}>
-          <Text style={styles.downloadText}>
-            {isAuthenticated ? 'Need coins?' : 'Sign in'}
-          </Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -156,53 +216,43 @@ const UnlockTakeoverScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#000' },
+  root: { flex: 1 },
   topBar: {
-    position: 'absolute', left: 0, right: 0, paddingHorizontal: 18,
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', zIndex: 3, opacity: 0.9,
+    position: 'absolute', left: 16, right: 16, flexDirection: 'row',
+    alignItems: 'center', justifyContent: 'space-between', zIndex: 2,
   },
   backBtn: {
-    width: 34, height: 34, borderRadius: 17, backgroundColor: 'rgba(255,255,255,0.1)',
+    width: 34, height: 34, borderRadius: 17, backgroundColor: 'rgba(0,0,0,0.45)',
     alignItems: 'center', justifyContent: 'center',
   },
-  epIndicator: { fontSize: 12.5, color: '#fff', fontFamily: FONTS.semi },
-  centerBlock: {
-    position: 'absolute', top: '42%', left: 0, right: 0,
-    alignItems: 'center', paddingHorizontal: 30, zIndex: 3,
-  },
+  epIndicator: { color: '#fff', fontFamily: FONTS.bold, fontSize: 13 },
+  centerBlock: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 28 },
   message: {
-    fontSize: 15, color: '#fff', fontFamily: FONTS.semi, lineHeight: 22,
-    textAlign: 'center', marginBottom: 22,
+    color: '#fff', fontFamily: FONTS.semi, fontSize: 16, textAlign: 'center', lineHeight: 24, marginBottom: 22,
   },
-  error: { color: '#EF4444', marginBottom: 12, fontFamily: FONTS.medium, fontSize: 13, textAlign: 'center' },
+  error: { color: COLORS.error, marginBottom: 12, textAlign: 'center', fontFamily: FONTS.medium },
   unlockBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: 8,
-    paddingHorizontal: 40, paddingVertical: 15, borderRadius: 16, backgroundColor: COLORS.gold,
+    flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: COLORS.gold,
+    paddingHorizontal: 22, paddingVertical: 14, borderRadius: 16, minWidth: 240, justifyContent: 'center',
   },
-  unlockText: { fontSize: 14.5, fontFamily: FONTS.extraBold, color: COLORS.navy },
-  vipHint: { marginTop: 14, padding: 6 },
-  vipHintText: { fontSize: 12, color: COLORS.gold, fontFamily: FONTS.semi, textAlign: 'center' },
-  actionRail: {
-    position: 'absolute', right: 12, alignItems: 'center', gap: 20, zIndex: 3, opacity: 0.85,
+  unlockText: { fontFamily: FONTS.bold, color: COLORS.navy, fontSize: 14.5 },
+  adBtn: {
+    marginTop: 12, flexDirection: 'row', alignItems: 'center', gap: 8,
+    borderWidth: 1.5, borderColor: COLORS.gold, paddingHorizontal: 18, paddingVertical: 13,
+    borderRadius: 16, minWidth: 240, justifyContent: 'center',
   },
+  adText: { fontFamily: FONTS.bold, color: COLORS.gold, fontSize: 13.5 },
+  adLeft: { marginTop: 8, fontSize: 11, color: COLORS.textFaint, fontFamily: FONTS.regular },
+  vipHint: { marginTop: 16 },
+  vipHintText: { color: COLORS.textDim, fontFamily: FONTS.semi, fontSize: 12.5 },
+  buyLink: { color: COLORS.gold, fontFamily: FONTS.semi, fontSize: 13 },
+  actionRail: { position: 'absolute', right: 14, gap: 16 },
   railItem: { alignItems: 'center', gap: 4 },
   railIcon: {
-    width: 42, height: 42, borderRadius: 21, backgroundColor: 'rgba(255,255,255,0.1)',
+    width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.12)',
     alignItems: 'center', justifyContent: 'center',
   },
-  railLabel: { fontSize: 10, color: '#fff', fontFamily: FONTS.semi },
-  bottomInfo: { position: 'absolute', left: 18, right: 80, zIndex: 3 },
-  seriesTitle: { fontSize: 14, fontFamily: FONTS.bold, color: '#fff', marginBottom: 4 },
-  epCaption: { fontSize: 11.5, color: '#C9C9DE', lineHeight: 16, fontFamily: FONTS.regular },
-  bottombar: {
-    position: 'absolute', bottom: 0, left: 0, right: 0,
-    backgroundColor: 'rgba(8,8,26,0.85)', borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.08)',
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 18, paddingTop: 12,
-  },
-  memberPill: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  memberText: { fontSize: 12.5, color: COLORS.gold, fontFamily: FONTS.bold },
-  downloadText: { fontSize: 12.5, color: '#7D7D97', fontFamily: FONTS.semi },
+  railLabel: { color: '#fff', fontSize: 10, fontFamily: FONTS.semi },
 });
 
 export default UnlockTakeoverScreen;

@@ -1,121 +1,142 @@
 /**
- * Style: WiamEpisio-Age-Gate.html
- * Confirm 18+ via DOB · Continue → Main · Exit for under 18
+ * Confirm age — year of birth only. Sticky until confirm / under-18 exit.
+ * Brand navy + gold radial glow.
  */
-import React, { useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, BackHandler, Platform,
+  View, Text, StyleSheet, TouchableOpacity, Alert, BackHandler, Platform,
+  ScrollView, KeyboardAvoidingView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { Lock } from 'lucide-react-native';
 import { COLORS, FONTS } from '../../constants/theme';
 import LogoBadge from '../../components/episio/LogoBadge';
 import EpisioGoldButton from '../../components/episio/EpisioGoldButton';
+import authApi from '../../api/auth';
 
 const MIN_AGE = 18;
-
-const parseAge = (day, month, year) => {
-  const d = parseInt(day, 10);
-  const m = parseInt(month, 10);
-  const y = parseInt(year, 10);
-  if (!d || !m || !y || y < 1900 || m < 1 || m > 12 || d < 1 || d > 31) return null;
-  const birth = new Date(y, m - 1, d);
-  if (birth.getFullYear() !== y || birth.getMonth() !== m - 1 || birth.getDate() !== d) return null;
-  const today = new Date();
-  let age = today.getFullYear() - y;
-  const md = today.getMonth() - birth.getMonth();
-  if (md < 0 || (md === 0 && today.getDate() < birth.getDate())) age -= 1;
-  return age;
-};
 
 const AgeGateScreen = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
-  const [day, setDay] = useState('');
-  const [month, setMonth] = useState('');
-  const [year, setYear] = useState('');
+  const route = useRoute();
+  const sticky = route.params?.sticky !== false;
+  const prefill = route.params?.birthYear;
+  const nowYear = new Date().getFullYear();
+  const maxYear = nowYear - MIN_AGE;
+  const minYear = nowYear - 100;
+
+  const years = useMemo(() => {
+    const list = [];
+    for (let y = maxYear; y >= minYear; y -= 1) list.push(y);
+    return list;
+  }, [maxYear, minYear]);
+
+  const [year, setYear] = useState(() => {
+    const y = Number(prefill);
+    if (y && y >= minYear && y <= maxYear) return y;
+    return maxYear - 5;
+  });
   const [error, setError] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!sticky || done) return undefined;
+      const onBack = () => true;
+      const sub = BackHandler.addEventListener('hardwareBackPress', onBack);
+      const unsub = navigation.addListener('beforeRemove', (e) => {
+        if (done) return;
+        if (e.data.action.type === 'GO_BACK' || e.data.action.type === 'POP') {
+          e.preventDefault();
+        }
+      });
+      return () => {
+        sub.remove();
+        unsub();
+      };
+    }, [navigation, sticky, done]),
+  );
 
   const exitApp = () => {
     Alert.alert(
       'Age requirement',
-      'WiamEpisio is for viewers 18 and older. You can browse other WiamLabs apps when you meet the age requirement.',
+      'WiamEpisio is for viewers 18 and older.',
       [
-        { text: 'OK', onPress: () => {
-          if (navigation.canGoBack()) navigation.goBack();
-          else if (Platform.OS === 'android') BackHandler.exitApp();
-        }},
+        {
+          text: 'OK',
+          onPress: () => {
+            setDone(true);
+            if (Platform.OS === 'android') BackHandler.exitApp();
+            else navigation.reset({ index: 0, routes: [{ name: 'Main' }] });
+          },
+        },
       ],
     );
   };
 
-  const confirm = () => {
+  const confirm = async () => {
     setError(null);
-    const age = parseAge(day, month, year);
-    if (age === null) {
-      setError('Enter a valid date of birth');
+    const y = Number(year);
+    if (!y || y < minYear || y > maxYear) {
+      setError('Select your year of birth');
       return;
     }
+    const age = nowYear - y;
     if (age < MIN_AGE) {
       exitApp();
       return;
     }
+    setBusy(true);
+    try {
+      // Store as Jan 1 of birth year for eligibility records
+      await authApi.updateProfile({ dateOfBirth: `${y}-01-01` }).catch(() => {});
+    } finally {
+      setBusy(false);
+    }
+    setDone(true);
     navigation.replace('Main');
   };
 
   return (
-    <View style={[styles.root, { paddingTop: insets.top, paddingBottom: Math.max(insets.bottom, 40) }]}>
+    <KeyboardAvoidingView
+      style={[styles.root, { paddingTop: insets.top, paddingBottom: Math.max(insets.bottom, 24) }]}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
       <View style={styles.glowBg} />
-
-      <View style={styles.wrap}>
+      <ScrollView
+        contentContainerStyle={styles.wrap}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
         <LogoBadge size={56} />
 
-        <Text style={styles.h1}>Confirm your date of birth</Text>
+        <Text style={styles.h1}>Confirm your age</Text>
         <Text style={styles.sub}>
-          WiamEpisio includes drama series intended for mature audiences. You must be 18+ to continue.
+          WiamEpisio includes drama series intended for mature audiences. Confirm your year of birth — you must be 18+ to continue.
         </Text>
 
-        <View style={styles.dobRow}>
-          <View style={styles.dobField}>
-            <TextInput
-              style={styles.dobInput}
-              placeholder="DD"
-              placeholderTextColor={COLORS.textFaint}
-              keyboardType="number-pad"
-              maxLength={2}
-              value={day}
-              onChangeText={setDay}
-            />
-          </View>
-          <View style={styles.dobField}>
-            <TextInput
-              style={styles.dobInput}
-              placeholder="MM"
-              placeholderTextColor={COLORS.textFaint}
-              keyboardType="number-pad"
-              maxLength={2}
-              value={month}
-              onChangeText={setMonth}
-            />
-          </View>
-          <View style={styles.dobField}>
-            <TextInput
-              style={styles.dobInput}
-              placeholder="YYYY"
-              placeholderTextColor={COLORS.textFaint}
-              keyboardType="number-pad"
-              maxLength={4}
-              value={year}
-              onChangeText={setYear}
-            />
-          </View>
-        </View>
-        <View style={styles.dobLabels}>
-          <Text style={styles.dobLabel}>Day</Text>
-          <Text style={styles.dobLabel}>Month</Text>
-          <Text style={styles.dobLabel}>Year</Text>
-        </View>
+        <Text style={styles.yearLabel}>Year of birth</Text>
+        <ScrollView
+          style={styles.yearWheel}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingVertical: 12 }}
+        >
+          {years.map((y) => {
+            const on = y === year;
+            return (
+              <TouchableOpacity
+                key={y}
+                style={[styles.yearItem, on && styles.yearItemOn]}
+                onPress={() => setYear(y)}
+              >
+                <Text style={[styles.yearText, on && styles.yearTextOn]}>{y}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
 
         <View style={styles.privacyNote}>
           <Lock size={14} color={COLORS.gold} />
@@ -127,8 +148,9 @@ const AgeGateScreen = () => {
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
         <EpisioGoldButton
-          label="Confirm & Continue"
+          label={busy ? 'Saving…' : 'Confirm & Continue'}
           onPress={confirm}
+          loading={busy}
           style={{ width: '100%', marginBottom: 12 }}
           textStyle={{ fontSize: 15 }}
         />
@@ -136,44 +158,53 @@ const AgeGateScreen = () => {
         <TouchableOpacity onPress={exitApp}>
           <Text style={styles.declineLink}>I'm under 18</Text>
         </TouchableOpacity>
-      </View>
-    </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: COLORS.navy, alignItems: 'center', justifyContent: 'center' },
+  root: { flex: 1, backgroundColor: COLORS.navy },
   glowBg: {
     position: 'absolute',
-    top: 60,
+    top: 40,
+    alignSelf: 'center',
     width: 420,
     height: 420,
     borderRadius: 210,
     backgroundColor: 'rgba(212,160,23,0.16)',
   },
-  wrap: { alignItems: 'center', paddingHorizontal: 30, width: '100%' },
-  h1: { fontSize: 20, fontFamily: FONTS.extraBold, color: '#fff', marginTop: 22, marginBottom: 10, textAlign: 'center' },
-  sub: { fontSize: 12.5, color: '#7D7D97', lineHeight: 20, textAlign: 'center', maxWidth: 280, marginBottom: 28 },
-  dobRow: { flexDirection: 'row', gap: 10, width: '100%', marginBottom: 8 },
-  dobField: {
-    flex: 1,
+  wrap: {
+    alignItems: 'center',
+    paddingHorizontal: 30,
+    paddingTop: 48,
+    paddingBottom: 40,
+    minHeight: '100%',
+    justifyContent: 'center',
+  },
+  h1: {
+    fontSize: 20, fontFamily: FONTS.extraBold, color: '#fff', marginTop: 22, marginBottom: 10, textAlign: 'center',
+  },
+  sub: {
+    fontSize: 12.5, color: '#7D7D97', lineHeight: 20, textAlign: 'center', maxWidth: 300, marginBottom: 20,
+  },
+  yearLabel: {
+    alignSelf: 'stretch', textAlign: 'center', fontSize: 10, color: COLORS.textFaint,
+    fontFamily: FONTS.bold, textTransform: 'uppercase', marginBottom: 8,
+  },
+  yearWheel: {
+    alignSelf: 'stretch',
+    maxHeight: 180,
     backgroundColor: COLORS.navyCard,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: COLORS.navyLine,
-    borderRadius: 14,
-    padding: 14,
-    alignItems: 'center',
+    marginBottom: 20,
   },
-  dobInput: {
-    color: '#fff',
-    fontSize: 16,
-    fontFamily: FONTS.bold,
-    textAlign: 'center',
-    width: '100%',
-    padding: 0,
-  },
-  dobLabels: { flexDirection: 'row', gap: 10, width: '100%', marginBottom: 24 },
-  dobLabel: { flex: 1, textAlign: 'center', fontSize: 9.5, color: COLORS.textFaint, fontFamily: FONTS.bold, textTransform: 'uppercase' },
+  yearItem: { paddingVertical: 10, alignItems: 'center', marginHorizontal: 10, borderRadius: 10 },
+  yearItemOn: { backgroundColor: 'rgba(212,160,23,0.2)' },
+  yearText: { fontSize: 18, fontFamily: FONTS.semi, color: COLORS.textDim },
+  yearTextOn: { color: COLORS.gold, fontFamily: FONTS.extraBold },
   privacyNote: {
     flexDirection: 'row',
     gap: 8,

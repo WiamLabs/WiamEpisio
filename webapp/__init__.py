@@ -2201,6 +2201,56 @@ def _run_safe_migrations(app):
             CONSTRAINT uq_user_series_remind UNIQUE (user_id, content_id)
         )""",
         "CREATE INDEX IF NOT EXISTS ix_series_remind_content ON w_series_reminders (content_id)",
+
+        """CREATE TABLE IF NOT EXISTS w_watch_episode_rewards (
+            id SERIAL PRIMARY KEY,
+            user_id BIGINT NOT NULL,
+            episode_id INTEGER NOT NULL,
+            coins INTEGER NOT NULL DEFAULT 2,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+            CONSTRAINT uq_watch_ep_reward UNIQUE (user_id, episode_id)
+        )""",
+        "CREATE INDEX IF NOT EXISTS ix_watch_ep_reward_user ON w_watch_episode_rewards (user_id)",
+
+        """CREATE TABLE IF NOT EXISTS w_ad_coin_claims (
+            id SERIAL PRIMARY KEY,
+            user_id BIGINT NOT NULL,
+            claim_date DATE NOT NULL,
+            claim_count INTEGER NOT NULL DEFAULT 0,
+            CONSTRAINT uq_ad_coin_day UNIQUE (user_id, claim_date)
+        )""",
+
+        """CREATE TABLE IF NOT EXISTS w_series_finish_rewards (
+            id SERIAL PRIMARY KEY,
+            user_id BIGINT NOT NULL,
+            series_id INTEGER NOT NULL,
+            coins INTEGER NOT NULL DEFAULT 15,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+            CONSTRAINT uq_series_finish_user UNIQUE (user_id, series_id)
+        )""",
+        "CREATE INDEX IF NOT EXISTS ix_series_finish_user ON w_series_finish_rewards (user_id, created_at)",
+
+        """CREATE TABLE IF NOT EXISTS w_friend_invite_bonuses (
+            id SERIAL PRIMARY KEY,
+            referrer_id BIGINT NOT NULL,
+            referred_id BIGINT NOT NULL,
+            coins INTEGER NOT NULL DEFAULT 20,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+            CONSTRAINT uq_friend_invite_pair UNIQUE (referrer_id, referred_id)
+        )""",
+        "CREATE INDEX IF NOT EXISTS ix_friend_invite_referrer ON w_friend_invite_bonuses (referrer_id, created_at)",
+
+        """CREATE TABLE IF NOT EXISTS w_genre_requests (
+            id SERIAL PRIMARY KEY,
+            creator_id BIGINT NOT NULL,
+            name TEXT NOT NULL,
+            note TEXT DEFAULT '',
+            status TEXT DEFAULT 'pending',
+            decided_by BIGINT,
+            decided_at TIMESTAMP,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+        )""",
+        "CREATE INDEX IF NOT EXISTS ix_genre_req_status ON w_genre_requests (status)",
     ]
     engine = db.engine
     with engine.connect() as conn:

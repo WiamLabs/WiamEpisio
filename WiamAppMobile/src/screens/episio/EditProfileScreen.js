@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { ChevronLeft } from 'lucide-react-native';
+import { ChevronLeft, Camera } from 'lucide-react-native';
 import { COLORS, FONTS } from '../../constants/theme';
 import EpisioGoldButton from '../../components/episio/EpisioGoldButton';
 import authApi from '../../api/auth';
@@ -84,16 +84,20 @@ const EditProfileScreen = () => {
         <Text style={styles.h1}>Edit profile</Text>
       </View>
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
-        <TouchableOpacity style={styles.avatar} onPress={pickAvatar} disabled={busy}>
-          {avatar ? (
-            <Image source={{ uri: avatar }} style={styles.avatarImg} />
-          ) : (
-            <View style={styles.avatarLetterWrap}>
-              <Text style={styles.avatarLetter}>{(displayName || 'U')[0]?.toUpperCase()}</Text>
+        <View style={styles.avatarWrap}>
+          <TouchableOpacity style={styles.avatar} onPress={pickAvatar} disabled={busy} activeOpacity={0.85}>
+            {avatar ? (
+              <Image source={{ uri: avatar }} style={styles.avatarImg} />
+            ) : (
+              <View style={styles.avatarLetterWrap}>
+                <Text style={styles.avatarLetter}>{(displayName || 'U')[0]?.toUpperCase()}</Text>
+              </View>
+            )}
+            <View style={styles.camBadge}>
+              <Camera size={14} color={COLORS.navy} />
             </View>
-          )}
-          <Text style={styles.changePhoto}>Change photo · crop first</Text>
-        </TouchableOpacity>
+          </TouchableOpacity>
+        </View>
         {avatar ? (
           <TouchableOpacity onPress={deleteAvatar} disabled={busy}>
             <Text style={styles.deletePhoto}>Remove photo</Text>
@@ -139,16 +143,22 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   h1: { fontSize: 17, fontFamily: FONTS.bold, color: '#fff' },
-  avatar: { alignItems: 'center', marginBottom: 8 },
+  avatarWrap: { alignItems: 'center', marginBottom: 8 },
+  avatar: { width: 96, height: 96 },
   avatarImg: { width: 96, height: 96, borderRadius: 48 },
   avatarLetterWrap: {
     width: 96, height: 96, borderRadius: 48, backgroundColor: COLORS.gold,
     alignItems: 'center', justifyContent: 'center',
   },
   avatarLetter: { fontSize: 36, fontFamily: FONTS.extraBold, color: COLORS.navy },
-  changePhoto: { marginTop: 10, color: COLORS.gold, fontFamily: FONTS.semi, fontSize: 13 },
+  camBadge: {
+    position: 'absolute', right: 0, bottom: 0,
+    width: 30, height: 30, borderRadius: 15,
+    backgroundColor: COLORS.gold, alignItems: 'center', justifyContent: 'center',
+    borderWidth: 2, borderColor: COLORS.navy,
+  },
   deletePhoto: {
-    textAlign: 'center', color: '#EF4444', fontFamily: FONTS.medium, fontSize: 12, marginBottom: 18,
+    textAlign: 'center', color: '#EF4444', fontFamily: FONTS.medium, fontSize: 12, marginBottom: 18, marginTop: 8,
   },
   label: { color: COLORS.textDim, fontFamily: FONTS.semi, fontSize: 12, marginBottom: 6 },
   input: {

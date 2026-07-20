@@ -115,6 +115,14 @@ const walletApi = {
   getRewardsStatus: () => apiClient.get('/rewards/status').then(r => r.data),
   getFirstMissionStatus: () => apiClient.get('/rewards/first-mission/status').then(r => r.data),
   claimFirstMissionReward: () => apiClient.post('/rewards/first-mission/claim').then(r => r.data),
+  claimWatchComplete: (episodeId, seriesId) =>
+    apiClient.post('/rewards/watch-complete', {
+      episode_id: episodeId,
+      series_id: seriesId,
+    }).then(r => r.data),
+  claimAdCoins: () => apiClient.post('/rewards/ad-coins').then(r => r.data),
+  claimSeriesFinish: (seriesId) =>
+    apiClient.post('/rewards/series-finish', { series_id: seriesId }).then(r => r.data),
 };
 
 export default walletApi;

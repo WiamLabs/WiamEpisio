@@ -6,7 +6,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView,
-  KeyboardAvoidingView, Platform, Keyboard,
+  KeyboardAvoidingView, Platform, Keyboard, Modal, Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -20,7 +20,7 @@ const StudioSeriesCreateScreen = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const scrollRef = useRef(null);
-  const { genres: GENRES } = useEpisioGenres();
+  const { genres: GENRES, reload: reloadGenres } = useEpisioGenres();
   const [title, setTitle] = useState('');
   const [synopsis, setSynopsis] = useState('');
   const [genre, setGenre] = useState('Drama');
@@ -29,6 +29,9 @@ const StudioSeriesCreateScreen = () => {
   const [seasonNumber, setSeasonNumber] = useState('1');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
+  const [genreReqOpen, setGenreReqOpen] = useState(false);
+  const [genreReqName, setGenreReqName] = useState('');
+  const [genreReqBusy, setGenreReqBusy] = useState(false);
 
   useEffect(() => {
     if (GENRES?.length && !GENRES.includes(genre)) {
@@ -186,6 +189,9 @@ const StudioSeriesCreateScreen = () => {
             </TouchableOpacity>
           ))}
         </View>
+        <TouchableOpacity onPress={() => { setGenreReqName(''); setGenreReqOpen(true); }}>
+          <Text style={styles.requestGenre}>Don't see your genre? Request one</Text>
+        </TouchableOpacity>
         <Text style={styles.label}>
           Planned episodes for this {structure === 'season' ? 'season' : 'series'} (min 20 · max 200)
         </Text>
@@ -207,6 +213,48 @@ const StudioSeriesCreateScreen = () => {
           loading={busy}
         />
       </ScrollView>
+
+      <Modal visible={genreReqOpen} transparent animationType="slide" onRequestClose={() => setGenreReqOpen(false)}>
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalSheet}>
+            <Text style={styles.modalTitle}>Request a genre</Text>
+            <Text style={styles.modalSub}>We will review and add it for all creators if it fits.</Text>
+            <TextInput
+              style={styles.input}
+              value={genreReqName}
+              onChangeText={setGenreReqName}
+              placeholder="e.g. Medical Drama"
+              placeholderTextColor={COLORS.textFaint}
+              autoFocus
+            />
+            <EpisioGoldButton
+              label={genreReqBusy ? 'Sending…' : 'Submit request'}
+              loading={genreReqBusy}
+              onPress={async () => {
+                const n = genreReqName.trim();
+                if (n.length < 2) {
+                  Alert.alert('Genre', 'Enter a genre name');
+                  return;
+                }
+                setGenreReqBusy(true);
+                try {
+                  await studioEpisioApi.requestGenre(n);
+                  setGenreReqOpen(false);
+                  Alert.alert('Submitted', 'Thanks — the team will review your genre request.');
+                  reloadGenres?.();
+                } catch (e) {
+                  Alert.alert('Request', e?.message || 'Could not submit');
+                } finally {
+                  setGenreReqBusy(false);
+                }
+              }}
+            />
+            <TouchableOpacity onPress={() => setGenreReqOpen(false)} style={{ marginTop: 12 }}>
+              <Text style={styles.modalCancel}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 };
@@ -236,7 +284,20 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.navyCard, borderWidth: 1, borderColor: COLORS.navyLine,
     borderRadius: 12, padding: 13, color: COLORS.text, marginBottom: 12, fontFamily: FONTS.regular,
   },
-  genreRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
+  genreRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 8 },
+  requestGenre: {
+    color: COLORS.gold, fontFamily: FONTS.semi, fontSize: 12.5, marginBottom: 14,
+  },
+  modalBackdrop: {
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'flex-end',
+  },
+  modalSheet: {
+    backgroundColor: COLORS.navyCard, borderTopLeftRadius: 20, borderTopRightRadius: 20,
+    padding: 20, paddingBottom: 32,
+  },
+  modalTitle: { fontFamily: FONTS.bold, fontSize: 16, color: '#fff', marginBottom: 6 },
+  modalSub: { fontFamily: FONTS.regular, fontSize: 12.5, color: COLORS.textDim, marginBottom: 14, lineHeight: 18 },
+  modalCancel: { textAlign: 'center', color: COLORS.textFaint, fontFamily: FONTS.semi },
   genreChip: {
     paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999,
     backgroundColor: COLORS.navyCard, borderWidth: 1, borderColor: COLORS.navyLine,

@@ -1,7 +1,7 @@
 /**
  * YouTube-style player from WiamEpisio-Player.html — contained frame + info panel.
  */
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
   ActivityIndicator, Dimensions, StatusBar as RNStatusBar, Share, Alert,
@@ -17,9 +17,11 @@ import { COLORS, FONTS } from '../../constants/theme';
 import episodesApi from '../../api/episodes';
 import apiClient from '../../api/client';
 import studioEpisioApi from '../../api/studioEpisio';
+import walletApi from '../../api/wallet';
 import useAuthStore from '../../store/useAuthStore';
 import CONFIG from '../../constants/config';
 import { assertGuestCanWatchSeries } from '../../utils/guestSeriesGate';
+import WatchRewardRing from '../../components/episio/WatchRewardRing';
 
 const { width: W } = Dimensions.get('window');
 const FRAME_H = Math.min(W * (16 / 9) * 0.58, W * 1.15);
@@ -37,6 +39,11 @@ const PlayerScreen = () => {
   const [fullscreen, setFullscreen] = useState(false);
   const [liked, setLiked] = useState(false);
   const [listMsg, setListMsg] = useState(null);
+  const [watchProgress, setWatchProgress] = useState(0);
+  const [rewardPaused, setRewardPaused] = useState(false);
+  const [rewardGranted, setRewardGranted] = useState(false);
+  const [rewardToast, setRewardToast] = useState(null);
+  const rewardedRef = useRef(false);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   const player = useVideoPlayer(streamUrl || '', (p) => {
@@ -133,6 +140,55 @@ const PlayerScreen = () => {
   }, [episodeId, seriesId, navigation, isAuthenticated]);
 
   useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    rewardedRef.current = false;
+    setWatchProgress(0);
+    setRewardGranted(false);
+    setRewardToast(null);
+  }, [episodeId]);
+
+  useEffect(() => {
+    if (!player || !streamUrl) return undefined;
+    const tick = setInterval(() => {
+      try {
+        const dur = Number(player.duration) || 0;
+        const cur = Number(player.currentTime) || 0;
+        if (dur > 0) {
+          const p = Math.min(1, cur / dur);
+          setWatchProgress(p);
+          if (p >= 0.9 && !rewardedRef.current && isAuthenticated) {
+            rewardedRef.current = true;
+            episodesApi.saveProgress({
+              episode_id: episodeId,
+              content_id: seriesId,
+              position_seconds: Math.floor(cur),
+              completed: true,
+            }).catch(() => {});
+            walletApi.claimWatchComplete(episodeId, seriesId).then((res) => {
+              if (res?.paused) {
+                setRewardPaused(true);
+                return;
+              }
+              setRewardPaused(false);
+              if (res?.granted) {
+                setRewardGranted(true);
+                setRewardToast(`+${res.coins || 2} coins`);
+                setTimeout(() => setRewardToast(null), 2200);
+              }
+              if (res?.series_finish?.granted) {
+                setRewardToast(`+${res.series_finish.coins} series finish`);
+                setTimeout(() => setRewardToast(null), 2600);
+              }
+            }).catch(() => {
+              rewardedRef.current = false;
+            });
+          }
+        }
+      } catch { /* ignore */ }
+    }, 500);
+    return () => clearInterval(tick);
+  }, [player, streamUrl, episodeId, seriesId, isAuthenticated]);
 
   const goEp = (ep) => {
     if (!ep) return;
@@ -240,14 +296,30 @@ const PlayerScreen = () => {
             <TouchableOpacity onPress={load}><Text style={styles.retry}>Retry</Text></TouchableOpacity>
           </View>
         ) : streamUrl ? (
-          <VideoView
-            style={StyleSheet.absoluteFill}
-            player={player}
-            allowsFullscreen
-            allowsPictureInPicture
-            contentFit="contain"
-            nativeControls
-          />
+          <>
+            <VideoView
+              style={StyleSheet.absoluteFill}
+              player={player}
+              allowsFullscreen
+              allowsPictureInPicture
+              contentFit="contain"
+              nativeControls
+            />
+            {isAuthenticated ? (
+              <View style={styles.rewardRing}>
+                <WatchRewardRing
+                  progress={watchProgress}
+                  paused={rewardPaused}
+                  granted={rewardGranted}
+                />
+              </View>
+            ) : null}
+            {rewardToast ? (
+              <View style={styles.rewardToast}>
+                <Text style={styles.rewardToastText}>{rewardToast}</Text>
+              </View>
+            ) : null}
+          </>
         ) : null}
 
         <View style={[styles.videoTop, { top: fullscreen ? insets.top + 8 : 10 }]}>
@@ -344,6 +416,14 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   frameFull: { flex: 1 },
+  rewardRing: {
+    position: 'absolute', top: 14, right: 14, zIndex: 6,
+  },
+  rewardToast: {
+    position: 'absolute', bottom: 18, alignSelf: 'center', zIndex: 7,
+    backgroundColor: 'rgba(212,160,23,0.95)', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20,
+  },
+  rewardToastText: { fontFamily: FONTS.bold, fontSize: 12, color: COLORS.navy },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
   error: { color: COLORS.error, fontFamily: FONTS.medium, textAlign: 'center', marginBottom: 12 },
   retry: { color: COLORS.gold, fontFamily: FONTS.semi },

@@ -1,6 +1,5 @@
 /**
- * Sign up — email + password (no SMS). Phone is optional contact only.
- * Google / Facebook slots kept. Guest can keep browsing.
+ * Sign up — email + password. Phone optional. DOB via picker. Username availability gated.
  */
 import React, { useEffect, useState } from 'react';
 import {
@@ -15,8 +14,8 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS, FONTS } from '../../constants/theme';
 import EpisioGoldButton from '../../components/episio/EpisioGoldButton';
+import DobPickerField from '../../components/episio/DobPickerField';
 import authApi from '../../api/auth';
-import apiClient from '../../api/client';
 import useAuthStore from '../../store/useAuthStore';
 import { GoogleSignInSlot } from '../../services/googleAuth';
 
@@ -26,6 +25,7 @@ const AuthRegisterScreen = () => {
   const route = useRoute();
   const setAuth = useAuthStore((s) => s.setAuth);
   const returnTo = route.params?.returnTo;
+  const returnParams = route.params?.returnParams || {};
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -36,6 +36,7 @@ const AuthRegisterScreen = () => {
   const [usernameStatus, setUsernameStatus] = useState({ checking: false, ok: null, message: '' });
   const [dob, setDob] = useState('');
   const [phone, setPhone] = useState('');
+  const [inviteCode, setInviteCode] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
 
@@ -44,39 +45,48 @@ const AuthRegisterScreen = () => {
     else navigation.navigate('Main');
   };
 
-  const afterAuth = () => {
+  const afterAuth = (user) => {
     if (returnTo) {
-      navigation.replace(returnTo, route.params?.returnParams || {});
+      navigation.replace(returnTo, returnParams);
       return;
     }
-    navigation.replace('AgeGate', { fromRegister: true });
+    navigation.replace('VerifyMethod', {
+      fromRegister: true,
+      email: user?.email || email.trim().toLowerCase(),
+      birthYear: dob ? Number(dob.slice(0, 4)) : undefined,
+    });
   };
 
   useEffect(() => {
     const u = username.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
     if (u.length < 3) {
-      setUsernameStatus({ checking: false, ok: null, message: '' });
+      setUsernameStatus({ checking: false, ok: null, message: u ? 'At least 3 characters' : '' });
       return undefined;
     }
     let cancelled = false;
-    setUsernameStatus({ checking: true, ok: null, message: '' });
+    setUsernameStatus({ checking: true, ok: null, message: 'Checking…' });
     const t = setTimeout(async () => {
       try {
-        const { data } = await apiClient.get(`/auth/check-username?username=${encodeURIComponent(u)}`);
+        const data = await authApi.checkUsername(u);
         if (cancelled) return;
+        const available = !!data?.available;
         setUsernameStatus({
           checking: false,
-          ok: !!data?.available,
-          message: data?.available
+          ok: available,
+          message: available
             ? 'Username is available'
             : (data?.reason || 'Username is taken'),
         });
-      } catch {
+      } catch (err) {
         if (!cancelled) {
-          setUsernameStatus({ checking: false, ok: null, message: 'Could not check username' });
+          setUsernameStatus({
+            checking: false,
+            ok: null,
+            message: typeof err === 'string' ? err : 'Could not check username — try again',
+          });
         }
       }
-    }, 400);
+    }, 450);
     return () => {
       cancelled = true;
       clearTimeout(t);
@@ -105,12 +115,16 @@ const AuthRegisterScreen = () => {
       setError('Username must be at least 3 characters (letters, numbers, _)');
       return;
     }
-    if (usernameStatus.ok === false) {
-      setError('Pick an available username');
+    if (usernameStatus.checking) {
+      setError('Wait for username check to finish');
       return;
     }
-    if (!dob.trim() || !/^\d{4}-\d{2}-\d{2}$/.test(dob.trim())) {
-      setError('Date of birth required (YYYY-MM-DD)');
+    if (usernameStatus.ok !== true) {
+      setError(usernameStatus.message || 'Pick an available username');
+      return;
+    }
+    if (!dob || !/^\d{4}-\d{2}-\d{2}$/.test(dob)) {
+      setError('Please select your date of birth');
       return;
     }
     setBusy(true);
@@ -121,11 +135,12 @@ const AuthRegisterScreen = () => {
         firstName: fn,
         lastName: ln,
         username: uname,
-        dateOfBirth: dob.trim(),
+        dateOfBirth: dob,
         phone: phone.trim() || undefined,
+        referralCode: inviteCode.trim() || undefined,
       });
       await setAuth(data.user, data.token);
-      afterAuth();
+      afterAuth(data.user);
     } catch (err) {
       const msg =
         (typeof err === 'string' && err)
@@ -137,6 +152,11 @@ const AuthRegisterScreen = () => {
       setBusy(false);
     }
   };
+
+  const canSubmit = !busy
+    && usernameStatus.ok === true
+    && !usernameStatus.checking
+    && !!dob;
 
   return (
     <KeyboardAvoidingView
@@ -228,21 +248,20 @@ const AuthRegisterScreen = () => {
           />
         </View>
         {usernameStatus.message ? (
-          <Text style={[styles.hint, usernameStatus.ok === false && styles.error]}>
-            {usernameStatus.checking ? 'Checking…' : usernameStatus.message}
+          <Text
+            style={[
+              styles.hint,
+              usernameStatus.ok === true && styles.okHint,
+              usernameStatus.ok === false && styles.error,
+            ]}
+          >
+            {usernameStatus.message}
           </Text>
         ) : null}
 
         <View style={styles.field}>
           <Calendar size={15} color={COLORS.gold} />
-          <TextInput
-            style={styles.input}
-            placeholder="Date of birth (YYYY-MM-DD)"
-            placeholderTextColor={COLORS.textFaint}
-            value={dob}
-            onChangeText={setDob}
-            autoCapitalize="none"
-          />
+          <DobPickerField value={dob} onChange={setDob} />
         </View>
 
         <View style={styles.field}>
@@ -257,12 +276,25 @@ const AuthRegisterScreen = () => {
           />
         </View>
 
+        <View style={styles.field}>
+          <User size={15} color={COLORS.gold} />
+          <TextInput
+            style={styles.input}
+            placeholder="Friend invite code (optional)"
+            placeholderTextColor={COLORS.textFaint}
+            autoCapitalize="characters"
+            value={inviteCode}
+            onChangeText={setInviteCode}
+          />
+        </View>
+
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
         <EpisioGoldButton
           label={busy ? 'Creating account…' : 'Create account'}
           onPress={submit}
           loading={busy}
+          disabled={!canSubmit}
           style={styles.cta}
         />
 
@@ -275,7 +307,7 @@ const AuthRegisterScreen = () => {
         <GoogleSignInSlot
           onSuccess={async (data) => {
             await setAuth(data.user, data.token);
-            afterAuth();
+            afterAuth(data.user);
           }}
           onError={(msg) => setError(typeof msg === 'string' ? msg : 'Google sign-up failed')}
         >
@@ -309,7 +341,7 @@ const AuthRegisterScreen = () => {
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={() => navigation.replace('Login', { returnTo })}
+            onPress={() => navigation.replace('Login', { returnTo, returnParams })}
             style={{ marginTop: 14 }}
           >
             <Text style={styles.guest}>
@@ -348,6 +380,7 @@ const styles = StyleSheet.create({
   row2: { flexDirection: 'row', gap: 10 },
   half: { flex: 1 },
   hint: { fontFamily: FONTS.regular, fontSize: 11.5, color: COLORS.textDim, marginTop: -6, marginBottom: 10 },
+  okHint: { color: '#4ade80' },
   error: { color: COLORS.error, fontFamily: FONTS.medium, fontSize: 12.5, marginBottom: 10 },
   cta: { marginTop: 4, marginBottom: 16 },
   divider: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
