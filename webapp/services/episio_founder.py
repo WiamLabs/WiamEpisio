@@ -134,6 +134,7 @@ def publish_whole_unit(content: Content, publish=True):
 
 
 def create_invite(*, created_by, code=None, note='', max_uses=1, expires_days=None):
+    """One-time invite — expires after first use so it cannot be shared widely."""
     raw = (code or '').strip().upper().replace(' ', '')
     if not raw:
         raw = f'WIAM-{uuid.uuid4().hex[:4].upper()}-{uuid.uuid4().hex[:4].upper()}'
@@ -146,7 +147,7 @@ def create_invite(*, created_by, code=None, note='', max_uses=1, expires_days=No
         code=raw,
         created_by=created_by,
         note=(note or '')[:500],
-        max_uses=max(1, int(max_uses or 1)),
+        max_uses=1,  # always single-use
         expires_at=expires,
         active=True,
     )
@@ -265,10 +266,15 @@ def list_featured(slot_key=None, limit=200):
     return q.order_by(FeaturedTrailerSlot.slot_key.asc(), FeaturedTrailerSlot.sort_order.asc()).limit(limit).all()
 
 
-def add_featured(*, content_id, slot_key='home_featured', sort_order=0, note='', curated_by=None):
+def add_featured(*, content_id, slot_key='home_featured', sort_order=0, note='',
+                 badge_label='', media_mode='trailer', curated_by=None):
     c = Content.query.get(int(content_id))
     if not c:
         raise ValueError('series_not_found')
+    mode = (media_mode or 'trailer').lower()
+    if mode not in ('trailer', 'image'):
+        mode = 'trailer'
+    label = (badge_label or '').strip()[:40]
     slot = FeaturedTrailerSlot(
         slot_key=(slot_key or 'home_featured').lower(),
         content_id=int(content_id),
@@ -276,6 +282,8 @@ def add_featured(*, content_id, slot_key='home_featured', sort_order=0, note='',
         is_active=True,
         curated_by=curated_by,
         note=(note or '')[:500],
+        badge_label=label,
+        media_mode=mode,
     )
     db.session.add(slot)
     db.session.commit()

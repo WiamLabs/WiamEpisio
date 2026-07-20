@@ -4,25 +4,53 @@
  */
 import React, { useState } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert, TextInput,
+  View, Text, StyleSheet, TextInput, Alert, TouchableOpacity,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { ChevronLeft } from 'lucide-react-native';
+import * as ImagePicker from 'expo-image-picker';
+import { Upload, Film } from 'lucide-react-native';
+import EpisioScreenShell from '../../components/episio/EpisioScreenShell';
+import EpisioGoldButton from '../../components/episio/EpisioGoldButton';
 import { COLORS, FONTS } from '../../constants/theme';
 import studioEpisioApi from '../../api/studioEpisio';
 
 const StudioEpisodeUploadScreen = () => {
-  const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const params = useRoute().params || {};
   const { seriesId, episodeId: existingId, episodeNumber, locked } = params;
   const [title, setTitle] = useState(episodeNumber ? `Episode ${episodeNumber}` : '');
+  const [pickedName, setPickedName] = useState(null);
   const [width, setWidth] = useState('1080');
   const [height, setHeight] = useState('1920');
   const [duration, setDuration] = useState('270');
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState(null);
+
+  const pickVideo = async () => {
+    if (locked) {
+      Alert.alert('Season locked', 'Replace files only when Needs Changes opens a fix window.');
+      return;
+    }
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) {
+      Alert.alert('Permission needed', 'Allow media access to pick an episode video.');
+      return;
+    }
+    const pick = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+      quality: 1,
+    });
+    if (pick.canceled || !pick.assets?.[0]) return;
+    const asset = pick.assets[0];
+    setPickedName(asset.fileName || asset.uri.split('/').pop() || 'episode.mp4');
+    if (asset.width) setWidth(String(asset.width));
+    if (asset.height) setHeight(String(asset.height));
+    if (asset.duration) {
+      // expo may report ms
+      const sec = asset.duration > 1000 ? Math.round(asset.duration / 1000) : Math.round(asset.duration);
+      if (sec > 0) setDuration(String(sec));
+    }
+  };
 
   const upload = async ({ markFinal }) => {
     if (locked) {
@@ -48,6 +76,7 @@ const StudioEpisodeUploadScreen = () => {
         is_final: !!markFinal,
         storage_key: `stub/ep_${epId}`,
         hls_manifest_url: `https://stub.local/hls/ep_${epId}/master.m3u8`,
+        source_filename: pickedName || undefined,
       });
       if (markFinal && done?.episode && !done.episode.is_final) {
         await studioEpisioApi.markFinal(epId, true);
@@ -76,64 +105,118 @@ const StudioEpisodeUploadScreen = () => {
   };
 
   return (
-    <ScrollView style={[styles.root, { paddingTop: insets.top + 8 }]} contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 48 }}>
-      <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
-        <ChevronLeft size={20} color={COLORS.text} />
-      </TouchableOpacity>
-      <Text style={styles.title}>Episode upload</Text>
-      <Text style={styles.hint}>
-        Specs: 9:16 · preferred 1080×1920 · episode must be 4–5 minutes only (not shorter/longer). Draft upload first; mark final when the cut is locked.
-      </Text>
-
-      <Text style={styles.label}>Title</Text>
-      <TextInput style={styles.input} value={title} onChangeText={setTitle} placeholderTextColor={COLORS.textFaint} placeholder="Episode title" />
-      <Text style={styles.label}>Width × Height (probe)</Text>
-      <View style={styles.row}>
-        <TextInput style={[styles.input, { flex: 1 }]} value={width} onChangeText={setWidth} keyboardType="number-pad" />
-        <TextInput style={[styles.input, { flex: 1 }]} value={height} onChangeText={setHeight} keyboardType="number-pad" />
+    <EpisioScreenShell
+      title="Episodes"
+      subtitle={episodeNumber ? `Episode ${episodeNumber}` : 'Add episode'}
+      footer={(
+        <>
+          <EpisioGoldButton
+            label="Validate draft upload"
+            onPress={() => upload({ markFinal: false })}
+            loading={busy}
+            disabled={locked}
+          />
+          <View style={{ height: 10 }} />
+          <EpisioGoldButton
+            label="Validate & mark final"
+            onPress={() => upload({ markFinal: true })}
+            disabled={busy || locked}
+            variant="ghost"
+          />
+        </>
+      )}
+    >
+      <View style={styles.specCallout}>
+        <Text style={styles.specTitle}>9:16 · 1080×1920 · 4–5 min · MP4</Text>
+        <Text style={styles.specSub}>
+          Anything outside 3:00–6:00 or the wrong aspect gets auto-rejected.
+        </Text>
       </View>
-      <Text style={styles.label}>Duration (seconds)</Text>
-      <TextInput style={styles.input} value={duration} onChangeText={setDuration} keyboardType="number-pad" />
 
-      <TouchableOpacity style={styles.cta} onPress={() => upload({ markFinal: false })} disabled={busy || locked}>
-        {busy ? <ActivityIndicator color={COLORS.navy} /> : <Text style={styles.ctaText}>Validate draft upload</Text>}
+      <TouchableOpacity style={styles.dropZone} onPress={pickVideo} disabled={locked} activeOpacity={0.85}>
+        <View style={styles.dropIcon}>
+          {pickedName ? <Film size={22} color={COLORS.gold} /> : <Upload size={22} color={COLORS.gold} />}
+        </View>
+        <Text style={styles.dropTitle}>
+          {pickedName ? 'Video selected' : 'Choose episode video'}
+        </Text>
+        <Text style={styles.dropSub}>
+          {pickedName || 'Upload from your device — vertical 9:16 only'}
+        </Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.ctaAlt} onPress={() => upload({ markFinal: true })} disabled={busy || locked}>
-        <Text style={styles.ctaAltText}>Validate & mark final</Text>
-      </TouchableOpacity>
+
+      <Text style={styles.label}>Episode title</Text>
+      <TextInput
+        style={styles.input}
+        value={title}
+        onChangeText={setTitle}
+        placeholderTextColor={COLORS.textFaint}
+        placeholder="Episode title"
+      />
+
+      <Text style={styles.label}>Probe (width × height × duration)</Text>
+      <Text style={styles.hint}>
+        Filled from your file when available. Adjust only if the probe is wrong.
+      </Text>
+      <View style={styles.row}>
+        <TextInput style={[styles.input, { flex: 1 }]} value={width} onChangeText={setWidth} keyboardType="number-pad" placeholder="W" placeholderTextColor={COLORS.textFaint} />
+        <TextInput style={[styles.input, { flex: 1 }]} value={height} onChangeText={setHeight} keyboardType="number-pad" placeholder="H" placeholderTextColor={COLORS.textFaint} />
+        <TextInput style={[styles.input, { flex: 1 }]} value={duration} onChangeText={setDuration} keyboardType="number-pad" placeholder="sec" placeholderTextColor={COLORS.textFaint} />
+      </View>
 
       {result ? (
-        <Text style={styles.ok}>
-          EP {result.episode_number} · {result.transcode_status}
-          {result.is_final ? ' · FINAL' : ' · draft ready'}
-        </Text>
+        <View style={styles.resultCard}>
+          <Text style={styles.resultText}>
+            EP {result.episode_number} · {(result.transcode_status || 'ready').toUpperCase()}
+            {result.is_final ? ' · FINAL' : ' · draft ready'}
+          </Text>
+        </View>
       ) : null}
-    </ScrollView>
+    </EpisioScreenShell>
   );
 };
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: COLORS.navy },
-  back: {
-    width: 36, height: 36, borderRadius: 18, backgroundColor: COLORS.navyCard,
-    alignItems: 'center', justifyContent: 'center', marginBottom: 14,
+  specCallout: {
+    backgroundColor: 'rgba(212,160,23,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(212,160,23,0.3)',
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 16,
   },
-  title: { fontSize: 22, fontFamily: FONTS.extraBold, color: COLORS.text },
-  hint: { marginTop: 8, marginBottom: 16, color: COLORS.textDim, fontFamily: FONTS.regular, lineHeight: 19 },
+  specTitle: { fontFamily: FONTS.extraBold, color: COLORS.gold, fontSize: 12.5, marginBottom: 4 },
+  specSub: { fontFamily: FONTS.regular, color: '#D9C89A', fontSize: 11.5, lineHeight: 17 },
+  dropZone: {
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    borderColor: COLORS.navyLine,
+    borderRadius: 18,
+    backgroundColor: COLORS.navyCard,
+    paddingVertical: 28,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    marginBottom: 18,
+  },
+  dropIcon: {
+    width: 48, height: 48, borderRadius: 24,
+    backgroundColor: 'rgba(212,160,23,0.14)',
+    alignItems: 'center', justifyContent: 'center', marginBottom: 12,
+  },
+  dropTitle: { fontFamily: FONTS.bold, color: '#fff', fontSize: 14, marginBottom: 4 },
+  dropSub: { fontFamily: FONTS.regular, color: COLORS.textDim, fontSize: 12, textAlign: 'center' },
   label: { color: COLORS.textDim, fontFamily: FONTS.semi, fontSize: 11.5, marginBottom: 6 },
+  hint: { color: COLORS.textFaint, fontFamily: FONTS.regular, fontSize: 11, marginBottom: 8, marginTop: -2 },
   input: {
     backgroundColor: COLORS.navyCard, borderWidth: 1, borderColor: COLORS.navyLine,
     borderRadius: 12, padding: 13, color: COLORS.text, marginBottom: 12, fontFamily: FONTS.regular,
   },
   row: { flexDirection: 'row', gap: 10 },
-  cta: { backgroundColor: COLORS.gold, borderRadius: 14, padding: 15, alignItems: 'center', marginTop: 8 },
-  ctaText: { fontFamily: FONTS.bold, color: COLORS.navy },
-  ctaAlt: {
-    marginTop: 10, borderRadius: 14, padding: 15, alignItems: 'center',
-    backgroundColor: COLORS.navyCard, borderWidth: 1, borderColor: COLORS.navyLine,
+  resultCard: {
+    marginTop: 4, padding: 12, borderRadius: 12,
+    backgroundColor: 'rgba(59,178,115,0.12)', borderWidth: 1, borderColor: 'rgba(59,178,115,0.3)',
   },
-  ctaAltText: { fontFamily: FONTS.bold, color: COLORS.gold },
-  ok: { marginTop: 14, color: COLORS.success, fontFamily: FONTS.medium },
+  resultText: { color: '#3BB273', fontFamily: FONTS.medium, fontSize: 12.5 },
 });
 
 export default StudioEpisodeUploadScreen;

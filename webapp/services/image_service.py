@@ -261,6 +261,46 @@ def upload_avatar(image_bytes, user_id, content_type='image/png', scan_nsfw=True
     )
 
 
+def upload_episio_cover(image_bytes, series_id, content_type='image/jpeg'):
+    return upload_image(
+        image_bytes,
+        folder='episio_covers',
+        public_id=f'cover_{series_id}',
+        content_type=content_type,
+        scan_nsfw=True,
+    )
+
+
+def upload_episio_banner(image_bytes, series_id, content_type='image/jpeg'):
+    return upload_image(
+        image_bytes,
+        folder='episio_banners',
+        public_id=f'banner_{series_id}',
+        content_type=content_type,
+        scan_nsfw=True,
+    )
+
+
+def upload_creator_channel_banner(image_bytes, user_id, content_type='image/jpeg'):
+    return upload_image(
+        image_bytes,
+        folder='creator_banners',
+        public_id=f'channel_banner_{user_id}',
+        content_type=content_type,
+        scan_nsfw=True,
+    )
+
+
+def upload_creator_channel_avatar(image_bytes, user_id, content_type='image/jpeg'):
+    return upload_image(
+        image_bytes,
+        folder='creator_avatars',
+        public_id=f'channel_avatar_{user_id}',
+        content_type=content_type,
+        scan_nsfw=True,
+    )
+
+
 def delete_avatar(user_id):
     """Destroy the Cloudinary avatar belonging to ``user_id``. Idempotent."""
     if user_id is None:

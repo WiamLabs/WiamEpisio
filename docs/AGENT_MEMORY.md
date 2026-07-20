@@ -2,7 +2,13 @@
 
 Living journal the AI agent reads at the start of every session and updates as work progresses. Mutable — overwrite freely. Durable project facts live in `.cursor/rules/project-context.mdc` instead.
 
-**Last updated:** 2026-07-20 — **Episio Founder Web Control Panel shipped.** Session HTML under `/founder/`: Episio nav (Watchers/Creators/Catalog/Money/Ops) + Legacy novel tools collapsed. New: `/founder/episio` hub, `/episio/series` (+ detail whole-unit publish, VIP/Origin), `/episio/invites`, `/episio/applications`, `/episio/featured`, `/episio/coin-bands`, `/episio/flags`, `/founder/users/<id>` (coins adjust, VIP grant/revoke, Studio unlock, unlocks/purchases). Helpers: `webapp/services/episio_founder.py`. Overview = Episio KPIs. Novel routes kept, off primary nav.
+**Last updated:** 2026-07-20 — **Blockers pass (complete):** Invite keyboard avoid + single-use invites; Studio unlock persists (`/auth/me` refresh + `studio_unlocked`); public profile avatar/banner clip; EditProfile + Cloudinary avatar delete/replace; Specs never show R2/provider; bank-only payout KYC + live selfie+ID; offline downloads (quality + guest gate + Player Save); auto-payout local 02:00 + threshold + silent retention. Images = Cloudinary (`CLOUDINARY_*`). Deploy backend when ready for Render.
+
+**Previous — Genres DB-driven + Origin split + FX + comments.**
+
+**Previous — Product laws + featured badges.** Unlock = flat **10 coins/episode**; Expo no Paystack; guest one-series gate; featured badge_label + media_mode.
+
+**Previous — Episio Founder Web Control Panel shipped.** `/founder/` Episio nav + Legacy collapsed. Series/invites/applications/featured/coin-bands/flags + user coin/VIP tools. Helpers: `episio_founder.py`.
 
 **Previous — HTML Fidelity Build Waves 1–4 DONE.** Expo: **103** Episio screens, **0** thin shells (&lt;60 lines), all `node --check` OK. Shared UI: `EpisioGoldButton`, `EpisioCenterState`, `EpisioScreenShell`. Navigator includes `VipCheckout`, `SearchNoResults`, `StudioRevisionRequest`. Product host episio.wiamlabs.com; support@wiamapp.com. Remaining polish is continuous QA vs HTML — not a blocker to ship Expo builds.
 

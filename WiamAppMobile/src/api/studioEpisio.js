@@ -61,6 +61,38 @@ const studioEpisioApi = {
     try { return (await apiClient.patch('/creator/studio/profile', payload)).data; }
     catch (e) { throw fmt(e, 'Failed to save studio profile'); }
   },
+  uploadChannelAvatar: async (uri) => {
+    try {
+      const formData = new FormData();
+      const filename = uri.split('/').pop() || 'avatar.jpg';
+      const match = /\.(\w+)$/.exec(filename);
+      const type = match ? `image/${match[1].toLowerCase()}` : 'image/jpeg';
+      formData.append('avatar', { uri, name: filename, type });
+      return (await apiClient.post('/creator/studio/profile/avatar', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })).data;
+    } catch (e) { throw fmt(e, 'Avatar upload failed'); }
+  },
+  deleteChannelAvatar: async () => {
+    try { return (await apiClient.delete('/creator/studio/profile/avatar')).data; }
+    catch (e) { throw fmt(e, 'Could not delete avatar'); }
+  },
+  uploadChannelBanner: async (uri) => {
+    try {
+      const formData = new FormData();
+      const filename = uri.split('/').pop() || 'banner.jpg';
+      const match = /\.(\w+)$/.exec(filename);
+      const type = match ? `image/${match[1].toLowerCase()}` : 'image/jpeg';
+      formData.append('banner', { uri, name: filename, type });
+      return (await apiClient.post('/creator/studio/profile/banner', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })).data;
+    } catch (e) { throw fmt(e, 'Banner upload failed'); }
+  },
+  deleteChannelBanner: async () => {
+    try { return (await apiClient.delete('/creator/studio/profile/banner')).data; }
+    catch (e) { throw fmt(e, 'Could not delete banner'); }
+  },
   listSeries: async () => {
     try { return (await apiClient.get('/creator/studio/series')).data; }
     catch (e) { throw fmt(e, 'Failed to load Studio series'); }

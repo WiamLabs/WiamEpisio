@@ -6,12 +6,12 @@ import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, BackHandler, Platform,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Lock } from 'lucide-react-native';
 import { COLORS, FONTS } from '../../constants/theme';
 import LogoBadge from '../../components/episio/LogoBadge';
+import EpisioGoldButton from '../../components/episio/EpisioGoldButton';
 
 const MIN_AGE = 18;
 
@@ -126,11 +126,12 @@ const AgeGateScreen = () => {
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
-        <TouchableOpacity activeOpacity={0.9} onPress={confirm} style={{ width: '100%' }}>
-          <LinearGradient colors={[COLORS.gold, COLORS.goldDark]} style={styles.btn}>
-            <Text style={styles.btnText}>Confirm & Continue</Text>
-          </LinearGradient>
-        </TouchableOpacity>
+        <EpisioGoldButton
+          label="Confirm & Continue"
+          onPress={confirm}
+          style={{ width: '100%', marginBottom: 12 }}
+          textStyle={{ fontSize: 15 }}
+        />
 
         <TouchableOpacity onPress={exitApp}>
           <Text style={styles.declineLink}>I'm under 18</Text>
@@ -152,7 +153,7 @@ const styles = StyleSheet.create({
   },
   wrap: { alignItems: 'center', paddingHorizontal: 30, width: '100%' },
   h1: { fontSize: 20, fontFamily: FONTS.extraBold, color: '#fff', marginTop: 22, marginBottom: 10, textAlign: 'center' },
-  sub: { fontSize: 12.5, color: COLORS.textDim, lineHeight: 20, textAlign: 'center', maxWidth: 280, marginBottom: 28 },
+  sub: { fontSize: 12.5, color: '#7D7D97', lineHeight: 20, textAlign: 'center', maxWidth: 280, marginBottom: 28 },
   dobRow: { flexDirection: 'row', gap: 10, width: '100%', marginBottom: 8 },
   dobField: {
     flex: 1,
@@ -185,10 +186,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     marginBottom: 26,
   },
-  privacyText: { flex: 1, fontSize: 10.5, color: COLORS.textDim, lineHeight: 16.3 },
+  privacyText: { flex: 1, fontSize: 10.5, color: '#7D7D97', lineHeight: 16.3 },
   error: { color: COLORS.error, fontFamily: FONTS.medium, fontSize: 12, marginBottom: 10 },
-  btn: { width: '100%', borderRadius: 16, paddingVertical: 16, alignItems: 'center', marginBottom: 12 },
-  btnText: { fontFamily: FONTS.extraBold, color: COLORS.navy, fontSize: 15 },
   declineLink: { fontSize: 12, color: COLORS.textFaint, fontFamily: FONTS.semi },
 });
 

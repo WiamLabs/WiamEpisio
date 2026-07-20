@@ -1,31 +1,70 @@
 /**
- * Login required sheet — modal gate
+ * WiamEpisio-Login-Required-Sheet.html — bottom sheet gate for guest actions.
  */
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { useRoute, useNavigation } from '@react-navigation/native';
+import { View, Text, StyleSheet, TouchableOpacity, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LogIn } from 'lucide-react-native';
-import { COLORS, FONTS, RADIUS } from '../../constants/theme';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { Bookmark, Heart, HelpCircle } from 'lucide-react-native';
+import EpisioGoldButton from '../../components/episio/EpisioGoldButton';
+import { COLORS, FONTS } from '../../constants/theme';
+
+const PERKS = [
+  { key: 'save', label: 'Save Series', Icon: Bookmark },
+  { key: 'follow', label: 'Follow Creators', Icon: Heart },
+  { key: 'coins', label: 'Free Coins', Icon: HelpCircle },
+];
 
 const LoginRequiredSheetScreen = () => {
-  const route = useRoute();
   const navigation = useNavigation();
+  const route = useRoute();
   const insets = useSafeAreaInsets();
-  const message = route.params?.message || 'Sign in to continue';
+
+  const title = route.params?.title || 'Sign in to continue';
+  const message = route.params?.message
+    || 'Following creators, saving to My List, and unlocking episodes needs a free account.';
+
+  const keepBrowsing = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    }
+  };
 
   return (
-    <View style={[styles.overlay, { paddingBottom: insets.bottom }]}>
-      <TouchableOpacity style={styles.backdrop} onPress={() => navigation.goBack()} />
-      <View style={styles.sheet}>
-        <LogIn size={32} color={COLORS.gold} />
-        <Text style={styles.title}>Sign in required</Text>
+    <View style={styles.root}>
+      <Pressable style={styles.backdrop} onPress={keepBrowsing} />
+      <View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, 34) }]}>
+        <View style={styles.handle} />
+        <View style={styles.badge}>
+          <Text style={styles.badgeText}>W</Text>
+        </View>
+        <Text style={styles.title}>{title}</Text>
         <Text style={styles.sub}>{message}</Text>
-        <TouchableOpacity style={styles.cta} onPress={() => navigation.navigate('Login')}>
-          <Text style={styles.ctaText}>Sign In</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.skip} onPress={() => navigation.goBack()}>
-          <Text style={styles.skipText}>Not now</Text>
+
+        <View style={styles.perkRow}>
+          {PERKS.map(({ key, label, Icon }) => (
+            <View key={key} style={styles.perk}>
+              <View style={styles.perkIcon}>
+                <Icon size={17} color={COLORS.gold} />
+              </View>
+              <Text style={styles.perkLabel}>{label}</Text>
+            </View>
+          ))}
+        </View>
+
+        <EpisioGoldButton
+          label="Sign Up Free"
+          onPress={() => navigation.navigate('AuthRegister')}
+          style={styles.primary}
+        />
+        <EpisioGoldButton
+          variant="ghost"
+          label="I already have an account"
+          onPress={() => navigation.navigate('Login')}
+          style={styles.ghost}
+        />
+        <TouchableOpacity onPress={keepBrowsing} hitSlop={12}>
+          <Text style={styles.guest}>Keep browsing as guest</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -33,21 +72,99 @@ const LoginRequiredSheetScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  overlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.6)' },
-  backdrop: { ...StyleSheet.absoluteFillObject },
+  root: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+  },
   sheet: {
-    backgroundColor: COLORS.navyCard, borderTopLeftRadius: 24, borderTopRightRadius: 24,
-    padding: 24, alignItems: 'center', borderWidth: 1, borderColor: COLORS.navyLine,
+    backgroundColor: COLORS.navySoft,
+    borderTopLeftRadius: 26,
+    borderTopRightRadius: 26,
+    paddingTop: 14,
+    paddingHorizontal: 24,
+    alignItems: 'center',
   },
-  title: { fontFamily: FONTS.extraBold, fontSize: 20, color: COLORS.text, marginTop: 12 },
-  sub: { fontFamily: FONTS.regular, fontSize: 14, color: COLORS.textDim, textAlign: 'center', marginTop: 8, lineHeight: 20 },
-  cta: {
-    alignSelf: 'stretch', marginTop: 24, backgroundColor: COLORS.gold, borderRadius: RADIUS.md,
-    padding: 15, alignItems: 'center',
+  handle: {
+    width: 36,
+    height: 4,
+    borderRadius: 99,
+    backgroundColor: COLORS.navyLine,
+    marginBottom: 22,
   },
-  ctaText: { fontFamily: FONTS.extraBold, fontSize: 14, color: COLORS.navy },
-  skip: { marginTop: 12, padding: 8 },
-  skipText: { fontFamily: FONTS.semi, color: COLORS.textDim },
+  badge: {
+    width: 64,
+    height: 64,
+    borderRadius: 20,
+    backgroundColor: COLORS.gold,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 18,
+  },
+  badgeText: {
+    fontFamily: FONTS.extraBold,
+    fontSize: 28,
+    color: COLORS.navy,
+  },
+  title: {
+    fontFamily: FONTS.extraBold,
+    fontSize: 17,
+    color: '#fff',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  sub: {
+    fontFamily: FONTS.regular,
+    fontSize: 12,
+    color: COLORS.textDim,
+    lineHeight: 19,
+    textAlign: 'center',
+    maxWidth: 280,
+    marginBottom: 22,
+  },
+  perkRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 20,
+    marginBottom: 24,
+  },
+  perk: {
+    alignItems: 'center',
+    width: 88,
+  },
+  perkIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: COLORS.navyCard,
+    borderWidth: 1,
+    borderColor: COLORS.navyLine,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 6,
+  },
+  perkLabel: {
+    fontFamily: FONTS.semi,
+    fontSize: 9.5,
+    color: COLORS.textFaint,
+    textAlign: 'center',
+  },
+  primary: {
+    width: '100%',
+    marginBottom: 10,
+  },
+  ghost: {
+    width: '100%',
+    marginBottom: 14,
+  },
+  guest: {
+    fontFamily: FONTS.semi,
+    fontSize: 11.5,
+    color: COLORS.textFaint,
+  },
 });
 
 export default LoginRequiredSheetScreen;

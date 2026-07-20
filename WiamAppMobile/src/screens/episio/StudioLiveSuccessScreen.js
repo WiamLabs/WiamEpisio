@@ -1,111 +1,158 @@
 /**
- * Layout: WiamStudio-Live-Success.html — warm team talk (not cold "platform")
+ * Layout: WiamStudio-Live-Success.html — warm team talk (Screens 2 copy)
  */
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation, useRoute } from '@react-navigation/native';
-import { Layers } from 'lucide-react-native';
+import React, { useCallback, useState } from 'react';
+import {
+  View, Text, StyleSheet, Image, ActivityIndicator, Share, TouchableOpacity,
+} from 'react-native';
+import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
+import { Layers, Link2 } from 'lucide-react-native';
+import EpisioCenterState from '../../components/episio/EpisioCenterState';
+import EpisioGoldButton from '../../components/episio/EpisioGoldButton';
 import { COLORS, FONTS } from '../../constants/theme';
+import studioEpisioApi from '../../api/studioEpisio';
+import resolveUrl from '../../utils/resolveUrl';
 
 const StudioLiveSuccessScreen = () => {
-  const insets = useSafeAreaInsets();
   const navigation = useNavigation();
-  const { title, underReview, message, autoPublished, seriesId } = useRoute().params || {};
+  const { title: paramTitle, underReview, message, autoPublished, seriesId } = useRoute().params || {};
+  const [series, setSeries] = useState(null);
+  const [loading, setLoading] = useState(!!seriesId);
+
+  useFocusEffect(useCallback(() => {
+    if (!seriesId) {
+      setLoading(false);
+      return undefined;
+    }
+    let alive = true;
+    (async () => {
+      try {
+        const d = await studioEpisioApi.getSeries(seriesId);
+        if (alive) setSeries(d?.series);
+      } finally {
+        if (alive) setLoading(false);
+      }
+    })();
+    return () => { alive = false; };
+  }, [seriesId]));
+
+  const title = series?.title || paramTitle || 'Series';
+  const poster = resolveUrl(series?.poster_url || series?.cover_url);
+  const publicUrl = seriesId
+    ? `https://episio.wiamlabs.com/series/${seriesId}`
+    : 'https://episio.wiamlabs.com';
+
+  const headline = underReview
+    ? 'With the WiamEpisio team'
+    : "You're live!";
+
+  const body = message || (
+    underReview
+      ? `We've received "${title}". Our team is reviewing your trailer and every episode. We'll publish it for viewers when it clears — you don't publish yourself.`
+      : autoPublished
+        ? `WiamEpisio has published "${title}" after a clean Good/Excellent review. Viewers can find, follow and unlock it right now.`
+        : `WiamEpisio has published "${title}". Viewers across WiamEpisio can find, follow and unlock it right now.`
+  );
+
+  const shareLink = async () => {
+    try {
+      await Share.share({ message: `Watch ${title} on WiamEpisio: ${publicUrl}`, url: publicUrl });
+    } catch { /* ignore */ }
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.loading}>
+        <ActivityIndicator color={COLORS.gold} />
+      </View>
+    );
+  }
 
   return (
-    <View style={[styles.root, { paddingTop: insets.top + 20 }]}>
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 40, alignItems: 'center' }}>
-        <View style={styles.badge}>
-          <Layers size={42} color={COLORS.navy} />
-        </View>
-        <Text style={styles.h1}>
-          {underReview ? 'With the WiamEpisio team' : 'The WiamEpisio team published your series'}
-        </Text>
-        <Text style={styles.p}>
-          {message || (
-            underReview
-              ? `We’ve received “${title || 'your series'}”. Our team is reviewing your trailer and every episode. We’ll publish it for viewers when it clears — you don’t publish yourself.`
-              : autoPublished
-                ? `Great news — the WiamEpisio team reviewed “${title || 'your series'}” and everything looked Good/Excellent, so we published it for viewers. Thank you for finishing a complete story.`
-                : `The WiamEpisio team has published “${title || 'your series'}”. It’s live for viewers now.`
-          )}
-        </Text>
-
-        <View style={styles.card}>
-          <View style={styles.liveDot}><Text style={styles.liveText}>{underReview ? 'REVIEW' : 'LIVE'}</Text></View>
-          <View>
-            <Text style={styles.cardTitle}>{title || 'Series'}</Text>
+    <EpisioCenterState
+      hideBack
+      icon={<Layers size={42} color={COLORS.gold} />}
+      title={headline}
+      subtitle={body}
+      card={(
+        <View style={styles.cardInner}>
+          {poster ? <Image source={{ uri: poster }} style={styles.poster} /> : <View style={styles.poster} />}
+          <View style={{ flex: 1 }}>
+            <View style={styles.liveDot}>
+              <Text style={styles.liveText}>{underReview ? 'REVIEW' : 'LIVE'}</Text>
+            </View>
+            <Text style={styles.cardTitle}>{title}</Text>
             <Text style={styles.cardMeta}>
               {underReview
                 ? 'Full check in progress · Our team publishes'
-                : (autoPublished ? 'Published by the WiamEpisio team after clean review' : 'Published by the WiamEpisio team')}
+                : (autoPublished ? 'Published after clean review' : 'Published by the WiamEpisio team')}
             </Text>
           </View>
+          {!underReview ? (
+            <TouchableOpacity onPress={shareLink} style={styles.linkBtn}>
+              <Link2 size={16} color={COLORS.gold} />
+            </TouchableOpacity>
+          ) : null}
         </View>
-
-        <Text style={styles.tipsTitle}>{underReview ? 'While you wait' : 'Tips to grow this week'}</Text>
-        {!underReview ? (
-          <>
-            <Text style={styles.tip}>Share your public series link — every view helps early ranking.</Text>
-            <Text style={styles.tip}>Engage early viewers — creators who show up in week one keep people longer.</Text>
-            <Text style={styles.tip}>Check Analytics for where viewers drop off.</Text>
-          </>
-        ) : (
-          <>
-            <Text style={styles.tip}>Share your teaser — soft interest still helps.</Text>
-            <Text style={styles.tip}>Start Season 2 only after this unit is live and complete.</Text>
-            <Text style={styles.tip}>Trusted creators get faster review windows after clean seasons.</Text>
-          </>
-        )}
-      </ScrollView>
-
-      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 20) }]}>
-        {!underReview && seriesId ? (
-          <TouchableOpacity
-            style={styles.btn}
-            onPress={() => navigation.navigate('StudioAnalytics', { seriesId })}
-          >
-            <Text style={styles.btnText}>View Analytics</Text>
+      )}
+      primary={(
+        <View style={{ width: '100%', gap: 10 }}>
+          {!underReview && seriesId ? (
+            <EpisioGoldButton
+              label="View Public Page"
+              onPress={() => navigation.navigate('SeriesDetail', { seriesId })}
+            />
+          ) : null}
+          <EpisioGoldButton
+            label="Back to Studio Home"
+            onPress={() => navigation.navigate('StudioHome')}
+            variant={!underReview && seriesId ? 'ghost' : 'gold'}
+          />
+        </View>
+      )}
+      tertiary={(
+        <View style={styles.tips}>
+          <Text style={styles.tipsTitle}>{underReview ? 'While you wait' : 'Tips to grow this week'}</Text>
+          {!underReview ? (
+            <>
+              <Text style={styles.tip}>Share your public series link — every view helps early ranking.</Text>
+              <Text style={styles.tip}>Reply to early comments — creators who show up in week one keep people longer.</Text>
+              <Text style={styles.tip}>Check Analytics daily for where viewers drop off.</Text>
+            </>
+          ) : (
+            <>
+              <Text style={styles.tip}>Share your teaser — soft interest still helps.</Text>
+              <Text style={styles.tip}>Start Season 2 only after this unit is live and complete.</Text>
+              <Text style={styles.tip}>Trusted creators get faster review windows after clean seasons.</Text>
+            </>
+          )}
+          <TouchableOpacity onPress={() => navigation.navigate('CreatorTrustTier')}>
+            <Text style={styles.ghost}>View Creator Trust Tier</Text>
           </TouchableOpacity>
-        ) : null}
-        <TouchableOpacity
-          style={[styles.btn, underReview && { marginTop: 0 }]}
-          onPress={() => navigation.navigate('StudioHome')}
-        >
-          <Text style={styles.btnText}>Back to Studio Home</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate('CreatorTrustTier')}>
-          <Text style={styles.ghost}>View Creator Trust Tier</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+        </View>
+      )}
+    />
   );
 };
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: COLORS.navy },
-  badge: {
-    width: 88, height: 88, borderRadius: 44, backgroundColor: COLORS.gold,
-    alignItems: 'center', justifyContent: 'center', marginBottom: 22,
-  },
-  h1: { fontSize: 22, fontFamily: FONTS.extraBold, color: '#fff', textAlign: 'center', marginBottom: 12 },
-  p: { fontSize: 13, color: COLORS.textDim, textAlign: 'center', lineHeight: 20, fontFamily: FONTS.regular, marginBottom: 24 },
-  card: {
-    width: '100%', flexDirection: 'row', gap: 12, alignItems: 'center',
-    backgroundColor: COLORS.navyCard, borderRadius: 16, borderWidth: 1, borderColor: COLORS.navyLine, padding: 14, marginBottom: 24,
-  },
+  loading: { flex: 1, backgroundColor: COLORS.navy, alignItems: 'center', justifyContent: 'center' },
+  cardInner: { flexDirection: 'row', gap: 12, alignItems: 'center' },
+  poster: { width: 48, height: 70, borderRadius: 8, backgroundColor: COLORS.navySoft },
   liveDot: {
-    backgroundColor: COLORS.gold, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4,
+    alignSelf: 'flex-start', backgroundColor: '#E4573D', borderRadius: 6,
+    paddingHorizontal: 7, paddingVertical: 2, marginBottom: 4,
   },
-  liveText: { fontSize: 10, fontFamily: FONTS.extraBold, color: COLORS.navy },
+  liveText: { fontSize: 9, fontFamily: FONTS.extraBold, color: '#fff' },
   cardTitle: { fontSize: 14, fontFamily: FONTS.extraBold, color: '#fff' },
-  cardMeta: { marginTop: 4, fontSize: 11, color: COLORS.textDim, fontFamily: FONTS.regular },
-  tipsTitle: { alignSelf: 'flex-start', fontSize: 13, fontFamily: FONTS.bold, color: '#fff', marginBottom: 10 },
-  tip: { alignSelf: 'stretch', fontSize: 12, color: COLORS.textDim, lineHeight: 18, marginBottom: 8, fontFamily: FONTS.regular },
-  footer: { paddingHorizontal: 24 },
-  btn: { backgroundColor: COLORS.gold, borderRadius: 16, paddingVertical: 16, alignItems: 'center', marginBottom: 10 },
-  btnText: { fontFamily: FONTS.extraBold, color: COLORS.navy, fontSize: 15 },
+  cardMeta: { marginTop: 3, fontSize: 11, color: COLORS.textDim, fontFamily: FONTS.regular },
+  linkBtn: {
+    width: 34, height: 34, borderRadius: 17, backgroundColor: COLORS.navySoft,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  tips: { width: '100%', marginTop: 8 },
+  tipsTitle: { fontSize: 13, fontFamily: FONTS.bold, color: '#fff', marginBottom: 10, textAlign: 'center' },
+  tip: { fontSize: 12, color: COLORS.textDim, lineHeight: 18, marginBottom: 8, fontFamily: FONTS.regular, textAlign: 'center' },
   ghost: { textAlign: 'center', color: COLORS.textDim, fontFamily: FONTS.semi, fontSize: 13, paddingVertical: 12 },
 });
 

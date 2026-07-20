@@ -12,6 +12,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Play } from 'lucide-react-native';
 import { COLORS, FONTS } from '../../constants/theme';
 import LogoBadge from '../../components/episio/LogoBadge';
+import EpisioGoldButton from '../../components/episio/EpisioGoldButton';
 
 const { width: SW } = Dimensions.get('window');
 const TILE_W = (SW - 12) / 3;
@@ -75,14 +76,12 @@ const OnboardingWelcomeScreen = () => {
           <View style={styles.dot} />
         </View>
 
-        <TouchableOpacity
-          activeOpacity={0.9}
+        <EpisioGoldButton
+          label="Continue"
           onPress={() => navigation.navigate('OnboardingGenres')}
-        >
-          <LinearGradient colors={[COLORS.gold, COLORS.goldDark]} style={styles.btn}>
-            <Text style={styles.btnText}>Continue</Text>
-          </LinearGradient>
-        </TouchableOpacity>
+          style={{ width: SW - 56, marginBottom: 12 }}
+          textStyle={styles.btnText}
+        />
         <Text style={styles.note}>Takes less than 30 seconds</Text>
       </View>
     </View>
@@ -157,7 +156,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontSize: 13,
     lineHeight: 20.8,
-    color: COLORS.textDim,
+    color: '#7D7D97',
     textAlign: 'center',
     paddingHorizontal: 6,
     marginBottom: 30,
@@ -165,13 +164,6 @@ const styles = StyleSheet.create({
   dots: { flexDirection: 'row', gap: 6, marginBottom: 26 },
   dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: COLORS.navyLine },
   dotActive: { width: 20, borderRadius: 4, backgroundColor: COLORS.gold },
-  btn: {
-    width: SW - 56,
-    borderRadius: 16,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginBottom: 12,
-  },
   btnText: { fontFamily: FONTS.extraBold, color: COLORS.navy, fontSize: 15.5 },
   note: { fontSize: 11, color: COLORS.textFaint, fontFamily: FONTS.regular },
 });

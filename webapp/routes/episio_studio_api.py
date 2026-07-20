@@ -17,7 +17,7 @@ from ..extensions import db, csrf
 from ..models import (
     Content, Episode, EpisioCreatorApplication, SeriesReminder, User,
     CreatorVideoUploadJob, EpisioCreatorInvite, EpisioCreatorInviteRedemption,
-    EpisioCreatorPublicProfile, CreatorProfile,
+    EpisioCreatorPublicProfile, CreatorProfile, CreatorPayoutSettings,
 )
 from .api_v1 import jwt_required, jwt_optional, _abs_url, _creator_api_forbidden
 from ..services.video_service import get_video_service
@@ -215,7 +215,7 @@ def _validate_duration(seconds, kind='episode'):
 
 @episio_studio_api.route('/episio/media-specs', methods=['GET'])
 def media_specs():
-    return jsonify({'ok': True, 'specs': MEDIA_SPECS, 'provider': get_video_service().name})
+    return jsonify({'ok': True, 'specs': MEDIA_SPECS})
 
 
 # ---------------------------------------------------------------------------
@@ -564,7 +564,8 @@ def founder_episio_invites():
         raw = f'WIAM-{uuid.uuid4().hex[:4].upper()}-{uuid.uuid4().hex[:4].upper()}'
     if EpisioCreatorInvite.query.filter_by(code=raw).first():
         return jsonify({'error': 'Code already exists'}), 400
-    max_uses = max(1, int(data.get('max_uses') or 1))
+    # Single-use only — code dies after one redeem (cannot be shared widely)
+    max_uses = 1
     days = data.get('expires_days')
     expires = None
     if days is not None and str(days).strip() != '':
@@ -574,7 +575,7 @@ def founder_episio_invites():
         code=raw,
         created_by=founder.wiam_id or founder.id,
         note=(data.get('note') or '')[:500],
-        max_uses=max_uses,
+        max_uses=1,
         expires_at=expires,
         active=True,
     )
@@ -721,9 +722,171 @@ def studio_public_profile():
     return jsonify({'ok': True, 'profile': _public_profile_json(pub, user)})
 
 
+@episio_studio_api.route('/creator/studio/profile/avatar', methods=['POST', 'DELETE'])
+@jwt_required
+def studio_profile_avatar():
+    """Creator channel avatar → Cloudinary (deletes previous asset)."""
+    forbid = _creator_api_forbidden()
+    if forbid:
+        return forbid
+    user = request.api_user
+    uid = user.wiam_id or user.id
+    pub = EpisioCreatorPublicProfile.query.get(uid)
+    if not pub:
+        pub = EpisioCreatorPublicProfile(user_id=uid)
+        db.session.add(pub)
+
+    from ..services.image_service import (
+        upload_creator_channel_avatar, delete_image_url, delete_image,
+    )
+
+    if request.method == 'DELETE':
+        if pub.avatar_url:
+            delete_image_url(pub.avatar_url)
+        delete_image(f'wiamapp/creator_avatars/channel_avatar_{uid}')
+        pub.avatar_url = ''
+        if user.avatar_url:
+            delete_image_url(user.avatar_url)
+            user.avatar_url = None
+        db.session.commit()
+        return jsonify({'ok': True, 'avatar_url': None})
+
+    f = request.files.get('avatar') or request.files.get('file')
+    if not f:
+        return jsonify({'error': 'avatar file required'}), 400
+    raw = f.read()
+    if len(raw) > 8 * 1024 * 1024:
+        return jsonify({'error': 'Max 8 MB'}), 400
+    if pub.avatar_url:
+        delete_image_url(pub.avatar_url)
+    ct = f.content_type or 'image/jpeg'
+    url = upload_creator_channel_avatar(raw, uid, ct)
+    if not url:
+        return jsonify({'error': 'Cloudinary upload failed'}), 500
+    pub.avatar_url = url
+    user.avatar_url = url
+    db.session.commit()
+    return jsonify({'ok': True, 'avatar_url': _abs_url(url)})
+
+
+@episio_studio_api.route('/creator/studio/profile/banner', methods=['POST', 'DELETE'])
+@jwt_required
+def studio_profile_banner():
+    """Creator channel banner → Cloudinary (required for professional channel look)."""
+    forbid = _creator_api_forbidden()
+    if forbid:
+        return forbid
+    user = request.api_user
+    uid = user.wiam_id or user.id
+    pub = EpisioCreatorPublicProfile.query.get(uid)
+    if not pub:
+        pub = EpisioCreatorPublicProfile(user_id=uid)
+        db.session.add(pub)
+
+    from ..services.image_service import (
+        upload_creator_channel_banner, delete_image_url, delete_image,
+    )
+
+    if request.method == 'DELETE':
+        if pub.banner_url:
+            delete_image_url(pub.banner_url)
+        delete_image(f'wiamapp/creator_banners/channel_banner_{uid}')
+        pub.banner_url = ''
+        db.session.commit()
+        return jsonify({'ok': True, 'banner_url': None})
+
+    f = request.files.get('banner') or request.files.get('file')
+    if not f:
+        return jsonify({'error': 'banner file required'}), 400
+    raw = f.read()
+    if len(raw) > 8 * 1024 * 1024:
+        return jsonify({'error': 'Max 8 MB'}), 400
+    if pub.banner_url:
+        delete_image_url(pub.banner_url)
+    ct = f.content_type or 'image/jpeg'
+    url = upload_creator_channel_banner(raw, uid, ct)
+    if not url:
+        return jsonify({'error': 'Cloudinary upload failed'}), 500
+    pub.banner_url = url
+    db.session.commit()
+    return jsonify({'ok': True, 'banner_url': _abs_url(url)})
+
+
 # ---------------------------------------------------------------------------
 # Studio series CRUD
 # ---------------------------------------------------------------------------
+
+@episio_studio_api.route('/creator/studio/payout-kyc', methods=['POST'])
+@jwt_required
+def studio_payout_kyc():
+    """Bank-only payout KYC + live selfie holding ID (Cloudinary)."""
+    forbid = _creator_api_forbidden()
+    if forbid:
+        return forbid
+    user = request.api_user
+    uid = user.wiam_id or user.id
+    full_name = (request.form.get('full_name') or '').strip()
+    dob = (request.form.get('date_of_birth') or '').strip()
+    id_type = (request.form.get('id_type') or 'national_id').strip()
+    account_name = (request.form.get('account_name') or '').strip()
+    account_number = (request.form.get('account_number') or '').strip()
+    bank_name = (request.form.get('bank_name') or '').strip()
+    routing = (request.form.get('routing_or_swift') or '').strip()
+    if not full_name or not account_number or not bank_name:
+        return jsonify({'error': 'full_name, account_number, and bank_name required'}), 400
+
+    selfie_url = None
+    f = request.files.get('selfie_with_id')
+    if f:
+        from ..services.image_service import upload_image, delete_image_url
+        raw = f.read()
+        if len(raw) > 10 * 1024 * 1024:
+            return jsonify({'error': 'Selfie max 10 MB'}), 400
+        selfie_url = upload_image(
+            raw,
+            folder='kyc_selfie',
+            public_id=f'kyc_{uid}',
+            content_type=f.content_type or 'image/jpeg',
+            scan_nsfw=False,
+        )
+        if not selfie_url:
+            return jsonify({'error': 'Cloudinary upload failed for selfie'}), 500
+
+    settings = CreatorPayoutSettings.query.get(uid)
+    if not settings:
+        settings = CreatorPayoutSettings(creator_id=uid)
+        db.session.add(settings)
+    settings.provider = 'bank'
+    settings.account_number = account_number[:80]
+    settings.account_name = f'{account_name} · {bank_name}'[:160]
+    settings.is_verified = False
+    settings.updated_at = datetime.utcnow()
+    # Store KYC meta on public profile note fields if needed
+    pub = EpisioCreatorPublicProfile.query.get(uid)
+    if pub is not None:
+        # keep channel; stash KYC status lightly in contact field unused path
+        pass
+    db.session.commit()
+    return jsonify({
+        'ok': True,
+        'provider': 'bank',
+        'selfie_uploaded': bool(selfie_url),
+        'id_type': id_type,
+        'dob': dob,
+        'routing_or_swift': routing,
+        'message': 'KYC submitted for review. Bank payouts only.',
+    })
+
+
+@episio_studio_api.route('/founder/episio/auto-payouts/run', methods=['POST'])
+@jwt_required
+def founder_run_auto_payouts():
+    if not getattr(request.api_user, 'is_founder', False):
+        return jsonify({'error': 'Forbidden'}), 403
+    from ..services.creator_auto_payout import run_automatic_payouts
+    force = bool((request.get_json(silent=True) or {}).get('force'))
+    return jsonify(run_automatic_payouts(force=force))
+
 
 @episio_studio_api.route('/creator/studio/series', methods=['GET', 'POST'])
 @jwt_required
@@ -888,15 +1051,23 @@ def studio_series_cover(series_id):
         db.session.commit()
         return jsonify({'ok': True, 'cover_url': _abs_url(c.cover_url), 'series': _series_card(c, user)})
 
-    upload_dir = os.path.join(current_app.root_path, 'static', 'uploads', 'episio_covers')
-    os.makedirs(upload_dir, exist_ok=True)
-    name = secure_filename(f.filename or 'cover.jpg') or 'cover.jpg'
-    key = f'{series_id}_{uuid.uuid4().hex[:12]}_{name}'
-    path = os.path.join(upload_dir, key)
-    f.save(path)
-    rel = f'/static/uploads/episio_covers/{key}'
-    c.cover_file_id = f'ext_{rel}'
-    c.poster_url = rel
+    from ..services.episio_image_validate import validate_poster_image
+    from ..services.image_service import upload_episio_cover, delete_image_url
+    ok, err, raw = validate_poster_image(f, kind='cover')
+    if not ok:
+        return jsonify({'error': err}), 400
+
+    # Replace previous Cloudinary asset if present
+    old = getattr(c, 'poster_url', None) or getattr(c, 'cover_url', None)
+    if old and 'res.cloudinary.com' in str(old):
+        delete_image_url(old)
+
+    ct = getattr(f, 'content_type', None) or 'image/jpeg'
+    cloud_url = upload_episio_cover(raw, series_id, ct)
+    if not cloud_url:
+        return jsonify({'error': 'Cloudinary upload failed. Check CLOUDINARY_* env on server.'}), 500
+    c.cover_file_id = f'ext_{cloud_url}'
+    c.poster_url = cloud_url
     db.session.commit()
     return jsonify({'ok': True, 'cover_url': _abs_url(c.cover_url), 'series': _series_card(c, user)})
 
@@ -1263,14 +1434,21 @@ def studio_series_banner(series_id):
         db.session.commit()
         return jsonify({'ok': True, 'banner_url': _abs_url(c.banner_url), 'series': _series_card(c, user)})
 
-    upload_dir = os.path.join(current_app.root_path, 'static', 'uploads', 'episio_banners')
-    os.makedirs(upload_dir, exist_ok=True)
-    name = secure_filename(f.filename or 'banner.jpg') or 'banner.jpg'
-    key = f'{series_id}_{uuid.uuid4().hex[:12]}_{name}'
-    path = os.path.join(upload_dir, key)
-    f.save(path)
-    rel = f'/static/uploads/episio_banners/{key}'
-    c.banner_url = rel
+    from ..services.episio_image_validate import validate_poster_image
+    from ..services.image_service import upload_episio_banner, delete_image_url
+    ok, err, raw = validate_poster_image(f, kind='banner')
+    if not ok:
+        return jsonify({'error': err}), 400
+
+    old = getattr(c, 'banner_url', None)
+    if old and 'res.cloudinary.com' in str(old):
+        delete_image_url(old)
+
+    ct = getattr(f, 'content_type', None) or 'image/jpeg'
+    cloud_url = upload_episio_banner(raw, series_id, ct)
+    if not cloud_url:
+        return jsonify({'error': 'Cloudinary upload failed. Check CLOUDINARY_* env on server.'}), 500
+    c.banner_url = cloud_url
     db.session.commit()
     return jsonify({'ok': True, 'banner_url': _abs_url(c.banner_url), 'series': _series_card(c, user)})
 

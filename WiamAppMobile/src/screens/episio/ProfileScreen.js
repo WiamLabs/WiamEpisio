@@ -261,6 +261,12 @@ const ProfileScreen = () => {
           sub="Apply to become a WiamEpisio Creator"
           onPress={() => navigation.navigate(user?.is_creator ? 'StudioHome' : 'CreatorApplyInviteOnly')}
         />
+        <MenuRowIcon
+          icon={User}
+          title="Edit profile"
+          sub="Photo, name, bio"
+          onPress={() => navigation.navigate('EditProfile')}
+        />
       </View>
 
       <Text style={styles.sectionLabel}>Watch & rewards</Text>

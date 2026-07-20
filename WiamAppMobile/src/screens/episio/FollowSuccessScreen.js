@@ -1,49 +1,118 @@
 /**
- * Follow success confirmation
+ * WiamEpisio-Follow-Success.html — overlay toast + Following chip, auto-dismiss.
  */
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import { UserCheck } from 'lucide-react-native';
-import EpisioScreenShell from '../../components/episio/EpisioScreenShell';
+import { Check } from 'lucide-react-native';
 import { COLORS, FONTS, RADIUS } from '../../constants/theme';
+
+const AUTO_MS = 2200;
 
 const FollowSuccessScreen = () => {
   const route = useRoute();
   const navigation = useNavigation();
-  const creatorName = route.params?.creatorName || 'this creator';
+  const name = route.params?.name
+    || route.params?.creatorName
+    || route.params?.displayName
+    || 'this creator';
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      if (navigation.canGoBack()) navigation.goBack();
+    }, AUTO_MS);
+    return () => clearTimeout(t);
+  }, [navigation]);
 
   return (
-    <EpisioScreenShell
-      title="Following"
-      scroll={false}
-      footer={(
-        <TouchableOpacity style={styles.cta} onPress={() => navigation.goBack()}>
-          <Text style={styles.ctaText}>Done</Text>
-        </TouchableOpacity>
-      )}
+    <TouchableOpacity
+      style={styles.overlay}
+      activeOpacity={1}
+      onPress={() => navigation.goBack()}
     >
-      <View style={styles.center}>
-        <View style={styles.iconWrap}>
-          <UserCheck size={40} color={COLORS.gold} />
+      <View style={styles.toast}>
+        <View style={styles.toastIcon}>
+          <Check size={16} color="#fff" strokeWidth={3} />
         </View>
-        <Text style={styles.headline}>You're following {creatorName}</Text>
-        <Text style={styles.sub}>New series and drops from this creator will surface in your feed.</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.title}>Now following {name}</Text>
+          <Text style={styles.sub}>You'll see their new series first</Text>
+        </View>
       </View>
-    </EpisioScreenShell>
+
+      <View style={styles.demo}>
+        <View style={styles.chip}>
+          <Check size={14} color={COLORS.textDim} />
+          <Text style={styles.chipText}>Following</Text>
+        </View>
+        <Text style={styles.hint}>Button flips instantly · toast confirms</Text>
+      </View>
+    </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 60, paddingHorizontal: 20 },
-  iconWrap: {
-    width: 80, height: 80, borderRadius: 40, backgroundColor: COLORS.navyCard,
-    alignItems: 'center', justifyContent: 'center', marginBottom: 20,
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    paddingHorizontal: 20,
+    paddingTop: 72,
   },
-  headline: { fontFamily: FONTS.extraBold, fontSize: 20, color: COLORS.text, textAlign: 'center', marginBottom: 8 },
-  sub: { fontFamily: FONTS.regular, fontSize: 14, color: COLORS.textDim, textAlign: 'center', lineHeight: 20 },
-  cta: { backgroundColor: COLORS.gold, borderRadius: RADIUS.md, padding: 15, alignItems: 'center' },
-  ctaText: { fontFamily: FONTS.extraBold, fontSize: 14, color: COLORS.navy },
+  toast: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: COLORS.navyCard,
+    borderRadius: RADIUS.lg,
+    borderWidth: 1.5,
+    borderColor: COLORS.success,
+    padding: 14,
+  },
+  toastIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: COLORS.success,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  title: {
+    fontFamily: FONTS.extraBold,
+    fontSize: 14,
+    color: COLORS.text,
+  },
+  sub: {
+    fontFamily: FONTS.regular,
+    fontSize: 12,
+    color: COLORS.textDim,
+    marginTop: 2,
+  },
+  demo: {
+    marginTop: 40,
+    alignItems: 'center',
+    gap: 12,
+  },
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: COLORS.navySoft,
+    borderWidth: 1,
+    borderColor: COLORS.navyLine,
+    borderRadius: RADIUS.full,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+  },
+  chipText: {
+    fontFamily: FONTS.semi,
+    fontSize: 13,
+    color: COLORS.textDim,
+  },
+  hint: {
+    fontFamily: FONTS.regular,
+    fontSize: 11,
+    color: COLORS.textFaint,
+  },
 });
 
 export default FollowSuccessScreen;

@@ -30,10 +30,21 @@ RATE_LIMITS = {
 
 # Per-type revenue splits: creator_share_pct / platform_share_pct
 REVENUE_SPLITS = {
-    'unlock':       {'creator': 70, 'platform': 30},
+    'unlock':       {'creator': 70, 'platform': 30},  # creator-owned series (including featured)
+    'unlock_origin': {'creator': 0, 'platform': 100},  # Wiam Origin / bought rights — platform owns
     'tip':          {'creator': 80, 'platform': 20},
     'subscription': {'creator': 75, 'platform': 25},
 }
+
+
+def unlock_split_for_content(content=None):
+    """Creator feature/upload → 70/30. Origin / platform-owned → 100% platform."""
+    if content is not None and bool(getattr(content, 'is_wiam_origin', False)):
+        return REVENUE_SPLITS['unlock_origin']
+    shelf = (getattr(content, 'catalog_shelf', None) or '') if content is not None else ''
+    if shelf == 'origin':
+        return REVENUE_SPLITS['unlock_origin']
+    return REVENUE_SPLITS['unlock']
 
 
 def _get_user(user_id):
@@ -298,9 +309,18 @@ def record_episode_unlock(user_id, creator_id, content_id, episode_id, episode_n
     tx_group = str(uuid.uuid4())
     now = datetime.utcnow()
 
-    split = REVENUE_SPLITS['unlock']
+    content = None
+    try:
+        from ..models import Content
+        content = Content.query.get(content_id)
+    except Exception:
+        content = None
+    split = unlock_split_for_content(content)
     creator_coins = int(coins_cost * split['creator'] / 100)
     platform_coins = coins_cost - creator_coins
+    if split.get('creator', 0) <= 0:
+        creator_coins = 0
+        platform_coins = coins_cost
 
     bal.balance -= coins_cost
     bal.total_spent += coins_cost
@@ -321,10 +341,13 @@ def record_episode_unlock(user_id, creator_id, content_id, episode_id, episode_n
             metadata_json=json.dumps({
                 'content_id': content_id, 'episode_id': episode_id,
                 'episode_number': episode_number, 'creator_id': creator_id,
+                'split': split,
             }),
             created_at=now, created_by=user_id,
         ),
-        LedgerEntry(
+    ]
+    if creator_coins > 0 and creator_id:
+        entries.append(LedgerEntry(
             tx_group=tx_group, account_type='creator', account_id=creator_id,
             entry_type='credit', amount=creator_coins, currency='coins',
             balance_after=0,
@@ -334,8 +357,7 @@ def record_episode_unlock(user_id, creator_id, content_id, episode_id, episode_n
                 'content_id': content_id, 'episode_id': episode_id, 'user_id': user_id,
             }),
             created_at=now, created_by=user_id,
-        ),
-    ]
+        ))
     if platform_coins > 0:
         entries.append(LedgerEntry(
             tx_group=tx_group, account_type='platform_revenue', account_id=0,

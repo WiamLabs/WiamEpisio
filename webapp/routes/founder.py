@@ -557,26 +557,53 @@ def reject_payout(payout_id):
 @founder_bp.route('/genres')
 @founder_required
 def genres():
-    """Genre management."""
-    all_genres = Genre.query.order_by(Genre.name).all()
-    return render_template('founder/genres.html', genres=all_genres)
+    """Episio genre management (founder-driven; app loads via API)."""
+    from ..services.episio_genres import seed_episio_genres
+    seed_episio_genres()
+    episio_genres = Genre.query.filter_by(product='episio').order_by(
+        Genre.sort_order.asc(), Genre.name.asc()
+    ).all()
+    legacy_genres = Genre.query.filter(
+        db.or_(Genre.product == 'legacy', Genre.product.is_(None))
+    ).order_by(Genre.name.asc()).all()
+    return render_template(
+        'founder/genres.html',
+        episio_genres=episio_genres,
+        legacy_genres=legacy_genres,
+        genres=episio_genres,
+    )
 
 
 @founder_bp.route('/genres/add', methods=['POST'])
 @founder_required
 def add_genre():
-    """Add a new genre."""
+    """Add a new genre (default product=episio)."""
+    from ..services.episio_genres import add_genre as add_g
     name = request.form.get('name', '').strip()
+    product = (request.form.get('product') or 'episio').strip().lower()
     if not name:
         flash('Genre name is required.', 'error')
         return redirect(url_for('founder_dash.genres'))
-    existing = Genre.query.filter(func.lower(Genre.name) == name.lower()).first()
-    if existing:
-        flash('Genre already exists.', 'error')
-        return redirect(url_for('founder_dash.genres'))
-    db.session.add(Genre(name=name))
+    try:
+        add_g(name, product=product)
+        flash(f'Genre "{name}" added for {product}.', 'success')
+    except Exception as e:
+        flash(str(e)[:200], 'error')
+    return redirect(url_for('founder_dash.genres'))
+
+
+@founder_bp.route('/genres/purge-legacy', methods=['POST'])
+@founder_required
+def purge_legacy_genres():
+    """Hide legacy novel genres from lists (does not drop parked novel rows)."""
+    rows = Genre.query.filter(
+        db.or_(Genre.product == 'legacy', Genre.product.is_(None))
+    ).all()
+    for g in rows:
+        g.product = 'legacy'
+        g.is_active = False
     db.session.commit()
-    flash(f'Genre "{name}" added.', 'success')
+    flash(f'Hid {len(rows)} legacy genres from active lists.', 'success')
     return redirect(url_for('founder_dash.genres'))
 
 
@@ -588,18 +615,13 @@ def delete_genre(genre_id):
     genre = Genre.query.get_or_404(genre_id)
     genre_name = genre.name
 
-    # Remove genre from all Content that references it
     Content.query.filter(Content.genre == genre_name).update(
         {Content.genre: ''}, synchronize_session=False
     )
-
-    # Remove from user genre preferences
     UserGenrePreference.query.filter_by(genre_id=genre_id).delete()
-
-    # Delete the genre itself
     db.session.delete(genre)
     db.session.commit()
-    flash(f'Genre "{genre_name}" deleted from everywhere (content, preferences, studio).', 'success')
+    flash(f'Genre "{genre_name}" deleted.', 'success')
     return redirect(url_for('founder_dash.genres'))
 
 

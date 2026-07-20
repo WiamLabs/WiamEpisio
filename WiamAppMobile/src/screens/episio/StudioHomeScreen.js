@@ -22,6 +22,8 @@ const StudioHomeScreen = () => {
   const [error, setError] = useState(null);
   const [apply, setApply] = useState(null);
 
+  const patchUser = useAuthStore((s) => s.patchUser);
+
   const load = useCallback(async (soft = false) => {
     if (!isAuthenticated) {
       setLoading(false);
@@ -30,9 +32,20 @@ const StudioHomeScreen = () => {
     if (!soft) setLoading(true);
     setError(null);
     try {
+      try {
+        const me = await (await import('../../api/auth')).default.me();
+        if (me?.user) await patchUser(me.user);
+        else if (me?.is_creator != null) await patchUser(me);
+      } catch { /* keep cached user */ }
       const app = await studioEpisioApi.getApply().catch(() => null);
       setApply(app);
-      if (!user?.is_creator && app?.application?.status !== 'accepted' && !app?.studio_unlocked) {
+      const unlocked = !!(
+        user?.is_creator
+        || app?.is_creator
+        || app?.studio_unlocked
+        || app?.application?.status === 'accepted'
+      );
+      if (!unlocked) {
         setSeries([]);
         return;
       }
@@ -45,7 +58,7 @@ const StudioHomeScreen = () => {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [isAuthenticated, user?.is_creator]);
+  }, [isAuthenticated, user?.is_creator, patchUser]);
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
@@ -60,7 +73,46 @@ const StudioHomeScreen = () => {
     );
   }
 
-  const locked = !user?.is_creator && apply?.application?.status !== 'accepted' && !apply?.studio_unlocked;
+  const locked = (() => {
+    const status = (user?.status || apply?.user_status || '').toLowerCase();
+    if (['banned', 'suspended', 'frozen'].includes(status)) return true;
+    return !(
+      user?.is_creator
+      || apply?.is_creator
+      || apply?.studio_unlocked
+      || apply?.application?.status === 'accepted'
+    );
+  })();
+
+  const lockReason = (() => {
+    const status = (user?.status || '').toLowerCase();
+    if (['banned', 'suspended', 'frozen'].includes(status)) {
+      return {
+        title: 'Studio locked',
+        sub: 'Your creator access is suspended. Contact support@wiamapp.com if you think this is a mistake.',
+        showApply: false,
+      };
+    }
+    if (apply?.application?.status === 'pending') {
+      return {
+        title: 'Application pending review',
+        sub: apply?.application?.reviewer_note || 'High quality only. Complete series + trailer QA before public live.',
+        showApply: false,
+      };
+    }
+    if (apply?.application?.status === 'rejected') {
+      return {
+        title: 'Application rejected — re-apply after fixing notes',
+        sub: apply?.application?.reviewer_note || 'High quality only. Complete series + trailer QA before public live.',
+        showApply: true,
+      };
+    }
+    return {
+      title: 'Apply before uploading',
+      sub: apply?.application?.reviewer_note || 'High quality only. Complete series + trailer QA before public live.',
+      showApply: true,
+    };
+  })();
 
   return (
     <View style={[styles.root, { paddingTop: insets.top + 8 }]}>
@@ -68,7 +120,12 @@ const StudioHomeScreen = () => {
         <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
           <ChevronLeft size={20} color={COLORS.text} />
         </TouchableOpacity>
-        <Text style={styles.title}>WiamStudio</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.title}>WiamStudio</Text>
+          <Text style={styles.brandSub}>
+            {locked ? 'Apply to create' : `${series.length} series · Build complete stories`}
+          </Text>
+        </View>
         {!locked ? (
           <TouchableOpacity style={styles.plus} onPress={() => navigation.navigate('StudioSeriesCreate')}>
             <Plus size={18} color={COLORS.navy} />
@@ -76,27 +133,37 @@ const StudioHomeScreen = () => {
         ) : <View style={{ width: 36 }} />}
       </View>
 
+      {!locked ? (
+        <View style={styles.statusCard}>
+          <Text style={styles.statusTitle}>
+            {series.filter((s) => s.pipeline_state === 'live').length
+              ? `${series.filter((s) => s.pipeline_state === 'live').length} live · keep building`
+              : series.length
+                ? `${series.filter((s) => !['live', 'published'].includes(s.pipeline_state)).length || series.length} series in progress`
+                : 'Start your first series'}
+          </Text>
+          <Text style={styles.statusSub}>Complete seasons only. Trailer + every episode must pass before publish.</Text>
+        </View>
+      ) : null}
+
       <TouchableOpacity onPress={() => navigation.navigate('StudioSpecs')}>
         <Text style={styles.specsLink}>Video specs: 9:16 · 1080×1920 · 4–5 min →</Text>
       </TouchableOpacity>
       {!locked ? (
-        <TouchableOpacity onPress={() => navigation.navigate('StudioSettings')}>
-          <Text style={styles.specsLink}>Studio settings →</Text>
-        </TouchableOpacity>
+        <View style={styles.quickLinks}>
+          <TouchableOpacity onPress={() => navigation.navigate('StudioSettings')}>
+            <Text style={styles.specsLink}>Studio settings →</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('CreatorTrustTier')}>
+            <Text style={styles.specsLink}>Trust tier →</Text>
+          </TouchableOpacity>
+        </View>
       ) : null}
 
       {locked ? (
         <View style={styles.lockBox}>
-          <Text style={styles.lockTitle}>
-            {apply?.application?.status === 'pending'
-              ? 'Application pending review'
-              : apply?.application?.status === 'rejected'
-                ? 'Application rejected — re-apply after fixing notes'
-                : 'Apply before uploading'}
-          </Text>
-          <Text style={styles.lockSub}>
-            {apply?.application?.reviewer_note || 'High quality only. Complete series + trailer QA before public live.'}
-          </Text>
+          <Text style={styles.lockTitle}>{lockReason.title}</Text>
+          <Text style={styles.lockSub}>{lockReason.sub}</Text>
           {apply?.application?.status === 'rejected' ? (
             <TouchableOpacity
               style={styles.ctaAlt}
@@ -107,7 +174,7 @@ const StudioHomeScreen = () => {
               <Text style={styles.ctaAltText}>Read team note</Text>
             </TouchableOpacity>
           ) : null}
-          {apply?.application?.status !== 'pending' ? (
+          {lockReason.showApply ? (
             <TouchableOpacity
               style={styles.cta}
               onPress={() => navigation.navigate(apply?.invite_only ? 'CreatorApplyInviteOnly' : 'CreatorApply')}
@@ -172,12 +239,20 @@ const StudioHomeScreen = () => {
               <View style={{ flex: 1 }}>
                 <Text style={styles.rowTitle}>{item.title}</Text>
                 <Text style={styles.rowMeta}>
-                  {item.ready_episodes || 0}/{item.planned_episode_count || 0} ready · Trailer {item.trailer_qa_status}
+                  {item.ready_episodes || 0}/{item.planned_episode_count || 0} ready · Trailer {item.trailer_qa_status || '—'}
                 </Text>
-                <Text style={styles.rowMeta}>
-                  {(item.pipeline_state || item.review_status || item.status || 'building').replace(/_/g, ' ')}
-                  {item.season_locked ? ' · locked' : ''}
-                </Text>
+                <View style={styles.flagRow}>
+                  <Text style={[
+                    styles.flag,
+                    item.pipeline_state === 'live' && styles.flagLive,
+                    item.pipeline_state === 'needs_changes' && styles.flagWarn,
+                    item.pipeline_state === 'in_review' && styles.flagReview,
+                  ]}
+                  >
+                    {(item.pipeline_state || item.review_status || item.status || 'building').replace(/_/g, ' ').toUpperCase()}
+                  </Text>
+                  {item.season_locked ? <Text style={styles.flagMuted}>LOCKED</Text> : null}
+                </View>
               </View>
             </TouchableOpacity>
           )}
@@ -195,12 +270,20 @@ const styles = StyleSheet.create({
     width: 36, height: 36, borderRadius: 18, backgroundColor: COLORS.navyCard,
     alignItems: 'center', justifyContent: 'center',
   },
-  title: { flex: 1, fontSize: 18, fontFamily: FONTS.bold, color: COLORS.text },
+  title: { fontSize: 18, fontFamily: FONTS.bold, color: COLORS.text },
+  brandSub: { fontSize: 11, fontFamily: FONTS.regular, color: COLORS.textFaint, marginTop: 2 },
   plus: {
     width: 36, height: 36, borderRadius: 18, backgroundColor: COLORS.gold,
     alignItems: 'center', justifyContent: 'center',
   },
-  specsLink: { color: COLORS.gold, fontFamily: FONTS.semi, fontSize: 12.5, paddingHorizontal: 20, marginBottom: 12 },
+  statusCard: {
+    marginHorizontal: 20, marginBottom: 10, padding: 14, borderRadius: 14,
+    backgroundColor: COLORS.navyCard, borderWidth: 1, borderColor: COLORS.navyLine,
+  },
+  statusTitle: { fontFamily: FONTS.bold, color: '#fff', fontSize: 13.5 },
+  statusSub: { marginTop: 4, fontFamily: FONTS.regular, color: COLORS.textDim, fontSize: 11.5, lineHeight: 16 },
+  quickLinks: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
+  specsLink: { color: COLORS.gold, fontFamily: FONTS.semi, fontSize: 12.5, paddingHorizontal: 20, marginBottom: 8 },
   lockBox: {
     marginHorizontal: 20, marginBottom: 16, padding: 16, borderRadius: 14,
     backgroundColor: COLORS.navyCard, borderWidth: 1, borderColor: COLORS.navyLine,
@@ -210,6 +293,18 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: 12, alignItems: 'center' },
   rowTitle: { fontFamily: FONTS.semi, color: COLORS.text, fontSize: 14 },
   rowMeta: { marginTop: 4, color: COLORS.textFaint, fontSize: 11.5, fontFamily: FONTS.regular },
+  flagRow: { flexDirection: 'row', gap: 6, marginTop: 6, flexWrap: 'wrap' },
+  flag: {
+    fontSize: 9, fontFamily: FONTS.extraBold, color: COLORS.gold,
+    backgroundColor: 'rgba(212,160,23,0.14)', paddingHorizontal: 7, paddingVertical: 3, borderRadius: 6, overflow: 'hidden',
+  },
+  flagLive: { color: '#fff', backgroundColor: '#E4573D' },
+  flagWarn: { color: '#E0A79A', backgroundColor: 'rgba(228,87,61,0.16)' },
+  flagReview: { color: COLORS.gold, backgroundColor: 'rgba(212,160,23,0.2)' },
+  flagMuted: {
+    fontSize: 9, fontFamily: FONTS.extraBold, color: COLORS.textFaint,
+    backgroundColor: COLORS.navySoft, paddingHorizontal: 7, paddingVertical: 3, borderRadius: 6, overflow: 'hidden',
+  },
   empty: { textAlign: 'center', color: COLORS.textFaint, marginTop: 30, fontFamily: FONTS.medium },
   error: { color: COLORS.error, paddingHorizontal: 20, fontFamily: FONTS.medium, marginBottom: 8 },
   cta: { marginTop: 14, backgroundColor: COLORS.gold, borderRadius: 12, padding: 13, alignItems: 'center' },

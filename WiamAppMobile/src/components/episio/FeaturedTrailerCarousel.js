@@ -32,9 +32,12 @@ function Slide({ item, active, width, onPress }) {
     try { p.volume = 0; } catch { /* older expo-video */ }
   });
 
+  const imageOnly = (item.featured_media_mode || 'trailer') === 'image';
+  const badge = (item.featured_badge || '').trim() || (imageOnly ? 'Featured' : 'Trailer');
+
   useEffect(() => {
     let cancelled = false;
-    if (!active) {
+    if (!active || imageOnly) {
       try { player.pause(); } catch { /* ignore */ }
       return undefined;
     }
@@ -59,7 +62,7 @@ function Slide({ item, active, width, onPress }) {
       cancelled = true;
       try { player.pause(); } catch { /* ignore */ }
     };
-  }, [active, item.id, direct, player]);
+  }, [active, item.id, direct, player, imageOnly]);
 
   const meta = [
     item.genre,
@@ -69,9 +72,11 @@ function Slide({ item, active, width, onPress }) {
       : null,
   ].filter(Boolean).join(' · ');
 
+  const showVideo = !imageOnly && !!(streamUrl || direct);
+
   return (
     <Pressable style={[styles.card, { width }]} onPress={() => onPress(item)}>
-      {streamUrl || direct ? (
+      {showVideo ? (
         <VideoView
           style={StyleSheet.absoluteFill}
           player={player}
@@ -91,11 +96,13 @@ function Slide({ item, active, width, onPress }) {
         colors={['transparent', 'rgba(8,8,26,0.2)', 'rgba(8,8,26,0.95)']}
         style={StyleSheet.absoluteFill}
       />
-      <View style={styles.play}>
-        <Play size={22} color={COLORS.navy} fill={COLORS.navy} />
-      </View>
+      {!showVideo ? (
+        <View style={styles.play}>
+          <Play size={22} color={COLORS.navy} fill={COLORS.navy} />
+        </View>
+      ) : null}
       <View style={styles.content}>
-        <Text style={styles.badge}>TRAILER</Text>
+        <Text style={styles.badge}>{badge.toUpperCase()}</Text>
         <Text style={styles.title} numberOfLines={2}>{item.title}</Text>
         {meta ? <Text style={styles.meta} numberOfLines={1}>{meta}</Text> : null}
       </View>

@@ -112,6 +112,8 @@ def _active_featured(slot_key: str, limit: int = 12):
         card = _series_card(c)
         card['featured_slot_id'] = slot.id
         card['featured_note'] = slot.note or ''
+        card['featured_badge'] = (getattr(slot, 'badge_label', None) or '').strip()
+        card['featured_media_mode'] = (getattr(slot, 'media_mode', None) or 'trailer').lower()
         out.append(card)
         if len(out) >= limit:
             break
@@ -429,9 +431,13 @@ def coins_bands():
 def fx_list():
     ensure_default_fx()
     from ..models import FxRate
+    from ..services.currency_display import currency_for_country
     rows = FxRate.query.order_by(FxRate.currency_code.asc()).all()
+    country = (request.args.get('country') or '').strip()
+    suggested = currency_for_country(country) if country else None
     return jsonify({
         'base': 'USD',
+        'suggested_currency': suggested,
         'rates': [{
             'currency': r.currency_code,
             'rate_per_usd': r.rate_per_usd,
@@ -439,6 +445,103 @@ def fx_list():
             'updated_at': r.updated_at.isoformat() if r.updated_at else None,
         } for r in rows],
     })
+
+
+@episio_catalog_api.route('/episio/genres', methods=['GET'])
+def episio_genres_list():
+    """Founder-managed Episio drama genres (not hardcoded client lists)."""
+    from ..services.episio_genres import list_episio_genres
+    return jsonify({
+        'product': 'episio',
+        'genres': list_episio_genres(active_only=True),
+    })
+
+
+@episio_catalog_api.route('/series/<int:series_id>/comments', methods=['GET'])
+@jwt_optional
+def series_comments_list(series_id):
+    from ..models import SeriesComment, User
+    c = Content.query.get(series_id)
+    if not c or c.is_deleted:
+        return jsonify({'error': 'not_found'}), 404
+    limit = min(100, max(1, request.args.get('limit', 40, type=int) or 40))
+    rows = (
+        SeriesComment.query.filter_by(content_id=series_id, is_deleted=False, parent_id=None)
+        .order_by(SeriesComment.created_at.desc())
+        .limit(limit)
+        .all()
+    )
+    out = []
+    for row in rows:
+        u = User.query.filter(
+            db.or_(User.wiam_id == row.user_id, User.id == row.user_id)
+        ).first()
+        replies = SeriesComment.query.filter_by(
+            parent_id=row.id, is_deleted=False
+        ).order_by(SeriesComment.created_at.asc()).limit(20).all()
+        out.append({
+            'id': row.id,
+            'body': row.body,
+            'created_at': row.created_at.isoformat() if row.created_at else None,
+            'user': {
+                'id': u.id if u else None,
+                'display_name': (u.display_name or u.username or 'Watcher') if u else 'Watcher',
+                'avatar_url': getattr(u, 'avatar_url', None) if u else None,
+            },
+            'replies': [{
+                'id': r.id,
+                'body': r.body,
+                'created_at': r.created_at.isoformat() if r.created_at else None,
+            } for r in replies],
+        })
+    return jsonify({'series_id': series_id, 'comments': out, 'count': len(out)})
+
+
+@episio_catalog_api.route('/series/<int:series_id>/comments', methods=['POST'])
+@jwt_required
+def series_comments_create(series_id):
+    from ..models import SeriesComment
+    user = request.api_user
+    c = Content.query.get(series_id)
+    if not c or c.is_deleted:
+        return jsonify({'error': 'not_found'}), 404
+    data = request.get_json(silent=True) or {}
+    body = (data.get('body') or '').strip()
+    if len(body) < 1:
+        return jsonify({'error': 'body_required'}), 400
+    if len(body) > 2000:
+        return jsonify({'error': 'body_too_long'}), 400
+    parent_id = data.get('parent_id')
+    if parent_id:
+        parent = SeriesComment.query.get(int(parent_id))
+        if not parent or parent.content_id != series_id:
+            return jsonify({'error': 'invalid_parent'}), 400
+    row = SeriesComment(
+        content_id=series_id,
+        user_id=user.wiam_id or user.id,
+        body=body,
+        parent_id=int(parent_id) if parent_id else None,
+    )
+    db.session.add(row)
+    db.session.commit()
+    return jsonify({'ok': True, 'id': row.id, 'body': row.body}), 201
+
+
+@episio_catalog_api.route('/series/<int:series_id>/share', methods=['POST'])
+@jwt_optional
+def series_share_track(series_id):
+    """Analytics ping when watcher shares a series."""
+    c = Content.query.get(series_id)
+    if not c or c.is_deleted:
+        return jsonify({'error': 'not_found'}), 404
+    user = getattr(request, 'api_user', None)
+    try:
+        from ..services.analytics import track
+        track('series_share', user, content_id=series_id)
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+    return jsonify({'ok': True})
 
 
 # ---------------------------------------------------------------------------

@@ -951,8 +951,14 @@ def upload_avatar():
     if len(img_bytes) > 5 * 1024 * 1024:
         return jsonify({'error': 'Image too large (max 5 MB)'}), 400
 
-    # Upload to Cloudinary (no DB fallback — saves space)
-    from ..services.image_service import upload_avatar as cloud_upload
+    # Upload to Cloudinary (no DB fallback — saves space). Drop previous asset first.
+    from ..services.image_service import (
+        upload_avatar as cloud_upload, delete_avatar, delete_image_url,
+    )
+    old = user.avatar_url
+    if old and 'res.cloudinary.com' in str(old):
+        delete_image_url(old)
+    delete_avatar(user.id)
     cloud_url = cloud_upload(img_bytes, user.id, content_type)
     if not cloud_url:
         return jsonify({'error': 'Image upload failed. Please try again.'}), 500
@@ -960,6 +966,20 @@ def upload_avatar():
     user.avatar_url = cloud_url
     db.session.commit()
     return jsonify({'message': 'Avatar updated', 'avatar_url': _abs_url(cloud_url)})
+
+
+@api_v1.route('/auth/avatar', methods=['DELETE'])
+@jwt_required
+def delete_avatar_api():
+    """Delete profile photo from Cloudinary and clear user.avatar_url."""
+    from ..services.image_service import delete_avatar, delete_image_url
+    user = request.api_user
+    if user.avatar_url and 'res.cloudinary.com' in str(user.avatar_url):
+        delete_image_url(user.avatar_url)
+    delete_avatar(user.id)
+    user.avatar_url = None
+    db.session.commit()
+    return jsonify({'ok': True, 'message': 'Avatar deleted'})
 
 
 @api_v1.route('/auth/change-password', methods=['POST'])
@@ -3206,14 +3226,25 @@ _api_genre_cache = {'ts': None, 'data': None}
 
 @api_v1.route('/genres')
 def genres_list():
-    """List all available genres (cached 1 hour)."""
+    """List genres. ?product=episio returns drama catalog only."""
     from datetime import datetime as _dt
+    product = (request.args.get('product') or '').strip().lower()
     now = _dt.utcnow()
-    if _api_genre_cache['ts'] and (now - _api_genre_cache['ts']).total_seconds() < 3600:
+    cache_key = product or 'all'
+    if (
+        _api_genre_cache['ts']
+        and _api_genre_cache.get('key') == cache_key
+        and (now - _api_genre_cache['ts']).total_seconds() < 3600
+    ):
         return jsonify(_api_genre_cache['data'])
-    genres = Genre.query.order_by(Genre.name).all()
-    result = {'genres': [{'id': g.id, 'name': g.name} for g in genres]}
+    if product == 'episio':
+        from ..services.episio_genres import list_episio_genres
+        result = {'product': 'episio', 'genres': list_episio_genres(active_only=True)}
+    else:
+        genres = Genre.query.order_by(Genre.name).all()
+        result = {'genres': [{'id': g.id, 'name': g.name, 'product': getattr(g, 'product', None)} for g in genres]}
     _api_genre_cache['ts'] = now
+    _api_genre_cache['key'] = cache_key
     _api_genre_cache['data'] = result
     return jsonify(result)
 

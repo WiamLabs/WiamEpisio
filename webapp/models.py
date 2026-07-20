@@ -386,12 +386,15 @@ class Content(db.Model):
 
 
 class Genre(db.Model):
-    """Maps to the bot's existing 'genres' table."""
+    """Shared genre catalog. product=episio for WiamEpisio; legacy=old novel list."""
     __tablename__ = 'genres'
     __table_args__ = {'extend_existing': True}
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, unique=True, nullable=False)
+    product = db.Column(db.Text, default='legacy')  # episio | legacy
+    sort_order = db.Column(db.Integer, default=0)
+    is_active = db.Column(db.Boolean, default=True)
 
     def __repr__(self):
         return f'<Genre {self.name}>'
@@ -3522,6 +3525,24 @@ class TrailerQualityReport(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
 
+class SeriesComment(db.Model):
+    """Watcher comments on a drama series (Episio)."""
+    __tablename__ = 'w_series_comments'
+    __table_args__ = (
+        db.Index('ix_series_comments_content', 'content_id', 'created_at'),
+        {'extend_existing': True},
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    content_id = db.Column(db.Integer, nullable=False)
+    user_id = db.Column(db.BigInteger, nullable=False)
+    body = db.Column(db.Text, nullable=False)
+    parent_id = db.Column(db.Integer, nullable=True)
+    is_deleted = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+
 class FeaturedTrailerSlot(db.Model):
     """Founder-curated featured trailers under Home chips (not auto-selected)."""
     __tablename__ = 'w_featured_trailer_slots'
@@ -3536,7 +3557,11 @@ class FeaturedTrailerSlot(db.Model):
     sort_order = db.Column(db.Integer, default=0)
     is_active = db.Column(db.Boolean, default=True)
     curated_by = db.Column(db.BigInteger, nullable=True)
-    note = db.Column(db.Text, default='')
+    note = db.Column(db.Text, default='')  # internal founder note only
+    # Overlay on Home hero: Coming Soon | Live Now | Fresh | Top Ranking | custom
+    badge_label = db.Column(db.Text, default='')
+    # trailer = autoplay series trailer · image = static poster/cover only
+    media_mode = db.Column(db.Text, default='trailer')  # trailer | image
     starts_at = db.Column(db.DateTime, nullable=True)
     ends_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)

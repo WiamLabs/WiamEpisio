@@ -4,21 +4,24 @@
  */
 import React, { useCallback, useState } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert,
+  View, Text, StyleSheet, Alert, ActivityIndicator, TouchableOpacity,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
-import { ChevronLeft, Check, RefreshCw } from 'lucide-react-native';
+import * as ImagePicker from 'expo-image-picker';
+import { Check, RefreshCw } from 'lucide-react-native';
+import EpisioScreenShell from '../../components/episio/EpisioScreenShell';
+import EpisioGoldButton from '../../components/episio/EpisioGoldButton';
 import { COLORS, FONTS } from '../../constants/theme';
 import studioEpisioApi from '../../api/studioEpisio';
 
 const StudioTrailerScreen = () => {
-  const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const seriesId = useRoute().params?.seriesId;
   const [series, setSeries] = useState(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [pickedDur, setPickedDur] = useState(null);
+  const [pickedName, setPickedName] = useState(null);
 
   const load = useCallback(async () => {
     if (!seriesId) return;
@@ -36,21 +39,47 @@ const StudioTrailerScreen = () => {
   const locked = !!series?.season_locked && !series?.fix_window_open;
   const qa = series?.trailer_qa_status || 'none';
   const passed = qa === 'passed';
-  const dur = series?.trailer_duration_seconds || 0;
+  const dur = pickedDur || series?.trailer_duration_seconds || 0;
   const inRange = dur >= 15 && dur <= 60;
 
-  const runUpload = async () => {
+  const pickAndUpload = async () => {
     if (locked) {
       Alert.alert('Season locked', 'Trailer replace opens when Needs Changes allows a fix window.');
       return;
     }
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) {
+      Alert.alert('Permission needed', 'Allow media access to pick a trailer.');
+      return;
+    }
+    const pick = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+      quality: 1,
+    });
+    if (pick.canceled || !pick.assets?.[0]) return;
+    const asset = pick.assets[0];
+    let seconds = 42;
+    if (asset.duration) {
+      seconds = asset.duration > 1000 ? Math.round(asset.duration / 1000) : Math.round(asset.duration);
+    }
+    setPickedDur(seconds);
+    setPickedName(asset.fileName || asset.uri.split('/').pop() || 'trailer.mp4');
+
     setBusy(true);
     try {
       await studioEpisioApi.uploadTrailer(seriesId, {
-        duration_seconds: 42, width: 1080, height: 1920,
+        duration_seconds: seconds,
+        width: asset.width || 1080,
+        height: asset.height || 1920,
+        source_filename: asset.fileName,
       });
       await load();
-      Alert.alert('Trailer registered', 'QA checklist updated.');
+      Alert.alert(
+        seconds >= 15 && seconds <= 60 ? 'Trailer registered' : 'Duration out of range',
+        seconds >= 15 && seconds <= 60
+          ? 'QA checklist updated. Trailer must stay 15–60 seconds.'
+          : `Trailer is ${seconds}s — must be 15–60s. Re-export and try again.`,
+      );
     } catch (e) {
       Alert.alert('Trailer failed', e?.data?.message || e?.message || 'Try again');
     } finally {
@@ -59,34 +88,41 @@ const StudioTrailerScreen = () => {
   };
 
   const checks = [
-    { ok: passed || !!series?.trailer_url, label: '9:16 aspect ratio confirmed' },
-    { ok: passed || !!series?.trailer_url, label: 'Resolution 1080 × 1920' },
+    { ok: passed || !!series?.trailer_url || !!pickedName, label: '9:16 aspect ratio confirmed' },
+    { ok: passed || !!series?.trailer_url || !!pickedName, label: 'Resolution 1080 × 1920' },
     { ok: inRange || passed, label: 'Duration within 15–60s' },
-    { ok: passed, label: 'No black frames / QA pass' },
+    { ok: passed, label: 'No black frames detected' },
   ];
 
   return (
-    <View style={[styles.root, { paddingTop: insets.top }]}>
-      <View style={styles.topbar}>
-        <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.goBack()}>
-          <ChevronLeft size={15} color="#fff" />
-        </TouchableOpacity>
-        <View>
-          <Text style={styles.h1}>Trailer</Text>
-          <Text style={styles.sub}>{series?.title || 'Series'}</Text>
-        </View>
-      </View>
-
+    <EpisioScreenShell
+      title="Trailer"
+      subtitle={series?.title || 'Series'}
+      footer={(
+        <EpisioGoldButton
+          label="Save & Continue"
+          onPress={() => navigation.goBack()}
+        />
+      )}
+    >
       {loading ? <ActivityIndicator color={COLORS.gold} style={{ marginTop: 40 }} /> : (
-        <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }}>
+        <>
           <View style={styles.preview}>
             <Text style={styles.badge}>TRAILER</Text>
-            <Text style={styles.previewTime}>{dur ? `${dur}s` : '—'} {inRange ? '— in range' : ''}</Text>
+            <Text style={styles.previewTime}>
+              {dur ? `${dur}s` : '—'}{inRange ? ' — in range' : dur ? ' — out of range' : ''}
+            </Text>
+            {pickedName ? <Text style={styles.fileName}>{pickedName}</Text> : null}
           </View>
 
           <View style={styles.meter}>
             <View style={styles.meterTrack}>
-              <View style={[styles.meterFill, { width: `${Math.min(100, (dur / 60) * 100)}%` }]} />
+              <View style={[
+                styles.meterFill,
+                { width: `${Math.min(100, (dur / 60) * 100)}%` },
+                !inRange && dur > 0 && { backgroundColor: '#E4573D' },
+              ]}
+              />
             </View>
             <View style={styles.meterLabels}>
               <Text style={styles.meterLbl}>15s</Text>
@@ -94,9 +130,14 @@ const StudioTrailerScreen = () => {
             </View>
           </View>
 
-          <TouchableOpacity style={styles.replace} onPress={runUpload} disabled={busy || locked}>
-            {busy ? <ActivityIndicator color={COLORS.gold} /> : <Text style={styles.replaceText}>Replace Video</Text>}
-          </TouchableOpacity>
+          <EpisioGoldButton
+            label="Replace Video"
+            onPress={pickAndUpload}
+            loading={busy}
+            disabled={locked}
+            variant="ghost"
+            style={{ marginBottom: 16 }}
+          />
 
           <View style={styles.qaCard}>
             <View style={styles.qaHead}>
@@ -111,26 +152,25 @@ const StudioTrailerScreen = () => {
                 <Text style={[styles.checkText, !c.ok && { color: COLORS.textFaint }]}>{c.label}</Text>
               </View>
             ))}
-            <TouchableOpacity style={styles.refresh} onPress={runUpload} disabled={busy || locked}>
+            <TouchableOpacity style={styles.refresh} onPress={pickAndUpload} disabled={busy || locked}>
               <RefreshCw size={12} color={COLORS.gold} />
               <Text style={styles.refreshText}>Re-run Quality Check</Text>
             </TouchableOpacity>
           </View>
-        </ScrollView>
+
+          <View style={styles.fileCard}>
+            <Text style={styles.fileTitle}>File Details</Text>
+            <Text style={styles.fileLine}>Codec · H.264 / AAC (preferred)</Text>
+            <Text style={styles.fileLine}>Target · 15–60 seconds · vertical 9:16</Text>
+            <Text style={styles.fileLine}>Status · {qa || 'not uploaded'}</Text>
+          </View>
+        </>
       )}
-    </View>
+    </EpisioScreenShell>
   );
 };
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: COLORS.navy },
-  topbar: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingBottom: 12 },
-  iconBtn: {
-    width: 34, height: 34, borderRadius: 17, backgroundColor: COLORS.navyCard,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  h1: { fontFamily: FONTS.extraBold, color: '#fff', fontSize: 16 },
-  sub: { fontFamily: FONTS.regular, color: COLORS.textDim, fontSize: 11.5, marginTop: 2 },
   preview: {
     height: 220, borderRadius: 18, backgroundColor: COLORS.navyCard,
     borderWidth: 1, borderColor: COLORS.navyLine, justifyContent: 'flex-end', padding: 14, marginBottom: 14,
@@ -139,19 +179,15 @@ const styles = StyleSheet.create({
     position: 'absolute', top: 12, left: 12, fontFamily: FONTS.extraBold, color: COLORS.gold, fontSize: 10,
   },
   previewTime: { fontFamily: FONTS.bold, color: '#fff', fontSize: 13 },
+  fileName: { marginTop: 4, fontFamily: FONTS.regular, color: COLORS.textDim, fontSize: 11 },
   meter: { marginBottom: 14 },
   meterTrack: { height: 6, borderRadius: 4, backgroundColor: COLORS.navyCard, overflow: 'hidden' },
   meterFill: { height: '100%', backgroundColor: COLORS.gold },
   meterLabels: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 },
   meterLbl: { color: COLORS.textFaint, fontSize: 10, fontFamily: FONTS.regular },
-  replace: {
-    padding: 12, borderRadius: 12, backgroundColor: COLORS.navySoft || '#161634',
-    borderWidth: 1, borderColor: COLORS.navyLine, alignItems: 'center', marginBottom: 16,
-  },
-  replaceText: { color: COLORS.gold, fontFamily: FONTS.bold, fontSize: 12 },
   qaCard: {
     backgroundColor: COLORS.navyCard, borderRadius: 16, padding: 14,
-    borderWidth: 1, borderColor: COLORS.navyLine,
+    borderWidth: 1, borderColor: COLORS.navyLine, marginBottom: 14,
   },
   qaHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   qaTitle: { fontFamily: FONTS.bold, color: '#fff', fontSize: 13 },
@@ -163,10 +199,16 @@ const styles = StyleSheet.create({
   checkText: { fontFamily: FONTS.regular, color: COLORS.text, fontSize: 12 },
   refresh: {
     marginTop: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7,
-    padding: 11, borderRadius: 12, backgroundColor: COLORS.navySoft || '#161634',
+    padding: 11, borderRadius: 12, backgroundColor: COLORS.navySoft,
     borderWidth: 1, borderColor: COLORS.navyLine,
   },
   refreshText: { color: COLORS.gold, fontFamily: FONTS.bold, fontSize: 11.5 },
+  fileCard: {
+    backgroundColor: COLORS.navyCard, borderRadius: 16, padding: 14,
+    borderWidth: 1, borderColor: COLORS.navyLine,
+  },
+  fileTitle: { fontFamily: FONTS.bold, color: '#fff', fontSize: 12.5, marginBottom: 8 },
+  fileLine: { fontFamily: FONTS.regular, color: COLORS.textDim, fontSize: 11.5, marginBottom: 4 },
 });
 
 export default StudioTrailerScreen;

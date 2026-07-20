@@ -20,6 +20,7 @@ import studioEpisioApi from '../../api/studioEpisio';
 import apiClient from '../../api/client';
 import useAuthStore from '../../store/useAuthStore';
 import resolveUrl from '../../utils/resolveUrl';
+import { assertGuestCanWatchSeries } from '../../utils/guestSeriesGate';
 
 const { width: W } = Dimensions.get('window');
 const HERO_H = 280;
@@ -82,8 +83,16 @@ const SeriesDetailScreen = () => {
     fn();
   };
 
-  const playEpisode = (ep) => {
+  const playEpisode = async (ep) => {
     if (!ep) return;
+    const gate = await assertGuestCanWatchSeries(seriesId, isAuthenticated);
+    if (!gate.allowed) {
+      navigation.navigate('LoginRequiredSheet', {
+        title: 'Register to watch more',
+        message: 'As a guest you can finish one series. Sign in free to watch a different series.',
+      });
+      return;
+    }
     if (ep.locked) {
       navigation.navigate('UnlockTakeover', {
         episodeId: ep.id,
@@ -111,7 +120,7 @@ const SeriesDetailScreen = () => {
   const onShare = () => {
     navigation.navigate('ShareSheet', {
       title: series?.title,
-      url: `https://wiamapp.com/series/${seriesId}`,
+      url: `https://episio.wiamlabs.com/series/${seriesId}`,
       seriesId,
     });
   };
@@ -252,6 +261,9 @@ const SeriesDetailScreen = () => {
               <Text style={styles.actionChipText}>Share</Text>
             </TouchableOpacity>
           </View>
+          <Text style={styles.freeNote}>
+            First episodes are free on the server. Later episodes unlock with coins or VIP.
+          </Text>
         </View>
 
         {/* HTML: .sheet-tabs */}
@@ -459,6 +471,9 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.navyCard, borderWidth: 1, borderColor: COLORS.navyLine,
   },
   actionChipText: { fontSize: 11.5, color: '#C9C9DE', fontFamily: FONTS.semi },
+  freeNote: {
+    marginTop: 12, fontSize: 11, color: COLORS.textDim, fontFamily: FONTS.regular, lineHeight: 16,
+  },
 
   sheetTabs: {
     flexDirection: 'row',

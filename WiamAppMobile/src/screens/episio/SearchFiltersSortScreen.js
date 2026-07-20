@@ -1,18 +1,19 @@
 /**
- * Search filters & sort
+ * Search filters & sort — genres from founder DB
  */
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import EpisioScreenShell from '../../components/episio/EpisioScreenShell';
 import { COLORS, FONTS, RADIUS } from '../../constants/theme';
+import { useEpisioGenres } from '../../hooks/useEpisioGenres';
 
-const GENRES = ['All', 'Drama', 'Romance', 'Comedy', 'Thriller', 'Fantasy', 'Historical'];
 const SORTS = ['Popular', 'Newest', 'Top rated', 'A–Z'];
 
 const SearchFiltersSortScreen = () => {
   const route = useRoute();
   const navigation = useNavigation();
+  const { genres: GENRES } = useEpisioGenres({ includeAll: true });
   const [genre, setGenre] = useState(route.params?.genre || 'All');
   const [sort, setSort] = useState(route.params?.sort || 'Popular');
 

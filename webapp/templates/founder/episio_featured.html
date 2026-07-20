@@ -5,37 +5,79 @@
 {% block dash_content %}
 <div class="dash-header">
   <h1><i class="bi bi-stars" style="color:var(--gold);"></i> Featured Trailer Slots</h1>
-  <p>Home / Origin / VIP / Anime curated trailers</p>
+  <p>Curate Home / Origin / VIP / Anime / Ranking heroes. Uses the series trailer (or image) already on that Series ID — you do not re-upload video here.</p>
 </div>
+
+<div class="dash-card" style="margin-bottom:16px;padding:14px 16px;font-size:0.85rem;color:var(--text-muted);line-height:1.5;">
+  <strong style="color:var(--text);">How Series ID works</strong><br>
+  1) Creator (or Origin) uploads trailer + cover on the series in Studio.<br>
+  2) You open <a href="{{ url_for('founder_dash.episio_series') }}">Episio Series</a>, copy the numeric Series ID.<br>
+  3) Add a slot below → that series appears in the Home hero carousel (autoplay muted trailer) or as a static image.<br>
+  <strong style="color:var(--text);">Badge</strong> is the overlay text watchers see (Coming Soon / Live Now / Fresh / Top Ranking / custom).<br>
+  <strong style="color:var(--text);">Note</strong> is internal only (not shown in the app).
+</div>
+
 <div class="dash-card" style="margin-bottom:16px;">
   <h3>Add slot</h3>
   <form method="post" class="row g-2 align-items-end">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <input type="hidden" name="action" value="add">
     <div class="col-md-2">
-      <label class="form-label" style="font-size:0.75rem;color:var(--text-muted);">Slot</label>
+      <label class="form-label" style="font-size:0.75rem;color:var(--text-muted);">Shelf slot</label>
       <select name="slot_key" class="form-select" style="background:var(--bg);color:var(--text);border-color:var(--border-subtle);">
-        <option value="home_featured">home_featured</option>
+        <option value="home_featured">home_featured (Home top)</option>
         <option value="origin">origin</option>
         <option value="vip">vip</option>
         <option value="anime">anime</option>
         <option value="ranking">ranking</option>
       </select>
     </div>
-    <div class="col-md-2"><label class="form-label" style="font-size:0.75rem;color:var(--text-muted);">Series ID</label><input name="content_id" class="form-control" required style="background:var(--bg);color:var(--text);border-color:var(--border-subtle);"></div>
-    <div class="col-md-2"><label class="form-label" style="font-size:0.75rem;color:var(--text-muted);">Sort</label><input name="sort_order" value="0" class="form-control" style="background:var(--bg);color:var(--text);border-color:var(--border-subtle);"></div>
-    <div class="col-md-4"><label class="form-label" style="font-size:0.75rem;color:var(--text-muted);">Note</label><input name="note" class="form-control" style="background:var(--bg);color:var(--text);border-color:var(--border-subtle);"></div>
-    <div class="col-md-2"><button class="btn-dash btn-dash-primary w-100" type="submit">Add</button></div>
+    <div class="col-md-2">
+      <label class="form-label" style="font-size:0.75rem;color:var(--text-muted);">Series ID</label>
+      <input name="content_id" class="form-control" required placeholder="e.g. 42" style="background:var(--bg);color:var(--text);border-color:var(--border-subtle);">
+    </div>
+    <div class="col-md-1">
+      <label class="form-label" style="font-size:0.75rem;color:var(--text-muted);">Sort</label>
+      <input name="sort_order" value="0" class="form-control" style="background:var(--bg);color:var(--text);border-color:var(--border-subtle);">
+    </div>
+    <div class="col-md-2">
+      <label class="form-label" style="font-size:0.75rem;color:var(--text-muted);">Badge (on trailer)</label>
+      <select name="badge_label" class="form-select" style="background:var(--bg);color:var(--text);border-color:var(--border-subtle);">
+        <option value="">(none)</option>
+        <option value="Coming Soon">Coming Soon</option>
+        <option value="Live Now">Live Now</option>
+        <option value="Fresh">Fresh</option>
+        <option value="Top Ranking">Top Ranking</option>
+        <option value="Wiam Origin">Wiam Origin</option>
+        <option value="VIP">VIP</option>
+        <option value="Anime">Anime</option>
+      </select>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label" style="font-size:0.75rem;color:var(--text-muted);">Media</label>
+      <select name="media_mode" class="form-select" style="background:var(--bg);color:var(--text);border-color:var(--border-subtle);">
+        <option value="trailer">Autoplay trailer</option>
+        <option value="image">Image / cover only</option>
+      </select>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label" style="font-size:0.75rem;color:var(--text-muted);">Internal note</label>
+      <input name="note" class="form-control" placeholder="ops only" style="background:var(--bg);color:var(--text);border-color:var(--border-subtle);">
+    </div>
+    <div class="col-md-1"><button class="btn-dash btn-dash-primary w-100" type="submit">Add</button></div>
   </form>
+  <p style="margin:10px 0 0;font-size:0.75rem;color:var(--text-muted);">Custom badge text: leave dropdown on (none) and we can extend with a free-text field later — presets cover the main tones.</p>
 </div>
 <div class="dash-card">
   <table class="dash-table">
-    <thead><tr><th>Slot</th><th>Series</th><th>Sort</th><th>Active</th><th>Note</th><th></th></tr></thead>
+    <thead><tr><th>Slot</th><th>Series</th><th>Badge</th><th>Media</th><th>Sort</th><th>Active</th><th>Note</th><th></th></tr></thead>
     <tbody>
     {% for s in slots %}
     <tr>
       <td>{{ s.slot_key }}</td>
       <td>#{{ s.content_id }} {% if series_map.get(s.content_id) %}— {{ series_map[s.content_id].title|truncate(40) }}{% endif %}</td>
+      <td>{{ s.badge_label or '—' }}</td>
+      <td>{{ s.media_mode or 'trailer' }}</td>
       <td>{{ s.sort_order }}</td>
       <td>{{ 'yes' if s.is_active else 'no' }}</td>
       <td>{{ s.note or '—' }}</td>
@@ -49,7 +91,7 @@
       </td>
     </tr>
     {% else %}
-    <tr><td colspan="6" style="color:var(--text-muted);">No featured slots.</td></tr>
+    <tr><td colspan="8" style="color:var(--text-muted);">No featured slots.</td></tr>
     {% endfor %}
     </tbody>
   </table>

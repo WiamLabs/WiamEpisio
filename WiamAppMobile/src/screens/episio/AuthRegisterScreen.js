@@ -1,6 +1,7 @@
 /**
- * Style: WiamEpisio-Register.html + real account fields for API.
- * Password show/hide · live username availability · last name · polished navy/gold.
+ * Style: WiamEpisio-Register.html (phone-first) + account details for API.
+ * Phone → OTP → details (email/password/username/DOB) → AgeGate.
+ * Keeps live username check + Google slot. Backend still requires email.
  */
 import React, { useEffect, useState } from 'react';
 import {
@@ -8,12 +9,13 @@ import {
   KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator, Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import {
   X, Phone, Mail, Lock, User, Calendar, Coins, Eye, EyeOff,
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS, FONTS } from '../../constants/theme';
+import EpisioGoldButton from '../../components/episio/EpisioGoldButton';
 import authApi from '../../api/auth';
 import apiClient from '../../api/client';
 import useAuthStore from '../../store/useAuthStore';
@@ -22,8 +24,12 @@ import { GoogleSignInSlot } from '../../services/googleAuth';
 const AuthRegisterScreen = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
+  const route = useRoute();
   const setAuth = useAuthStore((s) => s.setAuth);
-  const [phone, setPhone] = useState('');
+
+  const phoneVerified = !!route.params?.phoneVerified;
+  const [step, setStep] = useState(phoneVerified ? 'details' : 'phone');
+  const [phone, setPhone] = useState(route.params?.phone || '');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -35,12 +41,20 @@ const AuthRegisterScreen = () => {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
 
+  useEffect(() => {
+    if (route.params?.phoneVerified) {
+      setStep('details');
+      if (route.params.phone) setPhone(route.params.phone);
+    }
+  }, [route.params?.phoneVerified, route.params?.phone]);
+
   const close = () => {
     if (navigation.canGoBack()) navigation.goBack();
     else navigation.navigate('Main');
   };
 
   useEffect(() => {
+    if (step !== 'details') return undefined;
     const u = username.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
     if (u.length < 3) {
       setUsernameStatus({ checking: false, ok: null, message: '' });
@@ -69,9 +83,22 @@ const AuthRegisterScreen = () => {
       cancelled = true;
       clearTimeout(t);
     };
-  }, [username]);
+  }, [username, step]);
 
-  const submit = async () => {
+  const continuePhone = () => {
+    setError(null);
+    const p = phone.trim();
+    if (!p || p.replace(/\D/g, '').length < 9) {
+      setError('Enter a valid phone number');
+      return;
+    }
+    navigation.navigate('OtpVerify', {
+      phone: p,
+      flow: 'register',
+    });
+  };
+
+  const submitDetails = async () => {
     setError(null);
     const e = email.trim().toLowerCase();
     const uname = username.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
@@ -137,9 +164,11 @@ const AuthRegisterScreen = () => {
         </TouchableOpacity>
 
         <View style={styles.hero}>
-          <LinearGradient colors={[COLORS.gold, COLORS.goldDark]} style={styles.coinBurst}>
-            <Coins size={34} color={COLORS.navy} fill={COLORS.navy} />
-          </LinearGradient>
+          <View style={styles.coinBurstWrap}>
+            <LinearGradient colors={[COLORS.gold, COLORS.goldDark]} style={styles.coinBurst}>
+              <Coins size={34} color={COLORS.navy} fill={COLORS.navy} />
+            </LinearGradient>
+          </View>
           <Text style={styles.title}>Get 50 Free Coins</Text>
           <Text style={styles.sub}>
             Sign up now and unlock <Text style={styles.gold}>3 free episodes</Text>
@@ -147,155 +176,180 @@ const AuthRegisterScreen = () => {
           </Text>
         </View>
 
-        <View style={styles.field}>
-          <Phone size={15} color={COLORS.gold} />
-          <TextInput
-            style={styles.input}
-            placeholder="Phone number (optional)"
-            placeholderTextColor={COLORS.textFaint}
-            keyboardType="phone-pad"
-            value={phone}
-            onChangeText={setPhone}
-          />
-        </View>
-        <View style={styles.row2}>
-          <View style={[styles.field, styles.half]}>
-            <User size={15} color={COLORS.gold} />
-            <TextInput
-              style={styles.input}
-              placeholder="First name"
-              placeholderTextColor={COLORS.textFaint}
-              value={firstName}
-              onChangeText={setFirstName}
+        {step === 'phone' ? (
+          <>
+            <View style={styles.field}>
+              <Phone size={15} color={COLORS.gold} />
+              <TextInput
+                style={styles.input}
+                placeholder="Phone number"
+                placeholderTextColor={COLORS.textFaint}
+                keyboardType="phone-pad"
+                value={phone}
+                onChangeText={setPhone}
+              />
+            </View>
+
+            {error ? <Text style={styles.error}>{error}</Text> : null}
+
+            <EpisioGoldButton
+              label="Continue"
+              onPress={continuePhone}
+              style={styles.cta}
+              textStyle={styles.ctaText}
             />
-          </View>
-          <View style={[styles.field, styles.half]}>
-            <User size={15} color={COLORS.gold} />
-            <TextInput
-              style={styles.input}
-              placeholder="Last name"
-              placeholderTextColor={COLORS.textFaint}
-              value={lastName}
-              onChangeText={setLastName}
-            />
-          </View>
-        </View>
-        <View style={styles.field}>
-          <User size={15} color={COLORS.gold} />
-          <TextInput
-            style={styles.input}
-            placeholder="Username"
-            placeholderTextColor={COLORS.textFaint}
-            autoCapitalize="none"
-            value={username}
-            onChangeText={setUsername}
-          />
-        </View>
-        {usernameStatus.checking ? (
-          <Text style={styles.userHint}>Checking username…</Text>
-        ) : usernameStatus.message ? (
-          <Text style={[styles.userHint, usernameStatus.ok === false && styles.userBad, usernameStatus.ok && styles.userOk]}>
-            {usernameStatus.message}
-          </Text>
-        ) : null}
-        <View style={styles.field}>
-          <Mail size={15} color={COLORS.gold} />
-          <TextInput
-            style={styles.input}
-            placeholder="Email"
-            placeholderTextColor={COLORS.textFaint}
-            autoCapitalize="none"
-            keyboardType="email-address"
-            value={email}
-            onChangeText={setEmail}
-          />
-        </View>
-        <View style={styles.field}>
-          <Lock size={15} color={COLORS.gold} />
-          <TextInput
-            style={styles.input}
-            placeholder="Password (min 8)"
-            placeholderTextColor={COLORS.textFaint}
-            secureTextEntry={!showPassword}
-            value={password}
-            onChangeText={setPassword}
-          />
-          <TouchableOpacity onPress={() => setShowPassword((v) => !v)} hitSlop={10}>
-            {showPassword
-              ? <EyeOff size={16} color={COLORS.textFaint} />
-              : <Eye size={16} color={COLORS.textFaint} />}
-          </TouchableOpacity>
-        </View>
-        <View style={styles.field}>
-          <Calendar size={15} color={COLORS.gold} />
-          <TextInput
-            style={styles.input}
-            placeholder="Date of birth (YYYY-MM-DD)"
-            placeholderTextColor={COLORS.textFaint}
-            autoCapitalize="none"
-            value={dob}
-            onChangeText={setDob}
-          />
-        </View>
 
-        {error ? <Text style={styles.error}>{error}</Text> : null}
+            <View style={styles.divider}>
+              <View style={styles.line} />
+              <Text style={styles.dividerText}>or continue with</Text>
+              <View style={styles.line} />
+            </View>
 
-        <TouchableOpacity style={styles.signupBtn} onPress={submit} disabled={busy} activeOpacity={0.9}>
-          {busy ? (
-            <ActivityIndicator color={COLORS.navy} />
-          ) : (
-            <Text style={styles.signupBtnText}>Continue</Text>
-          )}
-        </TouchableOpacity>
+            <GoogleSignInSlot
+              onSuccess={async (data) => {
+                await setAuth(data.user, data.token);
+                close();
+              }}
+              onError={(msg) => setError(typeof msg === 'string' ? msg : 'Google sign-up failed')}
+            >
+              {(g) => (
+                <View style={styles.socialRow}>
+                  <TouchableOpacity
+                    style={styles.socialBtn}
+                    onPress={() => Alert.alert('Facebook', 'Facebook sign-up is not available yet.')}
+                  >
+                    <Text style={styles.socialText}>Facebook</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.socialBtn}
+                    onPress={() => g.start()}
+                    disabled={g.signing}
+                  >
+                    {g.signing ? (
+                      <ActivityIndicator color="#fff" />
+                    ) : (
+                      <Text style={styles.socialText}>Google{g.ready ? '' : ' · Soon'}</Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              )}
+            </GoogleSignInSlot>
 
-        <View style={styles.divider}>
-          <View style={styles.line} />
-          <Text style={styles.dividerText}>or continue with</Text>
-          <View style={styles.line} />
-        </View>
-
-        <GoogleSignInSlot
-          onSuccess={async (data) => {
-            await setAuth(data.user, data.token);
-            close();
-          }}
-          onError={(msg) => setError(typeof msg === 'string' ? msg : 'Google sign-up failed')}
-        >
-          {(g) => (
-            <View style={styles.socialRow}>
-              <TouchableOpacity
-                style={styles.socialBtn}
-                onPress={() => Alert.alert('Facebook', 'Facebook sign-up is not available yet.')}
-              >
-                <Text style={styles.socialText}>Facebook</Text>
+            <View style={styles.bottom}>
+              <TouchableOpacity onPress={close}>
+                <Text style={styles.guest}>
+                  Not ready? <Text style={{ color: COLORS.gold, fontFamily: FONTS.semi }}>Keep browsing as guest</Text>
+                </Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.socialBtn}
-                onPress={() => g.start()}
-                disabled={g.signing}
-              >
-                {g.signing ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={styles.socialText}>Google{g.ready ? '' : ' · Soon'}</Text>
-                )}
+              <TouchableOpacity onPress={() => navigation.replace('Login')} style={{ marginTop: 14 }}>
+                <Text style={styles.guest}>
+                  Have an account? <Text style={{ color: COLORS.gold, fontFamily: FONTS.semi }}>Sign in</Text>
+                </Text>
               </TouchableOpacity>
             </View>
-          )}
-        </GoogleSignInSlot>
+          </>
+        ) : (
+          <>
+            <Text style={styles.stepNote}>
+              Phone verified · finish your account
+              {phone ? ` (${phone})` : ''}
+            </Text>
 
-        <View style={styles.bottom}>
-          <TouchableOpacity onPress={close}>
-            <Text style={styles.guest}>
-              Not ready? <Text style={{ color: COLORS.gold, fontFamily: FONTS.semi }}>Keep browsing as guest</Text>
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.replace('Login')} style={{ marginTop: 14 }}>
-            <Text style={styles.guest}>
-              Have an account? <Text style={{ color: COLORS.gold, fontFamily: FONTS.semi }}>Sign in</Text>
-            </Text>
-          </TouchableOpacity>
-        </View>
+            <View style={styles.row2}>
+              <View style={[styles.field, styles.half]}>
+                <User size={15} color={COLORS.gold} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="First name"
+                  placeholderTextColor={COLORS.textFaint}
+                  value={firstName}
+                  onChangeText={setFirstName}
+                />
+              </View>
+              <View style={[styles.field, styles.half]}>
+                <User size={15} color={COLORS.gold} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Last name"
+                  placeholderTextColor={COLORS.textFaint}
+                  value={lastName}
+                  onChangeText={setLastName}
+                />
+              </View>
+            </View>
+            <View style={styles.field}>
+              <User size={15} color={COLORS.gold} />
+              <TextInput
+                style={styles.input}
+                placeholder="Username"
+                placeholderTextColor={COLORS.textFaint}
+                autoCapitalize="none"
+                value={username}
+                onChangeText={setUsername}
+              />
+            </View>
+            {usernameStatus.checking ? (
+              <Text style={styles.userHint}>Checking username…</Text>
+            ) : usernameStatus.message ? (
+              <Text style={[styles.userHint, usernameStatus.ok === false && styles.userBad, usernameStatus.ok && styles.userOk]}>
+                {usernameStatus.message}
+              </Text>
+            ) : null}
+            <View style={styles.field}>
+              <Mail size={15} color={COLORS.gold} />
+              <TextInput
+                style={styles.input}
+                placeholder="Email"
+                placeholderTextColor={COLORS.textFaint}
+                autoCapitalize="none"
+                keyboardType="email-address"
+                value={email}
+                onChangeText={setEmail}
+              />
+            </View>
+            <View style={styles.field}>
+              <Lock size={15} color={COLORS.gold} />
+              <TextInput
+                style={styles.input}
+                placeholder="Password (min 8)"
+                placeholderTextColor={COLORS.textFaint}
+                secureTextEntry={!showPassword}
+                value={password}
+                onChangeText={setPassword}
+              />
+              <TouchableOpacity onPress={() => setShowPassword((v) => !v)} hitSlop={10}>
+                {showPassword
+                  ? <EyeOff size={16} color={COLORS.textFaint} />
+                  : <Eye size={16} color={COLORS.textFaint} />}
+              </TouchableOpacity>
+            </View>
+            <View style={styles.field}>
+              <Calendar size={15} color={COLORS.gold} />
+              <TextInput
+                style={styles.input}
+                placeholder="Date of birth (YYYY-MM-DD)"
+                placeholderTextColor={COLORS.textFaint}
+                autoCapitalize="none"
+                value={dob}
+                onChangeText={setDob}
+              />
+            </View>
+
+            {error ? <Text style={styles.error}>{error}</Text> : null}
+
+            <EpisioGoldButton
+              label="Create account"
+              onPress={submitDetails}
+              loading={busy}
+              style={styles.cta}
+              textStyle={styles.ctaText}
+            />
+
+            <TouchableOpacity onPress={() => setStep('phone')} style={{ marginTop: 8, alignItems: 'center' }}>
+              <Text style={styles.guest}>Change phone number</Text>
+            </TouchableOpacity>
+          </>
+        )}
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -308,33 +362,40 @@ const styles = StyleSheet.create({
     width: 34, height: 34, borderRadius: 17, backgroundColor: COLORS.navyCard,
     alignItems: 'center', justifyContent: 'center', marginBottom: 20,
   },
-  hero: { alignItems: 'center', marginBottom: 22 },
+  hero: { alignItems: 'center', marginBottom: 26 },
+  coinBurstWrap: {
+    marginBottom: 16,
+    borderWidth: 1.5,
+    borderColor: 'rgba(212,160,23,0.3)',
+    borderRadius: 46,
+    padding: 8,
+  },
   coinBurst: {
     width: 76, height: 76, borderRadius: 38,
-    alignItems: 'center', justifyContent: 'center', marginBottom: 16,
+    alignItems: 'center', justifyContent: 'center',
   },
   title: { fontSize: 19, fontFamily: FONTS.extraBold, color: '#fff', marginBottom: 6 },
   sub: {
-    fontSize: 12.5, color: COLORS.textDim, textAlign: 'center', lineHeight: 19, fontFamily: FONTS.regular,
+    fontSize: 12.5, color: '#7D7D97', textAlign: 'center', lineHeight: 19, fontFamily: FONTS.regular,
   },
   gold: { color: COLORS.gold, fontFamily: FONTS.bold },
+  stepNote: {
+    fontSize: 12, color: COLORS.gold, fontFamily: FONTS.semi, marginBottom: 14, textAlign: 'center',
+  },
   row2: { flexDirection: 'row', gap: 10 },
   half: { flex: 1 },
   field: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
     backgroundColor: COLORS.navyCard, borderWidth: 1, borderColor: COLORS.navyLine,
-    borderRadius: 14, paddingHorizontal: 14, paddingVertical: 13, marginBottom: 12,
+    borderRadius: 14, paddingHorizontal: 14, paddingVertical: 13, marginBottom: 14,
   },
   input: { flex: 1, color: '#fff', fontSize: 13.5, fontFamily: FONTS.regular, padding: 0 },
   userHint: { marginTop: -6, marginBottom: 10, fontSize: 11.5, color: COLORS.textFaint, fontFamily: FONTS.medium },
   userOk: { color: '#34D399' },
   userBad: { color: '#EF4444' },
   error: { color: '#EF4444', marginBottom: 8, fontFamily: FONTS.medium, fontSize: 13 },
-  signupBtn: {
-    paddingVertical: 15, borderRadius: 16, backgroundColor: COLORS.gold,
-    alignItems: 'center', marginTop: 4, marginBottom: 16,
-  },
-  signupBtnText: { fontSize: 14.5, fontFamily: FONTS.bold, color: COLORS.navy },
+  cta: { marginTop: 8, marginBottom: 16 },
+  ctaText: { fontSize: 14.5, fontFamily: FONTS.bold },
   divider: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
   line: { flex: 1, height: 1, backgroundColor: COLORS.navyLine },
   dividerText: { fontSize: 11.5, color: COLORS.textFaint },
@@ -344,8 +405,8 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: COLORS.navyLine, alignItems: 'center',
   },
   socialText: { fontSize: 12.5, color: '#fff', fontFamily: FONTS.medium },
-  bottom: { marginTop: 8, paddingBottom: 14, alignItems: 'center' },
-  guest: { fontSize: 12.5, color: COLORS.textDim, fontFamily: FONTS.regular, textAlign: 'center' },
+  bottom: { marginTop: 'auto', paddingBottom: 14, alignItems: 'center' },
+  guest: { fontSize: 12.5, color: '#7D7D97', fontFamily: FONTS.regular, textAlign: 'center' },
 });
 
 export default AuthRegisterScreen;

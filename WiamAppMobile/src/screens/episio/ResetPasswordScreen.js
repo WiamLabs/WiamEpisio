@@ -1,30 +1,32 @@
 /**
  * Style: WiamEpisio-Reset-Password.html
- * New password + confirm · Submit → Login
- * Params: email?, code? (optional — for API reset)
+ * New password + confirm · eye toggle · strength · Submit → Login
+ * Params: email?, code?, phone? (email required for API when code present)
  */
 import React, { useMemo, useState } from 'react';
 import {
-  View, Text, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator,
+  View, Text, StyleSheet, TextInput, TouchableOpacity,
   KeyboardAvoidingView, Platform, ScrollView,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { ArrowLeft, Lock, Eye, EyeOff, Check } from 'lucide-react-native';
+import { ArrowLeft, Lock, Eye, EyeOff, Check, Mail } from 'lucide-react-native';
 import { COLORS, FONTS } from '../../constants/theme';
+import EpisioGoldButton from '../../components/episio/EpisioGoldButton';
 import authApi from '../../api/auth';
 
 const ResetPasswordScreen = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const route = useRoute();
-  const email = route.params?.email || '';
+  const initialEmail = route.params?.email || '';
   const code = route.params?.code || '';
 
+  const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [showPw, setShowPw] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
 
@@ -37,11 +39,12 @@ const ResetPasswordScreen = () => {
     if (hasLength) score += 1;
     if (hasSymbol) score += 1;
     if (password.length >= 12) score += 1;
-    if (matches && password.length >= 8) score += 1;
-    return score;
-  }, [password, hasLength, hasSymbol, matches]);
+    if (/[A-Z]/.test(password) && /[a-z]/.test(password)) score += 1;
+    return Math.min(score, 4);
+  }, [password, hasLength, hasSymbol]);
 
-  const strengthLabel = strength >= 3 ? 'Strong password' : strength >= 2 ? 'Good password' : 'Keep going';
+  const strengthLabel =
+    strength >= 3 ? 'Strong password' : strength >= 2 ? 'Good password' : 'Keep going';
 
   const submit = async () => {
     setError(null);
@@ -53,14 +56,19 @@ const ResetPasswordScreen = () => {
       setError('Passwords do not match');
       return;
     }
+    const e = email.trim().toLowerCase();
+    if (code && !e) {
+      setError('Email is required to reset your password');
+      return;
+    }
     setBusy(true);
     try {
-      if (email && code) {
-        await authApi.resetPassword(email.trim().toLowerCase(), code.trim(), password, confirm);
+      if (e && code) {
+        await authApi.resetPassword(e, code.trim(), password, confirm);
       }
       navigation.replace('Login');
-    } catch (e) {
-      setError(typeof e === 'string' ? e : 'Could not reset password');
+    } catch (err) {
+      setError(typeof err === 'string' ? err : 'Could not reset password');
     } finally {
       setBusy(false);
     }
@@ -95,6 +103,24 @@ const ResetPasswordScreen = () => {
           <Text style={styles.sub}>Code verified. Choose a strong password you haven't used before.</Text>
         </View>
 
+        {!initialEmail ? (
+          <>
+            <Text style={styles.fieldLabel}>Email</Text>
+            <View style={styles.fieldBox}>
+              <Mail size={15} color={COLORS.gold} />
+              <TextInput
+                style={styles.input}
+                placeholder="you@email.com"
+                placeholderTextColor={COLORS.textFaint}
+                autoCapitalize="none"
+                keyboardType="email-address"
+                value={email}
+                onChangeText={setEmail}
+              />
+            </View>
+          </>
+        ) : null}
+
         <Text style={styles.fieldLabel}>New password</Text>
         <View style={[styles.fieldBox, password.length > 0 && styles.fieldFocus]}>
           <Lock size={15} color={COLORS.gold} />
@@ -107,7 +133,7 @@ const ResetPasswordScreen = () => {
             onChangeText={setPassword}
             autoCapitalize="none"
           />
-          <TouchableOpacity onPress={() => setShowPw((v) => !v)}>
+          <TouchableOpacity onPress={() => setShowPw((v) => !v)} hitSlop={10}>
             {showPw ? <EyeOff size={15} color={COLORS.textFaint} /> : <Eye size={15} color={COLORS.textFaint} />}
           </TouchableOpacity>
         </View>
@@ -126,11 +152,14 @@ const ResetPasswordScreen = () => {
             style={styles.input}
             placeholder="••••••••"
             placeholderTextColor={COLORS.textFaint}
-            secureTextEntry={!showPw}
+            secureTextEntry={!showConfirm}
             value={confirm}
             onChangeText={setConfirm}
             autoCapitalize="none"
           />
+          <TouchableOpacity onPress={() => setShowConfirm((v) => !v)} hitSlop={10}>
+            {showConfirm ? <EyeOff size={15} color={COLORS.textFaint} /> : <Eye size={15} color={COLORS.textFaint} />}
+          </TouchableOpacity>
         </View>
 
         <View style={styles.reqList}>
@@ -141,15 +170,12 @@ const ResetPasswordScreen = () => {
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
-        <TouchableOpacity activeOpacity={0.9} onPress={submit} disabled={busy}>
-          <LinearGradient colors={[COLORS.gold, COLORS.goldDark]} style={styles.resetBtn}>
-            {busy ? (
-              <ActivityIndicator color={COLORS.navy} />
-            ) : (
-              <Text style={styles.resetText}>Reset Password</Text>
-            )}
-          </LinearGradient>
-        </TouchableOpacity>
+        <EpisioGoldButton
+          label="Reset Password"
+          onPress={submit}
+          loading={busy}
+          textStyle={styles.resetText}
+        />
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -175,8 +201,8 @@ const styles = StyleSheet.create({
     marginBottom: 18,
   },
   h1: { fontSize: 22, fontFamily: FONTS.extraBold, color: '#fff', letterSpacing: -0.3, marginBottom: 8 },
-  sub: { fontSize: 12.5, color: COLORS.textDim, lineHeight: 20 },
-  fieldLabel: { fontSize: 11.5, fontFamily: FONTS.semi, color: COLORS.textDim, marginBottom: 7 },
+  sub: { fontSize: 12.5, color: '#7D7D97', lineHeight: 20 },
+  fieldLabel: { fontSize: 11.5, fontFamily: FONTS.semi, color: '#7D7D97', marginBottom: 7 },
   fieldBox: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -198,11 +224,10 @@ const styles = StyleSheet.create({
   reqList: { marginBottom: 22 },
   reqItem: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 },
   reqPending: {},
-  reqText: { fontSize: 11, color: COLORS.textDim, fontFamily: FONTS.regular },
+  reqText: { fontSize: 11, color: '#7D7D97', fontFamily: FONTS.regular },
   reqTextPending: { color: COLORS.textFaint },
-  error: { color: COLORS.error, fontFamily: FONTS.medium, fontSize: 13, marginBottom: 10 },
-  resetBtn: { borderRadius: 16, paddingVertical: 16, alignItems: 'center' },
-  resetText: { fontFamily: FONTS.extraBold, color: COLORS.navy, fontSize: 14.5 },
+  error: { color: '#EF4444', fontFamily: FONTS.medium, fontSize: 13, marginBottom: 10 },
+  resetText: { fontSize: 14.5 },
 });
 
 export default ResetPasswordScreen;

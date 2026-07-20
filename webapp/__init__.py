@@ -2045,6 +2045,22 @@ def _run_safe_migrations(app):
         "ALTER TABLE w_platform_config ADD COLUMN IF NOT EXISTS vip_daily_stipend_coins INTEGER DEFAULT 30",
         "ALTER TABLE w_platform_config ADD COLUMN IF NOT EXISTS vip_unlock_discount_pct REAL DEFAULT 25.0",
 
+        "ALTER TABLE genres ADD COLUMN IF NOT EXISTS product TEXT DEFAULT 'legacy'",
+        "ALTER TABLE genres ADD COLUMN IF NOT EXISTS sort_order INTEGER DEFAULT 0",
+        "ALTER TABLE genres ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE",
+
+        """CREATE TABLE IF NOT EXISTS w_series_comments (
+            id SERIAL PRIMARY KEY,
+            content_id INTEGER NOT NULL,
+            user_id BIGINT NOT NULL,
+            body TEXT NOT NULL,
+            parent_id INTEGER,
+            is_deleted BOOLEAN DEFAULT FALSE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+        )""",
+        "CREATE INDEX IF NOT EXISTS ix_series_comments_content ON w_series_comments (content_id, created_at)",
+
         "ALTER TABLE w_creator_video_upload_jobs ADD COLUMN IF NOT EXISTS content_id INTEGER",
         "ALTER TABLE w_creator_video_upload_jobs ADD COLUMN IF NOT EXISTS asset_kind TEXT DEFAULT 'episode'",
 
@@ -2070,11 +2086,15 @@ def _run_safe_migrations(app):
             is_active BOOLEAN DEFAULT TRUE,
             curated_by BIGINT,
             note TEXT DEFAULT '',
+            badge_label TEXT DEFAULT '',
+            media_mode TEXT DEFAULT 'trailer',
             starts_at TIMESTAMP,
             ends_at TIMESTAMP,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
         )""",
         "CREATE INDEX IF NOT EXISTS ix_featured_trailer_slot ON w_featured_trailer_slots (slot_key, is_active)",
+        "ALTER TABLE w_featured_trailer_slots ADD COLUMN IF NOT EXISTS badge_label TEXT DEFAULT ''",
+        "ALTER TABLE w_featured_trailer_slots ADD COLUMN IF NOT EXISTS media_mode TEXT DEFAULT 'trailer'",
 
         """CREATE TABLE IF NOT EXISTS w_coin_price_bands (
             id SERIAL PRIMARY KEY,
@@ -2895,6 +2915,11 @@ def create_app():
         db.create_all()
         _seed_coin_packages()
         _seed_genres()
+        try:
+            from .services.episio_genres import seed_episio_genres
+            seed_episio_genres()
+        except Exception:
+            log.exception('seed_episio_genres failed')
         _seed_platform_settings()
         _seed_feature_flags()
         _seed_rbac()

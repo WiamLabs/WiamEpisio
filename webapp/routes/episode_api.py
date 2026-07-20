@@ -290,19 +290,24 @@ def unlock_episode(episode_id):
     db.session.add(unlock)
 
     now = datetime.utcnow()
-    earn = CreatorEarnings.query.filter_by(
-        creator_id=content.creator_wiam_id, year=now.year, month=now.month
-    ).first()
-    if not earn:
-        earn = CreatorEarnings(creator_id=content.creator_wiam_id, year=now.year, month=now.month)
-        db.session.add(earn)
-    earn.coins_from_unlocks = (earn.coins_from_unlocks or 0) + coins_needed
-    earn.total_coins = (earn.coins_from_unlocks or 0) + (earn.coins_from_tips or 0)
-    from ..services.monetization import COIN_TO_GHS
-    share_pct = RevenueRule.get_creator_share(content.creator_wiam_id) or 50.0
-    earn.ghs_value = earn.total_coins * COIN_TO_GHS
-    earn.creator_share_ghs = earn.ghs_value * (share_pct / 100.0)
-    earn.updated_at = now
+    from ..services.ledger import unlock_split_for_content
+    split = unlock_split_for_content(content)
+    # Origin / bought rights: no creator earnings row — money stays platform
+    if split.get('creator', 0) > 0 and content.creator_wiam_id:
+        earn = CreatorEarnings.query.filter_by(
+            creator_id=content.creator_wiam_id, year=now.year, month=now.month
+        ).first()
+        if not earn:
+            earn = CreatorEarnings(creator_id=content.creator_wiam_id, year=now.year, month=now.month)
+            db.session.add(earn)
+        earn.coins_from_unlocks = (earn.coins_from_unlocks or 0) + coins_needed
+        earn.total_coins = (earn.coins_from_unlocks or 0) + (earn.coins_from_tips or 0)
+        from ..services.monetization import COIN_TO_GHS
+        # Align payout % with ledger unlock split (70%)
+        share_pct = float(split.get('creator') or 70)
+        earn.ghs_value = earn.total_coins * COIN_TO_GHS
+        earn.creator_share_ghs = earn.ghs_value * (share_pct / 100.0)
+        earn.updated_at = now
 
     db.session.commit()
     track('episode_unlock', user, content_id=ep.content_id, chapter_number=ep.episode_number,
@@ -313,6 +318,7 @@ def unlock_episode(episode_id):
         'unlock_method': 'coins',
         'coins_spent': coins_needed,
         'balance': result.get('balance'),
+        'revenue_split': split,
     })
 
 

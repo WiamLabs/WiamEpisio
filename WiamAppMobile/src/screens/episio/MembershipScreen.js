@@ -1,19 +1,21 @@
 /**
  * Style: WiamEpisio-Membership.html
- * Wired: GET /vip/plans, GET /vip/status, POST /vip/initialize → Paystack,
+ * Wired: GET /vip/plans, GET /vip/status · mobile VIP = RevenueCat IAP (never Paystack in Expo).
  * Restore → GET /vip/status (+ premium/status fallback).
  */
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  ActivityIndicator, Linking, Alert,
+  ActivityIndicator, Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { X, Play, Download, Star, Ban } from 'lucide-react-native';
 import { COLORS, FONTS } from '../../constants/theme';
+import EpisioGoldButton from '../../components/episio/EpisioGoldButton';
 import useAuthStore from '../../store/useAuthStore';
 import vipApi from '../../api/vip';
+import { isIAPAvailable, getProducts, purchaseSubscription, restorePurchases, initIAP } from '../../services/iap';
 
 const FALLBACK_PLANS = [
   {
@@ -52,20 +54,11 @@ const MembershipScreen = () => {
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(false);
   const [error, setError] = useState(null);
-  const pendingPay = useRef(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      if (pendingPay.current?.reference && isAuthenticated) {
-        const { reference, planId } = pendingPay.current;
-        pendingPay.current = null;
-        try {
-          await vipApi.verify(reference, planId);
-          Alert.alert('Membership', 'Payment confirmed — welcome!');
-        } catch { /* still mid-checkout or Restore later */ }
-      }
       const [p, s] = await Promise.all([
         vipApi.plans().catch(() => null),
         isAuthenticated ? vipApi.status().catch(() => null) : Promise.resolve(null),
@@ -100,6 +93,9 @@ const MembershipScreen = () => {
       return;
     }
     try {
+      if (isIAPAvailable()) {
+        await restorePurchases();
+      }
       const s = await vipApi.status();
       setStatus(s);
       if (s?.is_vip) {
@@ -124,17 +120,38 @@ const MembershipScreen = () => {
     setJoining(true);
     setError(null);
     try {
-      const data = await vipApi.initialize(selected);
-      const url = data?.authorization_url;
-      if (!url) throw data?.error || 'Checkout unavailable';
-      if (data?.reference) pendingPay.current = { reference: data.reference, planId: selected };
-      await Linking.openURL(url);
-      Alert.alert(
-        'Complete payment',
-        'After paying in the browser, return here — we will confirm automatically. You can also tap Restore.',
-      );
+      const user = useAuthStore.getState().user;
+      if (user?.wiam_id) {
+        try { await initIAP(user.wiam_id); } catch { /* ignore */ }
+      }
+      if (!isIAPAvailable()) {
+        setError('Store billing not ready in this build. Use a production App Store / Play install.');
+        return;
+      }
+      const { subscriptionProducts = [] } = await getProducts();
+      const plan = plans.find((p) => p.id === selected);
+      const product = subscriptionProducts.find((p) => {
+        const id = (p.identifier || p.productId || '').toLowerCase();
+        return id.includes(String(selected).toLowerCase())
+          || id.includes('premium')
+          || id.includes('vip')
+          || id.includes('membership');
+      }) || subscriptionProducts[0];
+      if (!product) {
+        setError('No VIP product configured in RevenueCat yet.');
+        return;
+      }
+      const result = await purchaseSubscription(product);
+      if (result?.cancelled) return;
+      if (result?.ok) {
+        const s = await vipApi.status().catch(() => null);
+        if (s) setStatus(s);
+        Alert.alert('Welcome', `${plan?.name || 'Membership'} is active.`);
+      } else {
+        setError(result?.error || 'Purchase failed');
+      }
     } catch (e) {
-      setError(typeof e === 'string' ? e : (e?.message || 'Could not start checkout'));
+      setError(typeof e === 'string' ? e : (e?.message || 'Could not start store checkout'));
     } finally {
       setJoining(false);
     }
@@ -204,21 +221,27 @@ const MembershipScreen = () => {
           ))}
 
           {error ? <Text style={styles.error}>{error}</Text> : null}
-          <Text style={styles.footer}>© 2026 WiamEpisio · Powered by WiamLabs</Text>
+          <TouchableOpacity
+            style={styles.vipCheckoutLink}
+            onPress={() => navigation.navigate('VipCheckout', { plans })}
+          >
+            <Text style={styles.vipCheckoutText}>Compare VIP checkout plans ›</Text>
+          </TouchableOpacity>
+          <Text style={styles.footer}>
+            © 2026 WiamEpisio · Powered by WiamLabs · episio.wiamlabs.com
+          </Text>
+          <Text style={styles.footerHelp}>Help: support@wiamapp.com</Text>
         </ScrollView>
       )}
 
       <View style={[styles.joinbar, { paddingBottom: Math.max(insets.bottom, 12) }]}>
-        <TouchableOpacity style={styles.joinBtn} onPress={join} disabled={joining} activeOpacity={0.9}>
-          {joining ? (
-            <ActivityIndicator color={COLORS.navy} />
-          ) : (
-            <Text style={styles.joinBtnText}>
-              {status?.is_vip ? 'Membership Active' : 'Join Now'}
-            </Text>
-          )}
-        </TouchableOpacity>
-        <Text style={styles.joinNote}>Auto-renew · Cancel anytime · Paid via Paystack</Text>
+        <EpisioGoldButton
+          label={status?.is_vip ? 'Membership Active' : 'Join Now'}
+          onPress={join}
+          loading={joining}
+          disabled={!!status?.is_vip}
+        />
+        <Text style={styles.joinNote}>Auto-renew · Cancel anytime · App Store / Play billing</Text>
       </View>
     </View>
   );
@@ -270,16 +293,15 @@ const styles = StyleSheet.create({
   benefitTitle: { fontSize: 12.5, color: '#fff', fontFamily: FONTS.medium },
   benefitSub: { marginTop: 1, fontSize: 10.5, color: COLORS.textFaint, fontFamily: FONTS.regular },
   error: { color: '#EF4444', fontFamily: FONTS.medium, marginTop: 12, textAlign: 'center' },
-  footer: { textAlign: 'center', fontSize: 10, color: '#3A3A56', paddingVertical: 20, fontFamily: FONTS.regular },
+  vipCheckoutLink: { alignItems: 'center', marginTop: 18, padding: 8 },
+  vipCheckoutText: { color: COLORS.gold, fontFamily: FONTS.semi, fontSize: 13 },
+  footer: { textAlign: 'center', fontSize: 10, color: '#3A3A56', paddingTop: 16, fontFamily: FONTS.regular },
+  footerHelp: { textAlign: 'center', fontSize: 10, color: '#3A3A56', paddingBottom: 20, marginTop: 4, fontFamily: FONTS.regular },
   joinbar: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
     backgroundColor: COLORS.navySoft, borderTopWidth: 1, borderTopColor: '#1C1C38',
     paddingHorizontal: 20, paddingTop: 12,
   },
-  joinBtn: {
-    paddingVertical: 15, borderRadius: 16, backgroundColor: COLORS.gold, alignItems: 'center',
-  },
-  joinBtnText: { fontSize: 14.5, fontFamily: FONTS.bold, color: COLORS.navy },
   joinNote: { textAlign: 'center', fontSize: 10.5, color: COLORS.textFaint, marginTop: 8, fontFamily: FONTS.regular },
 });
 

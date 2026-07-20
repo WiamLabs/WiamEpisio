@@ -3,12 +3,13 @@
  * Claim & Start Watching → Main
  */
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Circle, Check } from 'lucide-react-native';
 import { COLORS, FONTS } from '../../constants/theme';
+import EpisioGoldButton from '../../components/episio/EpisioGoldButton';
 
 const PERKS = [
   'Follow any creator for +10 bonus coins',
@@ -46,15 +47,12 @@ const WelcomeBonusScreen = () => {
           ))}
         </View>
 
-        <TouchableOpacity
-          activeOpacity={0.9}
+        <EpisioGoldButton
+          label="Claim & Start Watching"
           onPress={() => navigation.replace('Main')}
           style={{ width: '100%' }}
-        >
-          <View style={styles.claimBtn}>
-            <Text style={styles.claimText}>Claim & Start Watching</Text>
-          </View>
-        </TouchableOpacity>
+          textStyle={styles.claimText}
+        />
       </View>
     </View>
   );
@@ -82,7 +80,7 @@ const styles = StyleSheet.create({
   amount: { fontSize: 36, fontFamily: FONTS.extraBold, color: COLORS.gold, marginBottom: 6, zIndex: 1 },
   sub: {
     fontSize: 12.5,
-    color: COLORS.textDim,
+    color: '#7D7D97',
     lineHeight: 19.4,
     textAlign: 'center',
     marginBottom: 28,
@@ -102,15 +100,7 @@ const styles = StyleSheet.create({
     marginBottom: 9,
   },
   perkText: { flex: 1, fontSize: 12, color: '#D3D3E2', fontFamily: FONTS.regular },
-  claimBtn: {
-    width: '100%',
-    paddingVertical: 15,
-    borderRadius: 16,
-    backgroundColor: COLORS.gold,
-    alignItems: 'center',
-    zIndex: 1,
-  },
-  claimText: { fontFamily: FONTS.bold, color: COLORS.navy, fontSize: 14.5 },
+  claimText: { fontFamily: FONTS.bold, fontSize: 14.5 },
 });
 
 export default WelcomeBonusScreen;

@@ -1,10 +1,10 @@
 """
-Money is accounted in USD on the backend.
+Money is accounted in USD on the backend (global, not Africa-only).
 
 - Coin packages store price_usd_cents (and legacy price_ghs).
-- Ledger / analytics can report USD.
-- Clients send Accept-Currency or ?currency=GHS to get local display amounts.
-Coins themselves are platform units, not fiat.
+- Watchers pick country at register → we map to currency → local display.
+- Same USD base for everyone → fair: GH₵ / $ / ₦ all convert from the same pack USD.
+- Mobile IAP: App Store / Play show their own local priceString (also fair via store pricing).
 """
 from __future__ import annotations
 
@@ -16,18 +16,63 @@ from ..models import FxRate, CoinPackage
 
 DEFAULT_RATES = [
     {'currency_code': 'USD', 'rate_per_usd': 1.0, 'symbol': '$'},
+    {'currency_code': 'EUR', 'rate_per_usd': 0.92, 'symbol': '€'},
+    {'currency_code': 'GBP', 'rate_per_usd': 0.79, 'symbol': '£'},
     {'currency_code': 'GHS', 'rate_per_usd': 15.5, 'symbol': 'GH₵'},
     {'currency_code': 'NGN', 'rate_per_usd': 1600.0, 'symbol': '₦'},
     {'currency_code': 'KES', 'rate_per_usd': 129.0, 'symbol': 'KSh'},
     {'currency_code': 'ZAR', 'rate_per_usd': 18.5, 'symbol': 'R'},
-    {'currency_code': 'EUR', 'rate_per_usd': 0.92, 'symbol': '€'},
-    {'currency_code': 'GBP', 'rate_per_usd': 0.79, 'symbol': '£'},
+    {'currency_code': 'CAD', 'rate_per_usd': 1.36, 'symbol': 'C$'},
+    {'currency_code': 'AUD', 'rate_per_usd': 1.52, 'symbol': 'A$'},
+    {'currency_code': 'INR', 'rate_per_usd': 83.0, 'symbol': '₹'},
+    {'currency_code': 'BRL', 'rate_per_usd': 5.1, 'symbol': 'R$'},
+    {'currency_code': 'JPY', 'rate_per_usd': 155.0, 'symbol': '¥'},
+    {'currency_code': 'CNY', 'rate_per_usd': 7.2, 'symbol': '¥'},
+    {'currency_code': 'AED', 'rate_per_usd': 3.67, 'symbol': 'د.إ'},
+    {'currency_code': 'EGP', 'rate_per_usd': 48.0, 'symbol': 'E£'},
+    {'currency_code': 'XOF', 'rate_per_usd': 600.0, 'symbol': 'CFA'},
 ]
+
+# ISO country code / common name → currency (global)
+COUNTRY_CURRENCY = {
+    'GH': 'GHS', 'Ghana': 'GHS',
+    'NG': 'NGN', 'Nigeria': 'NGN',
+    'KE': 'KES', 'Kenya': 'KES',
+    'ZA': 'ZAR', 'South Africa': 'ZAR',
+    'US': 'USD', 'USA': 'USD', 'United States': 'USD',
+    'GB': 'GBP', 'UK': 'GBP', 'United Kingdom': 'GBP',
+    'DE': 'EUR', 'FR': 'EUR', 'ES': 'EUR', 'IT': 'EUR', 'NL': 'EUR',
+    'Germany': 'EUR', 'France': 'EUR', 'Spain': 'EUR', 'Italy': 'EUR',
+    'CA': 'CAD', 'Canada': 'CAD',
+    'AU': 'AUD', 'Australia': 'AUD',
+    'IN': 'INR', 'India': 'INR',
+    'BR': 'BRL', 'Brazil': 'BRL',
+    'JP': 'JPY', 'Japan': 'JPY',
+    'CN': 'CNY', 'China': 'CNY',
+    'AE': 'AED', 'UAE': 'AED',
+    'EG': 'EGP', 'Egypt': 'EGP',
+    'SN': 'XOF', 'CI': 'XOF', 'BJ': 'XOF', 'TG': 'XOF',
+}
+
+
+def currency_for_country(country: Optional[str]) -> str:
+    if not country:
+        return 'USD'
+    key = str(country).strip()
+    if key.upper() in COUNTRY_CURRENCY:
+        return COUNTRY_CURRENCY[key.upper()]
+    if key in COUNTRY_CURRENCY:
+        return COUNTRY_CURRENCY[key]
+    # try 2-letter
+    if len(key) == 2:
+        return COUNTRY_CURRENCY.get(key.upper(), 'USD')
+    return 'USD'
 
 
 def ensure_default_fx():
     for row in DEFAULT_RATES:
-        if FxRate.query.filter_by(currency_code=row['currency_code']).first():
+        existing = FxRate.query.filter_by(currency_code=row['currency_code']).first()
+        if existing:
             continue
         db.session.add(FxRate(**row, updated_at=datetime.utcnow()))
     try:
@@ -55,13 +100,13 @@ def usd_cents_to_local(usd_cents: int, currency_code: str) -> dict:
         'usd_cents': int(usd_cents or 0),
         'usd': round(usd, 2),
         'rate_per_usd': rate,
+        'display': f"{fx.symbol if fx else '$'}{local:,.2f}",
     }
 
 
 def package_display(pkg: CoinPackage, currency_code: str = 'USD') -> dict:
     usd_cents = int(pkg.price_usd_cents or 0)
     if usd_cents <= 0 and pkg.price_ghs:
-        # legacy fallback: approximate from GHS via FX table
         ghs = get_fx('GHS')
         rate = float(ghs.rate_per_usd) if ghs else 15.5
         usd_cents = int(round((float(pkg.price_ghs) / rate) * 100))
@@ -75,6 +120,7 @@ def package_display(pkg: CoinPackage, currency_code: str = 'USD') -> dict:
         'store_product_id': pkg.store_product_id,
         'price_usd_cents': usd_cents,
         'display': local,
+        'display_price': local.get('display'),
     }
 
 

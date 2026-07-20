@@ -10,6 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import { ChevronLeft, BarChart2, Monitor } from 'lucide-react-native';
+import EpisioGoldButton from '../../components/episio/EpisioGoldButton';
 import { COLORS, FONTS } from '../../constants/theme';
 import studioEpisioApi from '../../api/studioEpisio';
 import resolveUrl from '../../utils/resolveUrl';
@@ -117,11 +118,9 @@ const StudioBannerScreen = () => {
           </View>
 
           <View style={styles.uploadRow}>
-            <TouchableOpacity style={styles.browseBtn} onPress={pickBanner} disabled={busy}>
-              {busy ? <ActivityIndicator color={COLORS.navy} /> : (
-                <Text style={styles.browseText}>Upload Banner</Text>
-              )}
-            </TouchableOpacity>
+            <View style={{ flex: 1 }}>
+              <EpisioGoldButton label="Upload Banner" onPress={pickBanner} loading={busy} />
+            </View>
             <TouchableOpacity style={styles.skipBtn} onPress={() => navigation.goBack()}>
               <Text style={styles.skipText}>Skip for now</Text>
             </TouchableOpacity>
@@ -130,9 +129,7 @@ const StudioBannerScreen = () => {
       )}
 
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 20) }]}>
-        <TouchableOpacity style={styles.cta} onPress={() => navigation.goBack()}>
-          <Text style={styles.ctaText}>Save & Continue</Text>
-        </TouchableOpacity>
+        <EpisioGoldButton label="Save & Continue" onPress={() => navigation.goBack()} />
       </View>
     </View>
   );

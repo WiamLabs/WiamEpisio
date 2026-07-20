@@ -4,11 +4,13 @@
  */
 import React, { useCallback, useState } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, TextInput, Alert,
+  View, Text, StyleSheet, TextInput, Alert, TouchableOpacity, ActivityIndicator,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
-import { ChevronLeft, Lock } from 'lucide-react-native';
+import * as ImagePicker from 'expo-image-picker';
+import { Lock, Upload } from 'lucide-react-native';
+import EpisioScreenShell from '../../components/episio/EpisioScreenShell';
+import EpisioGoldButton from '../../components/episio/EpisioGoldButton';
 import { COLORS, FONTS } from '../../constants/theme';
 import studioEpisioApi from '../../api/studioEpisio';
 
@@ -19,14 +21,15 @@ const CATS = [
 ];
 
 const StudioRevisionRequestScreen = () => {
-  const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const seriesId = useRoute().params?.seriesId;
   const [data, setData] = useState(null);
+  const [past, setPast] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [target, setTarget] = useState(null); // { kind, episodeId, episodeNumber, title }
+  const [target, setTarget] = useState(null);
   const [category, setCategory] = useState('rights');
   const [reason, setReason] = useState('');
+  const [fileName, setFileName] = useState(null);
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
@@ -35,6 +38,12 @@ const StudioRevisionRequestScreen = () => {
     try {
       const d = await studioEpisioApi.getSeries(seriesId);
       setData(d);
+      try {
+        const rev = await studioEpisioApi.listRevisionRequests(seriesId);
+        setPast(rev?.requests || rev?.revision_requests || []);
+      } catch {
+        setPast([]);
+      }
     } finally {
       setLoading(false);
     }
@@ -44,7 +53,23 @@ const StudioRevisionRequestScreen = () => {
 
   const series = data?.series;
   const eps = data?.episodes || [];
-  const live = ['published', 'ongoing', 'complete', 'approved'].includes(series?.status);
+  const live = ['published', 'ongoing', 'complete', 'approved'].includes(series?.status)
+    || series?.pipeline_state === 'live';
+
+  const pickFile = async () => {
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) {
+      Alert.alert('Permission needed', 'Allow media access to attach a corrected file.');
+      return;
+    }
+    const pick = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+      quality: 1,
+    });
+    if (pick.canceled || !pick.assets?.[0]) return;
+    const asset = pick.assets[0];
+    setFileName(asset.fileName || asset.uri.split('/').pop() || 'corrected.mp4');
+  };
 
   const submit = async () => {
     if (!live) {
@@ -73,6 +98,7 @@ const StudioRevisionRequestScreen = () => {
         replacement_storage_key: target.kind === 'episode'
           ? `stub/revision_ep_${target.episodeId || target.episodeNumber}`
           : `stub/revision_trailer_${seriesId}`,
+        replacement_filename: fileName || undefined,
       });
       Alert.alert('Sent to our team', res?.message || 'Only that piece is re-reviewed. The rest stays live.');
       navigation.goBack();
@@ -84,24 +110,25 @@ const StudioRevisionRequestScreen = () => {
   };
 
   return (
-    <View style={[styles.root, { paddingTop: insets.top }]}>
-      <View style={styles.topbar}>
-        <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.goBack()}>
-          <ChevronLeft size={15} color="#fff" />
-        </TouchableOpacity>
-        <View>
-          <Text style={styles.h1}>Request a Revision</Text>
-          <Text style={styles.sub}>{series?.title || 'Series'}{series?.season_locked ? ' — Locked' : ''}</Text>
-        </View>
-      </View>
-
+    <EpisioScreenShell
+      title="Request a Revision"
+      subtitle={`${series?.title || 'Series'}${series?.season_locked ? ' — Locked Season' : ''}`}
+      footer={(
+        <EpisioGoldButton
+          label="Submit Revision Request"
+          onPress={submit}
+          loading={busy}
+          disabled={!live}
+        />
+      )}
+    >
       {loading ? <ActivityIndicator color={COLORS.gold} style={{ marginTop: 40 }} /> : (
-        <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 120 }}>
+        <>
           <View style={styles.lockNote}>
             <Lock size={16} color={COLORS.gold} />
             <Text style={styles.lockText}>
-              This series is locked. Revision Requests are for <Text style={styles.bold}>legal, rights, or factual</Text> corrections —
-              not video/audio quality (our team already checked that before publish).
+              This season is <Text style={styles.bold}>locked</Text>. Revision Requests are for{' '}
+              <Text style={styles.bold}>legal, rights, or factual</Text> corrections — not video/audio quality.
             </Text>
           </View>
 
@@ -158,39 +185,49 @@ const StudioRevisionRequestScreen = () => {
             multiline
             value={reason}
             onChangeText={setReason}
-            placeholder="Explain what’s wrong and what you’re fixing"
+            placeholder="e.g. Legal music swap — replacing licensed track in Episode 14"
             placeholderTextColor={COLORS.textFaint}
           />
 
+          <TouchableOpacity style={styles.uploadSlot} onPress={pickFile} activeOpacity={0.85}>
+            <Upload size={16} color={COLORS.gold} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.uploadTitle}>Upload corrected file</Text>
+              <Text style={styles.uploadSub}>
+                {fileName
+                  ? fileName
+                  : target
+                    ? `Replaces ${target.title} once approved`
+                    : 'Optional — attach the replacement media'}
+              </Text>
+            </View>
+          </TouchableOpacity>
+
           <View style={styles.scope}>
             <Text style={styles.scopeText}>
-              <Text style={styles.bold}>Scoped review:</Text> only {target?.title || 'the selected piece'} goes back to the WiamEpisio team.
-              The rest of your series stays live.
+              <Text style={styles.bold}>Scoped review:</Text> only {target?.title || 'the selected piece'} goes back through review.
+              The rest of your series stays live and untouched.
             </Text>
           </View>
-        </ScrollView>
-      )}
 
-      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 16) }]}>
-        <TouchableOpacity style={styles.cta} onPress={submit} disabled={busy || !live}>
-          {busy ? <ActivityIndicator color={COLORS.navy} /> : (
-            <Text style={styles.ctaText}>Submit Revision Request</Text>
-          )}
-        </TouchableOpacity>
-      </View>
-    </View>
+          {past.length ? (
+            <>
+              <Text style={[styles.section, { marginTop: 18 }]}>Recent requests</Text>
+              {past.slice(0, 5).map((r) => (
+                <View key={r.id || r.created_at} style={styles.pastRow}>
+                  <Text style={styles.pastTitle}>{r.target_kind || r.category || 'Revision'}</Text>
+                  <Text style={styles.pastSub}>{r.status || 'pending'} · {r.reason?.slice?.(0, 60) || ''}</Text>
+                </View>
+              ))}
+            </>
+          ) : null}
+        </>
+      )}
+    </EpisioScreenShell>
   );
 };
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: COLORS.navy },
-  topbar: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingBottom: 12 },
-  iconBtn: {
-    width: 34, height: 34, borderRadius: 17, backgroundColor: COLORS.navyCard,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  h1: { fontFamily: FONTS.extraBold, color: '#fff', fontSize: 16 },
-  sub: { fontFamily: FONTS.regular, color: COLORS.textDim, fontSize: 11.5, marginTop: 2 },
   lockNote: {
     flexDirection: 'row', gap: 10, backgroundColor: 'rgba(212,160,23,0.1)',
     borderRadius: 14, padding: 12, borderWidth: 1, borderColor: 'rgba(212,160,23,0.35)', marginBottom: 16,
@@ -219,14 +256,24 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: COLORS.navyLine, color: COLORS.text, fontFamily: FONTS.regular,
     textAlignVertical: 'top', marginBottom: 14,
   },
+  uploadSlot: {
+    flexDirection: 'row', gap: 12, alignItems: 'center',
+    backgroundColor: COLORS.navyCard, borderRadius: 14, padding: 14, marginBottom: 14,
+    borderWidth: 1.5, borderStyle: 'dashed', borderColor: COLORS.navyLine,
+  },
+  uploadTitle: { fontFamily: FONTS.bold, color: '#fff', fontSize: 12.5 },
+  uploadSub: { marginTop: 3, fontFamily: FONTS.regular, color: COLORS.textFaint, fontSize: 11 },
   scope: {
     backgroundColor: 'rgba(61,220,151,0.08)', borderRadius: 14, padding: 12,
     borderWidth: 1, borderColor: 'rgba(61,220,151,0.25)',
   },
   scopeText: { fontFamily: FONTS.regular, color: COLORS.textDim, fontSize: 12, lineHeight: 18 },
-  footer: { paddingHorizontal: 20, paddingTop: 10, borderTopWidth: 1, borderTopColor: COLORS.navyLine },
-  cta: { backgroundColor: COLORS.gold, borderRadius: 16, padding: 16, alignItems: 'center' },
-  ctaText: { fontFamily: FONTS.extraBold, color: COLORS.navy, fontSize: 15 },
+  pastRow: {
+    backgroundColor: COLORS.navyCard, borderRadius: 12, padding: 12, marginBottom: 8,
+    borderWidth: 1, borderColor: COLORS.navyLine,
+  },
+  pastTitle: { fontFamily: FONTS.bold, color: '#fff', fontSize: 12 },
+  pastSub: { marginTop: 3, fontFamily: FONTS.regular, color: COLORS.textFaint, fontSize: 11 },
 });
 
 export default StudioRevisionRequestScreen;

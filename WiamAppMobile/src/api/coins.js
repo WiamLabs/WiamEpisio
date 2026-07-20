@@ -15,11 +15,13 @@ const coinsApi = {
   },
 
   /**
-   * Get available coin packages
+   * Get available coin packages.
+   * Pass currency (e.g. GHS, USD) for fair local display from USD base.
    */
-  getPackages: async () => {
+  getPackages: async (currency) => {
     try {
-      const response = await apiClient.get('/coins/packages');
+      const params = currency ? { currency: String(currency).toUpperCase() } : {};
+      const response = await apiClient.get('/coins/packages', { params });
       return response.data;
     } catch (error) {
       console.error('Get packages error:', error);

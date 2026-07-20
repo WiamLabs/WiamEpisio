@@ -1,40 +1,76 @@
 {% extends "dashboard_base.html" %}
-{% block title %}Genres — Control Panel{% endblock %}
-{% block sidebar_title %}Control Panel{% endblock %}
-
+{% block title %}Genres — WiamEpisio{% endblock %}
+{% block sidebar_title %}WiamEpisio Control{% endblock %}
 {% block sidebar_nav %}{% set active = 'genres' %}{% include "founder/_episio_nav.html" %}{% endblock %}
-
 {% block dash_content %}
 <div class="dash-header">
-    <h1>Genre Management</h1>
+  <h1><i class="bi bi-tags" style="color:var(--gold);"></i> Episio Genres</h1>
+  <p>These drive Studio create, Home chips, onboarding, and search. Not hardcoded in the app — add/remove here.</p>
 </div>
 
-<div class="dash-card" style="max-width:500px">
-    <h3>Add Genre</h3>
-    <form method="post" action="{{ url_for('founder_dash.add_genre') }}" class="d-flex gap-2">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <input type="text" name="name" placeholder="Genre name..." required style="flex:1;background:var(--bg);border:1px solid var(--border-subtle);color:var(--text);padding:0.4rem 0.75rem;border-radius:8px;">
-        <button type="submit" class="btn-dash btn-dash-primary">Add</button>
-    </form>
+<div class="dash-card" style="margin-bottom:16px;font-size:0.85rem;color:var(--text-muted);line-height:1.5;">
+  Old novel genres are kept as <strong style="color:var(--text);">legacy</strong> (parked Text Edition) and hidden from the app.
+  Episio uses the drama list below. Global product — labels are story types, not country-specific.
 </div>
 
+<div class="dash-card" style="max-width:640px;margin-bottom:16px;">
+  <h3>Add Episio genre</h3>
+  <form method="post" action="{{ url_for('founder_dash.add_genre') }}" class="d-flex gap-2 flex-wrap">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="product" value="episio">
+    <input type="text" name="name" placeholder="e.g. Medical Drama" required style="flex:1;min-width:180px;background:var(--bg);border:1px solid var(--border-subtle);color:var(--text);padding:0.4rem 0.75rem;border-radius:8px;">
+    <button type="submit" class="btn-dash btn-dash-primary">Add</button>
+  </form>
+</div>
+
+<div class="dash-card" style="margin-bottom:16px;">
+  <h3>Episio genres ({{ episio_genres|length }})</h3>
+  <table class="dash-table">
+    <thead><tr><th>Name</th><th>Sort</th><th>Active</th><th></th></tr></thead>
+    <tbody>
+    {% for g in episio_genres %}
+    <tr>
+      <td>{{ g.name }}</td>
+      <td>{{ g.sort_order or 0 }}</td>
+      <td>{{ 'yes' if g.is_active else 'no' }}</td>
+      <td>
+        <form method="post" action="{{ url_for('founder_dash.delete_genre', genre_id=g.id) }}" style="display:inline" onsubmit="return confirm('Delete {{ g.name }} from Episio?')">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn-dash btn-dash-sm btn-dash-danger"><i class="bi bi-trash"></i></button>
+        </form>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="4" style="color:var(--text-muted);">No Episio genres yet — defaults seed on deploy.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if legacy_genres %}
 <div class="dash-card">
-    <h3>All Genres ({{ genres|length }})</h3>
-    <table class="dash-table">
-        <thead><tr><th>Name</th><th>Actions</th></tr></thead>
-        <tbody>
-        {% for g in genres %}
-        <tr>
-            <td>{{ g.name }}</td>
-            <td>
-                <form method="post" action="{{ url_for('founder_dash.delete_genre', genre_id=g.id) }}" style="display:inline" onsubmit="return confirm('Delete genre {{ g.name }}?')">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button class="btn-dash btn-dash-sm btn-dash-danger"><i class="bi bi-trash"></i></button>
-                </form>
-            </td>
-        </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+  <h3>Legacy novel genres ({{ legacy_genres|length }}) — not shown in Episio app</h3>
+  <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:10px;">Parked with Text Edition. Safe to leave. Purge only if you are sure nothing references them.</p>
+  <form method="post" action="{{ url_for('founder_dash.purge_legacy_genres') }}" onsubmit="return confirm('Mark all legacy genres inactive? They stay in DB for parked novel code.')">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="btn-dash" type="submit" style="margin-bottom:12px;">Hide all legacy from any list</button>
+  </form>
+  <table class="dash-table">
+    <thead><tr><th>Name</th><th></th></tr></thead>
+    <tbody>
+    {% for g in legacy_genres %}
+    <tr>
+      <td style="color:var(--text-muted);">{{ g.name }}</td>
+      <td>
+        <form method="post" action="{{ url_for('founder_dash.delete_genre', genre_id=g.id) }}" style="display:inline" onsubmit="return confirm('Permanently delete {{ g.name }}?')">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn-dash btn-dash-sm btn-dash-danger"><i class="bi bi-trash"></i></button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
 </div>
+{% endif %}
 {% endblock %}

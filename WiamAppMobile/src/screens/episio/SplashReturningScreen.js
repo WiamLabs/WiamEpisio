@@ -4,6 +4,7 @@
  */
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { COLORS, FONTS } from '../../constants/theme';
@@ -52,9 +53,9 @@ const SplashReturningScreen = () => {
         </Text>
 
         <View style={styles.welcomeCard}>
-          <View style={styles.welcomeAvatar}>
+          <LinearGradient colors={[COLORS.gold, COLORS.goldDark]} style={styles.welcomeAvatar}>
             <Text style={styles.avatarLetter}>{initial}</Text>
-          </View>
+          </LinearGradient>
           <Text style={styles.welcomeText}>
             Welcome back, <Text style={styles.welcomeBold}>{firstName}</Text>
           </Text>
@@ -104,7 +105,6 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: COLORS.gold,
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -10,6 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import { ChevronLeft, Check } from 'lucide-react-native';
+import EpisioGoldButton from '../../components/episio/EpisioGoldButton';
 import { COLORS, FONTS } from '../../constants/theme';
 import studioEpisioApi from '../../api/studioEpisio';
 import resolveUrl from '../../utils/resolveUrl';
@@ -145,9 +146,7 @@ const StudioCoverScreen = () => {
       )}
 
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 20) }]}>
-        <TouchableOpacity style={styles.cta} onPress={next}>
-          <Text style={styles.ctaText}>Next: Episodes</Text>
-        </TouchableOpacity>
+        <EpisioGoldButton label="Next: Genres & Episodes" onPress={next} />
       </View>
     </View>
   );

@@ -10,9 +10,9 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { X, Mail, Lock, Eye, EyeOff } from 'lucide-react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS, FONTS } from '../../constants/theme';
 import LogoBadge from '../../components/episio/LogoBadge';
+import EpisioGoldButton from '../../components/episio/EpisioGoldButton';
 import authApi from '../../api/auth';
 import useAuthStore from '../../store/useAuthStore';
 import { GoogleSignInSlot } from '../../services/googleAuth';
@@ -24,6 +24,7 @@ const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
+  const [emailFocused, setEmailFocused] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
 
@@ -74,7 +75,7 @@ const LoginScreen = () => {
         </View>
 
         <Text style={styles.label}>Email</Text>
-        <View style={[styles.field, styles.fieldFocus]}>
+        <View style={[styles.field, emailFocused && styles.fieldFocus]}>
           <Mail size={15} color={COLORS.gold} />
           <TextInput
             style={styles.input}
@@ -84,6 +85,8 @@ const LoginScreen = () => {
             keyboardType="email-address"
             value={email}
             onChangeText={setEmail}
+            onFocus={() => setEmailFocused(true)}
+            onBlur={() => setEmailFocused(false)}
           />
         </View>
 
@@ -98,7 +101,7 @@ const LoginScreen = () => {
             value={password}
             onChangeText={setPassword}
           />
-          <TouchableOpacity onPress={() => setShowPw((v) => !v)}>
+          <TouchableOpacity onPress={() => setShowPw((v) => !v)} hitSlop={10}>
             {showPw ? <EyeOff size={15} color={COLORS.textFaint} /> : <Eye size={15} color={COLORS.textFaint} />}
           </TouchableOpacity>
         </View>
@@ -109,13 +112,13 @@ const LoginScreen = () => {
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
-        <TouchableOpacity onPress={submit} disabled={busy} activeOpacity={0.9}>
-          <LinearGradient colors={[COLORS.gold, COLORS.goldDark]} style={styles.btn}>
-            {busy ? <ActivityIndicator color={COLORS.navy} /> : (
-              <Text style={styles.btnText}>Sign In</Text>
-            )}
-          </LinearGradient>
-        </TouchableOpacity>
+        <EpisioGoldButton
+          label="Sign In"
+          onPress={submit}
+          loading={busy}
+          style={styles.btn}
+          textStyle={styles.btnText}
+        />
 
         <View style={styles.divider}>
           <View style={styles.line} />
@@ -171,8 +174,8 @@ const styles = StyleSheet.create({
   },
   hero: { marginBottom: 30 },
   title: { marginTop: 18, fontSize: 23, fontFamily: FONTS.extraBold, color: '#fff', letterSpacing: -0.3 },
-  sub: { marginTop: 6, fontSize: 13, color: COLORS.textDim, fontFamily: FONTS.regular },
-  label: { fontSize: 11.5, fontFamily: FONTS.semi, color: COLORS.textDim, marginBottom: 7 },
+  sub: { marginTop: 6, fontSize: 13, color: '#7D7D97', fontFamily: FONTS.regular },
+  label: { fontSize: 11.5, fontFamily: FONTS.semi, color: '#7D7D97', marginBottom: 7 },
   field: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
     backgroundColor: COLORS.navyCard, borderWidth: 1, borderColor: COLORS.navyLine,
@@ -183,10 +186,8 @@ const styles = StyleSheet.create({
   forgot: { alignSelf: 'flex-end', marginBottom: 22 },
   forgotText: { color: COLORS.gold, fontFamily: FONTS.semi, fontSize: 12 },
   error: { color: '#EF4444', marginBottom: 10, fontFamily: FONTS.medium, fontSize: 13 },
-  btn: {
-    borderRadius: 16, paddingVertical: 16, alignItems: 'center', marginBottom: 20,
-  },
-  btnText: { fontFamily: FONTS.extraBold, color: COLORS.navy, fontSize: 14.5 },
+  btn: { marginBottom: 20 },
+  btnText: { fontSize: 14.5 },
   divider: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 18 },
   line: { flex: 1, height: 1, backgroundColor: COLORS.navyLine },
   dividerText: { fontSize: 11.5, color: COLORS.textFaint, fontFamily: FONTS.regular },
@@ -197,7 +198,7 @@ const styles = StyleSheet.create({
   },
   socialText: { fontSize: 12.5, color: '#fff', fontFamily: FONTS.medium },
   bottom: { marginTop: 'auto', paddingBottom: 16, alignItems: 'center' },
-  signup: { fontSize: 13, color: COLORS.textDim, fontFamily: FONTS.regular, textAlign: 'center' },
+  signup: { fontSize: 13, color: '#7D7D97', fontFamily: FONTS.regular, textAlign: 'center' },
   guest: { marginTop: 12, fontSize: 12, color: COLORS.textFaint, fontFamily: FONTS.regular },
 });
 

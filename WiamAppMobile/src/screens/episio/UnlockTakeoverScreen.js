@@ -76,7 +76,7 @@ const UnlockTakeoverScreen = () => {
           {"This episode requires unlocking\nbefore you can watch."}
         </Text>
         {error ? <Text style={styles.error}>{error}</Text> : null}
-        <TouchableOpacity style={styles.unlockBtn} onPress={unlock} disabled={busy}>
+        <TouchableOpacity style={styles.unlockBtn} onPress={unlock} disabled={busy} activeOpacity={0.9}>
           {busy ? (
             <ActivityIndicator color={COLORS.navy} />
           ) : (
@@ -85,6 +85,15 @@ const UnlockTakeoverScreen = () => {
               <Text style={styles.unlockText}>Unlock Now — {unlockPrice} coins</Text>
             </>
           )}
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.vipHint}
+          onPress={() => navigation.navigate('MembershipOfferModal', {
+            price: 'From ₵35',
+            discountLabel: 'VIP unlocks all',
+          })}
+        >
+          <Text style={styles.vipHintText}>Or join VIP — watch without coins</Text>
         </TouchableOpacity>
       </View>
 
@@ -131,7 +140,7 @@ const UnlockTakeoverScreen = () => {
       <View style={[styles.bottombar, { paddingBottom: Math.max(insets.bottom, 10), height: 60 + insets.bottom }]}>
         <TouchableOpacity
           style={styles.memberPill}
-          onPress={() => navigation.navigate('Member')}
+          onPress={() => navigation.navigate('VipCheckout')}
         >
           <Crown size={14} color={COLORS.gold} fill={COLORS.gold} />
           <Text style={styles.memberText}>Join Membership</Text>
@@ -171,6 +180,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40, paddingVertical: 15, borderRadius: 16, backgroundColor: COLORS.gold,
   },
   unlockText: { fontSize: 14.5, fontFamily: FONTS.extraBold, color: COLORS.navy },
+  vipHint: { marginTop: 14, padding: 6 },
+  vipHintText: { fontSize: 12, color: COLORS.gold, fontFamily: FONTS.semi, textAlign: 'center' },
   actionRail: {
     position: 'absolute', right: 12, alignItems: 'center', gap: 20, zIndex: 3, opacity: 0.85,
   },

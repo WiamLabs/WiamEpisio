@@ -1,10 +1,11 @@
 /**
  * Layout: WiamEpisio-Creator-Apply-Intro-InviteOnly.html
- * Stage 1 curated intake — waitlist or invite code
+ * Keyboard avoids covering waitlist / invite fields.
  */
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Alert,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput,
+  ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Keyboard,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -12,15 +13,22 @@ import { X, Lock, Check } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS, FONTS } from '../../constants/theme';
 import studioEpisioApi from '../../api/studioEpisio';
+import useAuthStore from '../../store/useAuthStore';
 
 const CreatorApplyInviteOnlyScreen = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
+  const patchUser = useAuthStore((s) => s.patchUser);
+  const scrollRef = useRef(null);
   const [email, setEmail] = useState('');
   const [workLink, setWorkLink] = useState('');
   const [inviteCode, setInviteCode] = useState('');
   const [showCode, setShowCode] = useState(false);
   const [busy, setBusy] = useState(false);
+
+  const scrollToEnd = () => {
+    setTimeout(() => scrollRef.current?.scrollToEnd?.({ animated: true }), 120);
+  };
 
   const joinWaitlist = async () => {
     if (!email.trim()) {
@@ -30,7 +38,8 @@ const CreatorApplyInviteOnlyScreen = () => {
     setBusy(true);
     try {
       await studioEpisioApi.joinWaitlist({ email: email.trim(), work_link: workLink.trim() });
-      Alert.alert('You\'re on the list', 'We\'ll reach out when applications open or if we invite you sooner.');
+      Keyboard.dismiss();
+      Alert.alert("You're on the list", "We'll reach out when applications open or if we invite you sooner.");
       navigation.goBack();
     } catch (e) {
       Alert.alert('Waitlist', e?.message || 'Could not join');
@@ -47,23 +56,34 @@ const CreatorApplyInviteOnlyScreen = () => {
     setBusy(true);
     try {
       const data = await studioEpisioApi.redeemInvite(inviteCode.trim());
+      try {
+        await patchUser({ is_creator: true, creator_application_status: 'accepted' });
+        const me = await (await import('../../api/auth')).default.me();
+        if (me?.user) await patchUser(me.user);
+        else if (me?.is_creator != null) await patchUser(me);
+      } catch { /* still open studio */ }
+      Keyboard.dismiss();
       Alert.alert(
         'Studio unlocked',
         data?.message || 'Welcome to WiamStudio. Complete your public channel profile next.',
         [{
-          text: 'Open Studio Settings',
-          onPress: () => navigation.replace('StudioSettings'),
+          text: 'Open Studio',
+          onPress: () => navigation.replace('StudioHome'),
         }],
       );
     } catch (e) {
-      Alert.alert('Invite', e?.message || 'Invalid or expired invite code');
+      Alert.alert('Invite', e?.message || 'Invalid or used invite code');
     } finally {
       setBusy(false);
     }
   };
 
   return (
-    <View style={[styles.root, { paddingTop: insets.top }]}>
+    <KeyboardAvoidingView
+      style={[styles.root, { paddingTop: insets.top }]}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
+    >
       <LinearGradient colors={['#1a1030', COLORS.navy]} style={styles.hero}>
         <TouchableOpacity style={styles.close} onPress={() => navigation.goBack()}>
           <X size={16} color="#fff" />
@@ -76,7 +96,15 @@ const CreatorApplyInviteOnlyScreen = () => {
         <Text style={styles.heroP}>We're keeping the first wave small on purpose.</Text>
       </LinearGradient>
 
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
+      <ScrollView
+        ref={scrollRef}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        contentContainerStyle={{
+          padding: 20,
+          paddingBottom: Math.max(insets.bottom, 24) + 120,
+        }}
+      >
         <View style={styles.statusCard}>
           <Text style={styles.statusTitle}>Applications aren't open yet</Text>
           <Text style={styles.statusText}>
@@ -108,6 +136,7 @@ const CreatorApplyInviteOnlyScreen = () => {
             onChangeText={setEmail}
             keyboardType="email-address"
             autoCapitalize="none"
+            onFocus={scrollToEnd}
           />
           <TextInput
             style={styles.input}
@@ -116,6 +145,7 @@ const CreatorApplyInviteOnlyScreen = () => {
             value={workLink}
             onChangeText={setWorkLink}
             autoCapitalize="none"
+            onFocus={scrollToEnd}
           />
           <TouchableOpacity style={styles.btn} onPress={joinWaitlist} disabled={busy}>
             {busy ? <ActivityIndicator color={COLORS.navy} /> : (
@@ -124,13 +154,13 @@ const CreatorApplyInviteOnlyScreen = () => {
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity onPress={() => setShowCode((v) => !v)}>
+        <TouchableOpacity onPress={() => { setShowCode((v) => !v); setTimeout(scrollToEnd, 50); }}>
           <Text style={styles.haveCode}>
             Already have an invite code? <Text style={{ color: COLORS.gold }}>Enter it here</Text>
           </Text>
         </TouchableOpacity>
         {showCode ? (
-          <View style={{ marginTop: 12 }}>
+          <View style={{ marginTop: 12, marginBottom: 40 }}>
             <TextInput
               style={styles.input}
               placeholder="Invite code"
@@ -138,6 +168,7 @@ const CreatorApplyInviteOnlyScreen = () => {
               value={inviteCode}
               onChangeText={setInviteCode}
               autoCapitalize="characters"
+              onFocus={scrollToEnd}
             />
             <TouchableOpacity style={styles.btn} onPress={useInvite} disabled={busy}>
               <Text style={styles.btnText}>Continue with invite</Text>
@@ -145,7 +176,7 @@ const CreatorApplyInviteOnlyScreen = () => {
           </View>
         ) : null}
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 

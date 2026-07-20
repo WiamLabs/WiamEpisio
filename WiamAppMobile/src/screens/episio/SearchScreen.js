@@ -7,19 +7,26 @@ import {
   View, Text, StyleSheet, TextInput, FlatList, TouchableOpacity, ActivityIndicator, Dimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
-import { ChevronLeft, Search } from 'lucide-react-native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { ChevronLeft, Search, Check } from 'lucide-react-native';
 import { COLORS, FONTS } from '../../constants/theme';
 import watchApi from '../../api/watch';
 import PosterCard from '../../components/episio/PosterCard';
 
 const CARD_W = (Dimensions.get('window').width - 52) / 2;
 const GENRE_CHIPS = ['Drama', 'Revenge', 'Romance', 'Royal', 'Comedy'];
+const SEARCH_TIPS = [
+  'Check for typos in series or creator names',
+  'Use fewer, more general keywords',
+  'Try searching by genre, like "Revenge" or "Royal"',
+];
 
 const SearchScreen = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
-  const [q, setQ] = useState('');
+  const route = useRoute();
+  const initialQ = route.params?.query || route.params?.q || '';
+  const [q, setQ] = useState(initialQ);
   const [results, setResults] = useState([]);
   const [popular, setPopular] = useState([]);
   const [suggestChips, setSuggestChips] = useState([...GENRE_CHIPS]);
@@ -58,6 +65,14 @@ const SearchScreen = () => {
       setBusy(false);
     }
   }, [q]);
+
+  useEffect(() => {
+    if (initialQ.trim()) {
+      run(initialQ);
+    }
+    // Only on mount for deep-link query
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const openSeries = (id) => {
     if (!id) return;
@@ -109,9 +124,16 @@ const SearchScreen = () => {
           ListEmptyComponent={
             showNoResults ? (
               <View style={styles.emptyWrap}>
-                <Text style={styles.emptyTitle}>No series match “{q}”</Text>
+                <Text style={styles.emptyTitle}>No results for "{q}"</Text>
                 <Text style={styles.emptySub}>Try a different spelling, or browse by genre instead.</Text>
-                <Text style={styles.tip}>Try searching by genre, like "Revenge" or "Royal"</Text>
+                <Text style={styles.tipsTitle}>Search tips</Text>
+                {SEARCH_TIPS.map((tip) => (
+                  <View key={tip} style={styles.tipRow}>
+                    <Check size={14} color={COLORS.gold} />
+                    <Text style={styles.tipText}>{tip}</Text>
+                  </View>
+                ))}
+                <Text style={styles.suggestTitle}>Popular right now</Text>
                 <View style={styles.chips}>
                   {suggestChips.map((chip) => (
                     <TouchableOpacity
@@ -131,9 +153,18 @@ const SearchScreen = () => {
                 </View>
                 <TouchableOpacity
                   style={styles.browseBtn}
-                  onPress={() => navigation.navigate('Shelf', { mode: 'rankings', title: 'Rankings' })}
+                  onPress={() => navigation.navigate('Main')}
                 >
-                  <Text style={styles.browseText}>Browse rankings</Text>
+                  <Text style={styles.browseText}>Browse popular</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.fullEmptyLink}
+                  onPress={() => navigation.navigate('SearchNoResults', {
+                    query: q,
+                    suggestions: suggestChips,
+                  })}
+                >
+                  <Text style={styles.fullEmptyText}>Open full empty state ›</Text>
                 </TouchableOpacity>
               </View>
             ) : (
@@ -176,8 +207,19 @@ const styles = StyleSheet.create({
   emptyWrap: { paddingHorizontal: 24, paddingTop: 28, alignItems: 'center' },
   emptyTitle: { color: '#fff', fontFamily: FONTS.bold, fontSize: 16, textAlign: 'center' },
   emptySub: { marginTop: 8, color: COLORS.textFaint, fontFamily: FONTS.regular, fontSize: 13, textAlign: 'center', lineHeight: 18 },
-  tip: { marginTop: 18, color: '#B8B8CC', fontFamily: FONTS.medium, fontSize: 12.5, textAlign: 'center' },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center', marginTop: 16 },
+  tipsTitle: {
+    alignSelf: 'stretch', marginTop: 22, marginBottom: 12,
+    fontSize: 12, fontFamily: FONTS.extraBold, color: COLORS.textDim,
+    letterSpacing: 0.4, textTransform: 'uppercase',
+  },
+  tipRow: { alignSelf: 'stretch', flexDirection: 'row', gap: 9, marginBottom: 10 },
+  tipText: { flex: 1, fontSize: 11.5, color: '#C9C9DE', fontFamily: FONTS.regular, lineHeight: 17 },
+  suggestTitle: {
+    alignSelf: 'stretch', marginTop: 14, marginBottom: 12,
+    fontSize: 12, fontFamily: FONTS.extraBold, color: COLORS.textDim,
+    letterSpacing: 0.4, textTransform: 'uppercase',
+  },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center' },
   chip: {
     paddingHorizontal: 15, paddingVertical: 9, borderRadius: 999,
     backgroundColor: COLORS.navyCard, borderWidth: 1, borderColor: COLORS.navyLine,
@@ -187,6 +229,8 @@ const styles = StyleSheet.create({
     marginTop: 22, backgroundColor: COLORS.gold, paddingHorizontal: 22, paddingVertical: 12, borderRadius: 12,
   },
   browseText: { fontFamily: FONTS.bold, color: COLORS.navy, fontSize: 13.5 },
+  fullEmptyLink: { marginTop: 14, padding: 6 },
+  fullEmptyText: { color: COLORS.textDim, fontFamily: FONTS.semi, fontSize: 12 },
   error: { color: COLORS.error, paddingHorizontal: 20, marginBottom: 8, fontFamily: FONTS.medium },
 });
 

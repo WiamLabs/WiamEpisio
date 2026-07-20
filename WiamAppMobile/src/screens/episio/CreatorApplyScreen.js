@@ -62,15 +62,8 @@ const CreatorApplyScreen = () => {
 
   if (done) {
     return (
-      <View style={[styles.root, styles.center, { paddingTop: insets.top, paddingHorizontal: 24 }]}>
-        <Text style={styles.title}>Application submitted</Text>
-        <Text style={styles.sub}>Status: {done.status}. We’ll review your sample and quality fit.</Text>
-        <TouchableOpacity style={styles.cta} onPress={() => navigation.goBack()}>
-          <Text style={styles.ctaText}>Done</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate('StudioHome')}>
-          <Text style={styles.link}>Open Studio (if already accepted)</Text>
-        </TouchableOpacity>
+      <View style={[styles.root, styles.center, { paddingTop: insets.top }]}>
+        <ActivityIndicator color={COLORS.gold} />
       </View>
     );
   }
@@ -117,14 +110,20 @@ const CreatorApplyScreen = () => {
         planned_episode_count: Number(form.planned_episode_count) || 20,
         genres: form.genres.split(',').map((g) => g.trim()).filter(Boolean).slice(0, 3),
       });
-      setDone(data.application || { status: 'pending' });
       if (data.user) await patchUser(data.user);
+      setDone(data.application || { status: 'pending' });
+      navigation.replace('CreatorApplyAccepted', {
+        status: data.application?.status || 'pending',
+        message: data.message,
+      });
     } catch (e) {
       setError(e?.message || 'Submit failed');
     } finally {
       setBusy(false);
     }
   };
+
+  const stepLabels = ['Identity', 'Your Story', 'Sample Work', 'Rights'];
 
   return (
     <ScrollView
@@ -135,8 +134,14 @@ const CreatorApplyScreen = () => {
       <TouchableOpacity style={styles.back} onPress={() => (step > 0 ? setStep(step - 1) : navigation.goBack())}>
         <ChevronLeft size={20} color={COLORS.text} />
       </TouchableOpacity>
+      <Text style={styles.stepLabel}>Step {step + 1} of 4 — {stepLabels[step]}</Text>
+      <View style={styles.stepTrack}>
+        {[0, 1, 2, 3].map((i) => (
+          <View key={i} style={[styles.stepSeg, i <= step && styles.stepDone]} />
+        ))}
+      </View>
       <Text style={styles.title}>Become a Creator</Text>
-      <Text style={styles.sub}>Step {step + 1} of 4 · Quality-first. 9:16 · complete series required.</Text>
+      <Text style={styles.sub}>Quality-first. 9:16 · complete series required. Tell African stories — earn from every episode.</Text>
 
       {step === 0 ? (
         <>
@@ -150,9 +155,10 @@ const CreatorApplyScreen = () => {
 
       {step === 1 ? (
         <>
-          <Field label="Genres (comma)" value={form.genres} onChangeText={(v) => set('genres', v)} />
+          <Field label="Genres (comma, up to 3)" value={form.genres} onChangeText={(v) => set('genres', v)} />
           <Field label="First series pitch" value={form.pitch} onChangeText={(v) => set('pitch', v)} multiline />
           <Field label="Planned episodes (min 20)" value={form.planned_episode_count} onChangeText={(v) => set('planned_episode_count', v)} keyboardType="number-pad" />
+          <Text style={styles.hint}>Each episode should run 4–5 minutes. Anything under 3 or over 6 minutes won't pass quality review.</Text>
         </>
       ) : null}
 
@@ -181,7 +187,7 @@ const CreatorApplyScreen = () => {
       {error ? <Text style={styles.error}>{error}</Text> : null}
       <TouchableOpacity style={styles.cta} onPress={next} disabled={busy}>
         {busy ? <ActivityIndicator color={COLORS.navy} /> : (
-          <Text style={styles.ctaText}>{step === 3 ? 'Submit application' : 'Continue'}</Text>
+          <Text style={styles.ctaText}>{step === 3 ? 'Submit application' : `Next: ${stepLabels[step + 1] || 'Continue'}`}</Text>
         )}
       </TouchableOpacity>
     </ScrollView>
@@ -214,6 +220,10 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center', marginBottom: 14,
   },
   title: { fontSize: 22, fontFamily: FONTS.extraBold, color: COLORS.text },
+  stepLabel: { fontSize: 11, fontFamily: FONTS.bold, color: COLORS.textFaint, marginBottom: 8 },
+  stepTrack: { flexDirection: 'row', gap: 6, marginBottom: 14 },
+  stepSeg: { flex: 1, height: 4, borderRadius: 99, backgroundColor: COLORS.navyLine },
+  stepDone: { backgroundColor: COLORS.gold },
   sub: { marginTop: 6, marginBottom: 18, color: COLORS.textDim, fontFamily: FONTS.regular, fontSize: 13 },
   label: { color: COLORS.textDim, fontFamily: FONTS.semi, fontSize: 11.5, marginBottom: 6 },
   input: {

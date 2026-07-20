@@ -9,6 +9,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import { ChevronLeft, Lock, AlertTriangle, Check } from 'lucide-react-native';
+import EpisioGoldButton from '../../components/episio/EpisioGoldButton';
 import { COLORS, FONTS } from '../../constants/theme';
 import studioEpisioApi from '../../api/studioEpisio';
 import resolveUrl from '../../utils/resolveUrl';
@@ -133,16 +134,12 @@ const StudioSeasonLockScreen = () => {
           </ScrollView>
 
           <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 16) }]}>
-            <TouchableOpacity style={styles.btnLock} onPress={lock} disabled={busy || !checked}>
-              {busy ? (
-                <ActivityIndicator color={COLORS.navy} />
-              ) : (
-                <>
-                  <Lock size={15} color={COLORS.navy} />
-                  <Text style={styles.btnLockText}>Lock Season & Continue</Text>
-                </>
-              )}
-            </TouchableOpacity>
+            <EpisioGoldButton
+              label="Lock Season & Continue"
+              onPress={lock}
+              loading={busy}
+              disabled={!checked}
+            />
             <TouchableOpacity onPress={() => navigation.goBack()}>
               <Text style={styles.btnCancel}>Not yet — I need to add more episodes</Text>
             </TouchableOpacity>

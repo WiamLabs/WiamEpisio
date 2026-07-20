@@ -2,19 +2,22 @@
  * Layout: WiamStudio-Series-Create + Series vs Season choice (team copy).
  * structure_mode: series (one complete story) | season (Season N — submit season-by-season)
  */
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  View, Text, TextInput, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView,
+  View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { ChevronLeft, Check } from 'lucide-react-native';
+import EpisioGoldButton from '../../components/episio/EpisioGoldButton';
 import { COLORS, FONTS } from '../../constants/theme';
 import studioEpisioApi from '../../api/studioEpisio';
+import { useEpisioGenres } from '../../hooks/useEpisioGenres';
 
 const StudioSeriesCreateScreen = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
+  const { genres: GENRES } = useEpisioGenres();
   const [title, setTitle] = useState('');
   const [synopsis, setSynopsis] = useState('');
   const [genre, setGenre] = useState('Drama');
@@ -24,10 +27,20 @@ const StudioSeriesCreateScreen = () => {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
 
+  useEffect(() => {
+    if (GENRES?.length && !GENRES.includes(genre)) {
+      setGenre(GENRES[0]);
+    }
+  }, [GENRES, genre]);
+
   const create = async () => {
     setError(null);
     if (title.trim().length < 2) {
       setError('Title required');
+      return;
+    }
+    if (synopsis.trim().length > 0 && synopsis.trim().length < 40) {
+      setError('Synopsis should be at least 40 characters when provided');
       return;
     }
     if (Number(planned) < 20) {
@@ -49,7 +62,7 @@ const StudioSeriesCreateScreen = () => {
         season_number: structure === 'season' ? Number(seasonNumber) || 1 : 1,
       });
       const id = data?.series?.id;
-      navigation.replace('StudioSeriesDetail', { seriesId: id });
+      navigation.replace('StudioCover', { seriesId: id });
     } catch (e) {
       setError(e?.message || 'Create failed');
     } finally {
@@ -62,9 +75,18 @@ const StudioSeriesCreateScreen = () => {
       <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
         <ChevronLeft size={20} color={COLORS.text} />
       </TouchableOpacity>
-      <Text style={styles.title}>New Series</Text>
+
+      <Text style={styles.stepLabel}>Step 1 of 4 — Identity</Text>
+      <View style={styles.stepTrack}>
+        <View style={[styles.stepSeg, styles.stepDone]} />
+        <View style={styles.stepSeg} />
+        <View style={styles.stepSeg} />
+        <View style={styles.stepSeg} />
+      </View>
+
+      <Text style={styles.title}>Tell us about the series</Text>
       <Text style={styles.hint}>
-        Choose how your story is shaped. The WiamEpisio team reviews the full unit you submit — every episode + trailer — before anything goes live.
+        This becomes the public series page once live. The WiamEpisio team reviews the full unit you submit — every episode + trailer — before anything goes live.
       </Text>
 
       <Text style={styles.label}>How is this story structured?</Text>
@@ -110,27 +132,43 @@ const StudioSeriesCreateScreen = () => {
         </>
       ) : null}
 
-      <Text style={styles.label}>Title</Text>
+      <Text style={styles.label}>Series title</Text>
       <TextInput style={styles.input} value={title} onChangeText={setTitle} placeholderTextColor={COLORS.textFaint} placeholder="Series title" />
-      <Text style={styles.label}>Synopsis</Text>
-      <TextInput style={[styles.input, { minHeight: 90 }]} multiline value={synopsis} onChangeText={setSynopsis} placeholderTextColor={COLORS.textFaint} placeholder="Story..." />
+      <Text style={styles.label}>Synopsis · {synopsis.length}/400</Text>
+      <TextInput
+        style={[styles.input, { minHeight: 90 }]}
+        multiline
+        maxLength={400}
+        value={synopsis}
+        onChangeText={setSynopsis}
+        placeholderTextColor={COLORS.textFaint}
+        placeholder="Story hook (min 40 characters when set)"
+      />
       <Text style={styles.label}>Genre</Text>
-      <TextInput style={styles.input} value={genre} onChangeText={setGenre} placeholderTextColor={COLORS.textFaint} />
+      <View style={styles.genreRow}>
+        {GENRES.map((g) => (
+          <TouchableOpacity
+            key={g}
+            style={[styles.genreChip, genre === g && styles.genreOn]}
+            onPress={() => setGenre(g)}
+          >
+            <Text style={[styles.genreText, genre === g && { color: COLORS.navy }]}>{g}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
       <Text style={styles.label}>
         Planned episodes for this {structure === 'season' ? 'season' : 'series'} (min 20 · max 200)
       </Text>
       <TextInput style={styles.input} value={planned} onChangeText={setPlanned} keyboardType="number-pad" placeholderTextColor={COLORS.textFaint} />
       <Text style={styles.footNote}>
-        Each episode must be 4–5 minutes. Trailer 15–60 seconds. Half stories cannot go live or earn.
+        Episode count locks your completeness gate. Each episode must be 4–5 minutes. Trailer 15–60 seconds. Half stories cannot go live or earn.
       </Text>
       {error ? <Text style={styles.error}>{error}</Text> : null}
-      <TouchableOpacity style={styles.cta} onPress={create} disabled={busy}>
-        {busy ? <ActivityIndicator color={COLORS.navy} /> : (
-          <Text style={styles.ctaText}>
-            Create {structure === 'season' ? `Season ${seasonNumber} draft` : 'series draft'}
-          </Text>
-        )}
-      </TouchableOpacity>
+      <EpisioGoldButton
+        label={`Next: Cover · create ${structure === 'season' ? `Season ${seasonNumber}` : 'series'} draft`}
+        onPress={create}
+        loading={busy}
+      />
     </ScrollView>
   );
 };
@@ -141,6 +179,10 @@ const styles = StyleSheet.create({
     width: 36, height: 36, borderRadius: 18, backgroundColor: COLORS.navyCard,
     alignItems: 'center', justifyContent: 'center', marginBottom: 14,
   },
+  stepLabel: { fontSize: 11, fontFamily: FONTS.bold, color: COLORS.textFaint, marginBottom: 8 },
+  stepTrack: { flexDirection: 'row', gap: 6, marginBottom: 16 },
+  stepSeg: { flex: 1, height: 4, borderRadius: 99, backgroundColor: COLORS.navyLine },
+  stepDone: { backgroundColor: COLORS.gold },
   title: { fontSize: 22, fontFamily: FONTS.extraBold, color: COLORS.text, marginBottom: 8 },
   hint: { color: COLORS.textDim, fontFamily: FONTS.regular, marginBottom: 16, lineHeight: 19 },
   label: { color: COLORS.textDim, fontFamily: FONTS.semi, fontSize: 11.5, marginBottom: 6, marginTop: 4 },
@@ -156,9 +198,14 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.navyCard, borderWidth: 1, borderColor: COLORS.navyLine,
     borderRadius: 12, padding: 13, color: COLORS.text, marginBottom: 12, fontFamily: FONTS.regular,
   },
+  genreRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
+  genreChip: {
+    paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10,
+    backgroundColor: COLORS.navyCard, borderWidth: 1, borderColor: COLORS.navyLine,
+  },
+  genreOn: { backgroundColor: COLORS.gold, borderColor: COLORS.gold },
+  genreText: { fontFamily: FONTS.bold, color: COLORS.textDim, fontSize: 11.5 },
   footNote: { color: COLORS.textFaint, fontFamily: FONTS.regular, fontSize: 11.5, lineHeight: 17, marginBottom: 10 },
-  cta: { backgroundColor: COLORS.gold, borderRadius: 14, padding: 15, alignItems: 'center', marginTop: 8 },
-  ctaText: { fontFamily: FONTS.bold, color: COLORS.navy },
   error: { color: COLORS.error, fontFamily: FONTS.medium, marginBottom: 8 },
 });
 

@@ -19,11 +19,11 @@ import { COLORS, FONTS } from '../../constants/theme';
 import watchApi from '../../api/watch';
 import PosterCard from '../../components/episio/PosterCard';
 import resolveUrl from '../../utils/resolveUrl';
+import { useEpisioGenres } from '../../hooks/useEpisioGenres';
 
 const CAT_FILTERS = ['Popular', 'Fresh', 'A–Z', 'Completed', 'Free Only'];
 const FRESH_TABS = ['Live Now', 'Coming Soon'];
 const RANK_TABS = ['Most Trending', 'Top Searched', 'Fresh Releases'];
-const GENRE_CHIPS = ['Drama', 'Romance', 'Revenge', 'Hidden Identity', 'African Originals', 'Action'];
 
 const { width: W } = Dimensions.get('window');
 const COL3 = (W - 40 - 20) / 3;
@@ -33,6 +33,7 @@ const ShelfScreen = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const route = useRoute();
+  const { genres: GENRE_CHIPS } = useEpisioGenres();
   const mode = route.params?.mode || 'origin';
   const initialGenre = route.params?.genre || 'Drama';
   const titleParam = route.params?.title;

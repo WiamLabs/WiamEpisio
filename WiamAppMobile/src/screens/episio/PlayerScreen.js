@@ -11,7 +11,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import {
-  ChevronLeft, Maximize2, SkipBack, SkipForward, Heart, MessageCircle, Share2, List,
+  ChevronLeft, Maximize2, SkipBack, SkipForward, Heart, MessageCircle, Share2, List, Download,
 } from 'lucide-react-native';
 import { COLORS, FONTS } from '../../constants/theme';
 import episodesApi from '../../api/episodes';
@@ -19,6 +19,7 @@ import apiClient from '../../api/client';
 import studioEpisioApi from '../../api/studioEpisio';
 import useAuthStore from '../../store/useAuthStore';
 import CONFIG from '../../constants/config';
+import { assertGuestCanWatchSeries } from '../../utils/guestSeriesGate';
 
 const { width: W } = Dimensions.get('window');
 const FRAME_H = Math.min(W * (16 / 9) * 0.58, W * 1.15);
@@ -27,7 +28,7 @@ const PlayerScreen = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const route = useRoute();
-  const { episodeId, seriesId } = route.params || {};
+  const { episodeId, seriesId, offlineUri } = route.params || {};
   const [meta, setMeta] = useState(null);
   const [episodes, setEpisodes] = useState([]);
   const [streamUrl, setStreamUrl] = useState(null);
@@ -63,6 +64,28 @@ const PlayerScreen = () => {
     setLoading(true);
     setError(null);
     try {
+      if (offlineUri) {
+        setStreamUrl(offlineUri);
+        setMeta({
+          seriesTitle: route.params?.seriesTitle || 'Downloaded',
+          episodeNumber: route.params?.episodeNumber,
+          total: null,
+          synopsis: '',
+        });
+        setLoading(false);
+        return;
+      }
+      if (seriesId) {
+        const gate = await assertGuestCanWatchSeries(seriesId, isAuthenticated);
+        if (!gate.allowed) {
+          setLoading(false);
+          navigation.replace('LoginRequiredSheet', {
+            title: 'Register to watch more',
+            message: 'As a guest you can finish one series. Sign in free to watch a different series.',
+          });
+          return;
+        }
+      }
       let series = null;
       let eps = [];
       if (seriesId) {
@@ -107,7 +130,7 @@ const PlayerScreen = () => {
     } finally {
       setLoading(false);
     }
-  }, [episodeId, seriesId, navigation]);
+  }, [episodeId, seriesId, navigation, isAuthenticated]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -152,11 +175,26 @@ const PlayerScreen = () => {
   });
 
   const onComment = () => {
-    // Comments HTML deferred (Phase 2) — open series detail for now (no dead tap).
-    if (seriesId) navigation.navigate('SeriesDetail', { seriesId });
+    if (seriesId) navigation.navigate('SeriesComments', { seriesId });
   };
 
-  const onShare = async () => {
+  const onDownload = () => {
+    if (!isAuthenticated) {
+      navigation.navigate('LoginRequiredSheet', {
+        title: 'Sign in to download',
+        message: 'Offline downloads need a free WiamEpisio account.',
+      });
+      return;
+    }
+    navigation.navigate('DownloadsManager', {
+      pendingDownload: {
+        episodeId,
+        seriesId,
+        seriesTitle: meta?.seriesTitle,
+        episodeNumber: meta?.episodeNumber,
+      },
+    });
+  };
     const title = meta?.seriesTitle || 'WiamEpisio';
     const url = `${CONFIG.SITE_ORIGIN}/series/${seriesId || ''}`;
     try {
@@ -165,6 +203,9 @@ const PlayerScreen = () => {
         url,
         title,
       });
+      if (seriesId) {
+        apiClient.post(`/series/${seriesId}/share`, {}).catch(() => {});
+      }
     } catch { /* user cancelled */ }
   };
 
@@ -246,6 +287,7 @@ const PlayerScreen = () => {
               { Icon: Heart, label: 'Like', onPress: onLike, active: liked },
               { Icon: MessageCircle, label: 'Comment', onPress: onComment },
               { Icon: Share2, label: 'Share', onPress: onShare },
+              { Icon: Download, label: 'Save', onPress: onDownload },
               { Icon: List, label: 'List', onPress: onMyList },
             ].map(({ Icon, label, onPress, active }) => (
               <TouchableOpacity key={label} style={styles.actionItem} onPress={onPress} activeOpacity={0.7}>
@@ -255,6 +297,14 @@ const PlayerScreen = () => {
             ))}
           </View>
           {listMsg ? <Text style={styles.listMsg}>{listMsg}</Text> : null}
+
+          <TouchableOpacity
+            style={styles.vipBanner}
+            onPress={() => navigation.navigate('VipCheckout')}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.vipBannerText}>VIP — watch every episode without coins</Text>
+          </TouchableOpacity>
 
           {episodes.length ? (
             <>
@@ -340,6 +390,11 @@ const styles = StyleSheet.create({
   actionItem: { alignItems: 'center', gap: 4 },
   actionLabel: { fontSize: 10, color: '#8B8BA3', fontFamily: FONTS.regular },
   listMsg: { color: COLORS.gold, fontFamily: FONTS.medium, fontSize: 12, marginBottom: 12 },
+  vipBanner: {
+    backgroundColor: 'rgba(212,160,23,0.12)', borderWidth: 1, borderColor: COLORS.gold,
+    borderRadius: 12, paddingVertical: 12, paddingHorizontal: 14, marginBottom: 16,
+  },
+  vipBannerText: { color: COLORS.gold, fontFamily: FONTS.bold, fontSize: 12.5, textAlign: 'center' },
   epStripLabel: {
     fontSize: 13,
     fontFamily: FONTS.bold,

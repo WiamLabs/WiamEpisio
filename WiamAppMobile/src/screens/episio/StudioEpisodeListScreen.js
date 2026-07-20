@@ -4,7 +4,7 @@
  */
 import React, { useCallback, useState } from 'react';
 import {
-  View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl,
+  View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl, Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
@@ -12,13 +12,31 @@ import { ChevronLeft, Plus } from 'lucide-react-native';
 import { COLORS, FONTS } from '../../constants/theme';
 import studioEpisioApi from '../../api/studioEpisio';
 import QualityRejectedBanner from '../../components/episio/QualityRejectedBanner';
+import resolveUrl from '../../utils/resolveUrl';
 
-const statusColor = (ep) => {
-  if (ep.rejected || ep.transcode_status === 'failed') return COLORS.error;
-  if (ep.transcode_status === 'ready' && ep.is_final) return '#3DDC97';
-  if (ep.transcode_status === 'ready') return COLORS.gold;
-  if (ep.transcode_status === 'processing' || ep.transcode_status === 'queued') return '#6EA8FE';
-  return COLORS.textFaint;
+const fmtDur = (sec) => {
+  const s = Number(sec) || 0;
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+};
+
+const statusMeta = (ep) => {
+  if (ep.slot) return { label: 'Draft slot', color: COLORS.textFaint, pill: null };
+  if (ep.rejected || ep.transcode_status === 'failed') {
+    return { label: 'WRONG SIZE', color: '#E4573D', pill: 'reject' };
+  }
+  if (ep.transcode_status === 'processing' || ep.transcode_status === 'queued') {
+    return { label: 'PROCESSING', color: '#6EA8FE', pill: 'proc' };
+  }
+  if (ep.transcode_status === 'ready' && ep.is_final) {
+    return { label: 'READY', color: '#3BB273', pill: 'ready' };
+  }
+  if (ep.transcode_status === 'ready') {
+    return { label: 'READY', color: COLORS.gold, pill: 'ready' };
+  }
+  if (ep.transcode_status === 'uploading') {
+    return { label: 'UPLOADING', color: COLORS.gold, pill: 'up' };
+  }
+  return { label: (ep.transcode_status || 'draft').toUpperCase(), color: COLORS.textFaint, pill: null };
 };
 
 const StudioEpisodeListScreen = () => {
@@ -49,7 +67,6 @@ const StudioEpisodeListScreen = () => {
   const locked = !!series?.season_locked && !series?.fix_window_open;
   const rejected = eps.filter((e) => e.rejected);
 
-  // Fill empty slots so list shows draft placeholders up to planned
   const rows = [];
   const byNum = Object.fromEntries(eps.map((e) => [e.episode_number, e]));
   const maxShow = Math.max(planned, eps.length, 1);
@@ -138,24 +155,51 @@ const StudioEpisodeListScreen = () => {
           refreshControl={(
             <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(true); }} tintColor={COLORS.gold} />
           )}
-          renderItem={({ item: ep }) => (
-            <TouchableOpacity style={[styles.row, ep.rejected && styles.rowReject]} onPress={() => openEp(ep)}>
-              <View style={styles.thumb} />
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.epTitle, ep.slot && { color: COLORS.textFaint }]}>
-                  EP {ep.episode_number} — {ep.title || 'Untitled'}
-                </Text>
-                <Text style={styles.epMeta}>
-                  {ep.slot
-                    ? 'Draft slot'
-                    : `${Math.floor((ep.duration_seconds || 0) / 60)}:${String((ep.duration_seconds || 0) % 60).padStart(2, '0')} · ${
-                      ep.rejected ? 'Rejected' : (ep.is_final ? 'Final' : (ep.transcode_status || '—'))
-                    }`}
-                </Text>
-              </View>
-              <View style={[styles.dot, { backgroundColor: statusColor(ep) }]} />
-            </TouchableOpacity>
-          )}
+          renderItem={({ item: ep }) => {
+            const st = statusMeta(ep);
+            const thumb = resolveUrl(ep.poster_frame_url || ep.thumbnail_url);
+            return (
+              <TouchableOpacity
+                style={[styles.row, ep.slot && styles.rowSlot, ep.rejected && styles.rowReject]}
+                onPress={() => openEp(ep)}
+                activeOpacity={0.85}
+              >
+                {thumb ? (
+                  <Image source={{ uri: thumb }} style={styles.thumb} />
+                ) : (
+                  <View style={[styles.thumb, ep.slot && styles.thumbSlot]}>
+                    {ep.slot ? <Plus size={14} color={COLORS.textFaint} /> : null}
+                  </View>
+                )}
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.epTitle, ep.slot && { color: COLORS.textFaint }]}>
+                    EP {ep.episode_number} — {ep.slot ? 'Not uploaded' : (ep.title || 'Untitled')}
+                  </Text>
+                  <Text style={styles.epMeta}>
+                    {ep.slot
+                      ? 'Draft slot · Tap to upload'
+                      : ep.rejected
+                        ? (ep.reject_message || 'Video must be 9:16. Tap to fix.')
+                        : `${fmtDur(ep.duration_seconds)} · ${st.label}${ep.is_final ? ' · Final' : ''}`}
+                  </Text>
+                </View>
+                {st.pill ? (
+                  <View style={[
+                    styles.pill,
+                    st.pill === 'ready' && styles.pillReady,
+                    st.pill === 'proc' && styles.pillProc,
+                    st.pill === 'reject' && styles.pillReject,
+                    st.pill === 'up' && styles.pillUp,
+                  ]}
+                  >
+                    <Text style={[styles.pillText, { color: st.color }]}>{st.label}</Text>
+                  </View>
+                ) : (
+                  <View style={[styles.dot, { backgroundColor: st.color }]} />
+                )}
+              </TouchableOpacity>
+            );
+          }}
         />
       )}
     </View>
@@ -185,14 +229,22 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.navyCard, borderRadius: 14, padding: 11, marginBottom: 10,
     borderWidth: 1, borderColor: COLORS.navyLine,
   },
-  rowReject: { borderColor: 'rgba(228,87,61,0.35)' },
+  rowSlot: { borderStyle: 'dashed', opacity: 0.92 },
+  rowReject: { borderColor: 'rgba(228,87,61,0.45)', backgroundColor: 'rgba(228,87,61,0.06)' },
   thumb: {
     width: 40, height: 58, borderRadius: 8,
-    backgroundColor: COLORS.navySoft || '#161634',
+    backgroundColor: COLORS.navySoft, alignItems: 'center', justifyContent: 'center',
   },
+  thumbSlot: { borderWidth: 1, borderColor: COLORS.navyLine, borderStyle: 'dashed' },
   epTitle: { fontFamily: FONTS.bold, color: '#fff', fontSize: 12 },
   epMeta: { marginTop: 3, fontFamily: FONTS.regular, color: COLORS.textFaint, fontSize: 11 },
   dot: { width: 8, height: 8, borderRadius: 4 },
+  pill: { paddingHorizontal: 7, paddingVertical: 3, borderRadius: 6 },
+  pillReady: { backgroundColor: 'rgba(59,178,115,0.14)' },
+  pillProc: { backgroundColor: 'rgba(110,168,254,0.14)' },
+  pillReject: { backgroundColor: 'rgba(228,87,61,0.14)' },
+  pillUp: { backgroundColor: 'rgba(212,160,23,0.14)' },
+  pillText: { fontSize: 8.5, fontFamily: FONTS.extraBold },
 });
 
 export default StudioEpisodeListScreen;

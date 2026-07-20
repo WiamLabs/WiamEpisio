@@ -1,64 +1,143 @@
 /**
- * Confirm dialog — params title, message, onConfirm callback via goBack
+ * WiamEpisio-Confirm-Dialog.html — centered modal confirm pattern.
  */
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { useRoute, useNavigation } from '@react-navigation/native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { COLORS, FONTS, RADIUS } from '../../constants/theme';
+import { View, Text, StyleSheet, TouchableOpacity, Pressable } from 'react-native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { AlertCircle } from 'lucide-react-native';
+import EpisioGoldButton from '../../components/episio/EpisioGoldButton';
+import { COLORS, FONTS } from '../../constants/theme';
 
 const ConfirmDialogScreen = () => {
-  const route = useRoute();
   const navigation = useNavigation();
-  const insets = useSafeAreaInsets();
+  const route = useRoute();
   const {
-    title = 'Confirm',
-    message = 'Are you sure?',
-    confirmLabel = 'Confirm',
+    title = 'Remove from My List?',
+    message = 'This item will be removed. You can always add it back later.',
+    confirmLabel = 'Remove',
     cancelLabel = 'Cancel',
-    destructive = false,
+    next,
   } = route.params || {};
 
+  const onCancel = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    }
+  };
+
   const onConfirm = () => {
-    if (route.params?.onConfirm) route.params.onConfirm();
-    navigation.goBack();
+    if (next) {
+      if (typeof next === 'string') {
+        navigation.navigate(next);
+        return;
+      }
+      if (next?.screen) {
+        navigation.navigate(next.screen, next.params);
+        return;
+      }
+    }
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+      return;
+    }
+    navigation.navigate('Main');
   };
 
   return (
-    <View style={[styles.overlay, { paddingBottom: insets.bottom }]}>
-      <TouchableOpacity style={styles.backdrop} onPress={() => navigation.goBack()} />
-      <View style={styles.sheet}>
+    <View style={styles.root}>
+      <Pressable style={styles.veil} onPress={onCancel} />
+      <View style={styles.modal}>
+        <View style={styles.iconWrap}>
+          <AlertCircle size={24} color={COLORS.gold} />
+        </View>
         <Text style={styles.title}>{title}</Text>
-        <Text style={styles.message}>{message}</Text>
-        <TouchableOpacity
-          style={[styles.confirm, destructive && styles.confirmDanger]}
-          onPress={onConfirm}
-        >
-          <Text style={[styles.confirmText, destructive && styles.confirmTextLight]}>{confirmLabel}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.cancel} onPress={() => navigation.goBack()}>
-          <Text style={styles.cancelText}>{cancelLabel}</Text>
-        </TouchableOpacity>
+        <Text style={styles.sub}>{message}</Text>
+        <View style={styles.btnRow}>
+          <TouchableOpacity style={styles.cancelBtn} onPress={onCancel} activeOpacity={0.85}>
+            <Text style={styles.cancelText}>{cancelLabel}</Text>
+          </TouchableOpacity>
+          <View style={styles.confirmWrap}>
+            <EpisioGoldButton
+              label={confirmLabel}
+              onPress={onConfirm}
+              style={{ width: '100%' }}
+            />
+          </View>
+        </View>
       </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  overlay: { flex: 1, justifyContent: 'center', paddingHorizontal: 24, backgroundColor: 'rgba(0,0,0,0.65)' },
-  backdrop: { ...StyleSheet.absoluteFillObject },
-  sheet: {
-    backgroundColor: COLORS.navyCard, borderRadius: RADIUS.lg, padding: 22,
-    borderWidth: 1, borderColor: COLORS.navyLine,
+  root: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 20,
   },
-  title: { fontFamily: FONTS.extraBold, fontSize: 18, color: COLORS.text, marginBottom: 8 },
-  message: { fontFamily: FONTS.regular, fontSize: 14, color: COLORS.textDim, lineHeight: 21, marginBottom: 20 },
-  confirm: { backgroundColor: COLORS.gold, borderRadius: RADIUS.md, padding: 14, alignItems: 'center' },
-  confirmDanger: { backgroundColor: COLORS.error },
-  confirmText: { fontFamily: FONTS.extraBold, fontSize: 14, color: COLORS.navy },
-  confirmTextLight: { color: '#fff' },
-  cancel: { marginTop: 12, padding: 10, alignItems: 'center' },
-  cancelText: { fontFamily: FONTS.semi, color: COLORS.textDim },
+  veil: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modal: {
+    backgroundColor: COLORS.navySoft,
+    borderWidth: 1,
+    borderColor: COLORS.navyLine,
+    borderRadius: 20,
+    paddingTop: 24,
+    paddingHorizontal: 22,
+    paddingBottom: 20,
+    alignItems: 'center',
+  },
+  iconWrap: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: 'rgba(212,160,23,0.14)',
+    borderWidth: 1,
+    borderColor: 'rgba(212,160,23,0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  title: {
+    fontFamily: FONTS.extraBold,
+    fontSize: 16,
+    color: '#fff',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  sub: {
+    fontFamily: FONTS.regular,
+    fontSize: 12,
+    color: COLORS.textDim,
+    lineHeight: 19,
+    textAlign: 'center',
+    marginBottom: 22,
+  },
+  btnRow: {
+    flexDirection: 'row',
+    gap: 10,
+    width: '100%',
+  },
+  cancelBtn: {
+    flex: 1,
+    paddingVertical: 13,
+    borderRadius: 13,
+    backgroundColor: COLORS.navyCard,
+    borderWidth: 1,
+    borderColor: COLORS.navyLine,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cancelText: {
+    fontFamily: FONTS.bold,
+    fontSize: 13,
+    color: '#C9C9DE',
+  },
+  confirmWrap: {
+    flex: 1,
+  },
 });
 
 export default ConfirmDialogScreen;

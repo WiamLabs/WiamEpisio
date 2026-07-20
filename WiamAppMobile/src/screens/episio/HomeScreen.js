@@ -22,9 +22,9 @@ import studioEpisioApi from '../../api/studioEpisio';
 import coinsApi from '../../api/coins';
 import useAuthStore from '../../store/useAuthStore';
 import resolveUrl from '../../utils/resolveUrl';
+import { useEpisioGenres } from '../../hooks/useEpisioGenres';
 
 const TABS = ['Popular', 'Fresh', 'Rankings', 'Categories', 'Wiam Origin', 'Anime', 'VIP'];
-const GENRES = ['All', 'Drama', 'Romance', 'Revenge', 'Hidden Identity', 'African Originals'];
 
 function EmptyPoster({ width = 108, height = 154, title, tag, noMargin }) {
   return (
@@ -58,6 +58,7 @@ const HomeScreen = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const { genres: GENRES } = useEpisioGenres({ includeAll: true });
   const [tab, setTab] = useState('Popular');
   const [genre, setGenre] = useState('All');
   const [data, setData] = useState(null);
@@ -255,6 +256,25 @@ const HomeScreen = () => {
           })}
         </ScrollView>
 
+        {isAuthenticated ? (
+          <View style={styles.quickRow}>
+            <TouchableOpacity
+              style={styles.quickChip}
+              onPress={() => navigation.navigate('DailyRewards')}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.quickChipText}>Daily Rewards</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.quickChip}
+              onPress={() => navigation.navigate('MembershipOfferModal')}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.quickChipText}>VIP Offer</Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
+
         <SectionHead title="Continue Watching" onSeeAll={() => navigation.navigate('MyList')} />
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.posterRow}>
           {continueList.length ? continueList.map((item) => (
@@ -451,6 +471,14 @@ const styles = StyleSheet.create({
   genreChipActive: { backgroundColor: COLORS.gold, borderColor: COLORS.gold },
   genreText: { fontSize: 12, fontFamily: FONTS.medium, color: '#B8B8CC' },
   genreTextActive: { color: COLORS.navy },
+  quickRow: {
+    flexDirection: 'row', gap: 8, paddingHorizontal: 20, marginBottom: 18,
+  },
+  quickChip: {
+    paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999,
+    backgroundColor: 'rgba(212,160,23,0.12)', borderWidth: 1, borderColor: COLORS.gold,
+  },
+  quickChipText: { fontSize: 12, fontFamily: FONTS.bold, color: COLORS.gold },
   sectionHead: {
     flexDirection: 'row',
     alignItems: 'center',

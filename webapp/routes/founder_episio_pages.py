@@ -164,6 +164,8 @@ def register_episio_founder_pages(bp, founder_required):
                         slot_key=request.form.get('slot_key') or 'home_featured',
                         sort_order=request.form.get('sort_order') or 0,
                         note=request.form.get('note') or '',
+                        badge_label=request.form.get('badge_label') or '',
+                        media_mode=request.form.get('media_mode') or 'trailer',
                         curated_by=current_user.wiam_id or current_user.id,
                     )
                     flash('Featured slot added.', 'success')
@@ -193,17 +195,15 @@ def register_episio_founder_pages(bp, founder_required):
             if not band:
                 flash('Band not found.', 'error')
             else:
-                if request.form.get('unlock_coins'):
-                    band.unlock_coins = int(request.form.get('unlock_coins'))
-                if request.form.get('min_coins'):
-                    band.min_coins = int(request.form.get('min_coins'))
-                if request.form.get('max_coins'):
-                    band.max_coins = int(request.form.get('max_coins'))
+                # Flat-10 law — unlock price cannot be changed from founder UI
+                band.unlock_coins = 10
+                band.min_coins = 10
+                band.max_coins = 10
                 if request.form.get('label'):
-                    band.label = request.form.get('label')
+                    band.label = (request.form.get('label') or '')[:80]
                 band.is_active = request.form.get('is_active') == 'on'
                 db.session.commit()
-                flash(f'Band {band_key} saved.', 'success')
+                flash('Saved. Unlock stays locked at 10 coins per episode (platform law).', 'success')
             return redirect(url_for('founder_dash.episio_coin_bands'))
         return render_template(
             'founder/episio_coin_bands.html',

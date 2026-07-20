@@ -75,11 +75,15 @@ import StudioDashboardScreen from '../screens/episio/StudioDashboardScreen';
 import CreatorApplyAcceptedScreen from '../screens/episio/CreatorApplyAcceptedScreen';
 import CreatorApplyRejectedScreen from '../screens/episio/CreatorApplyRejectedScreen';
 import CreatorPublicProfileScreen from '../screens/episio/CreatorPublicProfileScreen';
+import EditProfileScreen from '../screens/episio/EditProfileScreen';
 import ShareSheetScreen from '../screens/episio/ShareSheetScreen';
 import RateSeriesScreen from '../screens/episio/RateSeriesScreen';
+import SeriesCommentsScreen from '../screens/episio/SeriesCommentsScreen';
 import UnlockSuccessScreen from '../screens/episio/UnlockSuccessScreen';
 import CoinsSuccessScreen from '../screens/episio/CoinsSuccessScreen';
 import CheckoutWebScreen from '../screens/episio/CheckoutWebScreen';
+import VipCheckoutScreen from '../screens/episio/VipCheckoutScreen';
+import SearchNoResultsScreen from '../screens/episio/SearchNoResultsScreen';
 import PaymentMethodPickerScreen from '../screens/episio/PaymentMethodPickerScreen';
 import RemindersScreen from '../screens/episio/RemindersScreen';
 import WatchHistoryScreen from '../screens/episio/WatchHistoryScreen';
@@ -256,11 +260,15 @@ const EpisioNavigator = () => {
         <Stack.Screen name="StudioDashboard" component={StudioDashboardScreen} />
 
         <Stack.Screen name="CreatorPublicProfile" component={CreatorPublicProfileScreen} />
+        <Stack.Screen name="EditProfile" component={EditProfileScreen} />
         <Stack.Screen name="ShareSheet" component={ShareSheetScreen} options={{ presentation: 'modal' }} />
         <Stack.Screen name="RateSeries" component={RateSeriesScreen} options={{ presentation: 'modal' }} />
+        <Stack.Screen name="SeriesComments" component={SeriesCommentsScreen} options={{ presentation: 'modal' }} />
         <Stack.Screen name="UnlockSuccess" component={UnlockSuccessScreen} options={{ presentation: 'modal' }} />
         <Stack.Screen name="CoinsSuccess" component={CoinsSuccessScreen} options={{ presentation: 'modal' }} />
         <Stack.Screen name="CheckoutWeb" component={CheckoutWebScreen} options={{ presentation: 'modal' }} />
+        <Stack.Screen name="VipCheckout" component={VipCheckoutScreen} options={{ presentation: 'modal' }} />
+        <Stack.Screen name="SearchNoResults" component={SearchNoResultsScreen} />
         <Stack.Screen name="PaymentMethodPicker" component={PaymentMethodPickerScreen} options={{ presentation: 'modal' }} />
         <Stack.Screen name="Reminders" component={RemindersScreen} />
         <Stack.Screen name="WatchHistory" component={WatchHistoryScreen} />
