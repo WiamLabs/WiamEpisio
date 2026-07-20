@@ -1,6 +1,5 @@
 /**
- * WiamStudio payout KYC — bank account only (App Store / Play compatible path).
- * Live selfie holding ID required. No Mobile Money / Paystack in Expo Studio.
+ * WiamStudio payout KYC — bank account only + live selfie holding ID.
  */
 import React, { useState } from 'react';
 import {
@@ -163,7 +162,7 @@ const StudioPayoutKycScreen = () => {
               <Text style={styles.bankBadgeText}>Bank transfer only</Text>
             </View>
             <Text style={styles.lead}>
-              Apple and Google payouts land via bank account. Mobile Money is not used in the app Studio.
+              Creator payouts land via bank account only.
             </Text>
             <Text style={styles.label}>Account holder name</Text>
             <TextInput style={styles.input} value={accountName} onChangeText={setAccountName} placeholderTextColor={COLORS.textFaint} />

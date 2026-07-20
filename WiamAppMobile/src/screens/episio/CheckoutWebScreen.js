@@ -23,7 +23,7 @@ const CheckoutWebScreen = () => {
     <View style={styles.root}>
       <ActivityIndicator color={COLORS.gold} />
       <Text style={styles.text}>Opening in-app coin packs…</Text>
-      <Text style={styles.sub}>App Store / Play billing only — no external checkout in this app.</Text>
+      <Text style={styles.sub}>Complete your purchase in the app — no external checkout.</Text>
     </View>
   );
 };

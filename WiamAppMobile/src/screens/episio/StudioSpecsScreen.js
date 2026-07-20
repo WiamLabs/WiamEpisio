@@ -165,7 +165,7 @@ const StudioSpecsScreen = () => {
         </Text>
         <Text style={styles.sectionTitle}>Images</Text>
         <Text style={styles.note}>
-          Covers, banners, and profile photos upload to Cloudinary. Videos use the platform video pipeline — sizes below still apply.
+          Covers, banners, and profile photos upload securely to WiamEpisio. Videos use our video pipeline — sizes below still apply.
         </Text>
         {loading ? <ActivityIndicator color={COLORS.gold} style={{ marginTop: 8 }} /> : null}
         {error ? <Text style={styles.error}>{error} — showing defaults.</Text> : null}

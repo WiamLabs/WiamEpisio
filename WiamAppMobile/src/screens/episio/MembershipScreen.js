@@ -1,7 +1,6 @@
 /**
  * Style: WiamEpisio-Membership.html
- * Wired: GET /vip/plans, GET /vip/status · mobile VIP = RevenueCat IAP (never Paystack in Expo).
- * Restore → GET /vip/status (+ premium/status fallback).
+ * Wired: GET /vip/plans, GET /vip/status. Restore → GET /vip/status.
  */
 import React, { useCallback, useState } from 'react';
 import {
@@ -125,7 +124,7 @@ const MembershipScreen = () => {
         try { await initIAP(user.wiam_id); } catch { /* ignore */ }
       }
       if (!isIAPAvailable()) {
-        setError('Store billing not ready in this build. Use a production App Store / Play install.');
+        setError('Membership billing is not ready in this build. Try again after a production install.');
         return;
       }
       const { subscriptionProducts = [] } = await getProducts();
@@ -138,7 +137,7 @@ const MembershipScreen = () => {
           || id.includes('membership');
       }) || subscriptionProducts[0];
       if (!product) {
-        setError('No VIP product configured in RevenueCat yet.');
+        setError('No VIP product is configured yet. Try again later.');
         return;
       }
       const result = await purchaseSubscription(product);
@@ -228,7 +227,7 @@ const MembershipScreen = () => {
             <Text style={styles.vipCheckoutText}>Compare VIP checkout plans ›</Text>
           </TouchableOpacity>
           <Text style={styles.footer}>
-            © 2026 WiamEpisio · Powered by WiamLabs · episio.wiamlabs.com
+            © 2026 WiamEpisio
           </Text>
           <Text style={styles.footerHelp}>Help: support@wiamapp.com</Text>
         </ScrollView>
@@ -241,7 +240,7 @@ const MembershipScreen = () => {
           loading={joining}
           disabled={!!status?.is_vip}
         />
-        <Text style={styles.joinNote}>Auto-renew · Cancel anytime · App Store / Play billing</Text>
+        <Text style={styles.joinNote}>Auto-renew · Cancel anytime</Text>
       </View>
     </View>
   );

@@ -156,8 +156,8 @@ const AuthRegisterScreen = () => {
           </View>
           <Text style={styles.title}>Get 50 Free Coins</Text>
           <Text style={styles.sub}>
-            Sign up with email — unlock <Text style={styles.gold}>3 free episodes</Text>
-            {'\n'}instantly, on us. No SMS required.
+            Sign up now and unlock <Text style={styles.gold}>3 free episodes</Text>
+            {'\n'}instantly, on us.
           </Text>
         </View>
 

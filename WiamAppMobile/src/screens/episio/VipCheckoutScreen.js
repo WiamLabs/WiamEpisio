@@ -194,7 +194,7 @@ const VipCheckoutScreen = () => {
               style={{ marginBottom: 8 }}
             />
             <Text style={styles.footerNote}>
-              Auto-renews via Paystack · Cancel anytime in Settings · episio.wiamlabs.com
+              Auto-renews · Cancel anytime in Settings
             </Text>
           </View>
         </>

@@ -16,7 +16,7 @@ const INFO_BLOCKS = [
   },
   {
     title: 'Prices are shown in your local currency',
-    body: 'On mobile, Apple / Google show store prices in your country. On web, we convert from USD using our FX table so the value stays fair.',
+    body: 'On mobile, prices appear in your country currency. On web, we convert from USD using our FX table so the value stays fair.',
   },
   {
     title: "Coins don't expire",
