@@ -2132,6 +2132,47 @@ def _run_safe_migrations(app):
         "CREATE INDEX IF NOT EXISTS ix_episio_apply_user ON w_episio_creator_applications (user_id)",
         "CREATE INDEX IF NOT EXISTS ix_episio_apply_status ON w_episio_creator_applications (status)",
 
+        """CREATE TABLE IF NOT EXISTS w_episio_creator_invites (
+            id SERIAL PRIMARY KEY,
+            code TEXT NOT NULL UNIQUE,
+            created_by BIGINT,
+            note TEXT DEFAULT '',
+            max_uses INTEGER DEFAULT 1,
+            use_count INTEGER DEFAULT 0,
+            active BOOLEAN DEFAULT TRUE,
+            expires_at TIMESTAMP,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+        )""",
+        "CREATE INDEX IF NOT EXISTS ix_episio_invite_code ON w_episio_creator_invites (code)",
+
+        """CREATE TABLE IF NOT EXISTS w_episio_creator_invite_redemptions (
+            id SERIAL PRIMARY KEY,
+            invite_id INTEGER NOT NULL,
+            user_id BIGINT NOT NULL,
+            redeemed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+            CONSTRAINT uq_episio_invite_user UNIQUE (invite_id, user_id)
+        )""",
+
+        """CREATE TABLE IF NOT EXISTS w_episio_creator_public_profiles (
+            user_id BIGINT PRIMARY KEY,
+            channel_name TEXT DEFAULT '',
+            tagline TEXT DEFAULT '',
+            bio TEXT DEFAULT '',
+            country TEXT DEFAULT '',
+            city TEXT DEFAULT '',
+            website_url TEXT DEFAULT '',
+            instagram TEXT DEFAULT '',
+            tiktok TEXT DEFAULT '',
+            youtube TEXT DEFAULT '',
+            twitter_x TEXT DEFAULT '',
+            facebook TEXT DEFAULT '',
+            avatar_url TEXT DEFAULT '',
+            banner_url TEXT DEFAULT '',
+            genres_json TEXT DEFAULT '[]',
+            contact_email_public TEXT DEFAULT '',
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )""",
+
         """CREATE TABLE IF NOT EXISTS w_series_reminders (
             id SERIAL PRIMARY KEY,
             user_id BIGINT NOT NULL,
@@ -2282,8 +2323,9 @@ def create_app():
     try:
         from .services.coin_pricing import ensure_default_bands
         from .services.currency_display import ensure_default_fx
-        ensure_default_bands()
-        ensure_default_fx()
+        with app.app_context():
+            ensure_default_bands()
+            ensure_default_fx()
     except Exception as _seed_err:
         log.warning('Episio seed bands/fx skipped: %s', _seed_err)
 

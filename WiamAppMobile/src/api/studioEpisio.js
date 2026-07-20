@@ -45,6 +45,22 @@ const studioEpisioApi = {
       return (await apiClient.post('/creator/episio/apply', { waitlist: true, ...payload })).data;
     } catch (e) { throw fmt(e, 'Waitlist failed'); }
   },
+  redeemInvite: async (inviteCode, extra = {}) => {
+    try {
+      return (await apiClient.post('/creator/episio/redeem-invite', {
+        invite_code: inviteCode,
+        ...extra,
+      })).data;
+    } catch (e) { throw fmt(e, 'Invite redeem failed'); }
+  },
+  getStudioProfile: async () => {
+    try { return (await apiClient.get('/creator/studio/profile')).data; }
+    catch (e) { throw fmt(e, 'Failed to load studio profile'); }
+  },
+  patchStudioProfile: async (payload) => {
+    try { return (await apiClient.patch('/creator/studio/profile', payload)).data; }
+    catch (e) { throw fmt(e, 'Failed to save studio profile'); }
+  },
   listSeries: async () => {
     try { return (await apiClient.get('/creator/studio/series')).data; }
     catch (e) { throw fmt(e, 'Failed to load Studio series'); }

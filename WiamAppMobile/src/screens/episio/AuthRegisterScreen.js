@@ -1,19 +1,21 @@
 /**
- * Style: WiamEpisio-Register.html (navy/gold, coin hero, social row).
- * Fields: what POST /auth/register requires for mobile —
- * email, password (≥8), first_name, username, date_of_birth; phone optional.
+ * Style: WiamEpisio-Register.html + real account fields for API.
+ * Password show/hide · live username availability · last name · polished navy/gold.
  */
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, TextInput, TouchableOpacity,
   KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator, Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { X, Phone, Mail, Lock, User, Calendar, Coins } from 'lucide-react-native';
+import {
+  X, Phone, Mail, Lock, User, Calendar, Coins, Eye, EyeOff,
+} from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS, FONTS } from '../../constants/theme';
 import authApi from '../../api/auth';
+import apiClient from '../../api/client';
 import useAuthStore from '../../store/useAuthStore';
 import { GoogleSignInSlot } from '../../services/googleAuth';
 
@@ -24,9 +26,12 @@ const AuthRegisterScreen = () => {
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [username, setUsername] = useState('');
-  const [dob, setDob] = useState(''); // YYYY-MM-DD
+  const [usernameStatus, setUsernameStatus] = useState({ checking: false, ok: null, message: '' });
+  const [dob, setDob] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
 
@@ -35,11 +40,43 @@ const AuthRegisterScreen = () => {
     else navigation.navigate('Main');
   };
 
+  useEffect(() => {
+    const u = username.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+    if (u.length < 3) {
+      setUsernameStatus({ checking: false, ok: null, message: '' });
+      return undefined;
+    }
+    let cancelled = false;
+    setUsernameStatus({ checking: true, ok: null, message: '' });
+    const t = setTimeout(async () => {
+      try {
+        const { data } = await apiClient.get(`/auth/check-username?username=${encodeURIComponent(u)}`);
+        if (cancelled) return;
+        setUsernameStatus({
+          checking: false,
+          ok: !!data?.available,
+          message: data?.available
+            ? 'Username is available'
+            : (data?.reason || 'Username is taken'),
+        });
+      } catch {
+        if (!cancelled) {
+          setUsernameStatus({ checking: false, ok: null, message: 'Could not check username' });
+        }
+      }
+    }, 400);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+  }, [username]);
+
   const submit = async () => {
     setError(null);
     const e = email.trim().toLowerCase();
     const uname = username.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
     const fn = firstName.trim();
+    const ln = lastName.trim();
     if (!e || !password) {
       setError('Email and password are required');
       return;
@@ -56,6 +93,10 @@ const AuthRegisterScreen = () => {
       setError('Username must be at least 3 characters (letters, numbers, _)');
       return;
     }
+    if (usernameStatus.ok === false) {
+      setError('Pick an available username');
+      return;
+    }
     if (!dob.trim() || !/^\d{4}-\d{2}-\d{2}$/.test(dob.trim())) {
       setError('Date of birth required (YYYY-MM-DD)');
       return;
@@ -66,13 +107,13 @@ const AuthRegisterScreen = () => {
         email: e,
         password,
         firstName: fn,
-        lastName: '',
+        lastName: ln,
         username: uname,
         dateOfBirth: dob.trim(),
         phone: phone.trim(),
       });
       await setAuth(data.user, data.token);
-      close();
+      navigation.replace('AgeGate', { fromRegister: true });
     } catch (err) {
       const msg =
         (typeof err === 'string' && err)
@@ -117,15 +158,27 @@ const AuthRegisterScreen = () => {
             onChangeText={setPhone}
           />
         </View>
-        <View style={styles.field}>
-          <User size={15} color={COLORS.gold} />
-          <TextInput
-            style={styles.input}
-            placeholder="First name"
-            placeholderTextColor={COLORS.textFaint}
-            value={firstName}
-            onChangeText={setFirstName}
-          />
+        <View style={styles.row2}>
+          <View style={[styles.field, styles.half]}>
+            <User size={15} color={COLORS.gold} />
+            <TextInput
+              style={styles.input}
+              placeholder="First name"
+              placeholderTextColor={COLORS.textFaint}
+              value={firstName}
+              onChangeText={setFirstName}
+            />
+          </View>
+          <View style={[styles.field, styles.half]}>
+            <User size={15} color={COLORS.gold} />
+            <TextInput
+              style={styles.input}
+              placeholder="Last name"
+              placeholderTextColor={COLORS.textFaint}
+              value={lastName}
+              onChangeText={setLastName}
+            />
+          </View>
         </View>
         <View style={styles.field}>
           <User size={15} color={COLORS.gold} />
@@ -138,6 +191,13 @@ const AuthRegisterScreen = () => {
             onChangeText={setUsername}
           />
         </View>
+        {usernameStatus.checking ? (
+          <Text style={styles.userHint}>Checking username…</Text>
+        ) : usernameStatus.message ? (
+          <Text style={[styles.userHint, usernameStatus.ok === false && styles.userBad, usernameStatus.ok && styles.userOk]}>
+            {usernameStatus.message}
+          </Text>
+        ) : null}
         <View style={styles.field}>
           <Mail size={15} color={COLORS.gold} />
           <TextInput
@@ -156,10 +216,15 @@ const AuthRegisterScreen = () => {
             style={styles.input}
             placeholder="Password (min 8)"
             placeholderTextColor={COLORS.textFaint}
-            secureTextEntry
+            secureTextEntry={!showPassword}
             value={password}
             onChangeText={setPassword}
           />
+          <TouchableOpacity onPress={() => setShowPassword((v) => !v)} hitSlop={10}>
+            {showPassword
+              ? <EyeOff size={16} color={COLORS.textFaint} />
+              : <Eye size={16} color={COLORS.textFaint} />}
+          </TouchableOpacity>
         </View>
         <View style={styles.field}>
           <Calendar size={15} color={COLORS.gold} />
@@ -253,12 +318,17 @@ const styles = StyleSheet.create({
     fontSize: 12.5, color: COLORS.textDim, textAlign: 'center', lineHeight: 19, fontFamily: FONTS.regular,
   },
   gold: { color: COLORS.gold, fontFamily: FONTS.bold },
+  row2: { flexDirection: 'row', gap: 10 },
+  half: { flex: 1 },
   field: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
     backgroundColor: COLORS.navyCard, borderWidth: 1, borderColor: COLORS.navyLine,
     borderRadius: 14, paddingHorizontal: 14, paddingVertical: 13, marginBottom: 12,
   },
   input: { flex: 1, color: '#fff', fontSize: 13.5, fontFamily: FONTS.regular, padding: 0 },
+  userHint: { marginTop: -6, marginBottom: 10, fontSize: 11.5, color: COLORS.textFaint, fontFamily: FONTS.medium },
+  userOk: { color: '#34D399' },
+  userBad: { color: '#EF4444' },
   error: { color: '#EF4444', marginBottom: 8, fontFamily: FONTS.medium, fontSize: 13 },
   signupBtn: {
     paddingVertical: 15, borderRadius: 16, backgroundColor: COLORS.gold,

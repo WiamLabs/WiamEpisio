@@ -7,6 +7,7 @@ import os
 import logging
 import jwt
 import re
+import json
 import hashlib
 from io import BytesIO
 from datetime import datetime, timedelta, date
@@ -2896,13 +2897,26 @@ def creator_profile(creator_id):
 
     profile = CreatorProfile.query.filter_by(wiam_id=user.wiam_id).first()
     follower_count = Follow.query.filter_by(creator_id=user.id).count()
+    uid = user.wiam_id or user.id
+    pub = None
+    try:
+        from ..models import EpisioCreatorPublicProfile
+        pub = EpisioCreatorPublicProfile.query.get(uid)
+    except Exception:
+        pub = None
 
-    # Creator's books
+    # Creator's books + drama series
     books = Content.query.filter(
         Content.creator_wiam_id == user.wiam_id,
         Content.status.in_(Content.PUBLISHED_STATUSES),
         Content.deleted_at.is_(None),
     ).order_by(Content.created_at.desc()).all()
+
+    drama = [
+        b for b in books
+        if (getattr(b, 'format', None) or '').lower() in ('drama', 'series', 'short_drama', 'episio')
+        or getattr(b, 'content_kind', None) == 'drama'
+    ]
 
     is_following = False
     if request.api_user and request.api_user.id != user.id:
@@ -2910,18 +2924,51 @@ def creator_profile(creator_id):
             user_id=request.api_user.id, creator_id=user.id
         ).first() is not None
 
+    display = (
+        (pub.channel_name if pub and pub.channel_name else None)
+        or (profile.pen_name if profile else None)
+        or user.display_name
+    )
+    bio = (pub.bio if pub and pub.bio else None) or user.bio or (profile.bio if profile else None)
+    try:
+        genres = json.loads(pub.genres_json) if pub and pub.genres_json else []
+    except Exception:
+        genres = []
+
     return jsonify({
         'id': user.id,
         'username': user.username,
-        'display_name': user.display_name,
-        'avatar_url': user.avatar_url,
-        'bio': user.bio or (profile.bio if profile else None),
-        'pen_name': profile.pen_name if profile else None,
-        'country': profile.country if profile else None,
+        'display_name': display,
+        'avatar_url': (pub.avatar_url if pub and pub.avatar_url else None) or user.avatar_url,
+        'banner_url': (pub.banner_url if pub else None) or None,
+        'bio': bio,
+        'tagline': (pub.tagline if pub else None) or None,
+        'pen_name': profile.pen_name if profile else display,
+        'channel_name': (pub.channel_name if pub else None) or display,
+        'country': (pub.country if pub and pub.country else None) or (profile.country if profile else None),
+        'city': (pub.city if pub else None) or None,
+        'website_url': (pub.website_url if pub else None) or None,
+        'instagram': (pub.instagram if pub else None) or None,
+        'tiktok': (pub.tiktok if pub else None) or None,
+        'youtube': (pub.youtube if pub else None) or None,
+        'twitter_x': (pub.twitter_x if pub else None) or None,
+        'facebook': (pub.facebook if pub else None) or None,
+        'genres': genres if isinstance(genres, list) else [],
         'follower_count': follower_count,
         'is_following': is_following,
+        'verified': bool(getattr(user, 'is_verified', False) or getattr(user, 'is_founder', False)),
         'book_count': len(books),
         'books': [_book_json(b, request.api_user) for b in books],
+        'series': [
+            {
+                'id': d.id,
+                'title': d.title,
+                'badge': 'LIVE' if d.status in Content.PUBLISHED_STATUSES else 'REVIEW',
+                'views': getattr(d, 'view_count', None) or getattr(d, 'views', None),
+                'cover_url': getattr(d, 'cover_url', None) or getattr(d, 'poster_url', None),
+            }
+            for d in (drama or books[:12])
+        ],
         'date_joined': user.date_joined.isoformat() if user.date_joined else None,
         'premium_plan': user.premium_plan if user.premium_status in ('active', 'trial') else None,
     })

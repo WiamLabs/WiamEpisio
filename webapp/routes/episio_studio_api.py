@@ -16,7 +16,8 @@ from werkzeug.utils import secure_filename
 from ..extensions import db, csrf
 from ..models import (
     Content, Episode, EpisioCreatorApplication, SeriesReminder, User,
-    CreatorVideoUploadJob,
+    CreatorVideoUploadJob, EpisioCreatorInvite, EpisioCreatorInviteRedemption,
+    EpisioCreatorPublicProfile, CreatorProfile,
 )
 from .api_v1 import jwt_required, jwt_optional, _abs_url, _creator_api_forbidden
 from ..services.video_service import get_video_service
@@ -304,9 +305,14 @@ def episio_apply():
 
     data = request.get_json(silent=True) or {}
     # Stage 1 curated: waitlist only unless already creator / has invite code
-    invite_code = (data.get('invite_code') or '').strip()
-    allowed_code = (os.environ.get('EPISIO_CREATOR_INVITE_CODE') or '').strip()
+    invite_code = (data.get('invite_code') or '').strip().upper().replace(' ', '')
+    allowed_code = (os.environ.get('EPISIO_CREATOR_INVITE_CODE') or '').strip().upper().replace(' ', '')
     has_invite = bool(allowed_code and invite_code and invite_code == allowed_code)
+    if not has_invite and invite_code:
+        inv = EpisioCreatorInvite.query.filter_by(code=invite_code).first()
+        if inv:
+            ok, _err = _invite_valid(inv)
+            has_invite = ok
     if invite_only and not user.is_creator and not has_invite:
         if data.get('waitlist'):
             email = (data.get('email') or user.email or '').strip()
@@ -453,6 +459,266 @@ def founder_decide_application(app_id):
                 user.is_creator = True
     db.session.commit()
     return jsonify({'ok': True, 'application': _apply_json(app_row)})
+
+
+def _public_profile_json(p: EpisioCreatorPublicProfile | None, user: User | None = None):
+    if not p:
+        return {
+            'channel_name': (user.display_name if user else '') or '',
+            'tagline': '',
+            'bio': (user.bio if user else '') or '',
+            'country': '',
+            'city': '',
+            'website_url': '',
+            'instagram': '',
+            'tiktok': '',
+            'youtube': '',
+            'twitter_x': '',
+            'facebook': '',
+            'avatar_url': _abs_url(user.avatar_url) if user and user.avatar_url else '',
+            'banner_url': '',
+            'genres': [],
+            'contact_email_public': '',
+        }
+    try:
+        genres = json.loads(p.genres_json or '[]')
+    except Exception:
+        genres = []
+    return {
+        'channel_name': p.channel_name or '',
+        'tagline': p.tagline or '',
+        'bio': p.bio or '',
+        'country': p.country or '',
+        'city': p.city or '',
+        'website_url': p.website_url or '',
+        'instagram': p.instagram or '',
+        'tiktok': p.tiktok or '',
+        'youtube': p.youtube or '',
+        'twitter_x': p.twitter_x or '',
+        'facebook': p.facebook or '',
+        'avatar_url': _abs_url(p.avatar_url) if p.avatar_url else (
+            _abs_url(user.avatar_url) if user and user.avatar_url else ''
+        ),
+        'banner_url': _abs_url(p.banner_url) if p.banner_url else '',
+        'genres': genres if isinstance(genres, list) else [],
+        'contact_email_public': p.contact_email_public or '',
+    }
+
+
+def _unlock_studio_for_user(user: User, channel_hint: str = ''):
+    """Invite / accept → creator flag + public profile shell."""
+    if not user.is_creator:
+        try:
+            from ..services.creator_activation import finalize_creator_upgrade
+            finalize_creator_upgrade(user, pen_name_hint=channel_hint or user.username or user.display_name)
+        except Exception as exc:
+            log.warning('finalize_creator_upgrade failed: %s', exc)
+            user.is_creator = True
+    uid = user.wiam_id or user.id
+    pub = EpisioCreatorPublicProfile.query.get(uid)
+    if not pub:
+        pub = EpisioCreatorPublicProfile(
+            user_id=uid,
+            channel_name=(channel_hint or user.display_name or user.username or '').strip()[:80],
+            bio=(user.bio or '')[:2000],
+        )
+        db.session.add(pub)
+    return pub
+
+
+def _invite_valid(inv: EpisioCreatorInvite) -> tuple[bool, str]:
+    if not inv or not inv.active:
+        return False, 'Invite code is not active'
+    if inv.expires_at and inv.expires_at < datetime.utcnow():
+        return False, 'Invite code has expired'
+    if inv.use_count >= (inv.max_uses or 1):
+        return False, 'Invite code has no uses left'
+    return True, ''
+
+
+@episio_studio_api.route('/founder/episio/invites', methods=['GET', 'POST'])
+@jwt_required
+def founder_episio_invites():
+    """Generate or list invite codes (founder only)."""
+    if not getattr(request.api_user, 'is_founder', False):
+        return jsonify({'error': 'Forbidden'}), 403
+    founder = request.api_user
+    if request.method == 'GET':
+        rows = EpisioCreatorInvite.query.order_by(EpisioCreatorInvite.id.desc()).limit(100).all()
+        return jsonify({
+            'invites': [{
+                'id': r.id,
+                'code': r.code,
+                'note': r.note or '',
+                'max_uses': r.max_uses,
+                'use_count': r.use_count,
+                'active': bool(r.active),
+                'expires_at': r.expires_at.isoformat() if r.expires_at else None,
+                'created_at': r.created_at.isoformat() if r.created_at else None,
+            } for r in rows]
+        })
+
+    data = request.get_json(silent=True) or {}
+    raw = (data.get('code') or '').strip().upper().replace(' ', '')
+    if not raw:
+        raw = f'WIAM-{uuid.uuid4().hex[:4].upper()}-{uuid.uuid4().hex[:4].upper()}'
+    if EpisioCreatorInvite.query.filter_by(code=raw).first():
+        return jsonify({'error': 'Code already exists'}), 400
+    max_uses = max(1, int(data.get('max_uses') or 1))
+    days = data.get('expires_days')
+    expires = None
+    if days is not None and str(days).strip() != '':
+        from datetime import timedelta
+        expires = datetime.utcnow() + timedelta(days=max(1, int(days)))
+    inv = EpisioCreatorInvite(
+        code=raw,
+        created_by=founder.wiam_id or founder.id,
+        note=(data.get('note') or '')[:500],
+        max_uses=max_uses,
+        expires_at=expires,
+        active=True,
+    )
+    db.session.add(inv)
+    db.session.commit()
+    return jsonify({
+        'ok': True,
+        'invite': {
+            'id': inv.id,
+            'code': inv.code,
+            'max_uses': inv.max_uses,
+            'expires_at': inv.expires_at.isoformat() if inv.expires_at else None,
+            'note': inv.note,
+        },
+    }), 201
+
+
+@episio_studio_api.route('/creator/episio/redeem-invite', methods=['POST'])
+@jwt_required
+def redeem_creator_invite():
+    """
+    Valid invite → unlock WiamStudio immediately (no waitlist / no pending apply).
+    User must already have a normal WiamEpisio account (register/login).
+    """
+    user = request.api_user
+    data = request.get_json(silent=True) or {}
+    code = (data.get('invite_code') or data.get('code') or '').strip().upper().replace(' ', '')
+    if not code:
+        return jsonify({'error': 'invite_code required'}), 400
+
+    uid = user.wiam_id or user.id
+    if user.is_creator:
+        return jsonify({
+            'ok': True,
+            'already_creator': True,
+            'studio_unlocked': True,
+            'message': 'Studio already unlocked — open WiamStudio and edit your public profile.',
+        })
+
+    inv = EpisioCreatorInvite.query.filter_by(code=code).first()
+    env_code = (os.environ.get('EPISIO_CREATOR_INVITE_CODE') or '').strip().upper().replace(' ', '')
+    used_env = False
+    if not inv and env_code and code == env_code:
+        used_env = True
+    elif inv:
+        ok, err = _invite_valid(inv)
+        if not ok:
+            return jsonify({'error': err}), 400
+        if EpisioCreatorInviteRedemption.query.filter_by(invite_id=inv.id, user_id=uid).first():
+            return jsonify({'error': 'You already used this invite'}), 400
+    else:
+        return jsonify({'error': 'Invalid invite code'}), 404
+
+    channel_hint = (data.get('channel_name') or user.display_name or user.username or '').strip()
+    _unlock_studio_for_user(user, channel_hint)
+
+    if inv and not used_env:
+        db.session.add(EpisioCreatorInviteRedemption(invite_id=inv.id, user_id=uid))
+        inv.use_count = int(inv.use_count or 0) + 1
+        if inv.use_count >= (inv.max_uses or 1):
+            inv.active = False
+
+    # Mark application accepted so StudioHome doesn't bounce to invite gate
+    app_row = EpisioCreatorApplication(
+        user_id=uid,
+        legal_name=user.display_name or '',
+        channel_name=channel_hint[:80],
+        bio='',
+        pitch='Unlocked via invite code',
+        planned_episode_count=20,
+        sample_type='invite',
+        sample_url='invite',
+        rights_attested=True,
+        complete_series_attested=True,
+        status='accepted',
+        decided_at=datetime.utcnow(),
+    )
+    db.session.add(app_row)
+    db.session.commit()
+
+    return jsonify({
+        'ok': True,
+        'studio_unlocked': True,
+        'is_creator': True,
+        'message': 'Welcome to WiamStudio — complete your public channel profile next.',
+        'next': 'StudioSettings',
+    })
+
+
+@episio_studio_api.route('/creator/studio/profile', methods=['GET', 'PATCH'])
+@jwt_required
+def studio_public_profile():
+    """Full public channel profile — every field shown on Creator Public Profile."""
+    forbid = _creator_api_forbidden()
+    if forbid:
+        return forbid
+    user = request.api_user
+    uid = user.wiam_id or user.id
+    pub = EpisioCreatorPublicProfile.query.get(uid)
+
+    if request.method == 'GET':
+        return jsonify({'profile': _public_profile_json(pub, user), 'user_id': user.id})
+
+    data = request.get_json(silent=True) or {}
+    if not pub:
+        pub = EpisioCreatorPublicProfile(user_id=uid)
+        db.session.add(pub)
+
+    def _s(key, maxlen=500):
+        if key in data and data[key] is not None:
+            return str(data[key]).strip()[:maxlen]
+        return None
+
+    for key, maxlen in (
+        ('channel_name', 80), ('tagline', 160), ('bio', 2000), ('country', 80),
+        ('city', 80), ('website_url', 300), ('instagram', 120), ('tiktok', 120),
+        ('youtube', 120), ('twitter_x', 120), ('facebook', 120),
+        ('avatar_url', 500), ('banner_url', 500), ('contact_email_public', 120),
+    ):
+        val = _s(key, maxlen)
+        if val is not None:
+            setattr(pub, key, val)
+
+    if 'genres' in data:
+        genres = data.get('genres') or []
+        if isinstance(genres, str):
+            genres = [g.strip() for g in genres.split(',') if g.strip()]
+        pub.genres_json = json.dumps([str(g)[:40] for g in genres[:8]])
+
+    # Mirror primary identity onto CreatorProfile + user for older surfaces
+    if pub.channel_name:
+        cp = CreatorProfile.query.filter_by(wiam_id=uid).first()
+        if not cp and user.wiam_id:
+            cp = CreatorProfile.query.filter_by(wiam_id=user.wiam_id).first()
+        if cp:
+            cp.pen_name = pub.channel_name
+            cp.bio = pub.bio
+            cp.country = pub.country
+        if hasattr(user, 'bio'):
+            user.bio = pub.bio
+
+    pub.updated_at = datetime.utcnow()
+    db.session.commit()
+    return jsonify({'ok': True, 'profile': _public_profile_json(pub, user)})
 
 
 # ---------------------------------------------------------------------------

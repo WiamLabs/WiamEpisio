@@ -3617,6 +3617,62 @@ class EpisioCreatorApplication(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
 
+class EpisioCreatorInvite(db.Model):
+    """Founder-generated invite codes — redeem unlocks Studio immediately."""
+    __tablename__ = 'w_episio_creator_invites'
+    __table_args__ = (
+        db.Index('ix_episio_invite_code', 'code', unique=True),
+        {'extend_existing': True},
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    code = db.Column(db.Text, nullable=False, unique=True)
+    created_by = db.Column(db.BigInteger, nullable=True)
+    note = db.Column(db.Text, default='')
+    max_uses = db.Column(db.Integer, default=1)
+    use_count = db.Column(db.Integer, default=0)
+    active = db.Column(db.Boolean, default=True)
+    expires_at = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+
+class EpisioCreatorInviteRedemption(db.Model):
+    __tablename__ = 'w_episio_creator_invite_redemptions'
+    __table_args__ = (
+        db.UniqueConstraint('invite_id', 'user_id', name='uq_episio_invite_user'),
+        {'extend_existing': True},
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    invite_id = db.Column(db.Integer, nullable=False)
+    user_id = db.Column(db.BigInteger, nullable=False)
+    redeemed_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+
+class EpisioCreatorPublicProfile(db.Model):
+    """Public-facing creator channel card (appears on Creator Public Profile)."""
+    __tablename__ = 'w_episio_creator_public_profiles'
+    __table_args__ = {'extend_existing': True}
+
+    user_id = db.Column(db.BigInteger, primary_key=True)
+    channel_name = db.Column(db.Text, default='')
+    tagline = db.Column(db.Text, default='')
+    bio = db.Column(db.Text, default='')
+    country = db.Column(db.Text, default='')
+    city = db.Column(db.Text, default='')
+    website_url = db.Column(db.Text, default='')
+    instagram = db.Column(db.Text, default='')
+    tiktok = db.Column(db.Text, default='')
+    youtube = db.Column(db.Text, default='')
+    twitter_x = db.Column(db.Text, default='')
+    facebook = db.Column(db.Text, default='')
+    avatar_url = db.Column(db.Text, default='')
+    banner_url = db.Column(db.Text, default='')
+    genres_json = db.Column(db.Text, default='[]')
+    contact_email_public = db.Column(db.Text, default='')
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
 class SeriesReminder(db.Model):
     """Remind Me on Coming Soon / teaser series."""
     __tablename__ = 'w_series_reminders'

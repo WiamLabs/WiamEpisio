@@ -98,10 +98,40 @@ const CreatorPublicProfileScreen = () => {
         <View style={styles.nameRow}>
           <Text style={styles.name}>{name}</Text>
           {creator?.verified ? (
+            <View style={styles.verified}><Check size={12} color={COLORS.navy} /></View>
+          ) : null}
+        </View>
+        {handle ? <Text style={styles.handle}>{handle}</Text> : null}
+        {creator?.tagline ? <Text style={styles.tagline}>{creator.tagline}</Text> : null}
+        {(creator?.city || creator?.country) ? (
+          <Text style={styles.meta}>
+            {[creator.city, creator.country].filter(Boolean).join(' · ')}
+          </Text>
+        ) : null}
+        {creator?.bio ? <Text style={styles.bio}>{creator.bio}</Text> : null}
+        {Array.isArray(creator?.genres) && creator.genres.length ? (
+          <Text style={styles.meta}>{creator.genres.join(' · ')}</Text>
+        ) : null}
+        <View style={styles.socialRow}>
+          {[
+            creator?.instagram && `IG ${creator.instagram}`,
+            creator?.tiktok && `TT ${creator.tiktok}`,
+            creator?.youtube && 'YouTube',
+            creator?.website_url && 'Website',
+          ].filter(Boolean).slice(0, 4).map((label) => (
+            <View key={label} style={styles.socialChip}><Text style={styles.socialChipText}>{label}</Text></View>
+          ))}
+        </View>
             <View style={styles.verify}><Check size={9} color={COLORS.navy} strokeWidth={3} /></View>
           ) : null}
         </View>
         {handle ? <Text style={styles.handle}>{handle}</Text> : null}
+        {creator?.tagline ? <Text style={styles.tagline}>{creator.tagline}</Text> : null}
+        {(creator?.city || creator?.country) ? (
+          <Text style={styles.meta}>
+            {[creator.city, creator.country].filter(Boolean).join(' · ')}
+          </Text>
+        ) : null}
 
         <View style={styles.stats}>
           <Stat n={creator?.follower_count ?? '18.2K'} label="Followers" />
@@ -119,7 +149,10 @@ const CreatorPublicProfileScreen = () => {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.shareBtn}
-            onPress={() => navigation.navigate('ShareSheet', { title: name, url: `https://wiamapp.com/creator/${creatorId}` })}
+            onPress={() => navigation.navigate('ShareSheet', {
+              title: name,
+              url: `https://episio.wiamlabs.com/creator/${creatorId}`,
+            })}
           >
             <Text style={styles.shareText}>Share</Text>
           </TouchableOpacity>
@@ -128,6 +161,19 @@ const CreatorPublicProfileScreen = () => {
         {creator?.bio ? <Text style={styles.bio}>{creator.bio}</Text> : (
           <Text style={styles.bio}>Storyteller on WiamEpisio — bold African drama and unforgettable characters.</Text>
         )}
+        {Array.isArray(creator?.genres) && creator.genres.length ? (
+          <Text style={styles.meta}>{creator.genres.join(' · ')}</Text>
+        ) : null}
+        <View style={styles.socialRow}>
+          {[
+            creator?.instagram && `IG ${creator.instagram}`,
+            creator?.tiktok && `TT ${creator.tiktok}`,
+            creator?.youtube && 'YouTube',
+            creator?.website_url && 'Website',
+          ].filter(Boolean).slice(0, 4).map((label) => (
+            <View key={label} style={styles.socialChip}><Text style={styles.socialChipText}>{label}</Text></View>
+          ))}
+        </View>
 
         <Text style={styles.section}>Series ({series.length})</Text>
         <View style={styles.grid}>
@@ -182,6 +228,14 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   handle: { fontFamily: FONTS.regular, fontSize: 11.5, color: COLORS.textFaint, marginTop: 2 },
+  tagline: { fontFamily: FONTS.medium, fontSize: 12.5, color: COLORS.gold, marginTop: 6 },
+  meta: { fontFamily: FONTS.regular, fontSize: 11.5, color: COLORS.textDim, marginTop: 6, marginBottom: 4 },
+  socialRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 14 },
+  socialChip: {
+    backgroundColor: COLORS.navyCard, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 5,
+    borderWidth: 1, borderColor: COLORS.navyLine,
+  },
+  socialChipText: { color: '#C9C9DE', fontFamily: FONTS.medium, fontSize: 10.5 },
   stats: { flexDirection: 'row', gap: 22, marginTop: 12, marginBottom: 14 },
   stat: {},
   statN: { fontFamily: FONTS.extraBold, fontSize: 15, color: '#fff' },

@@ -39,12 +39,27 @@ const CreatorApplyInviteOnlyScreen = () => {
     }
   };
 
-  const useInvite = () => {
+  const useInvite = async () => {
     if (!inviteCode.trim()) {
       Alert.alert('Invite', 'Enter your invite code');
       return;
     }
-    navigation.replace('CreatorApply', { inviteCode: inviteCode.trim(), openForm: true });
+    setBusy(true);
+    try {
+      const data = await studioEpisioApi.redeemInvite(inviteCode.trim());
+      Alert.alert(
+        'Studio unlocked',
+        data?.message || 'Welcome to WiamStudio. Complete your public channel profile next.',
+        [{
+          text: 'Open Studio Settings',
+          onPress: () => navigation.replace('StudioSettings'),
+        }],
+      );
+    } catch (e) {
+      Alert.alert('Invite', e?.message || 'Invalid or expired invite code');
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (

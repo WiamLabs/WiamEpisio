@@ -1,15 +1,16 @@
 /**
- * Layout: WiamStudio-Settings.html (Episio links hub)
- * Team talk · links to Specs, HelpQuality, TrustTier, PayoutKyc, Earnings
+ * Studio Settings + full public channel profile editor.
+ * Layout: WiamStudio-Settings.html + public card fields for Creator Public Profile.
  */
 import React, { useCallback, useState } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput,
+  ActivityIndicator, Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import {
-  ChevronLeft, ChevronRight, FileText, HelpCircle, Star, Wallet, Banknote, LogOut,
+  ChevronLeft, ChevronRight, FileText, HelpCircle, Star, Wallet, Banknote, LogOut, Save,
 } from 'lucide-react-native';
 import { COLORS, FONTS } from '../../constants/theme';
 import useAuthStore from '../../store/useAuthStore';
@@ -27,6 +28,20 @@ const Row = ({ icon: Icon, label, value, onPress, tag }) => (
   </TouchableOpacity>
 );
 
+const Field = ({ label, value, onChange, placeholder, multiline }) => (
+  <View style={styles.fieldWrap}>
+    <Text style={styles.fieldLabel}>{label}</Text>
+    <TextInput
+      style={[styles.fieldInput, multiline && styles.fieldMulti]}
+      value={value}
+      onChangeText={onChange}
+      placeholder={placeholder}
+      placeholderTextColor={COLORS.textFaint}
+      multiline={!!multiline}
+    />
+  </View>
+);
+
 const StudioSettingsScreen = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
@@ -34,16 +49,77 @@ const StudioSettingsScreen = () => {
   const logout = useAuthStore((s) => s.logout);
   const [tier, setTier] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [profile, setProfile] = useState({
+    channel_name: '',
+    tagline: '',
+    bio: '',
+    country: '',
+    city: '',
+    website_url: '',
+    instagram: '',
+    tiktok: '',
+    youtube: '',
+    twitter_x: '',
+    facebook: '',
+    avatar_url: '',
+    banner_url: '',
+    contact_email_public: '',
+    genres: '',
+  });
 
-  useFocusEffect(useCallback(() => {
+  const load = useCallback(() => {
     setLoading(true);
-    studioEpisioApi.trustTier()
-      .then((d) => setTier(d))
-      .catch(() => setTier(null))
-      .finally(() => setLoading(false));
-  }, []));
+    Promise.all([
+      studioEpisioApi.trustTier().catch(() => null),
+      studioEpisioApi.getStudioProfile().catch(() => null),
+    ]).then(([t, p]) => {
+      setTier(t);
+      const pr = p?.profile || {};
+      setProfile({
+        channel_name: pr.channel_name || user?.display_name || '',
+        tagline: pr.tagline || '',
+        bio: pr.bio || user?.bio || '',
+        country: pr.country || '',
+        city: pr.city || '',
+        website_url: pr.website_url || '',
+        instagram: pr.instagram || '',
+        tiktok: pr.tiktok || '',
+        youtube: pr.youtube || '',
+        twitter_x: pr.twitter_x || '',
+        facebook: pr.facebook || '',
+        avatar_url: pr.avatar_url || '',
+        banner_url: pr.banner_url || '',
+        contact_email_public: pr.contact_email_public || '',
+        genres: Array.isArray(pr.genres) ? pr.genres.join(', ') : (pr.genres || ''),
+      });
+    }).finally(() => setLoading(false));
+  }, [user?.display_name, user?.bio]);
 
-  const displayName = user?.display_name || user?.username || 'Creator';
+  useFocusEffect(useCallback(() => { load(); }, [load]));
+
+  const saveProfile = async () => {
+    if (!profile.channel_name.trim()) {
+      Alert.alert('Channel name', 'Your public channel name is required.');
+      return;
+    }
+    setSaving(true);
+    try {
+      const genres = profile.genres.split(',').map((g) => g.trim()).filter(Boolean);
+      const data = await studioEpisioApi.patchStudioProfile({
+        ...profile,
+        genres,
+      });
+      Alert.alert('Saved', 'Your public creator profile is updated. Viewers will see these details.');
+      void data;
+    } catch (e) {
+      Alert.alert('Save failed', e?.message || 'Try again');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const displayName = profile.channel_name || user?.display_name || user?.username || 'Creator';
   const initial = (displayName[0] || 'C').toUpperCase();
   const tierLabel = {
     new: 'New Creator',
@@ -59,6 +135,9 @@ const StudioSettingsScreen = () => {
           <ChevronLeft size={15} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.h1}>Studio Settings</Text>
+        <TouchableOpacity style={styles.saveBtn} onPress={saveProfile} disabled={saving}>
+          {saving ? <ActivityIndicator color={COLORS.navy} /> : <Save size={14} color={COLORS.navy} />}
+        </TouchableOpacity>
       </View>
 
       <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }}>
@@ -72,33 +151,48 @@ const StudioSettingsScreen = () => {
           </View>
         </View>
 
+        <Text style={styles.groupTitle}>Public channel (viewers see this)</Text>
+        <View style={styles.formCard}>
+          <Field label="Channel name" value={profile.channel_name} onChange={(v) => setProfile((p) => ({ ...p, channel_name: v }))} placeholder="Your studio / channel name" />
+          <Field label="Tagline" value={profile.tagline} onChange={(v) => setProfile((p) => ({ ...p, tagline: v }))} placeholder="One-line hook for your page" />
+          <Field label="Bio" value={profile.bio} onChange={(v) => setProfile((p) => ({ ...p, bio: v }))} placeholder="Tell viewers who you are" multiline />
+          <Field label="Genres" value={profile.genres} onChange={(v) => setProfile((p) => ({ ...p, genres: v }))} placeholder="Romance, Thriller, Comedy" />
+          <Field label="Country" value={profile.country} onChange={(v) => setProfile((p) => ({ ...p, country: v }))} placeholder="Ghana" />
+          <Field label="City" value={profile.city} onChange={(v) => setProfile((p) => ({ ...p, city: v }))} placeholder="Accra" />
+          <Field label="Website" value={profile.website_url} onChange={(v) => setProfile((p) => ({ ...p, website_url: v }))} placeholder="https://" />
+          <Field label="Instagram" value={profile.instagram} onChange={(v) => setProfile((p) => ({ ...p, instagram: v }))} placeholder="@handle or URL" />
+          <Field label="TikTok" value={profile.tiktok} onChange={(v) => setProfile((p) => ({ ...p, tiktok: v }))} placeholder="@handle or URL" />
+          <Field label="YouTube" value={profile.youtube} onChange={(v) => setProfile((p) => ({ ...p, youtube: v }))} placeholder="Channel URL" />
+          <Field label="X / Twitter" value={profile.twitter_x} onChange={(v) => setProfile((p) => ({ ...p, twitter_x: v }))} placeholder="@handle" />
+          <Field label="Facebook" value={profile.facebook} onChange={(v) => setProfile((p) => ({ ...p, facebook: v }))} placeholder="Page URL" />
+          <Field label="Avatar URL" value={profile.avatar_url} onChange={(v) => setProfile((p) => ({ ...p, avatar_url: v }))} placeholder="https://…" />
+          <Field label="Banner URL" value={profile.banner_url} onChange={(v) => setProfile((p) => ({ ...p, banner_url: v }))} placeholder="https://…" />
+          <Field label="Public contact email" value={profile.contact_email_public} onChange={(v) => setProfile((p) => ({ ...p, contact_email_public: v }))} placeholder="Optional" />
+          <TouchableOpacity style={styles.primarySave} onPress={saveProfile} disabled={saving}>
+            {saving ? <ActivityIndicator color={COLORS.navy} /> : <Text style={styles.primarySaveText}>Save public profile</Text>}
+          </TouchableOpacity>
+          {user?.id ? (
+            <TouchableOpacity
+              style={styles.previewLink}
+              onPress={() => navigation.navigate('CreatorPublicProfile', { creatorId: user.id })}
+            >
+              <Text style={styles.previewLinkText}>Preview public profile</Text>
+            </TouchableOpacity>
+          ) : null}
+        </View>
+
         <Text style={styles.groupTitle}>Publishing help</Text>
         <View style={styles.rowCard}>
           <Row icon={FileText} label="Specs guide" onPress={() => navigation.navigate('StudioSpecs')} />
           <Row icon={HelpCircle} label="Quality & review help" onPress={() => navigation.navigate('StudioHelpQuality')} />
           <Row icon={Star} label="Creator Trust Tier" value={tierLabel} onPress={() => navigation.navigate('CreatorTrustTier')} />
         </View>
-        <Text style={styles.groupNote}>
-          The WiamEpisio team reviews your full series — not episode-by-episode drops. These guides explain what we check.
-        </Text>
 
         <Text style={styles.groupTitle}>Payouts</Text>
         <View style={styles.rowCard}>
-          <Row
-            icon={Wallet}
-            label="Payout & KYC"
-            tag={user?.is_creator ? 'OPEN' : undefined}
-            onPress={() => navigation.navigate('StudioPayoutKyc')}
-          />
-          <Row
-            icon={Banknote}
-            label="Earnings overview"
-            onPress={() => navigation.navigate('StudioEarnings', {})}
-          />
+          <Row icon={Wallet} label="Payout & KYC" tag={user?.is_creator ? 'OPEN' : undefined} onPress={() => navigation.navigate('StudioPayoutKyc')} />
+          <Row icon={Banknote} label="Earnings overview" onPress={() => navigation.navigate('StudioEarnings', {})} />
         </View>
-        <Text style={styles.groupNote}>
-          Earnings start only after our team publishes your complete series. Payouts unlock after identity checks.
-        </Text>
 
         {loading ? <ActivityIndicator color={COLORS.gold} style={{ marginTop: 16 }} /> : null}
 
@@ -119,57 +213,68 @@ const StudioSettingsScreen = () => {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: COLORS.navy },
-  topbar: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingBottom: 12 },
+  topbar: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingVertical: 12 },
   iconBtn: {
-    width: 34, height: 34, borderRadius: 17, backgroundColor: COLORS.navyCard,
+    width: 36, height: 36, borderRadius: 18, backgroundColor: COLORS.navyCard,
     alignItems: 'center', justifyContent: 'center',
   },
-  h1: { fontSize: 18, fontFamily: FONTS.extraBold, color: '#fff' },
+  saveBtn: {
+    marginLeft: 'auto', width: 36, height: 36, borderRadius: 18, backgroundColor: COLORS.gold,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  h1: { fontSize: 18, fontFamily: FONTS.bold, color: '#fff' },
   studioCard: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    backgroundColor: COLORS.navyCard, borderWidth: 1, borderColor: COLORS.navyLine,
-    borderRadius: 16, padding: 14, marginBottom: 18,
+    flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: COLORS.navyCard,
+    borderRadius: 16, padding: 14, borderWidth: 1, borderColor: COLORS.navyLine, marginBottom: 18,
   },
   avatar: {
-    width: 46, height: 46, borderRadius: 13,
-    backgroundColor: COLORS.gold, alignItems: 'center', justifyContent: 'center',
-  },
-  avatarText: { fontFamily: FONTS.extraBold, fontSize: 19, color: COLORS.navy },
-  cardName: { fontSize: 13.5, fontFamily: FONTS.extraBold, color: '#fff' },
-  cardSub: { fontSize: 10.5, fontFamily: FONTS.regular, color: COLORS.textFaint, marginTop: 2 },
-  groupTitle: {
-    fontSize: 11, fontFamily: FONTS.extraBold, color: COLORS.textFaint,
-    letterSpacing: 0.4, textTransform: 'uppercase', marginBottom: 10,
-  },
-  groupNote: {
-    fontSize: 11, fontFamily: FONTS.regular, color: COLORS.textDim,
-    lineHeight: 17, marginBottom: 16, marginTop: -4,
-  },
-  rowCard: {
-    backgroundColor: COLORS.navyCard, borderWidth: 1, borderColor: COLORS.navyLine,
-    borderRadius: 14, overflow: 'hidden', marginBottom: 8,
-  },
-  row: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    paddingHorizontal: 14, paddingVertical: 13,
-    borderBottomWidth: 1, borderBottomColor: COLORS.navyLine,
-  },
-  rowIcon: {
-    width: 30, height: 30, borderRadius: 9, backgroundColor: COLORS.navySoft,
+    width: 48, height: 48, borderRadius: 24, backgroundColor: COLORS.gold,
     alignItems: 'center', justifyContent: 'center',
   },
-  rowLabel: { flex: 1, fontSize: 13, fontFamily: FONTS.medium, color: '#E7E7F2' },
-  rowValue: { fontSize: 12, fontFamily: FONTS.regular, color: COLORS.textFaint, marginRight: 4 },
+  avatarText: { fontFamily: FONTS.bold, color: COLORS.navy, fontSize: 18 },
+  cardName: { color: '#fff', fontFamily: FONTS.bold, fontSize: 16 },
+  cardSub: { color: COLORS.textDim, fontFamily: FONTS.regular, fontSize: 12, marginTop: 2 },
+  groupTitle: { color: COLORS.textFaint, fontFamily: FONTS.semi, fontSize: 11, marginBottom: 8, textTransform: 'uppercase' },
+  formCard: {
+    backgroundColor: COLORS.navyCard, borderRadius: 16, padding: 14, marginBottom: 18,
+    borderWidth: 1, borderColor: COLORS.navyLine,
+  },
+  fieldWrap: { marginBottom: 12 },
+  fieldLabel: { color: COLORS.textDim, fontFamily: FONTS.medium, fontSize: 11, marginBottom: 6 },
+  fieldInput: {
+    backgroundColor: COLORS.navy, borderRadius: 12, borderWidth: 1, borderColor: COLORS.navyLine,
+    color: '#fff', paddingHorizontal: 12, paddingVertical: 10, fontFamily: FONTS.regular, fontSize: 13.5,
+  },
+  fieldMulti: { minHeight: 80, textAlignVertical: 'top' },
+  primarySave: {
+    marginTop: 6, backgroundColor: COLORS.gold, borderRadius: 14, paddingVertical: 14, alignItems: 'center',
+  },
+  primarySaveText: { color: COLORS.navy, fontFamily: FONTS.bold, fontSize: 14 },
+  previewLink: { marginTop: 12, alignItems: 'center' },
+  previewLinkText: { color: COLORS.gold, fontFamily: FONTS.semi, fontSize: 13 },
+  rowCard: {
+    backgroundColor: COLORS.navyCard, borderRadius: 16, marginBottom: 16,
+    borderWidth: 1, borderColor: COLORS.navyLine, overflow: 'hidden',
+  },
+  row: {
+    flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingVertical: 14,
+    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: COLORS.navyLine,
+  },
+  rowIcon: {
+    width: 28, height: 28, borderRadius: 8, backgroundColor: COLORS.navy,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  rowLabel: { flex: 1, color: '#fff', fontFamily: FONTS.medium, fontSize: 14 },
+  rowValue: { color: COLORS.textDim, fontFamily: FONTS.regular, fontSize: 12, marginRight: 4 },
   statusTag: {
-    fontSize: 9, fontFamily: FONTS.extraBold, color: '#3BB273',
-    backgroundColor: 'rgba(59,178,115,0.16)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6,
+    color: COLORS.gold, fontFamily: FONTS.semi, fontSize: 10, marginRight: 6,
+    borderWidth: 1, borderColor: COLORS.gold, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2,
   },
   signoutBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    padding: 14, borderRadius: 14, marginTop: 20,
-    backgroundColor: 'rgba(228,87,61,0.1)', borderWidth: 1, borderColor: 'rgba(228,87,61,0.3)',
+    marginTop: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    paddingVertical: 14, borderRadius: 14, borderWidth: 1, borderColor: '#E4573D55',
   },
-  signoutText: { fontSize: 13, fontFamily: FONTS.bold, color: '#E4573D' },
+  signoutText: { color: '#E4573D', fontFamily: FONTS.semi },
 });
 
 export default StudioSettingsScreen;
