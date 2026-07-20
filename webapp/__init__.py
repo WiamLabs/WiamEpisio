@@ -2551,10 +2551,12 @@ def create_app():
         ep = request.endpoint or ''
 
         # ── Founder isolation ──
-        if getattr(_cu, 'is_founder', False):
+        # Under EPISIO_SLIM, do not lock founders to /founder/ — public Episio
+        # must stay reachable, and a broken founder page must not trap the session.
+        if getattr(_cu, 'is_founder', False) and not _episio_slim:
             founder_allowed = _shared + (
                 'founder_dash.', 'team.', 'admin_dash.', 'editor_studio.',
-                'apply.',
+                'apply.', 'home.',
             )
             for prefix in founder_allowed:
                 if ep.startswith(prefix) or ep == prefix.rstrip('.'):

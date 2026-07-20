@@ -48,6 +48,19 @@ flask_app = create_app()
 def health():
     return 'OK', 200
 
+
+@flask_app.route('/health/version')
+def health_version():
+    """Prove which git commit Render is running (set automatically by Render)."""
+    from flask import jsonify
+    return jsonify(
+        ok=True,
+        commit=(os.environ.get('RENDER_GIT_COMMIT') or os.environ.get('GIT_COMMIT') or 'unknown')[:12],
+        branch=os.environ.get('RENDER_GIT_BRANCH') or 'unknown',
+        slim=(os.environ.get('EPISIO_SLIM') or '1'),
+        service=os.environ.get('RENDER_SERVICE_NAME') or 'unknown',
+    ), 200
+
 # ---------------------------------------------------------------------------
 # 3. Background scheduled jobs (eligibility check + monthly payouts)
 # ---------------------------------------------------------------------------

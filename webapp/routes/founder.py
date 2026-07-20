@@ -91,19 +91,34 @@ def overview():
         Content.deleted_at == None
     ).order_by(Content.created_at.desc()).limit(5).all())
 
-    return render_template('founder/overview.html',
-        total_users=total_users,
-        total_creators=total_creators,
-        published_books=published_books,
-        draft_books=draft_books,
-        pending_apps=pending_apps,
-        total_coin_purchases=total_coin_purchases,
-        total_coins_circulating=total_coins_circulating,
-        active_elite_subs=active_elite_subs,
-        month_revenue_ghs=month_revenue_ghs,
-        recent_users=recent_users,
-        recent_books=recent_books,
-    )
+    try:
+        return render_template('founder/overview.html',
+            total_users=total_users,
+            total_creators=total_creators,
+            published_books=published_books,
+            draft_books=draft_books,
+            pending_apps=pending_apps,
+            total_coin_purchases=total_coin_purchases,
+            total_coins_circulating=total_coins_circulating,
+            active_elite_subs=active_elite_subs,
+            month_revenue_ghs=month_revenue_ghs,
+            recent_users=recent_users,
+            recent_books=recent_books,
+        )
+    except Exception as e:
+        log.exception('founder overview template failed')
+        # Never trap the founder on a 500 — return a minimal escape hatch.
+        from flask import make_response
+        body = (
+            '<!doctype html><html><body style="background:#08081a;color:#eee;font-family:sans-serif;padding:2rem">'
+            '<h1 style="color:#d4a843">Founder panel (safe mode)</h1>'
+            '<p>Overview template failed: <code>%s</code></p>'
+            '<p><a href="/founder/episio-quality" style="color:#d4a843">Episio Season QC</a> · '
+            '<a href="/" style="color:#d4a843">Home</a> · '
+            '<a href="/logout" style="color:#f87171">Logout</a></p>'
+            '</body></html>'
+        ) % (str(e)[:300].replace('<', '&lt;'),)
+        return make_response(body, 200)
 
 
 @founder_bp.route('/users')
