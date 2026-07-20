@@ -2251,6 +2251,13 @@ def _run_safe_migrations(app):
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
         )""",
         "CREATE INDEX IF NOT EXISTS ix_genre_req_status ON w_genre_requests (status)",
+
+        # Supabase advisor: public tables must have RLS (Flask owner role bypasses it)
+        "ALTER TABLE IF EXISTS w_watch_episode_rewards ENABLE ROW LEVEL SECURITY",
+        "ALTER TABLE IF EXISTS w_ad_coin_claims ENABLE ROW LEVEL SECURITY",
+        "ALTER TABLE IF EXISTS w_series_finish_rewards ENABLE ROW LEVEL SECURITY",
+        "ALTER TABLE IF EXISTS w_friend_invite_bonuses ENABLE ROW LEVEL SECURITY",
+        "ALTER TABLE IF EXISTS w_genre_requests ENABLE ROW LEVEL SECURITY",
     ]
     engine = db.engine
     with engine.connect() as conn:

@@ -398,6 +398,25 @@ def health_check():
     return jsonify(ok=True)
 
 
+@api_v1.route('/health/email')
+def health_email():
+    """Report whether outbound email credentials are configured (no secrets)."""
+    from ..services.email_service import email_delivery_configured, _cfg
+    resend = bool((_cfg('RESEND_API_KEY') or '').strip())
+    smtp = bool(
+        (_cfg('SMTP_HOST') or '').strip()
+        and (_cfg('SMTP_USER') or '').strip()
+        and (_cfg('SMTP_PASS') or '').strip().replace(' ', '')
+    )
+    ok = email_delivery_configured()
+    return jsonify({
+        'ok': ok,
+        'resend_configured': resend,
+        'smtp_configured': smtp,
+        'hint': None if ok else 'Set RESEND_API_KEY (+ RESEND_FROM) or SMTP_* on the host',
+    }), (200 if ok else 503)
+
+
 @api_v1.route('/health/db')
 def health_db():
     """Quick database connectivity check."""
@@ -807,11 +826,17 @@ def auth_send_verify_code():
     if user.email_verified:
         return jsonify({'ok': True, 'already_verified': True, 'message': 'Email already verified'})
     try:
-        from ..services.email_service import create_and_send_code
+        from ..services.email_service import create_and_send_code, email_delivery_configured
+        if not email_delivery_configured():
+            log.error('send-verify-code blocked: email delivery not configured on server')
+            return jsonify({
+                'error': 'Email delivery is not set up on the server yet. Please try again later or contact support@wiamapp.com.',
+            }), 503
         vc = create_and_send_code(email, 'register', user_id=user.id)
         if not vc:
             return jsonify({'error': 'Could not send verification email. Try again shortly.'}), 502
     except Exception:
+        log.exception('send-verify-code failed for user_id=%s', getattr(user, 'id', None))
         return jsonify({'error': 'Could not send verification email. Try again shortly.'}), 502
     return jsonify({'ok': True, 'message': 'Verification code sent', 'email': email})
 

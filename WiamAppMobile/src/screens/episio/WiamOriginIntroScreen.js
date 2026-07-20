@@ -57,7 +57,7 @@ const WiamOriginIntroScreen = () => {
       </View>
 
       <View style={styles.center}>
-        <LogoBadge size={96} />
+        <LogoBadge size={120} />
         <Text style={styles.wordmark}>WIAM ORIGIN</Text>
         <Text style={styles.tag}>An Original Series</Text>
       </View>

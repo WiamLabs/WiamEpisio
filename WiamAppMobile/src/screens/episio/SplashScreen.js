@@ -70,8 +70,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   logo: {
-    width: 128,
-    height: 128,
+    width: 168,
+    height: 168,
   },
   wordmark: {
     marginTop: 22,

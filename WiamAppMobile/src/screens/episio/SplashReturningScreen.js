@@ -47,7 +47,7 @@ const SplashReturningScreen = () => {
       <View style={styles.glowBg} />
 
       <View style={styles.wrap}>
-        <LogoBadge size={66} />
+        <LogoBadge size={88} />
         <Text style={styles.wordmark}>
           Wiam<Text style={{ color: COLORS.gold }}>Episio</Text>
         </Text>

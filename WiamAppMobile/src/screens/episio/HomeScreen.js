@@ -173,7 +173,7 @@ const HomeScreen = () => {
       <View style={styles.topFixed}>
         <View style={styles.brandRow}>
           <View style={styles.brand}>
-            <LogoBadge size={30} />
+            <LogoBadge size={38} />
             <Text style={styles.brandName}>
               Wiam<Text style={{ color: COLORS.gold }}>Episio</Text>
             </Text>

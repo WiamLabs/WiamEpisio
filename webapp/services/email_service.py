@@ -559,6 +559,15 @@ def _verification_email_parts(email, code, purpose):
     )
 
 
+def email_delivery_configured():
+    """True if Resend or SMTP credentials are present (does not prove delivery works)."""
+    api_key = (_cfg('RESEND_API_KEY') or '').strip()
+    smtp_host = (_cfg('SMTP_HOST') or '').strip()
+    smtp_user = (_cfg('SMTP_USER') or '').strip()
+    smtp_pass = (_cfg('SMTP_PASS') or '').strip().replace(' ', '')
+    return bool(api_key) or bool(smtp_host and smtp_user and smtp_pass)
+
+
 def create_and_send_code(email, purpose, user_id=None):
     """Persist a verification code, then deliver by sync send or queue fallback.
 
@@ -592,19 +601,39 @@ def create_and_send_code(email, purpose, user_id=None):
     db.session.add(vc)
     db.session.commit()
 
+    if not email_delivery_configured():
+        log.error(
+            "Verification email blocked — no RESEND_API_KEY and no SMTP configured "
+            "(purpose=%s, to=%s)",
+            purpose, email,
+        )
+        try:
+            vc.is_used = True
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+        return None
+
     log.info("Sending verification code to %s for %s", email, purpose)
     sent = send_verification_code(email, code, purpose)
     if sent:
         return vc
 
     # Sync delivery failed (common on hosts that block SMTP) — queue for worker retry
+    subject, body, preheader = _verification_email_parts(email, code, purpose)
     try:
-        subject, body, preheader = _verification_email_parts(email, code, purpose)
         job = enqueue_branded(email, subject, body, preheader, priority=1)
         if job:
             log.warning(
                 "Verification email sync failed for %s — queued job id=%s",
                 email, getattr(job, 'id', '?'),
+            )
+            return vc
+        # Same subject already pending/sent recently — treat as success so retries work
+        if _is_duplicate(email, subject):
+            log.info(
+                "Verification email already queued/sent recently for %s — returning ok",
+                email,
             )
             return vc
     except Exception as e:
