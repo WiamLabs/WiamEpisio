@@ -1,5 +1,5 @@
 /**
- * Watcher / creator personal profile editor — avatar + bio via Cloudinary.
+ * Watcher / creator personal profile editor — avatar + bio.
  * Crop required before upload (square → shown circular).
  */
 import React, { useState } from 'react';
