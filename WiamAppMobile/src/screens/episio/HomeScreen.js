@@ -176,7 +176,7 @@ const HomeScreen = () => {
       <View style={styles.topFixed}>
         <View style={styles.brandRow}>
           <View style={styles.brand}>
-            <LogoBadge size={72} />
+            <LogoBadge size={46} />
             <Text style={styles.brandName}>
               Wiam<Text style={{ color: COLORS.gold }}>Episio</Text>
             </Text>
@@ -404,7 +404,7 @@ const styles = StyleSheet.create({
   },
   brand: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   brandName: {
-    fontSize: 20,
+    fontSize: 17,
     fontFamily: FONTS.extraBold,
     color: '#fff',
     letterSpacing: -0.3,
