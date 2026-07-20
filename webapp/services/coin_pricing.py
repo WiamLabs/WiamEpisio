@@ -41,13 +41,15 @@ def get_band(band_key: str) -> Optional[CoinPriceBand]:
 
 def list_bands():
     ensure_default_bands()
-    rows = CoinPriceBand.query.filter_by(is_active=True).order_by(CoinPriceBand.sort_order.asc()).all()
+    rows = CoinPriceBand.query.order_by(CoinPriceBand.sort_order.asc()).all()
     return [{
         'band_key': b.band_key,
         'label': b.label,
         'unlock_coins': b.unlock_coins,
         'min_coins': b.min_coins,
         'max_coins': b.max_coins,
+        'is_active': bool(b.is_active),
+        'sort_order': b.sort_order,
     } for b in rows]
 
 

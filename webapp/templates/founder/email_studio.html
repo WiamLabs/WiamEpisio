@@ -2,33 +2,7 @@
 {% block title %}Email Writer Studio — Control Panel{% endblock %}
 {% block sidebar_title %}Control Panel{% endblock %}
 
-{% block sidebar_nav %}
-<a class="nav-link" href="{{ url_for('founder_dash.overview') }}"><i class="bi bi-speedometer2"></i> Overview</a>
-<a class="nav-link" href="{{ url_for('founder_dash.users') }}"><i class="bi bi-people"></i> Users</a>
-<a class="nav-link" href="{{ url_for('founder_dash.content') }}"><i class="bi bi-book"></i> Content</a>
-<a class="nav-link" href="{{ url_for('founder_dash.revenue') }}"><i class="bi bi-cash-stack"></i> Revenue</a>
-<a class="nav-link" href="{{ url_for('founder_dash.financial_dashboard') }}"><i class="bi bi-bank" style="color:var(--gold);"></i> Financial v5</a>
-<a class="nav-link" href="{{ url_for('founder_dash.premium_analytics') }}"><i class="bi bi-gem" style="color:#c084fc;"></i> Premium Analytics</a>
-<a class="nav-link" href="{{ url_for('founder_dash.payouts') }}"><i class="bi bi-send-check"></i> Payouts</a>
-<a class="nav-link" href="{{ url_for('founder_dash.withdrawals') }}"><i class="bi bi-arrow-up-right-circle" style="color:var(--gold);"></i> Withdrawals</a>
-<a class="nav-link" href="{{ url_for('founder_dash.subscribers') }}"><i class="bi bi-gem" style="color:#9b59b6;"></i> Subscribers</a>
-<a class="nav-link" href="{{ url_for('founder_dash.payroll') }}"><i class="bi bi-wallet2" style="color:#2ecc71;"></i> Team Payroll</a>
-<a class="nav-link" href="{{ url_for('founder_dash.creators') }}"><i class="bi bi-person-badge"></i> Creators</a>
-<a class="nav-link" href="{{ url_for('founder_dash.moderation') }}"><i class="bi bi-shield-exclamation"></i> Moderation</a>
-<a class="nav-link" href="{{ url_for('founder_dash.warnings_list') }}"><i class="bi bi-exclamation-triangle" style="color:#f59e0b;"></i> Warnings</a>
-<a class="nav-link" href="{{ url_for('founder_dash.elite_manage') }}"><span style="color:var(--gold);">?</span> WiamElite</a>
-<a class="nav-link" href="{{ safe_url_for('wiambot.apex_review') }}"><i class="bi bi-trophy-fill" style="color:var(--gold);"></i> Apex Review</a>
-<a class="nav-link" href="{{ url_for('founder_dash.review_queue') }}"><i class="bi bi-robot"></i> Bot Review Queue</a>
-<a class="nav-link" href="{{ url_for('founder_dash.platform_settings') }}"><i class="bi bi-sliders"></i> Platform Settings</a>
-<a class="nav-link" href="{{ url_for('founder_dash.forms_dashboard') }}"><i class="bi bi-file-earmark-text"></i> Application Forms</a>
-<a class="nav-link active" href="{{ url_for('founder_dash.email_studio') }}"><i class="bi bi-envelope-paper" style="color:var(--gold);"></i> Email Studio</a>
-<a class="nav-link" href="{{ url_for('founder_dash.team_management') }}"><i class="bi bi-people-fill"></i> Team</a>
-<a class="nav-link" href="{{ url_for('founder_dash.account_management') }}"><i class="bi bi-person-x"></i> Account Management</a>
-<a class="nav-link" href="{{ url_for('founder_dash.notification_testing') }}"><i class="bi bi-bell" style="color:#fbbf24;"></i> Notifications</a>
-<a class="nav-link" href="{{ safe_url_for('classics.dashboard') }}"><i class="bi bi-journal-bookmark" style="color:#a78bfa;"></i> Content Seeder</a>
-<a class="nav-link" href="{{ url_for('founder_dash.settings') }}"><i class="bi bi-gear"></i> Settings</a>
-<a class="nav-link" href="{{ url_for('founder_dash.admins') }}"><i class="bi bi-shield-check"></i> Admins</a>
-{% endblock %}
+{% block sidebar_nav %}{% set active = 'email' %}{% include "founder/_episio_nav.html" %}{% endblock %}
 
 {% block dash_content %}
 <style>

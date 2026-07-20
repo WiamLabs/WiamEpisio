@@ -1,0 +1,94 @@
+{% extends "dashboard_base.html" %}
+{% block title %}{{ u.display_name }} — Watcher{% endblock %}
+{% block sidebar_title %}WiamEpisio Control{% endblock %}
+{% block sidebar_nav %}{% set active = 'users' %}{% include "founder/_episio_nav.html" %}{% endblock %}
+{% block dash_content %}
+<div class="dash-header">
+  <h1>{{ u.display_name }}</h1>
+  <p>@{{ u.username or '—' }} · {{ u.email or 'no email' }} · role {{ u.role }} · status {{ u.status or 'active' }} · ID {{ u.id }}</p>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-4">
+    <div class="dash-card">
+      <h3>Wallet</h3>
+      <p style="font-size:2rem;color:var(--gold);font-weight:800;margin:0;">{{ balance }}</p>
+      <p style="color:var(--text-muted);font-size:0.8rem;">coins</p>
+      <form method="post" action="{{ url_for('founder_dash.user_adjust_coins', user_id=u.id) }}" class="mt-3">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input name="delta" type="number" placeholder="+/- coins" class="form-control mb-2" required style="background:var(--bg);color:var(--text);border-color:var(--border-subtle);">
+        <input name="reason" placeholder="Reason" class="form-control mb-2" style="background:var(--bg);color:var(--text);border-color:var(--border-subtle);">
+        <button class="btn-dash btn-dash-primary" type="submit">Adjust coins</button>
+      </form>
+    </div>
+    <div class="dash-card" style="margin-top:12px;">
+      <h3>VIP / Membership</h3>
+      <p style="font-size:0.85rem;color:var(--text-muted);">premium_status: <strong style="color:#fff;">{{ u.premium_status or 'none' }}</strong>
+        {% if vip %}<br>sub #{{ vip.id }} until {{ vip.expires_at }}{% endif %}
+      </p>
+      <form method="post" action="{{ url_for('founder_dash.user_vip_toggle', user_id=u.id) }}" class="d-flex gap-2 flex-wrap">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input name="days" value="30" style="width:70px;background:var(--bg);color:var(--text);border:1px solid var(--border-subtle);border-radius:8px;padding:6px;">
+        <button class="btn-dash btn-dash-primary" name="action" value="grant" type="submit">Grant VIP</button>
+        <button class="btn-dash" name="action" value="revoke" type="submit">Revoke</button>
+      </form>
+    </div>
+    <div class="dash-card" style="margin-top:12px;">
+      <h3>Studio</h3>
+      <p style="font-size:0.85rem;">Creator: {{ 'yes' if u.is_creator else 'no' }}</p>
+      {% if not u.is_creator %}
+      <form method="post" action="{{ url_for('founder_dash.user_studio_unlock', user_id=u.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input name="channel_name" placeholder="Channel name" class="form-control mb-2" style="background:var(--bg);color:var(--text);border-color:var(--border-subtle);">
+        <button class="btn-dash btn-dash-primary" type="submit">Unlock Studio</button>
+      </form>
+      {% endif %}
+      <p style="margin-top:10px;font-size:0.8rem;">
+        <a href="{{ url_for('founder_dash.toggle_ban', user_id=u.id) }}" style="color:#f87171;" onclick="event.preventDefault();document.getElementById('banForm').submit();">Ban / Unban</a>
+      </p>
+      <form id="banForm" method="post" action="{{ url_for('founder_dash.toggle_ban', user_id=u.id) }}" style="display:none;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      </form>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="dash-card">
+      <h3>Episode unlocks</h3>
+      <table class="dash-table">
+        <thead><tr><th>Ep</th><th>Coins</th><th>When</th></tr></thead>
+        <tbody>
+        {% for un in unlocks %}
+        <tr>
+          <td>{% set ep = ep_map.get(un.episode_id) %}{% if ep %}EP {{ ep.episode_number }}{% else %}#{{ un.episode_id }}{% endif %}</td>
+          <td>{{ un.coins_spent }}</td>
+          <td style="white-space:nowrap;font-size:0.75rem;">{{ un.unlocked_at.strftime('%b %d') if un.unlocked_at else '—' }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="3" style="color:var(--text-muted);">No unlocks</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="dash-card">
+      <h3>Coin purchases</h3>
+      <table class="dash-table">
+        <thead><tr><th>Amount</th><th>Ref</th><th>When</th></tr></thead>
+        <tbody>
+        {% for p in purchases %}
+        <tr>
+          <td>{{ p.amount }}</td>
+          <td style="font-size:0.72rem;">{{ (p.reference or '—')|truncate(16) }}</td>
+          <td style="white-space:nowrap;font-size:0.75rem;">{{ p.created_at.strftime('%b %d') if p.created_at else '—' }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="3" style="color:var(--text-muted);">No purchases</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      <p style="margin-top:10px;"><a href="{{ url_for('founder_dash.coin_purchases') }}" style="color:var(--gold);font-size:0.8rem;">All purchases →</a></p>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Creator Applications — WiamEpisio{% endblock %}
+{% block sidebar_title %}WiamEpisio Control{% endblock %}
+{% block sidebar_nav %}{% set active = 'applications' %}{% include "founder/_episio_nav.html" %}{% endblock %}
+{% block dash_content %}
+<div class="dash-header">
+  <h1><i class="bi bi-clipboard-check" style="color:var(--gold);"></i> Creator Applications</h1>
+  <p>Accept unlocks Studio · Reject keeps waitlist</p>
+</div>
+<div class="filter-bar" style="margin-bottom:12px;">
+  {% for st in ['pending','accepted','rejected','all'] %}
+  <a href="{{ url_for('founder_dash.episio_applications', status=st) }}" class="btn-dash {% if status==st %}btn-dash-primary{% endif %}" style="margin-right:6px;">{{ st }}</a>
+  {% endfor %}
+</div>
+{% for a in applications %}
+<div class="dash-card" style="margin-bottom:12px;">
+  <div class="d-flex justify-content-between flex-wrap gap-2">
+    <div>
+      <strong style="color:#fff;">{{ a.channel_name or a.legal_name or ('App #' ~ a.id) }}</strong>
+      <span class="badge-status" style="margin-left:8px;">{{ a.status }}</span>
+      <p style="color:var(--text-muted);font-size:0.85rem;margin:6px 0 0;">User ID {{ a.user_id }} · planned {{ a.planned_episode_count }} eps · {{ a.sample_type }}</p>
+      <p style="font-size:0.9rem;margin:8px 0 0;">{{ a.pitch or a.bio or '—' }}</p>
+      {% if a.sample_url %}<p style="font-size:0.8rem;"><a href="{{ a.sample_url }}" style="color:var(--gold);" target="_blank" rel="noopener">Sample</a></p>{% endif %}
+    </div>
+    {% if a.status == 'pending' %}
+    <div style="min-width:220px;">
+      <form method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="app_id" value="{{ a.id }}">
+        <textarea name="note" rows="2" placeholder="Reviewer note" class="form-control mb-2" style="background:var(--bg);color:var(--text);border-color:var(--border-subtle);font-size:0.8rem;"></textarea>
+        <button class="btn-dash btn-dash-primary" name="decision" value="accepted" type="submit">Accept</button>
+        <button class="btn-dash" name="decision" value="rejected" type="submit">Reject</button>
+      </form>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% else %}
+<div class="dash-card"><p style="color:var(--text-muted);margin:0;">No applications in this filter.</p></div>
+{% endfor %}
+{% endblock %}

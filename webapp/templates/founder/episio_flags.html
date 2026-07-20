@@ -1,0 +1,45 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Product Flags — WiamEpisio{% endblock %}
+{% block sidebar_title %}WiamEpisio Control{% endblock %}
+{% block sidebar_nav %}{% set active = 'flags' %}{% include "founder/_episio_nav.html" %}{% endblock %}
+{% block dash_content %}
+<div class="dash-header">
+  <h1><i class="bi bi-toggles" style="color:var(--gold);"></i> Product Flags</h1>
+  <p>Kill switches for VIP, completeness, QC automation</p>
+</div>
+<div class="dash-card">
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {% set checks = [
+      ('ff_vip_enabled', 'VIP membership enabled'),
+      ('ff_trailer_quality_gate', 'Trailer quality gate'),
+      ('ff_require_complete_series', 'Require complete series before live'),
+      ('ff_season_quality_pipeline', 'Season QC pipeline ON'),
+      ('ff_season_qc_auto_reject_poor', 'Auto-reject Poor QC'),
+      ('ff_season_qc_auto_clear_good', 'Auto-clear Good QC'),
+      ('ff_season_qc_sla_auto_decide', 'SLA auto-decide after tier window'),
+    ] %}
+    {% for key, label in checks %}
+    <label style="display:flex;gap:10px;align-items:center;margin-bottom:12px;">
+      <input type="checkbox" name="{{ key }}" {% if flags[key] %}checked{% endif %}> {{ label }}
+    </label>
+    {% endfor %}
+    <div class="row g-2" style="margin-top:12px;">
+      <div class="col-md-3">
+        <label class="form-label" style="font-size:0.75rem;color:var(--text-muted);">VIP daily stipend coins</label>
+        <input name="vip_daily_stipend_coins" value="{{ flags.vip_daily_stipend_coins }}" class="form-control" style="background:var(--bg);color:var(--text);border-color:var(--border-subtle);">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label" style="font-size:0.75rem;color:var(--text-muted);">VIP unlock discount %</label>
+        <input name="vip_unlock_discount_pct" value="{{ flags.vip_unlock_discount_pct }}" class="form-control" style="background:var(--bg);color:var(--text);border-color:var(--border-subtle);">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label" style="font-size:0.75rem;color:var(--text-muted);">Money base currency</label>
+        <input name="money_base_currency" value="{{ flags.money_base_currency }}" class="form-control" style="background:var(--bg);color:var(--text);border-color:var(--border-subtle);">
+      </div>
+    </div>
+    <button class="btn-dash btn-dash-primary" type="submit" style="margin-top:16px;">Save flags</button>
+  </form>
+  <p style="margin-top:16px;font-size:0.8rem;color:var(--text-muted);">Per-layer QC tool toggles live on <a href="{{ url_for('founder_dash.episio_quality') }}" style="color:var(--gold);">Season QC</a>.</p>
+</div>
+{% endblock %}

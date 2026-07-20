@@ -1,0 +1,27 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Coin Bands — WiamEpisio{% endblock %}
+{% block sidebar_title %}WiamEpisio Control{% endblock %}
+{% block sidebar_nav %}{% set active = 'coin_bands' %}{% include "founder/_episio_nav.html" %}{% endblock %}
+{% block dash_content %}
+<div class="dash-header">
+  <h1><i class="bi bi-cash-stack" style="color:var(--gold);"></i> Unlock Coin Bands</h1>
+  <p>Series inherit unlock prices from their band</p>
+</div>
+{% for b in bands %}
+<div class="dash-card" style="margin-bottom:12px;">
+  <form method="post" class="row g-2 align-items-end">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="band_key" value="{{ b.band_key }}">
+    <div class="col-md-2"><strong style="color:var(--gold);">{{ b.band_key }}</strong></div>
+    <div class="col-md-2"><label class="form-label" style="font-size:0.7rem;color:var(--text-muted);">Label</label><input name="label" value="{{ b.label }}" class="form-control" style="background:var(--bg);color:var(--text);border-color:var(--border-subtle);"></div>
+    <div class="col-md-2"><label class="form-label" style="font-size:0.7rem;color:var(--text-muted);">Unlock</label><input name="unlock_coins" value="{{ b.unlock_coins }}" class="form-control" style="background:var(--bg);color:var(--text);border-color:var(--border-subtle);"></div>
+    <div class="col-md-1"><label class="form-label" style="font-size:0.7rem;color:var(--text-muted);">Min</label><input name="min_coins" value="{{ b.min_coins }}" class="form-control" style="background:var(--bg);color:var(--text);border-color:var(--border-subtle);"></div>
+    <div class="col-md-1"><label class="form-label" style="font-size:0.7rem;color:var(--text-muted);">Max</label><input name="max_coins" value="{{ b.max_coins }}" class="form-control" style="background:var(--bg);color:var(--text);border-color:var(--border-subtle);"></div>
+    <div class="col-md-2"><label style="font-size:0.8rem;"><input type="checkbox" name="is_active" {% if b.is_active %}checked{% endif %}> Active</label></div>
+    <div class="col-md-2"><button class="btn-dash btn-dash-primary w-100" type="submit">Save</button></div>
+  </form>
+</div>
+{% else %}
+<div class="dash-card"><p style="color:var(--text-muted);">No bands — defaults will seed on save attempt.</p></div>
+{% endfor %}
+{% endblock %}

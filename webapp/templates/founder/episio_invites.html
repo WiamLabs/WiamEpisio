@@ -1,0 +1,50 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Creator Invites — WiamEpisio{% endblock %}
+{% block sidebar_title %}WiamEpisio Control{% endblock %}
+{% block sidebar_nav %}{% set active = 'invites' %}{% include "founder/_episio_nav.html" %}{% endblock %}
+{% block dash_content %}
+<div class="dash-header">
+  <h1><i class="bi bi-ticket-perforated" style="color:var(--gold);"></i> Studio Invite Codes</h1>
+  <p>Generate codes that unlock WiamStudio immediately after redeem.</p>
+</div>
+<div class="dash-card" style="margin-bottom:16px;">
+  <h3>Create invite</h3>
+  <form method="post" class="row g-2 align-items-end">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="action" value="create">
+    <div class="col-md-3"><label class="form-label" style="font-size:0.75rem;color:var(--text-muted);">Code (blank = auto)</label><input class="form-control" name="code" placeholder="WIAM-XXXX-XXXX" style="background:var(--bg);color:var(--text);border-color:var(--border-subtle);"></div>
+    <div class="col-md-2"><label class="form-label" style="font-size:0.75rem;color:var(--text-muted);">Max uses</label><input class="form-control" name="max_uses" value="1" style="background:var(--bg);color:var(--text);border-color:var(--border-subtle);"></div>
+    <div class="col-md-2"><label class="form-label" style="font-size:0.75rem;color:var(--text-muted);">Expires days</label><input class="form-control" name="expires_days" placeholder="optional" style="background:var(--bg);color:var(--text);border-color:var(--border-subtle);"></div>
+    <div class="col-md-3"><label class="form-label" style="font-size:0.75rem;color:var(--text-muted);">Note</label><input class="form-control" name="note" style="background:var(--bg);color:var(--text);border-color:var(--border-subtle);"></div>
+    <div class="col-md-2"><button class="btn-dash btn-dash-primary w-100" type="submit">Generate</button></div>
+  </form>
+</div>
+<div class="dash-card">
+  <table class="dash-table">
+    <thead><tr><th>Code</th><th>Uses</th><th>Active</th><th>Expires</th><th>Note</th><th></th></tr></thead>
+    <tbody>
+    {% for inv in invites %}
+    <tr>
+      <td><code style="color:var(--gold);">{{ inv.code }}</code></td>
+      <td>{{ inv.use_count }}/{{ inv.max_uses }}</td>
+      <td>{{ 'yes' if inv.active else 'no' }}</td>
+      <td>{{ inv.expires_at.strftime('%Y-%m-%d') if inv.expires_at else '—' }}</td>
+      <td>{{ inv.note or '—' }}</td>
+      <td>
+        {% if inv.active %}
+        <form method="post" style="display:inline;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="action" value="revoke">
+          <input type="hidden" name="invite_id" value="{{ inv.id }}">
+          <button class="btn-dash" type="submit" style="font-size:0.75rem;">Revoke</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="6" style="color:var(--text-muted);">No invites yet.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

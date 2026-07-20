@@ -1,0 +1,52 @@
+{# Shared Episio-first founder sidebar. Pass active='overview'|'users'|... #}
+{% macro nav_link(endpoint, label, icon, key, badge=None) -%}
+<a class="nav-link{% if active == key %} active{% endif %}" href="{{ url_for(endpoint) }}">
+  <i class="bi {{ icon }}"{% if key in ('series','quality','featured','flags') %} style="color:var(--gold);"{% endif %}></i>
+  {{ label }}{% if badge %} <span class="badge bg-warning text-dark ms-auto">{{ badge }}</span>{% endif %}
+</a>
+{%- endmacro %}
+
+<div style="font-size:0.65rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);padding:0.75rem 0.5rem 0.25rem;">Watchers</div>
+{{ nav_link('founder_dash.overview', 'Overview', 'bi-speedometer2', 'overview') }}
+{{ nav_link('founder_dash.users', 'Users', 'bi-people', 'users') }}
+{{ nav_link('founder_dash.coin_purchases', 'Coin purchases', 'bi-coin', 'coin_purchases') }}
+{{ nav_link('founder_dash.subscribers', 'VIP / Membership', 'bi-gem', 'subscribers') }}
+{{ nav_link('founder_dash.moderation', 'Reports', 'bi-flag', 'moderation') }}
+
+<div style="font-size:0.65rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);padding:0.75rem 0.5rem 0.25rem;">Creators</div>
+{{ nav_link('founder_dash.creators', 'Creators', 'bi-person-badge', 'creators') }}
+{{ nav_link('founder_dash.episio_invites', 'Invites', 'bi-ticket-perforated', 'invites') }}
+{{ nav_link('founder_dash.episio_applications', 'Applications', 'bi-clipboard-check', 'applications') }}
+{{ nav_link('founder_dash.episio_series', 'Series', 'bi-camera-reels', 'series') }}
+{{ nav_link('founder_dash.episio_quality', 'Season QC', 'bi-shield-check', 'quality') }}
+
+<div style="font-size:0.65rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);padding:0.75rem 0.5rem 0.25rem;">Catalog</div>
+{{ nav_link('founder_dash.episio_featured', 'Featured', 'bi-stars', 'featured') }}
+{{ nav_link('founder_dash.episio_coin_bands', 'Coin bands', 'bi-cash-stack', 'coin_bands') }}
+{{ nav_link('founder_dash.genres', 'Genres', 'bi-tags', 'genres') }}
+{{ nav_link('founder_dash.episio_flags', 'Product flags', 'bi-toggles', 'flags') }}
+
+<div style="font-size:0.65rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);padding:0.75rem 0.5rem 0.25rem;">Money</div>
+{{ nav_link('founder_dash.payouts', 'Payouts', 'bi-send-check', 'payouts') }}
+{{ nav_link('founder_dash.withdrawals', 'Withdrawals', 'bi-arrow-up-right-circle', 'withdrawals') }}
+{{ nav_link('founder_dash.financial_dashboard', 'Financial', 'bi-bank', 'financial') }}
+
+<div style="font-size:0.65rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);padding:0.75rem 0.5rem 0.25rem;">Ops</div>
+{{ nav_link('founder_dash.announcements', 'Announcements', 'bi-megaphone', 'announcements') }}
+{{ nav_link('founder_dash.team_management', 'Team', 'bi-people-fill', 'team') }}
+{{ nav_link('founder_dash.email_studio', 'Email Studio', 'bi-envelope-paper', 'email') }}
+{{ nav_link('founder_dash.settings', 'Settings', 'bi-gear', 'settings') }}
+{{ nav_link('founder_dash.notification_testing', 'Notifications', 'bi-bell', 'notifications') }}
+
+<details style="margin-top:1rem;padding:0.5rem;border-top:1px solid rgba(255,255,255,0.08);">
+  <summary style="font-size:0.72rem;color:var(--text-muted);cursor:pointer;">Legacy novel tools</summary>
+  <div style="margin-top:0.5rem;display:flex;flex-direction:column;gap:2px;">
+    <a class="nav-link" href="{{ url_for('founder_dash.content') }}" style="font-size:0.78rem;"><i class="bi bi-book"></i> Books content</a>
+    <a class="nav-link" href="{{ url_for('founder_dash.review_queue') }}" style="font-size:0.78rem;"><i class="bi bi-robot"></i> Bot review</a>
+    <a class="nav-link" href="{{ url_for('founder_dash.elite_manage') }}" style="font-size:0.78rem;">✦ Elite</a>
+    <a class="nav-link" href="{{ url_for('founder_dash.collections') }}" style="font-size:0.78rem;"><i class="bi bi-grid"></i> Collections</a>
+    <a class="nav-link" href="{{ url_for('founder_dash.book_sections') }}" style="font-size:0.78rem;"><i class="bi bi-layout-text-window"></i> Book sections</a>
+    <a class="nav-link" href="{{ safe_url_for('classics.dashboard') }}" style="font-size:0.78rem;"><i class="bi bi-journal-bookmark"></i> Classics</a>
+    <a class="nav-link" href="{{ safe_url_for('wiambot.apex_review') }}" style="font-size:0.78rem;"><i class="bi bi-trophy"></i> Apex</a>
+  </div>
+</details>

@@ -1,0 +1,81 @@
+{% extends "dashboard_base.html" %}
+{% block title %}{{ series.title }} — Series Control{% endblock %}
+{% block sidebar_title %}WiamEpisio Control{% endblock %}
+{% block sidebar_nav %}{% set active = 'series' %}{% include "founder/_episio_nav.html" %}{% endblock %}
+{% block dash_content %}
+<div class="dash-header">
+  <h1>{{ series.title }}</h1>
+  <p>ID {{ series.id }} · format {{ series.format }} · structure {{ series.structure_mode or 'series' }}
+    {% if creator %} · Creator <a href="{{ url_for('founder_dash.user_detail', user_id=creator.id) }}" style="color:var(--gold);">{{ creator.display_name }}</a>{% endif %}
+  </p>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-5">
+    <div class="dash-card">
+      <h3>Flags & shelf</h3>
+      <form method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="action" value="flags">
+        <label style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
+          <input type="checkbox" name="is_wiam_origin" {% if series.is_wiam_origin %}checked{% endif %}> Wiam Origin
+        </label>
+        <label style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
+          <input type="checkbox" name="is_vip_series" {% if series.is_vip_series %}checked{% endif %}> VIP series
+        </label>
+        <label class="d-block mb-2" style="font-size:0.8rem;color:var(--text-muted);">Catalog shelf</label>
+        <select name="catalog_shelf" class="form-select mb-3" style="background:var(--bg);color:var(--text);border-color:var(--border-subtle);">
+          {% for sh in ['standard','origin','vip','anime'] %}
+          <option value="{{ sh }}" {% if series.catalog_shelf==sh %}selected{% endif %}>{{ sh }}</option>
+          {% endfor %}
+        </select>
+        <label class="d-block mb-2" style="font-size:0.8rem;color:var(--text-muted);">Coin band</label>
+        <select name="coin_band" class="form-select mb-3" style="background:var(--bg);color:var(--text);border-color:var(--border-subtle);">
+          {% for b in ['standard','premium','origin','vip'] %}
+          <option value="{{ b }}" {% if series.coin_band==b %}selected{% endif %}>{{ b }}</option>
+          {% endfor %}
+        </select>
+        <button class="btn-dash btn-dash-primary" type="submit">Save flags</button>
+      </form>
+      <hr style="border-color:rgba(255,255,255,0.08);margin:1.2rem 0;">
+      <form method="post" style="display:inline;" onsubmit="return confirm('Publish entire unit (all episodes)?');">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="action" value="publish">
+        <button class="btn-dash btn-dash-primary" type="submit">Publish whole unit</button>
+      </form>
+      <form method="post" style="display:inline;margin-left:8px;" onsubmit="return confirm('Unpublish entire unit?');">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="action" value="unpublish">
+        <button class="btn-dash" type="submit">Unpublish whole unit</button>
+      </form>
+      {% if qc_job %}
+      <p style="margin-top:14px;"><a href="{{ url_for('founder_dash.episio_quality_job', job_id=qc_job.id) }}" style="color:var(--gold);">Open Season QC job #{{ qc_job.id }} ({{ qc_job.status }}) →</a></p>
+      {% else %}
+      <p style="margin-top:14px;"><a href="{{ url_for('founder_dash.episio_quality') }}" style="color:var(--gold);">Season QC queue →</a></p>
+      {% endif %}
+    </div>
+  </div>
+  <div class="col-lg-7">
+    <div class="dash-card">
+      <h3>Episodes ({{ episodes|length }})</h3>
+      <table class="dash-table">
+        <thead><tr><th>#</th><th>Title</th><th>Published</th><th>Final</th><th>QC</th><th>Coins</th></tr></thead>
+        <tbody>
+        {% for ep in episodes %}
+        <tr>
+          <td>{{ ep.episode_number }}</td>
+          <td>{{ ep.title }}</td>
+          <td>{{ 'yes' if ep.published else 'no' }}</td>
+          <td>{{ 'yes' if ep.is_final else 'no' }}</td>
+          <td>{{ ep.asset_qc_status or '—' }}</td>
+          <td>{{ ep.unlock_price_coins }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" style="color:var(--text-muted);">No episodes uploaded.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

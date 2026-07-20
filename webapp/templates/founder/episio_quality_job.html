@@ -2,10 +2,7 @@
 {% block title %}Season QC #{{ job.id }} — Founder{% endblock %}
 {% block sidebar_title %}Founder Dashboard{% endblock %}
 
-{% block sidebar_nav %}
-<a class="nav-link" href="{{ url_for('founder_dash.episio_quality') }}"><i class="bi bi-camera-reels" style="color:var(--gold);"></i> Episio Season QC</a>
-<a class="nav-link" href="{{ url_for('founder_dash.platform_settings') }}"><i class="bi bi-sliders"></i> Platform Settings</a>
-{% endblock %}
+{% block sidebar_nav %}{% set active = 'quality' %}{% include "founder/_episio_nav.html" %}{% endblock %}
 
 {% block dash_content %}
 <div class="dash-header">

@@ -42,8 +42,8 @@ def founder_required(f):
 @founder_bp.route('/')
 @founder_required
 def overview():
-    """Founder overview with key stats."""
-    from datetime import datetime
+    """Episio founder overview — watchers, creators, catalog KPIs."""
+    from ..services import episio_founder as ef
 
     def _safe(default, fn):
         try:
@@ -53,68 +53,54 @@ def overview():
             log.exception('founder overview query failed')
             return default
 
-    total_users = _safe(0, lambda: User.query.count())
-    total_creators = _safe(0, lambda: User.query.filter(User.role.in_(['creator', 'founder'])).count())
-    published_books = _safe(0, lambda: Content.query.filter(
-        Content.status.in_(Content.PUBLISHED_STATUSES),
-        Content.deleted_at == None
-    ).count())
-    draft_books = _safe(0, lambda: Content.query.filter(
-        Content.status == 'draft',
-        Content.deleted_at == None
-    ).count())
-    pending_apps = _safe(0, lambda: User.query.filter(User.creator_application_status == 'pending').count())
+    stats = ef.overview_stats()
+    recent_users = _safe([], lambda: User.query.order_by(User.date_joined.desc()).limit(8).all())
+    recent_series = _safe([], lambda: ef.list_drama_series(limit=8))
 
-    # Coin system stats
-    total_coin_purchases = _safe(0, lambda: CoinTransaction.query.filter_by(type='purchase').count())
-    total_coins_circulating = _safe(0, lambda: db.session.query(
-        func.coalesce(func.sum(CoinBalance.balance), 0)
-    ).scalar() or 0)
-    active_elite_subs = _safe(0, lambda: EliteSubscription.query.filter_by(status='active').count())
+    try:
+        from ..services.monetization import COIN_TO_GHS
+    except Exception:
+        COIN_TO_GHS = 0.1
 
-    # This month revenue (coin purchases)
-    month_start = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    month_start = __import__('datetime').datetime.utcnow().replace(
+        day=1, hour=0, minute=0, second=0, microsecond=0
+    )
     month_coin_revenue = _safe(0, lambda: db.session.query(
         func.coalesce(func.sum(CoinTransaction.amount), 0)
     ).filter(
         CoinTransaction.type == 'purchase',
         CoinTransaction.created_at >= month_start,
     ).scalar() or 0)
-    from ..services.monetization import COIN_TO_GHS
     month_revenue_ghs = abs(month_coin_revenue) * COIN_TO_GHS
 
-    # Recent users
-    recent_users = _safe([], lambda: User.query.order_by(User.date_joined.desc()).limit(5).all())
-
-    # Recent books / series
-    recent_books = _safe([], lambda: Content.query.filter(
-        Content.deleted_at == None
-    ).order_by(Content.created_at.desc()).limit(5).all())
-
     try:
-        return render_template('founder/overview.html',
-            total_users=total_users,
-            total_creators=total_creators,
-            published_books=published_books,
-            draft_books=draft_books,
-            pending_apps=pending_apps,
-            total_coin_purchases=total_coin_purchases,
-            total_coins_circulating=total_coins_circulating,
-            active_elite_subs=active_elite_subs,
-            month_revenue_ghs=month_revenue_ghs,
+        return render_template(
+            'founder/overview.html',
+            stats=stats,
             recent_users=recent_users,
-            recent_books=recent_books,
+            recent_series=recent_series,
+            month_revenue_ghs=month_revenue_ghs,
+            active='overview',
+            # legacy template vars kept for safety
+            total_users=stats.get('watchers', 0),
+            total_creators=stats.get('creators', 0),
+            published_books=stats.get('live_series', 0),
+            draft_books=max(0, (stats.get('all_series') or 0) - (stats.get('live_series') or 0)),
+            pending_apps=stats.get('pending_applications', 0),
+            total_coin_purchases=stats.get('coin_purchases_month', 0),
+            total_coins_circulating=stats.get('coins_circulating', 0),
+            active_elite_subs=stats.get('vip_active', 0),
+            recent_books=recent_series,
         )
     except Exception as e:
         log.exception('founder overview template failed')
-        # Never trap the founder on a 500 — return a minimal escape hatch.
         from flask import make_response
         body = (
             '<!doctype html><html><body style="background:#08081a;color:#eee;font-family:sans-serif;padding:2rem">'
             '<h1 style="color:#d4a843">Founder panel (safe mode)</h1>'
             '<p>Overview template failed: <code>%s</code></p>'
-            '<p><a href="/founder/episio-quality" style="color:#d4a843">Episio Season QC</a> · '
-            '<a href="/" style="color:#d4a843">Home</a> · '
+            '<p><a href="/founder/episio/series" style="color:#d4a843">Series</a> · '
+            '<a href="/founder/episio-quality" style="color:#d4a843">Season QC</a> · '
             '<a href="/logout" style="color:#f87171">Logout</a></p>'
             '</body></html>'
         ) % (str(e)[:300].replace('<', '&lt;'),)
@@ -4821,3 +4807,10 @@ def episio_quality_decide(job_id):
     db.session.commit()
     flash('Published "%s" — WiamEpisio (platform) publish complete.' % (series.title or series.id), 'success')
     return redirect(url_for('founder_dash.episio_quality'))
+
+
+# ---------------------------------------------------------------------------
+# WiamEpisio founder control pages (watchers + creators + catalog)
+# ---------------------------------------------------------------------------
+from .founder_episio_pages import register_episio_founder_pages
+register_episio_founder_pages(founder_bp, founder_required)

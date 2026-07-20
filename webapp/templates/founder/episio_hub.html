@@ -1,0 +1,38 @@
+{% extends "dashboard_base.html" %}
+{% block title %}WiamEpisio Hub — Founder{% endblock %}
+{% block sidebar_title %}WiamEpisio Control{% endblock %}
+{% block sidebar_nav %}{% set active = 'overview' %}{% include "founder/_episio_nav.html" %}{% endblock %}
+{% block dash_content %}
+<div class="dash-header">
+  <h1>WiamEpisio Hub</h1>
+  <p>Jump to any control surface</p>
+</div>
+<div class="stat-grid">
+  <div class="stat-card"><div class="label">Watchers</div><div class="value">{{ stats.watchers }}</div></div>
+  <div class="stat-card"><div class="label">Creators</div><div class="value">{{ stats.creators }}</div></div>
+  <div class="stat-card"><div class="label">Live series</div><div class="value gold">{{ stats.live_series }}</div></div>
+  <div class="stat-card"><div class="label">Pending QC</div><div class="value" style="color:#facc15;">{{ stats.pending_qc }}</div></div>
+</div>
+<div class="row g-3" style="margin-top:12px;">
+  {% set cards = [
+    ('founder_dash.users', 'Users / Watchers', 'Ban, coins, VIP, unlocks'),
+    ('founder_dash.episio_series', 'Series', 'Publish whole unit, VIP, Origin'),
+    ('founder_dash.episio_invites', 'Invites', 'Generate Studio invite codes'),
+    ('founder_dash.episio_applications', 'Applications', 'Accept / reject creators'),
+    ('founder_dash.episio_quality', 'Season QC', 'Pipeline + decide'),
+    ('founder_dash.episio_featured', 'Featured', 'Home / VIP / Origin slots'),
+    ('founder_dash.episio_coin_bands', 'Coin bands', 'Unlock pricing'),
+    ('founder_dash.episio_flags', 'Flags', 'VIP + QC kill switches'),
+    ('founder_dash.payouts', 'Payouts', 'Creator money out'),
+    ('founder_dash.moderation', 'Reports', 'Watcher reports'),
+  ] %}
+  {% for ep, title, sub in cards %}
+  <div class="col-md-4">
+    <a href="{{ url_for(ep) }}" class="dash-card" style="display:block;text-decoration:none;color:inherit;">
+      <h3 style="color:var(--gold);">{{ title }}</h3>
+      <p style="color:var(--text-muted);margin:0;font-size:0.85rem;">{{ sub }}</p>
+    </a>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

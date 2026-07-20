@@ -1,0 +1,40 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Series — WiamEpisio Founder{% endblock %}
+{% block sidebar_title %}WiamEpisio Control{% endblock %}
+{% block sidebar_nav %}{% set active = 'series' %}{% include "founder/_episio_nav.html" %}{% endblock %}
+{% block dash_content %}
+<div class="dash-header">
+  <h1><i class="bi bi-camera-reels" style="color:var(--gold);"></i> Drama Series</h1>
+  <p>Publish / unpublish whole units · VIP / Origin · open QC</p>
+</div>
+<form method="get" class="filter-bar d-flex gap-2 flex-wrap" style="margin-bottom:16px;">
+  <input type="text" name="q" value="{{ q }}" placeholder="Search title…">
+  <select name="status" onchange="this.form.submit()">
+    <option value="">All statuses</option>
+    {% for st in ['draft','published','ongoing','complete','approved'] %}
+    <option value="{{ st }}" {% if status==st %}selected{% endif %}>{{ st }}</option>
+    {% endfor %}
+  </select>
+  <button class="btn-dash btn-dash-primary" type="submit">Filter</button>
+</form>
+<div class="dash-card">
+  <table class="dash-table">
+    <thead><tr><th>ID</th><th>Title</th><th>Status</th><th>Shelf</th><th>QC</th><th>Eps</th><th></th></tr></thead>
+    <tbody>
+    {% for s in series_list %}
+    <tr>
+      <td>{{ s.id }}</td>
+      <td><strong>{{ s.title }}</strong>{% if s.is_vip_series %} <span style="color:var(--gold);font-size:0.7rem;">VIP</span>{% endif %}{% if s.is_wiam_origin %} <span style="color:#38bdf8;font-size:0.7rem;">ORIGIN</span>{% endif %}</td>
+      <td>{{ s.status }}</td>
+      <td>{{ s.catalog_shelf or 'standard' }}</td>
+      <td>{{ s.season_qc_status or 'none' }}</td>
+      <td>{{ s.total_episodes or s.planned_episode_count or '—' }}</td>
+      <td><a href="{{ url_for('founder_dash.episio_series_detail', series_id=s.id) }}" style="color:var(--gold);">Open →</a></td>
+    </tr>
+    {% else %}
+    <tr><td colspan="7" style="color:var(--text-muted);">No drama series yet.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

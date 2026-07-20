@@ -1,0 +1,57 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Featured Shelves — WiamEpisio{% endblock %}
+{% block sidebar_title %}WiamEpisio Control{% endblock %}
+{% block sidebar_nav %}{% set active = 'featured' %}{% include "founder/_episio_nav.html" %}{% endblock %}
+{% block dash_content %}
+<div class="dash-header">
+  <h1><i class="bi bi-stars" style="color:var(--gold);"></i> Featured Trailer Slots</h1>
+  <p>Home / Origin / VIP / Anime curated trailers</p>
+</div>
+<div class="dash-card" style="margin-bottom:16px;">
+  <h3>Add slot</h3>
+  <form method="post" class="row g-2 align-items-end">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="action" value="add">
+    <div class="col-md-2">
+      <label class="form-label" style="font-size:0.75rem;color:var(--text-muted);">Slot</label>
+      <select name="slot_key" class="form-select" style="background:var(--bg);color:var(--text);border-color:var(--border-subtle);">
+        <option value="home_featured">home_featured</option>
+        <option value="origin">origin</option>
+        <option value="vip">vip</option>
+        <option value="anime">anime</option>
+        <option value="ranking">ranking</option>
+      </select>
+    </div>
+    <div class="col-md-2"><label class="form-label" style="font-size:0.75rem;color:var(--text-muted);">Series ID</label><input name="content_id" class="form-control" required style="background:var(--bg);color:var(--text);border-color:var(--border-subtle);"></div>
+    <div class="col-md-2"><label class="form-label" style="font-size:0.75rem;color:var(--text-muted);">Sort</label><input name="sort_order" value="0" class="form-control" style="background:var(--bg);color:var(--text);border-color:var(--border-subtle);"></div>
+    <div class="col-md-4"><label class="form-label" style="font-size:0.75rem;color:var(--text-muted);">Note</label><input name="note" class="form-control" style="background:var(--bg);color:var(--text);border-color:var(--border-subtle);"></div>
+    <div class="col-md-2"><button class="btn-dash btn-dash-primary w-100" type="submit">Add</button></div>
+  </form>
+</div>
+<div class="dash-card">
+  <table class="dash-table">
+    <thead><tr><th>Slot</th><th>Series</th><th>Sort</th><th>Active</th><th>Note</th><th></th></tr></thead>
+    <tbody>
+    {% for s in slots %}
+    <tr>
+      <td>{{ s.slot_key }}</td>
+      <td>#{{ s.content_id }} {% if series_map.get(s.content_id) %}— {{ series_map[s.content_id].title|truncate(40) }}{% endif %}</td>
+      <td>{{ s.sort_order }}</td>
+      <td>{{ 'yes' if s.is_active else 'no' }}</td>
+      <td>{{ s.note or '—' }}</td>
+      <td>
+        <form method="post" style="display:inline;" onsubmit="return confirm('Remove slot?');">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="action" value="delete">
+          <input type="hidden" name="slot_id" value="{{ s.id }}">
+          <button class="btn-dash" type="submit" style="font-size:0.75rem;">Delete</button>
+        </form>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="6" style="color:var(--text-muted);">No featured slots.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
