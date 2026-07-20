@@ -20,9 +20,9 @@
 <a class="nav-link" href="{{ url_for('founder_dash.moderation') }}"><i class="bi bi-shield-exclamation"></i> Moderation</a>
 <a class="nav-link" href="{{ url_for('founder_dash.warnings_list') }}"><i class="bi bi-exclamation-triangle" style="color:#f59e0b;"></i> Warnings</a>
 <a class="nav-link" href="{{ url_for('founder_dash.elite_manage') }}"><span style="color:var(--gold);">?</span> WiamElite</a>
-<a class="nav-link" href="{{ url_for('wiambot.apex_review') }}"><i class="bi bi-trophy-fill" style="color:var(--gold);"></i> Apex Review</a>
+<a class="nav-link" href="{{ safe_url_for('wiambot.apex_review') }}"><i class="bi bi-trophy-fill" style="color:var(--gold);"></i> Apex Review</a>
 <a class="nav-link" href="{{ url_for('founder_dash.review_queue') }}"><i class="bi bi-robot"></i> Bot Review Queue</a>
-<a class="nav-link active" href="{{ url_for('classics.dashboard') }}"><i class="bi bi-journal-bookmark" style="color:#a78bfa;"></i> Content Seeder</a>
+<a class="nav-link active" href="{{ safe_url_for('classics.dashboard') }}"><i class="bi bi-journal-bookmark" style="color:#a78bfa;"></i> Content Seeder</a>
 <a class="nav-link" href="{{ url_for('founder_dash.platform_settings') }}"><i class="bi bi-sliders"></i> Platform Settings</a>
 <a class="nav-link" href="{{ url_for('founder_dash.forms_dashboard') }}"><i class="bi bi-file-earmark-text"></i> Application Forms</a>
 <a class="nav-link" href="{{ url_for('founder_dash.email_studio') }}"><i class="bi bi-envelope-paper" style="color:var(--gold);"></i> Email Studio</a>
@@ -83,7 +83,7 @@
 <!-- Fetch Form -->
 <div class="seeder-card" style="border-left:4px solid #a78bfa;">
     <h3><i class="bi bi-cloud-download"></i> Fetch Classic Novels</h3>
-    <form method="POST" action="{{ url_for('classics.fetch_books') }}" class="fetch-form">
+    <form method="POST" action="{{ safe_url_for('classics.fetch_books') }}" class="fetch-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div>
             <label>Number of books</label>
@@ -151,12 +151,12 @@
                     <td>{{ '{:,}'.format(b.word_count) }}</td>
                     <td style="white-space:nowrap;color:var(--text-muted);">{{ b.created_at.strftime('%b %d, %H:%M') }}</td>
                     <td style="white-space:nowrap;display:flex;gap:0.4rem;">
-                        <a href="{{ url_for('classics.review', book_id=b.id) }}" class="btn-review"><i class="bi bi-eye"></i> Review</a>
-                        <form method="POST" action="{{ url_for('classics.publish', book_id=b.id) }}" style="display:inline;" onsubmit="return confirm('Publish this classic? Chapter 1 releases immediately, then 1 chapter/day.')">
+                        <a href="{{ safe_url_for('classics.review', book_id=b.id) }}" class="btn-review"><i class="bi bi-eye"></i> Review</a>
+                        <form method="POST" action="{{ safe_url_for('classics.publish', book_id=b.id) }}" style="display:inline;" onsubmit="return confirm('Publish this classic? Chapter 1 releases immediately, then 1 chapter/day.')">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="btn-publish"><i class="bi bi-check-lg"></i> Publish</button>
                         </form>
-                        <form method="POST" action="{{ url_for('classics.delete', book_id=b.id) }}" style="display:inline;" onsubmit="return confirm('Permanently delete this classic draft?')">
+                        <form method="POST" action="{{ safe_url_for('classics.delete', book_id=b.id) }}" style="display:inline;" onsubmit="return confirm('Permanently delete this classic draft?')">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="btn-delete"><i class="bi bi-trash"></i></button>
                         </form>
@@ -196,7 +196,7 @@
                 <tr>
                     <td>
                         <span class="badge-classic">CLASSIC</span>
-                        <a href="{{ url_for('classics.book_detail', book_id=b.id) }}" style="color:var(--text);text-decoration:none;">{{ b.title|truncate(40) }}</a>
+                        <a href="{{ safe_url_for('classics.book_detail', book_id=b.id) }}" style="color:var(--text);text-decoration:none;">{{ b.title|truncate(40) }}</a>
                     </td>
                     <td style="color:var(--text-muted);">{{ b.author }}</td>
                     <td><span style="color:#a78bfa;">{{ b.genre }}</span></td>
@@ -204,7 +204,7 @@
                     <td>{{ b.views }}</td>
                     <td style="white-space:nowrap;color:var(--text-muted);">{{ b.published_at.strftime('%b %d') if b.published_at else '—' }}</td>
                     <td>
-                        <form method="POST" action="{{ url_for('classics.delete', book_id=b.id) }}" style="display:inline;" onsubmit="return confirm('?? This will permanently remove this classic and all its chapters. Continue?')">
+                        <form method="POST" action="{{ safe_url_for('classics.delete', book_id=b.id) }}" style="display:inline;" onsubmit="return confirm('?? This will permanently remove this classic and all its chapters. Continue?')">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="btn-delete"><i class="bi bi-trash"></i> Remove</button>
                         </form>
@@ -241,12 +241,12 @@
                     <td style="white-space:nowrap;color:var(--text-muted);">{{ l.fetched_at.strftime('%b %d, %H:%M') }}</td>
                     <td style="white-space:nowrap;display:flex;gap:0.4rem;">
                         {% if l.status == 'fetched' %}
-                        <form method="POST" action="{{ url_for('classics.return_log', log_id=l.id) }}" style="display:inline;" onsubmit="return confirm('Return this book to draft review?')">
+                        <form method="POST" action="{{ safe_url_for('classics.return_log', log_id=l.id) }}" style="display:inline;" onsubmit="return confirm('Return this book to draft review?')">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="btn-review" style="font-size:0.72rem;padding:0.25rem 0.6rem;"><i class="bi bi-arrow-counterclockwise"></i> Return</button>
                         </form>
                         {% endif %}
-                        <form method="POST" action="{{ url_for('classics.delete_log', log_id=l.id) }}" style="display:inline;" onsubmit="return confirm('Permanently delete this log entry and any associated book?')">
+                        <form method="POST" action="{{ safe_url_for('classics.delete_log', log_id=l.id) }}" style="display:inline;" onsubmit="return confirm('Permanently delete this log entry and any associated book?')">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="btn-delete" style="font-size:0.72rem;padding:0.25rem 0.6rem;"><i class="bi bi-trash"></i></button>
                         </form>

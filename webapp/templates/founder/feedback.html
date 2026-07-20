@@ -18,7 +18,7 @@
 <a class="nav-link" href="{{ url_for('founder_dash.moderation') }}"><i class="bi bi-shield-exclamation"></i> Moderation</a>
 <a class="nav-link" href="{{ url_for('founder_dash.warnings_list') }}"><i class="bi bi-exclamation-triangle" style="color:#f59e0b;"></i> Warnings</a>
 <a class="nav-link" href="{{ url_for('founder_dash.elite_manage') }}"><span style="color:var(--gold);">?</span> WiamElite</a>
-<a class="nav-link" href="{{ url_for('wiambot.apex_review') }}"><i class="bi bi-trophy-fill" style="color:var(--gold);"></i> Apex Review</a>
+<a class="nav-link" href="{{ safe_url_for('wiambot.apex_review') }}"><i class="bi bi-trophy-fill" style="color:var(--gold);"></i> Apex Review</a>
 <a class="nav-link" href="{{ url_for('founder_dash.review_queue') }}"><i class="bi bi-robot"></i> Bot Review Queue</a>
 <a class="nav-link" href="{{ url_for('founder_dash.platform_settings') }}"><i class="bi bi-sliders"></i> Platform Settings</a>
 <a class="nav-link" href="{{ url_for('founder_dash.forms_dashboard') }}"><i class="bi bi-file-earmark-text"></i> Application Forms</a>
@@ -27,7 +27,7 @@
 <a class="nav-link" href="{{ url_for('founder_dash.team_management') }}"><i class="bi bi-people-fill"></i> Team</a>
 <a class="nav-link" href="{{ url_for('founder_dash.account_management') }}"><i class="bi bi-person-x"></i> Account Management</a>
 <a class="nav-link" href="{{ url_for('founder_dash.notification_testing') }}"><i class="bi bi-bell" style="color:#fbbf24;"></i> Notifications</a>
-<a class="nav-link" href="{{ url_for('classics.dashboard') }}"><i class="bi bi-journal-bookmark" style="color:#a78bfa;"></i> Content Seeder</a>
+<a class="nav-link" href="{{ safe_url_for('classics.dashboard') }}"><i class="bi bi-journal-bookmark" style="color:#a78bfa;"></i> Content Seeder</a>
 <a class="nav-link" href="{{ url_for('founder_dash.settings') }}"><i class="bi bi-gear"></i> Settings</a>
 <a class="nav-link" href="{{ url_for('founder_dash.admins') }}"><i class="bi bi-shield-check"></i> Admins</a>
 {% endblock %}

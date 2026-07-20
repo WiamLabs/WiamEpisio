@@ -2620,6 +2620,20 @@ def create_app():
         return {'now': _dt.utcnow}
 
     @app.context_processor
+    def inject_safe_url_for():
+        """url_for that returns '#' when endpoint is not registered (EPISIO_SLIM)."""
+        from flask import url_for as _url_for
+        from werkzeug.routing import BuildError as _BuildError
+
+        def safe_url_for(endpoint, **values):
+            try:
+                return _url_for(endpoint, **values)
+            except _BuildError:
+                return '#'
+
+        return {'safe_url_for': safe_url_for}
+
+    @app.context_processor
     def inject_wiam_in_app():
         """True when page is loaded inside the Expo app WebView (embed query, cookie, or UA marker)."""
         from flask import request as _req

@@ -22,13 +22,13 @@
 <a class="nav-link" href="{{ url_for('founder_dash.elite_manage') }}"><span style="color:var(--gold);">✦</span> WiamElite</a>
 <a class="nav-link" href="{{ url_for('founder_dash.review_queue') }}"><i class="bi bi-robot"></i> Bot Review Queue</a>
 <a class="nav-link" href="{{ url_for('founder_dash.platform_settings') }}"><i class="bi bi-sliders"></i> Platform Settings</a>
-<a class="nav-link active" href="{{ url_for('wiambot.apex_review') }}"><i class="bi bi-trophy"></i> Apex Review</a>
+<a class="nav-link active" href="{{ safe_url_for('wiambot.apex_review') }}"><i class="bi bi-trophy"></i> Apex Review</a>
 <a class="nav-link" href="{{ url_for('founder_dash.forms_dashboard') }}"><i class="bi bi-file-earmark-text"></i> Application Forms</a>
 <a class="nav-link" href="{{ url_for('founder_dash.email_studio') }}"><i class="bi bi-envelope-paper" style="color:var(--gold);"></i> Email Studio</a>
 <a class="nav-link" href="{{ url_for('founder_dash.team_management') }}"><i class="bi bi-people-fill"></i> Team</a>
 <a class="nav-link" href="{{ url_for('founder_dash.account_management') }}"><i class="bi bi-person-x"></i> Account Management</a>
 <a class="nav-link" href="{{ url_for('founder_dash.notification_testing') }}"><i class="bi bi-bell" style="color:#fbbf24;"></i> Notifications</a>
-<a class="nav-link" href="{{ url_for('classics.dashboard') }}"><i class="bi bi-journal-bookmark" style="color:#a78bfa;"></i> Content Seeder</a>
+<a class="nav-link" href="{{ safe_url_for('classics.dashboard') }}"><i class="bi bi-journal-bookmark" style="color:#a78bfa;"></i> Content Seeder</a>
 <a class="nav-link" href="{{ url_for('founder_dash.settings') }}"><i class="bi bi-gear"></i> Settings</a>
 {% endblock %}
 
@@ -65,7 +65,7 @@
     .btn-revision{background:#fb923c;color:#000;}
 </style>
 
-<a href="{{ url_for('wiambot.apex_review') }}" style="font-size:0.82rem;color:var(--text-muted);text-decoration:none;"><i class="bi bi-arrow-left"></i> Back to Apex Review</a>
+<a href="{{ safe_url_for('wiambot.apex_review') }}" style="font-size:0.82rem;color:var(--text-muted);text-decoration:none;"><i class="bi bi-arrow-left"></i> Back to Apex Review</a>
 
 <div class="rd-header" style="margin-top:12px;">
     <h2>{{ sub.title }}</h2>
@@ -101,7 +101,7 @@
 <div class="rd-section"><h3>Chapter 2</h3><div class="rd-text">{{ sub.chapter_2[:3000] }}{% if sub.chapter_2|length > 3000 %}...{% endif %}</div></div>
 
 {% if sub.status == 'pending_review' %}
-<form class="action-form" method="POST" action="{{ url_for('wiambot.apex_review_action', submission_id=sub.id) }}">
+<form class="action-form" method="POST" action="{{ safe_url_for('wiambot.apex_review_action', submission_id=sub.id) }}">
     <h3>Decision</h3>
     <textarea name="notes" placeholder="Optional notes for the creator..."></textarea>
     <div class="action-btns">

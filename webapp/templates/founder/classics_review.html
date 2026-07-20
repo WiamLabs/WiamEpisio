@@ -20,9 +20,9 @@
 <a class="nav-link" href="{{ url_for('founder_dash.moderation') }}"><i class="bi bi-shield-exclamation"></i> Moderation</a>
 <a class="nav-link" href="{{ url_for('founder_dash.warnings_list') }}"><i class="bi bi-exclamation-triangle" style="color:#f59e0b;"></i> Warnings</a>
 <a class="nav-link" href="{{ url_for('founder_dash.elite_manage') }}"><span style="color:var(--gold);">?</span> WiamElite</a>
-<a class="nav-link" href="{{ url_for('wiambot.apex_review') }}"><i class="bi bi-trophy-fill" style="color:var(--gold);"></i> Apex Review</a>
+<a class="nav-link" href="{{ safe_url_for('wiambot.apex_review') }}"><i class="bi bi-trophy-fill" style="color:var(--gold);"></i> Apex Review</a>
 <a class="nav-link" href="{{ url_for('founder_dash.review_queue') }}"><i class="bi bi-robot"></i> Bot Review Queue</a>
-<a class="nav-link active" href="{{ url_for('classics.dashboard') }}"><i class="bi bi-journal-bookmark" style="color:#a78bfa;"></i> Content Seeder</a>
+<a class="nav-link active" href="{{ safe_url_for('classics.dashboard') }}"><i class="bi bi-journal-bookmark" style="color:#a78bfa;"></i> Content Seeder</a>
 <a class="nav-link" href="{{ url_for('founder_dash.platform_settings') }}"><i class="bi bi-sliders"></i> Platform Settings</a>
 <a class="nav-link" href="{{ url_for('founder_dash.forms_dashboard') }}"><i class="bi bi-file-earmark-text"></i> Application Forms</a>
 <a class="nav-link" href="{{ url_for('founder_dash.email_studio') }}"><i class="bi bi-envelope-paper" style="color:var(--gold);"></i> Email Studio</a>
@@ -77,12 +77,12 @@
         {% endif %}
 
         <div class="review-actions">
-            <a href="{{ url_for('classics.dashboard') }}" class="btn-back"><i class="bi bi-arrow-left"></i> Back</a>
-            <form method="POST" action="{{ url_for('classics.publish', book_id=book.id) }}" style="display:inline;" onsubmit="return confirm('Publish this classic? Chapter 1 releases immediately, then 1 chapter per day.')">
+            <a href="{{ safe_url_for('classics.dashboard') }}" class="btn-back"><i class="bi bi-arrow-left"></i> Back</a>
+            <form method="POST" action="{{ safe_url_for('classics.publish', book_id=book.id) }}" style="display:inline;" onsubmit="return confirm('Publish this classic? Chapter 1 releases immediately, then 1 chapter per day.')">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="btn-publish-lg"><i class="bi bi-check-lg"></i> Publish</button>
             </form>
-            <form method="POST" action="{{ url_for('classics.delete', book_id=book.id) }}" style="display:inline;" onsubmit="return confirm('Permanently delete this draft?')">
+            <form method="POST" action="{{ safe_url_for('classics.delete', book_id=book.id) }}" style="display:inline;" onsubmit="return confirm('Permanently delete this draft?')">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="btn-delete-lg"><i class="bi bi-trash"></i> Delete</button>
             </form>

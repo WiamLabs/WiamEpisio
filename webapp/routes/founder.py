@@ -44,43 +44,52 @@ def founder_required(f):
 def overview():
     """Founder overview with key stats."""
     from datetime import datetime
-    total_users = User.query.count()
-    total_creators = User.query.filter(User.role.in_(['creator', 'founder'])).count()
-    published_books = Content.query.filter(
+
+    def _safe(default, fn):
+        try:
+            return fn()
+        except Exception:
+            db.session.rollback()
+            log.exception('founder overview query failed')
+            return default
+
+    total_users = _safe(0, lambda: User.query.count())
+    total_creators = _safe(0, lambda: User.query.filter(User.role.in_(['creator', 'founder'])).count())
+    published_books = _safe(0, lambda: Content.query.filter(
         Content.status.in_(Content.PUBLISHED_STATUSES),
         Content.deleted_at == None
-    ).count()
-    draft_books = Content.query.filter(
+    ).count())
+    draft_books = _safe(0, lambda: Content.query.filter(
         Content.status == 'draft',
         Content.deleted_at == None
-    ).count()
-    pending_apps = User.query.filter(User.creator_application_status == 'pending').count()
+    ).count())
+    pending_apps = _safe(0, lambda: User.query.filter(User.creator_application_status == 'pending').count())
 
     # Coin system stats
-    total_coin_purchases = CoinTransaction.query.filter_by(type='purchase').count()
-    total_coins_circulating = db.session.query(
+    total_coin_purchases = _safe(0, lambda: CoinTransaction.query.filter_by(type='purchase').count())
+    total_coins_circulating = _safe(0, lambda: db.session.query(
         func.coalesce(func.sum(CoinBalance.balance), 0)
-    ).scalar() or 0
-    active_elite_subs = EliteSubscription.query.filter_by(status='active').count()
+    ).scalar() or 0)
+    active_elite_subs = _safe(0, lambda: EliteSubscription.query.filter_by(status='active').count())
 
     # This month revenue (coin purchases)
     month_start = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-    month_coin_revenue = db.session.query(
+    month_coin_revenue = _safe(0, lambda: db.session.query(
         func.coalesce(func.sum(CoinTransaction.amount), 0)
     ).filter(
         CoinTransaction.type == 'purchase',
         CoinTransaction.created_at >= month_start,
-    ).scalar() or 0
+    ).scalar() or 0)
     from ..services.monetization import COIN_TO_GHS
     month_revenue_ghs = abs(month_coin_revenue) * COIN_TO_GHS
 
     # Recent users
-    recent_users = User.query.order_by(User.date_joined.desc()).limit(5).all()
+    recent_users = _safe([], lambda: User.query.order_by(User.date_joined.desc()).limit(5).all())
 
-    # Recent books
-    recent_books = Content.query.filter(
+    # Recent books / series
+    recent_books = _safe([], lambda: Content.query.filter(
         Content.deleted_at == None
-    ).order_by(Content.created_at.desc()).limit(5).all()
+    ).order_by(Content.created_at.desc()).limit(5).all())
 
     return render_template('founder/overview.html',
         total_users=total_users,
