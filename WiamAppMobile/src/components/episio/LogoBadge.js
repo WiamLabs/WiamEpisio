@@ -1,35 +1,26 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { COLORS, FONTS } from '../../constants/theme';
+import { Image, StyleSheet } from 'react-native';
 
-/** Gold clipped "W" mark from HTML splash/home. */
-const LogoBadge = ({ size = 30 }) => (
-  <LinearGradient
-    colors={[COLORS.gold, COLORS.goldDark]}
-    start={{ x: 0, y: 0 }}
-    end={{ x: 1, y: 1 }}
+/** In-app WiamEpisio mark (navy background logo). */
+const LogoBadge = ({ size = 30, style }) => (
+  <Image
+    source={require('../../../assets/episio-logo-app.png')}
     style={[
-      styles.badge,
+      styles.img,
       {
         width: size,
         height: size,
-        borderRadius: size * 0.3,
+        borderRadius: Math.max(6, size * 0.18),
       },
+      style,
     ]}
-  >
-    <Text style={[styles.letter, { fontSize: size * 0.47 }]}>W</Text>
-  </LinearGradient>
+    resizeMode="cover"
+  />
 );
 
 const styles = StyleSheet.create({
-  badge: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  letter: {
-    fontFamily: FONTS.extraBold,
-    color: COLORS.navy,
+  img: {
+    backgroundColor: 'transparent',
   },
 });
 

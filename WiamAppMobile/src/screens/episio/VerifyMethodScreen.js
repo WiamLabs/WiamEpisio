@@ -21,9 +21,11 @@ const VerifyMethodScreen = () => {
   const user = useAuthStore((s) => s.user);
   const email = route.params?.email || user?.email || '';
   const birthYear = route.params?.birthYear;
+  const dateOfBirth = route.params?.dateOfBirth
+    || user?.date_of_birth
+    || user?.dateOfBirth;
   const [busy, setBusy] = useState(false);
   // SMS kept in code path for later — not shown in UI
-  const method = 'email';
 
   const send = async () => {
     setBusy(true);
@@ -33,6 +35,7 @@ const VerifyMethodScreen = () => {
         navigation.replace('AgeGate', {
           fromRegister: true,
           birthYear,
+          dateOfBirth,
           sticky: true,
         });
         return;
@@ -41,10 +44,16 @@ const VerifyMethodScreen = () => {
         flow: 'register_verify',
         email,
         birthYear,
+        dateOfBirth,
         sticky: true,
       });
     } catch (e) {
-      Alert.alert('Verification', typeof e === 'string' ? e : (e?.message || 'Could not send code'));
+      Alert.alert(
+        'Verification',
+        typeof e === 'string'
+          ? e
+          : (e?.message || 'Could not send verification email. Try again shortly.'),
+      );
     } finally {
       setBusy(false);
     }

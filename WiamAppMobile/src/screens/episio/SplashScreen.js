@@ -1,10 +1,9 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { View, Text, StyleSheet, Animated, Easing, Image } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { COLORS, FONTS } from '../../constants/theme';
-import LogoBadge from '../../components/episio/LogoBadge';
 
+/** Splash uses the transparent / black-plate logo on brand navy. */
 const SplashScreen = ({ navigation }) => {
   const pulse = useRef(new Animated.Value(1)).current;
   const load = useRef(new Animated.Value(0)).current;
@@ -14,7 +13,7 @@ const SplashScreen = ({ navigation }) => {
     Animated.spring(pop, { toValue: 1, friction: 5, tension: 80, useNativeDriver: true }).start();
     Animated.loop(
       Animated.sequence([
-        Animated.timing(pulse, { toValue: 1.18, duration: 1300, useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 1.08, duration: 1300, useNativeDriver: true }),
         Animated.timing(pulse, { toValue: 1, duration: 1300, useNativeDriver: true }),
       ]),
     ).start();
@@ -41,19 +40,13 @@ const SplashScreen = ({ navigation }) => {
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
-      <LinearGradient
-        colors={['rgba(212,160,23,0.08)', 'transparent', 'rgba(212,160,23,0.05)']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={StyleSheet.absoluteFill}
-      />
-      <View style={[styles.film, { left: 0 }]} />
-      <View style={[styles.film, { right: 0 }]} />
 
-      <Animated.View style={[styles.glow, { transform: [{ scale: pulse }] }]} />
-
-      <Animated.View style={{ transform: [{ scale: pop }], zIndex: 1 }}>
-        <LogoBadge size={100} />
+      <Animated.View style={{ transform: [{ scale: pop }, { scale: pulse }], zIndex: 1 }}>
+        <Image
+          source={require('../../../assets/episio-logo-splash.png')}
+          style={styles.logo}
+          resizeMode="contain"
+        />
       </Animated.View>
       <Text style={styles.wordmark}>
         Wiam<Text style={{ color: COLORS.gold }}>Episio</Text>
@@ -64,7 +57,7 @@ const SplashScreen = ({ navigation }) => {
         <Animated.View style={[styles.loaderFill, { transform: [{ translateX: loadX }] }]} />
       </View>
 
-      <Text style={styles.footer}>© 2026 WiamEpisio · Powered by WiamLabs</Text>
+      <Text style={styles.footer}>© 2026 WiamEpisio</Text>
     </View>
   );
 };
@@ -76,22 +69,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  film: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    width: 14,
-    backgroundColor: 'rgba(0,0,0,0.35)',
-  },
-  glow: {
-    position: 'absolute',
-    width: 360,
-    height: 360,
-    borderRadius: 180,
-    backgroundColor: 'rgba(212,160,23,0.14)',
+  logo: {
+    width: 128,
+    height: 128,
   },
   wordmark: {
-    marginTop: 24,
+    marginTop: 22,
     fontSize: 28,
     fontFamily: FONTS.extraBold,
     color: COLORS.text,

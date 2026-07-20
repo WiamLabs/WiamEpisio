@@ -513,6 +513,14 @@ def auth_register():
         return jsonify({'error': 'Valid email is required'}), 400
     if len(password) < 8:
         return jsonify({'error': 'Password must be at least 8 characters'}), 400
+    if not re.search(r'[a-z]', password):
+        return jsonify({'error': 'Password must include a lowercase letter'}), 400
+    if not re.search(r'[A-Z]', password):
+        return jsonify({'error': 'Password must include an uppercase letter'}), 400
+    if not re.search(r'[0-9]', password):
+        return jsonify({'error': 'Password must include a number'}), 400
+    if not re.search(r'[^A-Za-z0-9]', password):
+        return jsonify({'error': 'Password must include a symbol (e.g. ! @ # $)'}), 400
     if not first_name:
         return jsonify({'error': 'First name is required'}), 400
 

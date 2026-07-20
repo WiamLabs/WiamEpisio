@@ -74,9 +74,10 @@ const OtpVerifyScreen = () => {
       try {
         const data = await authApi.verifyEmail(code);
         if (data?.user) await patchUser(data.user);
-        navigation.replace('AgeGate', {
+    navigation.replace('AgeGate', {
           fromRegister: true,
           birthYear,
+          dateOfBirth: route.params?.dateOfBirth,
           sticky: true,
         });
       } catch (e) {

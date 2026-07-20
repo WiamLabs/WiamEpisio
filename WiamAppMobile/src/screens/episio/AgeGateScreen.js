@@ -1,11 +1,11 @@
 /**
- * Confirm age — year of birth only. Sticky until confirm / under-18 exit.
- * Brand navy + gold radial glow.
+ * Confirm age — type your age; compared to registration date of birth.
+ * Sticky until confirm / under-18 exit. Brand navy + gold glow.
  */
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, Alert, BackHandler, Platform,
-  ScrollView, KeyboardAvoidingView,
+  ScrollView, KeyboardAvoidingView, TextInput,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
@@ -13,31 +13,33 @@ import { Lock } from 'lucide-react-native';
 import { COLORS, FONTS } from '../../constants/theme';
 import LogoBadge from '../../components/episio/LogoBadge';
 import EpisioGoldButton from '../../components/episio/EpisioGoldButton';
-import authApi from '../../api/auth';
+import useAuthStore from '../../store/useAuthStore';
 
 const MIN_AGE = 18;
+
+function ageFromDob(iso) {
+  if (!iso || !/^\d{4}-\d{2}-\d{2}$/.test(String(iso).slice(0, 10))) return null;
+  const [y, m, d] = String(iso).slice(0, 10).split('-').map(Number);
+  const birth = new Date(y, m - 1, d);
+  const today = new Date();
+  let age = today.getFullYear() - y;
+  const md = today.getMonth() - birth.getMonth();
+  if (md < 0 || (md === 0 && today.getDate() < birth.getDate())) age -= 1;
+  return age;
+}
 
 const AgeGateScreen = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const route = useRoute();
+  const user = useAuthStore((s) => s.user);
   const sticky = route.params?.sticky !== false;
-  const prefill = route.params?.birthYear;
-  const nowYear = new Date().getFullYear();
-  const maxYear = nowYear - MIN_AGE;
-  const minYear = nowYear - 100;
+  const dob = route.params?.dateOfBirth
+    || user?.date_of_birth
+    || user?.dateOfBirth
+    || null;
 
-  const years = useMemo(() => {
-    const list = [];
-    for (let y = maxYear; y >= minYear; y -= 1) list.push(y);
-    return list;
-  }, [maxYear, minYear]);
-
-  const [year, setYear] = useState(() => {
-    const y = Number(prefill);
-    if (y && y >= minYear && y <= maxYear) return y;
-    return maxYear - 5;
-  });
+  const [ageText, setAgeText] = useState('');
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
@@ -79,20 +81,29 @@ const AgeGateScreen = () => {
 
   const confirm = async () => {
     setError(null);
-    const y = Number(year);
-    if (!y || y < minYear || y > maxYear) {
-      setError('Select your year of birth');
+    const typed = parseInt(String(ageText).replace(/\D/g, ''), 10);
+    if (!typed || typed < 1 || typed > 120) {
+      setError('Enter your age in years');
       return;
     }
-    const age = nowYear - y;
-    if (age < MIN_AGE) {
+    if (typed < MIN_AGE) {
       exitApp();
       return;
     }
+
+    const expected = ageFromDob(dob);
+    if (expected == null) {
+      setError('We could not find your date of birth from sign-up. Go back and complete registration.');
+      return;
+    }
+    if (typed !== expected) {
+      setError('That age does not match the date of birth you gave at sign-up.');
+      return;
+    }
+
     setBusy(true);
     try {
-      // Store as Jan 1 of birth year for eligibility records
-      await authApi.updateProfile({ dateOfBirth: `${y}-01-01` }).catch(() => {});
+      /* age confirmed against registration DOB */
     } finally {
       setBusy(false);
     }
@@ -115,28 +126,22 @@ const AgeGateScreen = () => {
 
         <Text style={styles.h1}>Confirm your age</Text>
         <Text style={styles.sub}>
-          WiamEpisio includes drama series intended for mature audiences. Confirm your year of birth — you must be 18+ to continue.
+          WiamEpisio includes drama series intended for mature audiences. Type your age — we check it against the date of birth you entered when you signed up. You must be 18+ to continue.
         </Text>
 
-        <Text style={styles.yearLabel}>Year of birth</Text>
-        <ScrollView
-          style={styles.yearWheel}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingVertical: 12 }}
-        >
-          {years.map((y) => {
-            const on = y === year;
-            return (
-              <TouchableOpacity
-                key={y}
-                style={[styles.yearItem, on && styles.yearItemOn]}
-                onPress={() => setYear(y)}
-              >
-                <Text style={[styles.yearText, on && styles.yearTextOn]}>{y}</Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
+        <Text style={styles.yearLabel}>Your age</Text>
+        <View style={styles.ageField}>
+          <TextInput
+            style={styles.ageInput}
+            value={ageText}
+            onChangeText={setAgeText}
+            placeholder="e.g. 22"
+            placeholderTextColor={COLORS.textFaint}
+            keyboardType="number-pad"
+            maxLength={3}
+            returnKeyType="done"
+          />
+        </View>
 
         <View style={styles.privacyNote}>
           <Lock size={14} color={COLORS.gold} />
@@ -148,7 +153,7 @@ const AgeGateScreen = () => {
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
         <EpisioGoldButton
-          label={busy ? 'Saving…' : 'Confirm & Continue'}
+          label={busy ? 'Checking…' : 'Confirm & Continue'}
           onPress={confirm}
           loading={busy}
           style={{ width: '100%', marginBottom: 12 }}
@@ -192,19 +197,22 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch', textAlign: 'center', fontSize: 10, color: COLORS.textFaint,
     fontFamily: FONTS.bold, textTransform: 'uppercase', marginBottom: 8,
   },
-  yearWheel: {
+  ageField: {
     alignSelf: 'stretch',
-    maxHeight: 180,
     backgroundColor: COLORS.navyCard,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: COLORS.navyLine,
     marginBottom: 20,
+    paddingVertical: 6,
   },
-  yearItem: { paddingVertical: 10, alignItems: 'center', marginHorizontal: 10, borderRadius: 10 },
-  yearItemOn: { backgroundColor: 'rgba(212,160,23,0.2)' },
-  yearText: { fontSize: 18, fontFamily: FONTS.semi, color: COLORS.textDim },
-  yearTextOn: { color: COLORS.gold, fontFamily: FONTS.extraBold },
+  ageInput: {
+    color: '#fff',
+    fontFamily: FONTS.extraBold,
+    fontSize: 28,
+    textAlign: 'center',
+    paddingVertical: 14,
+  },
   privacyNote: {
     flexDirection: 'row',
     gap: 8,
@@ -218,7 +226,7 @@ const styles = StyleSheet.create({
     marginBottom: 26,
   },
   privacyText: { flex: 1, fontSize: 10.5, color: '#7D7D97', lineHeight: 16.3 },
-  error: { color: COLORS.error, fontFamily: FONTS.medium, fontSize: 12, marginBottom: 10 },
+  error: { color: COLORS.error, fontFamily: FONTS.medium, fontSize: 12, marginBottom: 10, textAlign: 'center' },
   declineLink: { fontSize: 12, color: COLORS.textFaint, fontFamily: FONTS.semi },
 });
 

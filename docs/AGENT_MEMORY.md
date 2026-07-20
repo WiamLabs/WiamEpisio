@@ -2,9 +2,11 @@
 
 Living journal the AI agent reads at the start of every session and updates as work progresses. Mutable — overwrite freely. Durable project facts live in `.cursor/rules/project-context.mdc` instead.
 
-**Last updated:** 2026-07-20 — **Auth + free coins + genres.** Email verify after register (SMS hidden); year-only sticky AgeGate; DOB picker + username gate; watch +2 (pause ≥50), ad +10 (3/day), series finish +15 (2/week), friend invite +20 (5/month); creator genre requests + founder approve.
+**Last updated:** 2026-07-20 — **Register polish + logos + verify email + age type.** Username suggested from name (`@handle`, no spaces, availability fades 4s); strong password (8+ with upper/lower/number/symbol) client+server; AgeGate types age vs registration DOB; real logos (`episio-logo-splash.png` / `episio-logo-app.png`) replace W placeholder; splash on brand navy; verify email sync+queue fallback (needs `RESEND_API_KEY` / SMTP on Render).
 
 **Standing order from Martin:** after finishing meaningful work, **commit + push to `master`** so Render auto-deploys. Do not leave shippable Episio/webapp changes only local.
+
+**Previous — Auth + free coins + genres.** Email verify after register (SMS hidden); year-only sticky AgeGate; DOB picker + username gate; watch +2 (pause ≥50), ad +10 (3/day), series finish +15 (2/week), friend invite +20 (5/month); creator genre requests + founder approve.
 
 **Previous — Restored email signup (no SMS).** Guest Buy Coins; downloads signup-only; one-series watch.
 

@@ -1,7 +1,8 @@
 /**
- * Sign up — email + password. Phone optional. DOB via picker. Username availability gated.
+ * Sign up — email + password. Username suggested from name, shown with @.
+ * Strong password required. DOB via picker.
  */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View, Text, StyleSheet, TextInput, TouchableOpacity,
   KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator, Alert,
@@ -9,7 +10,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import {
-  X, Mail, Lock, User, Calendar, Coins, Eye, EyeOff, Phone,
+  X, Mail, Lock, User, Calendar, Coins, Eye, EyeOff, Phone, AtSign,
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS, FONTS } from '../../constants/theme';
@@ -18,6 +19,35 @@ import DobPickerField from '../../components/episio/DobPickerField';
 import authApi from '../../api/auth';
 import useAuthStore from '../../store/useAuthStore';
 import { GoogleSignInSlot } from '../../services/googleAuth';
+
+function suggestUsername(firstName, lastName) {
+  const a = String(firstName || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const b = String(lastName || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  let base = `${a}${b}`.slice(0, 24);
+  if (base.length < 3) base = (a || b || 'watcher').slice(0, 24);
+  return base;
+}
+
+function normalizeUsername(raw) {
+  return String(raw || '')
+    .trim()
+    .toLowerCase()
+    .replace(/^@+/, '')
+    .replace(/\s+/g, '')
+    .replace(/[^a-z0-9_]/g, '')
+    .slice(0, 30);
+}
+
+function passwordStrengthError(password) {
+  if (!password || password.length < 8) {
+    return 'Password must be at least 8 characters';
+  }
+  if (!/[a-z]/.test(password)) return 'Add a lowercase letter';
+  if (!/[A-Z]/.test(password)) return 'Add an uppercase letter';
+  if (!/[0-9]/.test(password)) return 'Add a number';
+  if (!/[^A-Za-z0-9]/.test(password)) return 'Add a symbol (e.g. ! @ # $)';
+  return null;
+}
 
 const AuthRegisterScreen = () => {
   const insets = useSafeAreaInsets();
@@ -33,12 +63,15 @@ const AuthRegisterScreen = () => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [username, setUsername] = useState('');
+  const [usernameEdited, setUsernameEdited] = useState(false);
   const [usernameStatus, setUsernameStatus] = useState({ checking: false, ok: null, message: '' });
+  const [statusVisible, setStatusVisible] = useState(false);
   const [dob, setDob] = useState('');
   const [phone, setPhone] = useState('');
   const [inviteCode, setInviteCode] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
+  const fadeTimer = useRef(null);
 
   const close = () => {
     if (navigation.canGoBack()) navigation.goBack();
@@ -53,18 +86,27 @@ const AuthRegisterScreen = () => {
     navigation.replace('VerifyMethod', {
       fromRegister: true,
       email: user?.email || email.trim().toLowerCase(),
-      birthYear: dob ? Number(dob.slice(0, 4)) : undefined,
+      dateOfBirth: dob,
     });
   };
 
+  // Suggest username from name until user edits it
   useEffect(() => {
-    const u = username.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+    if (usernameEdited) return;
+    const suggested = suggestUsername(firstName, lastName);
+    if (suggested.length >= 3) setUsername(suggested);
+  }, [firstName, lastName, usernameEdited]);
+
+  useEffect(() => {
+    const u = normalizeUsername(username);
     if (u.length < 3) {
       setUsernameStatus({ checking: false, ok: null, message: u ? 'At least 3 characters' : '' });
+      setStatusVisible(!!u);
       return undefined;
     }
     let cancelled = false;
     setUsernameStatus({ checking: true, ok: null, message: 'Checking…' });
+    setStatusVisible(true);
     const t = setTimeout(async () => {
       try {
         const data = await authApi.checkUsername(u);
@@ -77,6 +119,9 @@ const AuthRegisterScreen = () => {
             ? 'Username is available'
             : (data?.reason || 'Username is taken'),
         });
+        setStatusVisible(true);
+        if (fadeTimer.current) clearTimeout(fadeTimer.current);
+        fadeTimer.current = setTimeout(() => setStatusVisible(false), 4000);
       } catch (err) {
         if (!cancelled) {
           setUsernameStatus({
@@ -84,6 +129,7 @@ const AuthRegisterScreen = () => {
             ok: null,
             message: typeof err === 'string' ? err : 'Could not check username — try again',
           });
+          setStatusVisible(true);
         }
       }
     }, 450);
@@ -93,18 +139,23 @@ const AuthRegisterScreen = () => {
     };
   }, [username]);
 
+  useEffect(() => () => {
+    if (fadeTimer.current) clearTimeout(fadeTimer.current);
+  }, []);
+
   const submit = async () => {
     setError(null);
     const e = email.trim().toLowerCase();
-    const uname = username.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+    const uname = normalizeUsername(username);
     const fn = firstName.trim();
     const ln = lastName.trim();
     if (!e || !password) {
       setError('Email and password are required');
       return;
     }
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters');
+    const pwErr = passwordStrengthError(password);
+    if (pwErr) {
+      setError(pwErr);
       return;
     }
     if (!fn) {
@@ -156,7 +207,12 @@ const AuthRegisterScreen = () => {
   const canSubmit = !busy
     && usernameStatus.ok === true
     && !usernameStatus.checking
-    && !!dob;
+    && !!dob
+    && !passwordStrengthError(password);
+
+  const pwHint = password
+    ? (passwordStrengthError(password) || 'Strong password')
+    : '8+ chars with upper, lower, number & symbol';
 
   return (
     <KeyboardAvoidingView
@@ -224,7 +280,7 @@ const AuthRegisterScreen = () => {
           <Lock size={15} color={COLORS.gold} />
           <TextInput
             style={styles.input}
-            placeholder="Password (min 8)"
+            placeholder="Password"
             placeholderTextColor={COLORS.textFaint}
             secureTextEntry={!showPassword}
             value={password}
@@ -234,20 +290,28 @@ const AuthRegisterScreen = () => {
             {showPassword ? <EyeOff size={16} color={COLORS.textFaint} /> : <Eye size={16} color={COLORS.textFaint} />}
           </TouchableOpacity>
         </View>
+        <Text style={[styles.hint, password && !passwordStrengthError(password) && styles.okHint]}>
+          {pwHint}
+        </Text>
 
+        <Text style={styles.fieldLabel}>Username</Text>
         <View style={styles.field}>
-          <User size={15} color={COLORS.gold} />
+          <AtSign size={15} color={COLORS.gold} />
+          <Text style={styles.atPrefix}>@</Text>
           <TextInput
             style={styles.input}
-            placeholder="Username"
+            placeholder="username"
             placeholderTextColor={COLORS.textFaint}
             autoCapitalize="none"
             autoCorrect={false}
             value={username}
-            onChangeText={setUsername}
+            onChangeText={(t) => {
+              setUsernameEdited(true);
+              setUsername(normalizeUsername(t));
+            }}
           />
         </View>
-        {usernameStatus.message ? (
+        {statusVisible && usernameStatus.message ? (
           <Text
             style={[
               styles.hint,
@@ -258,6 +322,9 @@ const AuthRegisterScreen = () => {
             {usernameStatus.message}
           </Text>
         ) : null}
+        <Text style={styles.metaHint}>
+          Suggested from your name — you can edit it. No spaces. Others can tag you as @{normalizeUsername(username) || 'username'}.
+        </Text>
 
         <View style={styles.field}>
           <Calendar size={15} color={COLORS.gold} />
@@ -315,9 +382,9 @@ const AuthRegisterScreen = () => {
             <View style={styles.socialRow}>
               <TouchableOpacity
                 style={styles.socialBtn}
-                onPress={() => Alert.alert('Facebook', 'Facebook sign-up is not available yet.')}
+                onPress={() => Alert.alert('Coming soon', 'This sign-up option is not available yet.')}
               >
-                <Text style={styles.socialText}>Facebook</Text>
+                <Text style={styles.socialText}>Continue</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.socialBtn}
@@ -371,15 +438,22 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.regular, fontSize: 12.5, color: COLORS.textDim, textAlign: 'center', lineHeight: 19,
   },
   gold: { color: COLORS.gold, fontFamily: FONTS.bold },
+  fieldLabel: {
+    fontSize: 11.5, fontFamily: FONTS.semi, color: COLORS.textDim, marginBottom: 7,
+  },
   field: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
     backgroundColor: COLORS.navyCard, borderWidth: 1, borderColor: COLORS.navyLine,
     borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12, marginBottom: 12,
   },
+  atPrefix: { color: COLORS.gold, fontFamily: FONTS.bold, fontSize: 14 },
   input: { flex: 1, color: '#fff', fontFamily: FONTS.regular, fontSize: 13.5, padding: 0 },
   row2: { flexDirection: 'row', gap: 10 },
   half: { flex: 1 },
   hint: { fontFamily: FONTS.regular, fontSize: 11.5, color: COLORS.textDim, marginTop: -6, marginBottom: 10 },
+  metaHint: {
+    fontFamily: FONTS.regular, fontSize: 11, color: COLORS.textFaint, marginTop: -4, marginBottom: 12, lineHeight: 16,
+  },
   okHint: { color: '#4ade80' },
   error: { color: COLORS.error, fontFamily: FONTS.medium, fontSize: 12.5, marginBottom: 10 },
   cta: { marginTop: 4, marginBottom: 16 },

@@ -213,7 +213,7 @@ def _send_via_resend(to_email, subject, html_body, from_email):
             'https://api.resend.com/emails',
             headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
             json={
-                'from': f'WiamApp <{resend_from}>',
+                'from': f'WiamEpisio <{resend_from}>',
                 'to': [to_email],
                 'subject': subject,
                 'html': html_body,
@@ -258,9 +258,9 @@ def send_email(to_email, subject, html_body):
     resend_result = _send_via_resend(to_email, subject, html_body, from_email)
     if resend_result is True:
         return True
+    # If Resend is configured but failed, still try SMTP as a backup
     if resend_result is False:
-        return False  # configured but failed
-    # resend_result is None → not configured, fall through to SMTP
+        log.warning("Resend delivery failed for %s — trying SMTP fallback", to_email)
 
     # 2) Fall back to SMTP
     smtp_port = int(_cfg('SMTP_PORT') or 587)
@@ -487,31 +487,31 @@ def get_queue_status():
 # ─── Verification code emails ────────────────────────────────────────────────
 
 def send_verification_code(email, code, purpose='register'):
-    """Send a branded verification code email."""
+    """Send a branded verification code email (WiamEpisio)."""
     if purpose == 'register':
-        subject = 'Verify Your Email — WiamApp'
+        subject = 'Verify Your Email — WiamEpisio'
         body = (
-            _heading('Welcome to WiamApp!', '#d4a843')
+            _heading('Welcome to WiamEpisio!', '#d4a843')
             + _subheading('Verify your email to get started')
-            + _paragraph('Enter this code to verify your email address and create your account:')
+            + _paragraph('Enter this code to verify your email address:')
             + _code_block(code)
-            + _note('This code expires in <strong>15 minutes</strong>. If you didn\'t create an account on WiamApp, just ignore this email.')
+            + _note('This code expires in <strong>15 minutes</strong>. If you didn\'t create an account, ignore this email.')
         )
-        preheader = f'Your WiamApp verification code is {code}'
+        preheader = f'Your WiamEpisio verification code is {code}'
 
     elif purpose == 'reset':
-        subject = 'Reset Your Password — WiamApp'
+        subject = 'Reset Your Password — WiamEpisio'
         body = (
             _heading('Password Reset')
             + _subheading('We received a request to reset your password')
             + _paragraph('Enter this code to reset your password:')
             + _code_block(code)
-            + _note('This code expires in <strong>15 minutes</strong>. If you didn\'t request this, you can safely ignore this email.')
+            + _note('This code expires in <strong>15 minutes</strong>. If you didn\'t request this, ignore this email.')
         )
         preheader = f'Your password reset code is {code}'
 
     elif purpose == 'two_factor':
-        subject = 'Login Verification — WiamApp'
+        subject = 'Login Verification — WiamEpisio'
         body = (
             _heading('Two-Factor Verification')
             + _subheading('An extra layer of security for your account')
@@ -521,11 +521,103 @@ def send_verification_code(email, code, purpose='register'):
         )
         preheader = f'Your 2FA code is {code}'
     else:
-        subject = 'Verification Code — WiamApp'
+        subject = 'Verification Code — WiamEpisio'
         body = _paragraph(f'Your verification code is:') + _code_block(code)
         preheader = f'Code: {code}'
 
     return send_branded(email, subject, body, preheader)
+
+
+def _verification_email_parts(email, code, purpose):
+    """Build subject/body/preheader for enqueue fallback."""
+    if purpose == 'register':
+        return (
+            'Verify Your Email — WiamEpisio',
+            (
+                _heading('Welcome to WiamEpisio!', '#d4a843')
+                + _subheading('Verify your email to get started')
+                + _paragraph('Enter this code to verify your email address:')
+                + _code_block(code)
+                + _note('This code expires in <strong>15 minutes</strong>.')
+            ),
+            f'Your WiamEpisio verification code is {code}',
+        )
+    if purpose == 'reset':
+        return (
+            'Reset Your Password — WiamEpisio',
+            (
+                _heading('Password Reset')
+                + _paragraph('Enter this code to reset your password:')
+                + _code_block(code)
+            ),
+            f'Your password reset code is {code}',
+        )
+    return (
+        'Verification Code — WiamEpisio',
+        _paragraph('Your verification code is:') + _code_block(code),
+        f'Code: {code}',
+    )
+
+
+def create_and_send_code(email, purpose, user_id=None):
+    """Persist a verification code, then deliver by sync send or queue fallback.
+
+    Returns the VerificationCode on success (sent or queued), or None if neither path works.
+    """
+    from ..models import VerificationCode
+    from ..extensions import db
+
+    email = (email or '').strip().lower()
+    if not email:
+        log.error("create_and_send_code called with empty email (purpose=%s)", purpose)
+        return None
+
+    old_codes = VerificationCode.query.filter_by(
+        email=email, purpose=purpose, is_used=False
+    ).all()
+    for oc in old_codes:
+        oc.is_used = True
+    if old_codes:
+        db.session.commit()
+
+    code = generate_code(6)
+    ttl = 15 if purpose != 'two_factor' else 10
+    vc = VerificationCode(
+        user_id=user_id,
+        email=email,
+        code=code,
+        purpose=purpose,
+        expires_at=datetime.utcnow() + timedelta(minutes=ttl),
+    )
+    db.session.add(vc)
+    db.session.commit()
+
+    log.info("Sending verification code to %s for %s", email, purpose)
+    sent = send_verification_code(email, code, purpose)
+    if sent:
+        return vc
+
+    # Sync delivery failed (common on hosts that block SMTP) — queue for worker retry
+    try:
+        subject, body, preheader = _verification_email_parts(email, code, purpose)
+        job = enqueue_branded(email, subject, body, preheader, priority=1)
+        if job:
+            log.warning(
+                "Verification email sync failed for %s — queued job id=%s",
+                email, getattr(job, 'id', '?'),
+            )
+            return vc
+    except Exception as e:
+        log.error("Verification enqueue also failed for %s: %s", email, e)
+
+    # Roll back unused code so user can retry cleanly
+    try:
+        vc.is_used = True
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+    log.error("Verification email failed for %s (purpose=%s)", email, purpose)
+    return None
 
 
 # ─── Pre-built email types (callable from anywhere) ──────────────────────────
@@ -534,20 +626,13 @@ def send_welcome_email(email, name=''):
     """Send a welcome email after successful registration."""
     greeting = f'Hi {name},' if name else 'Hi there,'
     body = (
-        _heading('Welcome to WiamApp!', '#d4a843')
-        + _subheading('Your personal reading space')
+        _heading('Welcome to WiamEpisio!', '#d4a843')
+        + _subheading('African vertical drama')
         + _paragraph(f'{greeting}')
-        + _paragraph('Welcome to WiamApp — a free novel reading platform where you can discover amazing stories from talented creators across Africa and beyond.')
-        + _paragraph('Here\'s what you can do:')
-        + _info_box(
-            '<p style="margin:0 0 8px;color:#ccc;font-size:14px;">📖 <strong style="color:#d4a843;">Read Stories</strong> — Browse thousands of free stories across every genre</p>'
-            '<p style="margin:0 0 8px;color:#ccc;font-size:14px;">✦ <strong style="color:#d4a843;">WiamElite</strong> — Discover the best of the best in our Hall of Fame</p>'
-            '<p style="margin:0 0 8px;color:#ccc;font-size:14px;">✍️ <strong style="color:#d4a843;">Become a Creator</strong> — Share your stories with the world</p>'
-            '<p style="margin:0;color:#ccc;font-size:14px;">💰 <strong style="color:#d4a843;">Support Creators</strong> — Use Wiam Coins to unlock premium chapters</p>'
-        )
-        + _button('Start Reading', f'{_app_url()}/browse')
+        + _paragraph('Welcome to WiamEpisio — short drama series made for your phone.')
+        + _button('Start Watching', f'{_app_url()}')
     )
-    return enqueue_branded(email, 'Welcome to WiamApp!', body, 'Welcome to WiamApp — your personal reading space', priority=2)
+    return enqueue_branded(email, 'Welcome to WiamEpisio!', body, 'Welcome to WiamEpisio', priority=2)
 
 
 def send_creator_eligible_email(email, name=''):
@@ -557,19 +642,12 @@ def send_creator_eligible_email(email, name=''):
         _heading('You\'re Eligible for Monetization!', '#4ade80')
         + _subheading('Congratulations on reaching this milestone')
         + _paragraph(f'{greeting}')
-        + _paragraph('Great news! Your stories and audience have grown enough that you\'re now eligible to <strong style="color:#4ade80;">earn money</strong> from your writing on WiamApp.')
-        + _paragraph('To start receiving payouts, you need to connect your payment method (Mobile Money) in your Creator Dashboard.')
-        + _info_box(
-            '<p style="margin:0 0 8px;color:#ccc;font-size:14px;">💳 <strong style="color:#d4a843;">How Payouts Work:</strong></p>'
-            '<p style="margin:0 0 6px;color:#aaa;font-size:13px;">• Readers spend Wiam Coins on your locked chapters</p>'
-            '<p style="margin:0 0 6px;color:#aaa;font-size:13px;">• You earn 50% of the coin value as revenue</p>'
-            '<p style="margin:0;color:#aaa;font-size:13px;">• Monthly automatic payout to your Mobile Money (min. 10 GHS)</p>',
-            'rgba(74,222,128,0.15)', 'rgba(74,222,128,0.04)'
-        )
-        + _button('Set Up Payment Method', f'{_app_url()}/creator/dashboard')
-        + _note('This is a huge milestone — only the most dedicated creators reach it. Keep writing!')
+        + _paragraph('Great news! Your audience has grown enough that you\'re now eligible to <strong style="color:#4ade80;">earn money</strong> from your series on WiamEpisio.')
+        + _paragraph('To start receiving payouts, connect your bank details in WiamStudio.')
+        + _button('Open Studio', f'{_app_url()}')
+        + _note('This is a huge milestone. Keep creating!')
     )
-    return enqueue_branded(email, 'You\'re Eligible for Payouts — WiamApp', body, 'Congrats! You can now earn from your stories on WiamApp', priority=2)
+    return enqueue_branded(email, 'You\'re Eligible for Payouts — WiamEpisio', body, 'Congrats! You can now earn on WiamEpisio', priority=2)
 
 
 def send_payout_email(email, name='', amount='0', currency='GHS', period=''):
@@ -778,54 +856,7 @@ def send_general_notification(email, subject, message, cta_text='', cta_link='')
     return enqueue_branded(email, subject, body, message[:100], priority=2)
 
 
-# ─── Verification code DB helpers ─────────────────────────────────────────────
-
-def create_and_send_code(email, purpose, user_id=None):
-    """Send a verification code email and persist the code only if delivery succeeds.
-
-    Returns the VerificationCode object on success, or None if the email could
-    not be sent. This prevents the app from flashing success while no email was
-    actually delivered.
-    """
-    from ..models import VerificationCode
-    from ..extensions import db
-
-    email = (email or '').strip().lower()
-    if not email:
-        log.error("create_and_send_code called with empty email (purpose=%s)", purpose)
-        return None
-
-    # Invalidate any previous unused codes for same email + purpose
-    old_codes = VerificationCode.query.filter_by(
-        email=email, purpose=purpose, is_used=False
-    ).all()
-    for oc in old_codes:
-        oc.is_used = True
-    if old_codes:
-        db.session.commit()
-        log.info("Invalidated %d old %s codes for %s", len(old_codes), purpose, email)
-
-    log.info("Sending verification code to %s for %s", email, purpose)
-
-    code = generate_code(6)
-    ttl = 15 if purpose != 'two_factor' else 10
-
-    sent = send_verification_code(email, code, purpose)
-    if not sent:
-        log.error("Verification email failed for %s (purpose=%s)", email, purpose)
-        return None
-
-    vc = VerificationCode(
-        user_id=user_id,
-        email=email,
-        code=code,
-        purpose=purpose,
-        expires_at=datetime.utcnow() + timedelta(minutes=ttl),
-    )
-    db.session.add(vc)
-    db.session.commit()
-    return vc
-
+# ─── Verification code verify ─────────────────────────────────────────────────
 
 def verify_code(email, code, purpose):
     """Verify a code. Returns the VerificationCode if valid, None otherwise."""
