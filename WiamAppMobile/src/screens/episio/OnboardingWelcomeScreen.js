@@ -61,7 +61,7 @@ const OnboardingWelcomeScreen = () => {
       </TouchableOpacity>
 
       <View style={[styles.content, { paddingBottom: Math.max(insets.bottom, 40) }]}>
-        <LogoBadge size={88} />
+        <LogoBadge size={110} />
         <Text style={styles.wordmark}>
           Wiam<Text style={{ color: COLORS.gold }}>Episio</Text>
         </Text>

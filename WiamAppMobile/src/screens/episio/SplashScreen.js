@@ -97,8 +97,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   logo: {
-    width: 168,
-    height: 168,
+    width: 220,
+    height: 220,
   },
   wordmark: {
     marginTop: 22,

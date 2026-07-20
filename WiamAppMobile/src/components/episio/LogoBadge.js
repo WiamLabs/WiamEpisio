@@ -2,10 +2,10 @@ import React from 'react';
 import { Image, StyleSheet } from 'react-native';
 
 /**
- * In-app WiamEpisio mark — transparent / black-plate logo (same as splash).
- * Navy-plate asset stays for store icons only.
+ * In-app WiamEpisio mark — transparent shield (no black plate).
+ * Store icons keep the separate navy-plate asset.
  */
-const LogoBadge = ({ size = 52, style }) => (
+const LogoBadge = ({ size = 64, style }) => (
   <Image
     source={require('../../../assets/episio-logo-splash.png')}
     style={[

@@ -128,7 +128,7 @@ const AgeGateScreen = () => {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <LogoBadge size={72} />
+        <LogoBadge size={96} />
 
         <Text style={styles.h1}>Confirm your age</Text>
         <Text style={styles.sub}>

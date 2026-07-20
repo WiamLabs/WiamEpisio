@@ -95,7 +95,7 @@ const LoginScreen = () => {
         </TouchableOpacity>
 
         <View style={styles.hero}>
-          <LogoBadge size={64} />
+          <LogoBadge size={88} />
           <Text style={styles.title}>Welcome back</Text>
           <Text style={styles.sub}>Sign in to keep watching where you left off.</Text>
         </View>
