@@ -1,0 +1,135 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Analyst Dashboard — WiamApp{% endblock %}
+{% block sidebar_title %}Analyst Panel{% endblock %}
+
+{% block sidebar_nav %}
+<a class="nav-link active" href="{{ url_for('team.dashboard') }}"><i class="bi bi-speedometer2"></i> Overview</a>
+<div class="sidebar-title" style="margin-top:1rem;">Analytics</div>
+<a class="nav-link" href="{{ url_for('team.admin_user_list') }}"><i class="bi bi-people"></i> User Data</a>
+<a class="nav-link" href="{{ url_for('admin_dash.content') }}"><i class="bi bi-journal-text"></i> Content Data</a>
+<a class="nav-link" href="{{ url_for('admin_dash.orders') }}"><i class="bi bi-receipt"></i> Orders</a>
+<div class="sidebar-title" style="margin-top:1rem;">Account</div>
+<a class="nav-link" href="{{ url_for('profile.account_safety') }}"><i class="bi bi-shield-check"></i> Account Safety</a>
+{% endblock %}
+
+{% block dash_content %}
+{% include "team/_dashboard_switcher.html" ignore missing %}
+{% include "team/_greeting.html" ignore missing %}
+<div class="dash-header">
+    <h1><i class="bi bi-bar-chart-line" style="color:#a78bfa;"></i> Analyst Dashboard</h1>
+</div>
+
+<!-- Stats -->
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="label">Total Users</div>
+        <div class="value gold">{{ total_users }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">New This Week</div>
+        <div class="value" style="color:#60a5fa;">{{ new_users_week }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Published Stories</div>
+        <div class="value" style="color:#4ade80;">{{ total_published }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Total Reads</div>
+        <div class="value" style="color:#a78bfa;">{{ total_reads }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Total Creators</div>
+        <div class="value" style="color:#f472b6;">{{ total_creators }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Avg Rating</div>
+        <div class="value" style="color:#fbbf24;">{{ '%.1f'|format(avg_rating) }}</div>
+    </div>
+</div>
+
+<!-- User Growth Chart -->
+<div class="dash-card" style="border-left:3px solid #a78bfa;">
+    <h3><i class="bi bi-graph-up" style="color:#a78bfa;margin-right:6px;"></i> User Growth — Last 7 Days</h3>
+    <div style="display:flex;align-items:flex-end;gap:12px;height:140px;padding:20px 10px 30px;position:relative;">
+        {% set max_count = user_growth|map(attribute='count')|max or 1 %}
+        {% for d in user_growth %}
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;position:relative;">
+            <span style="font-size:0.75rem;font-weight:700;color:var(--gold);margin-bottom:6px;">{{ d.count }}</span>
+            <div style="width:100%;max-width:48px;height:{{ (d.count / max_count * 90 + 6)|int }}px;background:linear-gradient(to top,rgba(167,139,250,0.3),rgba(167,139,250,0.7));border-radius:8px 8px 0 0;transition:height 0.3s;"></div>
+            <span style="font-size:0.7rem;color:var(--text-muted);margin-top:8px;position:absolute;bottom:-22px;">{{ d.day }}</span>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Content Analytics -->
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;margin-bottom:1.5rem;">
+    <div class="dash-card">
+        <h3><i class="bi bi-book" style="color:#60a5fa;margin-right:6px;"></i> Content Breakdown</h3>
+        <table class="dash-table">
+            <tbody>
+                <tr><td>Total Stories</td><td style="font-weight:700;">{{ total_stories }}</td></tr>
+                <tr><td>Published</td><td style="font-weight:700;color:#4ade80;">{{ total_published }}</td></tr>
+                <tr><td>Drafts</td><td style="font-weight:700;color:var(--text-muted);">{{ total_stories - total_published }}</td></tr>
+                <tr><td>Total Chapters</td><td style="font-weight:700;">{{ total_chapters }}</td></tr>
+                <tr><td>Avg Chapters/Story</td><td style="font-weight:700;">{{ '%.1f'|format(total_chapters / total_published) if total_published else '0' }}</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="dash-card">
+        <h3><i class="bi bi-heart" style="color:#f87171;margin-right:6px;"></i> Engagement</h3>
+        <table class="dash-table">
+            <tbody>
+                <tr><td>Total Favorites</td><td style="font-weight:700;color:#f472b6;">{{ total_favorites }}</td></tr>
+                <tr><td>Total Ratings</td><td style="font-weight:700;color:#fbbf24;">{{ total_ratings }}</td></tr>
+                <tr><td>Total Comments</td><td style="font-weight:700;color:#60a5fa;">{{ total_comments }}</td></tr>
+                <tr><td>Avg Favs/Story</td><td style="font-weight:700;">{{ '%.1f'|format(total_favorites / total_published) if total_published else '0' }}</td></tr>
+                <tr><td>Avg Rating/Story</td><td style="font-weight:700;">{{ '%.1f'|format(total_ratings / total_published) if total_published else '0' }}</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Top Stories by Reads -->
+<div class="dash-card">
+    <h3><i class="bi bi-trophy" style="color:var(--gold);margin-right:6px;"></i> Top Stories by Reads</h3>
+    <table class="dash-table">
+        <thead>
+            <tr><th>#</th><th>Title</th><th>Author</th><th>Reads</th><th>Rating</th></tr>
+        </thead>
+        <tbody>
+        {% for s in top_stories %}
+        <tr>
+            <td style="color:var(--text-muted);">{{ loop.index }}</td>
+            <td><strong>{{ s.title }}</strong></td>
+            <td style="color:var(--text-muted);">{{ s.author or '—' }}</td>
+            <td style="font-weight:600;">{{ s.views or 0 }}</td>
+            <td style="color:#fbbf24;">{{ '%.1f'|format(s.avg_rating) if s.avg_rating else '—' }}</td>
+        </tr>
+        {% endfor %}
+        {% if not top_stories %}
+        <tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:2rem">No story data yet</td></tr>
+        {% endif %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Revenue Summary (read-only) -->
+<div class="dash-card">
+    <h3><i class="bi bi-cash-stack" style="color:var(--gold);margin-right:6px;"></i> Revenue Summary</h3>
+    <div class="stat-grid" style="margin-bottom:0;">
+        <div class="stat-card">
+            <div class="label">Coin Revenue (All Time)</div>
+            <div class="value" style="color:var(--gold);">GH₵{{ '%.2f'|format(coin_revenue_ghs) }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="label">Active Elite Subs</div>
+            <div class="value" style="color:#d4a843;">{{ active_subs }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="label">Total Coin Purchases</div>
+            <div class="value">{{ total_purchases }}</div>
+        </div>
+    </div>
+</div>
+{% endblock %}

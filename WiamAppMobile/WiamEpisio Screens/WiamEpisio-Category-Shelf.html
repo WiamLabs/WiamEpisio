@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamEpisio — Drama</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); display:flex; flex-direction:column; }
+  .statusbar{ height:44px; flex-shrink:0; }
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+
+  .topbar{ padding:2px 20px 14px; flex-shrink:0; }
+  .top-row{ display:flex; align-items:center; gap:12px; margin-bottom:14px; }
+  .icon-btn{ width:34px; height:34px; border-radius:50%; background:var(--navy-card); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .top-row h1{ font-size:19px; font-weight:800; color:#fff; margin:0; }
+  .top-row span{ display:block; font-size:11px; color:var(--text-faint); font-weight:600; margin-top:1px; }
+
+  .filter-row{ display:flex; gap:8px; overflow-x:auto; }
+  .filter-chip{ flex-shrink:0; padding:8px 15px; border-radius:999px; background:var(--navy-card); border:1px solid var(--navy-line); color:#B8B8CC; font-size:12px; font-weight:600; display:flex; align-items:center; gap:5px; }
+  .filter-chip.active{ background:var(--gold); color:var(--navy); border-color:var(--gold); }
+
+  .scroll{ flex:1; overflow-y:auto; padding:0 20px 84px; }
+  .count-row{ font-size:11px; color:var(--text-faint); margin:14px 0 12px; }
+  .count-row b{ color:#fff; }
+
+  .grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  .poster-art{ aspect-ratio:2/3; border-radius:12px; position:relative; overflow:hidden; }
+  .poster-art.g1{ background:linear-gradient(160deg,#3a1420,#12122a); }
+  .poster-art.g2{ background:linear-gradient(160deg,#1a2a3a,#12122a); }
+  .poster-art.g3{ background:linear-gradient(160deg,#3a2a14,#12122a); }
+  .poster-art.g4{ background:linear-gradient(160deg,#241a3a,#0d0d24); }
+  .poster-art.g5{ background:linear-gradient(160deg,#1a3a2a,#12122a); }
+  .poster-art.g6{ background:linear-gradient(160deg,#3a1414,#12122a); }
+  .poster-badge{ position:absolute; top:6px; left:6px; font-size:8px; font-weight:700; padding:2px 6px; border-radius:4px; }
+  .poster-badge.new{ background:var(--gold); color:var(--navy); }
+  .poster-badge.hot{ background:#EF4444; color:#fff; }
+  .poster-views{ position:absolute; bottom:6px; right:6px; font-size:8.5px; color:#fff; background:rgba(0,0,0,0.55); padding:2px 5px; border-radius:999px; }
+  .poster-title{ font-size:11px; font-weight:600; color:#fff; margin:6px 0 0; line-height:1.3; }
+
+  .bottomnav{ position:absolute; bottom:0; left:0; right:0; height:84px; background:var(--navy-soft); border-top:1px solid #1C1C38; display:flex; align-items:flex-start; justify-content:space-around; padding-top:12px; }
+  .navitem{ display:flex; flex-direction:column; align-items:center; gap:4px; width:60px; }
+  .navitem span{ font-size:9.5px; }
+  .navitem svg{ width:20px; height:20px; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"></div>
+  <div class="topbar">
+    <div class="top-row">
+      <div class="icon-btn"><svg viewBox="0 0 24 24" width="15" height="15" color="#fff"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></div>
+      <div><h1>Drama</h1><span>1,204 series</span></div>
+    </div>
+    <div class="filter-row">
+      <span class="filter-chip active">Popular</span>
+      <span class="filter-chip">Fresh</span>
+      <span class="filter-chip">A–Z</span>
+      <span class="filter-chip">Completed</span>
+      <span class="filter-chip">Free Only</span>
+    </div>
+  </div>
+
+  <div class="scroll">
+    <p class="count-row">Showing <b>1,204</b> series, sorted by popularity</p>
+
+    <div class="grid">
+      <div><div class="poster-art g1"><span class="poster-badge hot">HOT</span><span class="poster-views">4.9M</span></div><p class="poster-title">The King's Forgotten Son</p></div>
+      <div><div class="poster-art g2"><span class="poster-views">1.1M</span></div><p class="poster-title">Love Me When I'm Gone</p></div>
+      <div><div class="poster-art g3"><span class="poster-badge new">NEW</span></div><p class="poster-title">Accra Nights</p></div>
+      <div><div class="poster-art g4"><span class="poster-views">890K</span></div><p class="poster-title">My Husband is a Hidden Hero</p></div>
+      <div><div class="poster-art g5"></div><p class="poster-title">The Chief's Daughter</p></div>
+      <div><div class="poster-art g6"><span class="poster-views">1.8M</span></div><p class="poster-title">Combat King Returns</p></div>
+      <div><div class="poster-art g1"></div><p class="poster-title">Betrayed by My Fiancée</p></div>
+      <div><div class="poster-art g2"><span class="poster-badge new">NEW</span></div><p class="poster-title">Love Found Too Late</p></div>
+      <div><div class="poster-art g3"></div><p class="poster-title">The Return of the Fallen Queen</p></div>
+      <div><div class="poster-art g4"><span class="poster-views">620K</span></div><p class="poster-title">Love Delayed</p></div>
+      <div><div class="poster-art g5"></div><p class="poster-title">Silent Vows</p></div>
+      <div><div class="poster-art g6"></div><p class="poster-title">The Widow's Second Chance</p></div>
+    </div>
+  </div>
+
+  <div class="bottomnav">
+    <div class="navitem active"><svg viewBox="0 0 24 24" fill="#D4A017" stroke="none"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10" fill="none" stroke="#D4A017" stroke-width="1.8"/></svg><span style="color:#D4A017">Home</span></div>
+    <div class="navitem" style="color:#5A5A75"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span>Discover</span></div>
+    <div class="navitem" style="color:#5A5A75"><svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="3"/><polygon points="10 9 10 15 15 12" fill="#5A5A75"/></svg><span>Member</span></div>
+    <div class="navitem" style="color:#5A5A75"><svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span>My List</span></div>
+    <div class="navitem" style="color:#5A5A75"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Profile</span></div>
+  </div>
+</div>
+
+</body>
+</html>

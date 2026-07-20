@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+{% set _creator_name = (profile.pen_name if profile else (creator.display_name if creator else None)) or 'WiamApp creator' %}
+{% block title %}{% if creator %}{{ _creator_name }} — WiamApp{% else %}Creator Not Found{% endif %}{% endblock %}
+{% block meta_description %}{% if creator %}Read stories by {{ _creator_name }} on WiamApp. Explore their published works and follow for updates.{% else %}Creator not found on WiamApp.{% endif %}{% endblock %}
+{% block og_type %}profile{% endblock %}
+{% block og_title %}{{ _creator_name }} — WiamApp{% endblock %}
+{% block og_description %}{% if creator %}Read stories by {{ _creator_name }} on WiamApp.{% else %}Creator not found on WiamApp.{% endif %}{% endblock %}
+{% block og_image %}{% if creator and creator.avatar_url %}{{ creator.avatar_url }}{% else %}{{ url_for('static', filename='img/og-card.png', _external=True) }}{% endif %}{% endblock %}
+{% block og_image_alt %}{{ _creator_name }} on WiamApp{% endblock %}
+{% block jsonld_extra %}
+{% if creator %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "name": {{ _creator_name|tojson }},
+  "url": "https://wiamapp.com/creator/{{ creator.username or creator.wiam_id }}",
+  {% if creator.avatar_url %}"image": {{ creator.avatar_url|tojson }},{% endif %}
+  {% if creator.bio %}"description": {{ creator.bio[:300]|tojson }},{% endif %}
+  "jobTitle": "Storyteller",
+  "worksFor": { "@type": "Organization", "name": "WiamApp", "url": "https://wiamapp.com" }
+}
+</script>
+{% endif %}
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    .creator-hero {
+        position: relative;
+        padding: var(--space-2xl) 0 var(--space-xl);
+        text-align: center;
+    }
+    .creator-hero::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(ellipse at 50% 0%, var(--wine-glow), transparent 70%);
+        pointer-events: none;
+    }
+    .creator-avatar {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid var(--gold-dim);
+        box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+    }
+    .creator-avatar-placeholder {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--wine), var(--wine-dark));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--gold);
+        font-size: 2.5rem;
+        font-family: var(--font-display);
+        margin: 0 auto;
+        border: 3px solid var(--gold-dim);
+    }
+    .creator-stats {
+        display: flex;
+        justify-content: center;
+        gap: var(--space-xl);
+        margin: var(--space-lg) 0;
+    }
+    .creator-stat {
+        text-align: center;
+    }
+    .creator-stat .num {
+        font-family: var(--font-display);
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--text);
+    }
+    .creator-stat .label {
+        font-size: 0.78rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .follow-btn {
+        border-radius: var(--radius-full);
+        padding: 8px 28px;
+        font-weight: 600;
+        font-size: 0.88rem;
+        border: 1px solid var(--gold);
+        cursor: pointer;
+        transition: all var(--duration-normal) var(--ease-out);
+    }
+    .follow-btn.following {
+        background: var(--gold-dim);
+        color: var(--gold);
+    }
+    .follow-btn.not-following {
+        background: var(--gold);
+        color: var(--bg);
+    }
+    .follow-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 16px rgba(201, 168, 76, 0.2);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{% if not creator %}
+<div class="container" style="padding-top: var(--space-2xl);">
+    <div class="empty-state">
+        <div class="icon"><i class="bi bi-person-x"></i></div>
+        <h3>Creator not found.</h3>
+        <p>This profile doesn't exist or isn't a creator yet.</p>
+        <a href="{{ url_for('browse.browse_home') }}" class="btn btn-outline-gold mt-3">Browse Books</a>
+    </div>
+</div>
+{% else %}
+
+<!-- Creator Hero -->
+<div class="creator-hero">
+    <div class="container position-relative" style="z-index: 1;">
+        <a href="javascript:history.back()" class="btn-ghost" style="position: absolute; left: 0; top: 0;">
+            <i class="bi bi-arrow-left me-1"></i> Back
+        </a>
+
+        <!-- Avatar -->
+        <div style="margin-bottom: var(--space-md);">
+            {% if profile and profile.avatar_url %}
+            <img src="{{ profile.avatar_url }}" alt="{{ profile.pen_name }}" class="creator-avatar">
+            {% else %}
+            <div class="creator-avatar-placeholder">
+                {{ (profile.pen_name if profile else creator.display_name)[0] | upper }}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Name -->
+        <h1 class="font-display" style="font-size: 1.8rem; font-weight: 700; margin-bottom: var(--space-xs);">
+            {{ profile.pen_name if profile else creator.display_name }}
+            {% if is_elite_creator %}
+            <span style="display:inline-block;background:linear-gradient(135deg,#d4a843,#b8860b);color:#000;font-size:0.5rem;font-weight:700;padding:2px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:1px;vertical-align:middle;margin-left:6px;">✦ Elite Creator</span>
+            {% endif %}
+        </h1>
+        {% if creator.username %}
+        <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: var(--space-sm);">@{{ creator.username }}</p>
+        {% endif %}
+
+        {% if profile and profile.country %}
+        <p style="color: var(--text-secondary); font-size: 0.88rem;"><i class="bi bi-geo-alt me-1"></i>{{ profile.country }}</p>
+        {% endif %}
+
+        {% if profile and profile.bio %}
+        <p style="color: var(--text-secondary); font-size: 0.92rem; max-width: 480px; margin: var(--space-md) auto; line-height: 1.7;">
+            {{ profile.bio }}
+        </p>
+        {% endif %}
+
+        <!-- Stats -->
+        <div class="creator-stats">
+            <div class="creator-stat">
+                <div class="num">{{ book_count }}</div>
+                <div class="label">Books</div>
+            </div>
+            <div class="creator-stat">
+                <div class="num" id="followerCount">{{ follower_count }}</div>
+                <div class="label">Followers</div>
+            </div>
+            <div class="creator-stat">
+                <div class="num">{{ total_views }}</div>
+                <div class="label">Views</div>
+            </div>
+            {% if rating_count > 0 %}
+            <div class="creator-stat">
+                <div class="num">{{ avg_rating }}<span style="font-size: 0.75rem; color: var(--gold);"> &#9733;</span></div>
+                <div class="label">{{ rating_count }} ratings</div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Follow button -->
+        {% if current_user.is_authenticated and current_user.id != creator.id %}
+        <div style="display:flex;gap:10px;justify-content:center;align-items:center;margin-top:var(--space-sm);">
+            <button class="follow-btn {{ 'following' if is_following else 'not-following' }}" id="followBtn"
+                    onclick="toggleFollow({{ creator.id }})">
+                <span id="followText">{{ 'Following' if is_following else 'Follow' }}</span>
+            </button>
+        </div>
+        {% elif current_user.is_authenticated and current_user.wiam_id == creator.wiam_id %}
+        <a href="{{ url_for('bulletin.feed', creator_id=creator.wiam_id) }}"
+           style="display:inline-block;margin-top:var(--space-sm);border:1px solid var(--gold);color:var(--gold);padding:8px 24px;border-radius:var(--radius-full);font-size:0.88rem;font-weight:600;text-decoration:none;transition:all 0.15s;"
+           onmouseover="this.style.background='var(--gold)';this.style.color='var(--bg)'"
+           onmouseout="this.style.background='transparent';this.style.color='var(--gold)'">
+            <i class="bi bi-megaphone me-1"></i> My Bulletin
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Creator's Books -->
+<div class="container" style="padding: var(--space-xl) 0 var(--space-2xl);">
+    {% if books %}
+    <div class="section-header">
+        <h2>Books by {{ profile.pen_name if profile else creator.display_name }}</h2>
+    </div>
+    <div class="row g-3">
+        {% for book in books %}
+        <div class="col-6 col-md-4 col-lg-3">
+            <a href="{{ url_for('book.detail', book_id=book.id) }}" class="book-card d-block" style="text-decoration: none;">
+                {% if book.cover_file_id %}
+                <img src="{{ book.cover_url }}" class="card-cover" alt="{{ book.title }}" loading="lazy">
+                {% else %}
+                <div class="cover-placeholder"><i class="bi bi-book"></i></div>
+                {% endif %}
+                <div class="card-body">
+                    <div class="card-title">{{ book.title }}</div>
+                    <div class="card-author">{{ book.author or 'Unknown' }}</div>
+                    <div class="card-stats"><span>👁 {{ book.views or 0 }}</span><span>❤️ {{ book.favorite_count }}</span><span>⭐ {{ book.rating_count }}</span></div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="icon"><i class="bi bi-book"></i></div>
+        <h3>No published stories yet.</h3>
+        <p>This creator hasn't published any stories yet. Check back later!</p>
+    </div>
+    {% endif %}
+</div>
+
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleFollow(creatorId) {
+    var btn = document.getElementById('followBtn');
+    var txt = document.getElementById('followText');
+    var cnt = document.getElementById('followerCount');
+    var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    fetch('/creator/' + creatorId + '/follow', {method: 'POST', headers: {'X-CSRFToken': csrfToken}})
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.following) {
+            btn.className = 'follow-btn following';
+            txt.textContent = 'Following';
+        } else {
+            btn.className = 'follow-btn not-following';
+            txt.textContent = 'Follow';
+        }
+        if (cnt) cnt.textContent = data.count;
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}WiamApex — Officially Contracted Stories{% endblock %}
+{% block meta_description %}Discover WiamApex stories — the absolute best content on WiamApp, officially backed and contracted by the platform.{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:var(--space-xl);padding-bottom:var(--space-2xl);max-width:900px;margin:0 auto;">
+
+    <!-- Back -->
+    <a href="{{ url_for('home.home') }}" style="display:inline-flex;align-items:center;gap:4px;font-size:0.85rem;color:var(--gold);text-decoration:none;margin-bottom:var(--space-xl);">
+        <i class="bi bi-arrow-left"></i> Back to Home
+    </a>
+
+    <!-- Hero -->
+    <div style="text-align:center;margin-bottom:var(--space-2xl);padding:var(--space-2xl) var(--space-lg);background:linear-gradient(135deg,rgba(212,168,67,0.1),rgba(114,47,55,0.08));border:1px solid rgba(212,168,67,0.2);border-radius:var(--radius-lg);">
+        <div style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#d4a843,#b8860b);color:#000;font-size:0.7rem;font-weight:700;padding:6px 18px;border-radius:20px;text-transform:uppercase;letter-spacing:2px;margin-bottom:var(--space-md);">
+            <i class="bi bi-trophy-fill"></i> WiamApex
+        </div>
+        <h1 style="font-size:1.6rem;font-family:var(--font-display);color:var(--text);margin:0 0 var(--space-sm);">
+            The Pinnacle of Storytelling
+        </h1>
+        <p style="font-size:0.9rem;color:var(--text-secondary);margin:0;max-width:550px;display:inline-block;line-height:1.6;">
+            WiamApex stories are handpicked masterpieces — officially contracted and backed by WiamApp.
+            These are the stories that define the platform.
+        </p>
+    </div>
+
+    {% if apex_paywall and not is_premium %}
+    <!-- Paywall notice -->
+    <div style="padding:var(--space-lg);background:rgba(231,76,60,0.08);border:1px solid rgba(231,76,60,0.2);border-radius:var(--radius-md);text-align:center;margin-bottom:var(--space-xl);">
+        <i class="bi bi-lock" style="font-size:1.2rem;color:#e74c3c;"></i>
+        <p style="font-size:0.85rem;color:var(--text);margin:var(--space-xs) 0;">
+            Apex stories require <b>WiamPremium</b> to read.
+        </p>
+        <a href="{{ url_for('premium.premium_page') }}" style="display:inline-block;padding:8px 20px;background:linear-gradient(135deg,#9b59b6,#8e44ad);color:#fff;border-radius:var(--radius-md);font-weight:600;font-size:0.8rem;text-decoration:none;margin-top:var(--space-xs);">
+            <i class="bi bi-gem"></i> Get Premium
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- Stories Grid -->
+    {% if apex_stories %}
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:var(--space-md);">
+        {% for story in apex_stories %}
+        <a href="{{ url_for('book.book_detail', book_id=story.id) }}" style="text-decoration:none;display:block;">
+            <div style="background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);overflow:hidden;transition:transform 0.2s,box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='none';this.style.boxShadow='none'">
+                <!-- Cover -->
+                <div style="position:relative;padding-top:140%;background:var(--bg-elevated);">
+                    {% if story.cover_url %}
+                    <img src="{{ story.cover_url }}" alt="{{ story.title }}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;" loading="lazy">
+                    {% else %}
+                    <div style="position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
+                        <i class="bi bi-book" style="font-size:2rem;color:var(--text-muted);"></i>
+                    </div>
+                    {% endif %}
+                    <!-- Apex Badge -->
+                    <div style="position:absolute;top:8px;left:8px;background:linear-gradient(135deg,#d4a843,#b8860b);color:#000;font-size:0.55rem;font-weight:700;padding:2px 8px;border-radius:10px;text-transform:uppercase;letter-spacing:1px;">
+                        <i class="bi bi-trophy-fill"></i> Apex
+                    </div>
+                    {% if apex_paywall and not is_premium %}
+                    <div style="position:absolute;bottom:8px;right:8px;">
+                        <i class="bi bi-lock-fill" style="color:#e74c3c;font-size:0.9rem;text-shadow:0 1px 4px rgba(0,0,0,0.5);"></i>
+                    </div>
+                    {% endif %}
+                </div>
+                <!-- Info -->
+                <div style="padding:var(--space-sm);">
+                    <div style="font-size:0.8rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ story.title }}</div>
+                    <div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px;">
+                        {% if story.author %}{{ story.author }}{% else %}Unknown{% endif %}
+                    </div>
+                    <div style="display:flex;gap:var(--space-sm);margin-top:4px;font-size:0.65rem;color:var(--text-muted);">
+                        <span><i class="bi bi-eye"></i> {{ story.views or 0 }}</span>
+                        <span><i class="bi bi-star-fill" style="color:var(--gold);"></i> {{ '%.1f'|format(story.avg_rating or 0) }}</span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Empty state -->
+    <div style="text-align:center;padding:var(--space-2xl);color:var(--text-muted);">
+        <i class="bi bi-trophy" style="font-size:3rem;display:block;margin-bottom:var(--space-md);color:var(--gold);"></i>
+        <h3 style="font-size:1rem;font-family:var(--font-display);color:var(--text);margin:0 0 var(--space-sm);">No Apex Stories Yet</h3>
+        <p style="font-size:0.85rem;max-width:400px;margin:0 auto;line-height:1.6;">
+            WiamApex is coming soon. The very best stories will be handpicked and officially contracted here.
+        </p>
+    </div>
+    {% endif %}
+
+    <!-- How Apex Works -->
+    <div style="margin-top:var(--space-2xl);padding:var(--space-xl);background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);">
+        <h2 style="font-size:1rem;font-family:var(--font-display);margin-bottom:var(--space-lg);text-align:center;color:var(--text);">How WiamApex Works</h2>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-lg);text-align:center;">
+            <div>
+                <div style="font-size:1.3rem;margin-bottom:var(--space-xs);"><i class="bi bi-send" style="color:var(--gold);"></i></div>
+                <div style="font-size:0.8rem;font-weight:600;color:var(--text);margin-bottom:2px;">Creators Apply</div>
+                <div style="font-size:0.7rem;color:var(--text-secondary);line-height:1.5;">Top creators submit their best work for Apex consideration.</div>
+            </div>
+            <div>
+                <div style="font-size:1.3rem;margin-bottom:var(--space-xs);"><i class="bi bi-shield-check" style="color:var(--gold);"></i></div>
+                <div style="font-size:0.8rem;font-weight:600;color:var(--text);margin-bottom:2px;">We Review</div>
+                <div style="font-size:0.7rem;color:var(--text-secondary);line-height:1.5;">Our team reviews every submission against the highest quality standards.</div>
+            </div>
+            <div>
+                <div style="font-size:1.3rem;margin-bottom:var(--space-xs);"><i class="bi bi-file-earmark-text" style="color:var(--gold);"></i></div>
+                <div style="font-size:0.8rem;font-weight:600;color:var(--text);margin-bottom:2px;">Official Contract</div>
+                <div style="font-size:0.7rem;color:var(--text-secondary);line-height:1.5;">Approved stories get an official contract with premium revenue share.</div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

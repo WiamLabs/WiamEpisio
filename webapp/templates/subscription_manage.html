@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}My Subscription — WiamApp{% endblock %}
+{% block meta_description %}Manage your WiamApp subscription, view credits, and billing history.{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:var(--space-xl);padding-bottom:var(--space-2xl);max-width:700px;margin:0 auto;">
+
+    <!-- Back -->
+    <a href="{{ url_for('home.home') }}" style="display:inline-flex;align-items:center;gap:4px;font-size:0.85rem;color:var(--gold);text-decoration:none;margin-bottom:var(--space-xl);">
+        <i class="bi bi-arrow-left"></i> Back to Home
+    </a>
+
+    <h1 style="font-size:1.4rem;font-family:var(--font-display);color:var(--text);margin:0 0 var(--space-xl);">My Subscription</h1>
+
+    <!-- ═══ PREMIUM STATUS CARD ═══ -->
+    <div style="padding:var(--space-xl);background:{% if is_premium %}linear-gradient(135deg,rgba(155,89,182,0.12),rgba(142,68,173,0.08)){% else %}var(--bg-card){% endif %};border:{% if is_premium %}2px solid rgba(155,89,182,0.3){% else %}1px solid var(--border-subtle){% endif %};border-radius:var(--radius-lg);margin-bottom:var(--space-lg);">
+        <div style="display:flex;align-items:center;gap:var(--space-md);margin-bottom:var(--space-lg);">
+            <div style="width:48px;height:48px;border-radius:50%;background:{% if is_premium %}linear-gradient(135deg,#9b59b6,#8e44ad){% else %}var(--bg-card){% endif %};display:flex;align-items:center;justify-content:center;font-size:1.3rem;{% if not is_premium %}border:1px solid var(--border-subtle);{% endif %}">
+                {% if is_premium %}<i class="bi bi-gem" style="color:#fff;"></i>{% else %}<i class="bi bi-person" style="color:var(--text-muted);"></i>{% endif %}
+            </div>
+            <div>
+                <div style="font-size:1rem;font-weight:700;color:var(--text);">
+                    {% if is_premium %}WiamPremium Active{% else %}Free Reader{% endif %}
+                </div>
+                <div style="font-size:0.8rem;color:var(--text-secondary);">
+                    {% if premium_sub and premium_sub.status == 'active' %}
+                        Renews {{ premium_sub.expires_at.strftime('%b %d, %Y') if premium_sub.expires_at else 'soon' }}
+                    {% elif premium_sub and premium_sub.status == 'cancelled' %}
+                        Access until {{ premium_sub.expires_at.strftime('%b %d, %Y') if premium_sub.expires_at else 'period ends' }}
+                    {% else %}
+                        Upgrade to unlock premium features
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {% if is_premium %}
+        <!-- Credits -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-md);margin-bottom:var(--space-lg);">
+            <div style="padding:var(--space-md);background:rgba(155,89,182,0.08);border-radius:var(--radius-md);text-align:center;">
+                <div style="font-size:1.5rem;font-weight:800;color:#9b59b6;">{{ credits }}</div>
+                <div style="font-size:0.7rem;color:var(--text-muted);">Credits Remaining</div>
+            </div>
+            <div style="padding:var(--space-md);background:rgba(155,89,182,0.08);border-radius:var(--radius-md);text-align:center;">
+                <div style="font-size:1.5rem;font-weight:800;color:#9b59b6;">{{ cfg.premium_monthly_unlock_credits }}</div>
+                <div style="font-size:0.7rem;color:var(--text-muted);">Credits / Month</div>
+            </div>
+        </div>
+        {% if credits_cycle_end %}
+        <div style="font-size:0.75rem;color:var(--text-muted);text-align:center;margin-bottom:var(--space-md);">
+            Credits reset on {{ credits_cycle_end.strftime('%b %d, %Y') }}
+        </div>
+        {% endif %}
+        {% endif %}
+
+        <!-- Actions -->
+        <div style="display:flex;gap:var(--space-sm);flex-wrap:wrap;">
+            {% if not is_premium %}
+            <a href="{{ url_for('premium.premium_page') }}" style="flex:1;text-align:center;padding:10px 20px;background:linear-gradient(135deg,#9b59b6,#8e44ad);color:#fff;border-radius:var(--radius-md);font-weight:700;font-size:0.85rem;text-decoration:none;">
+                <i class="bi bi-gem"></i> Upgrade to Premium
+            </a>
+            {% elif premium_sub and premium_sub.status == 'active' %}
+            <form method="POST" action="{{ url_for('premium.cancel') }}" style="flex:1;" onsubmit="return confirm('Cancel your premium subscription?');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" style="width:100%;padding:10px 20px;background:transparent;border:1px solid var(--border-subtle);border-radius:var(--radius-md);font-size:0.8rem;color:var(--text-muted);cursor:pointer;">
+                    Cancel Premium
+                </button>
+            </form>
+            {% elif premium_sub and premium_sub.status == 'cancelled' %}
+            <a href="{{ url_for('premium.premium_page') }}" style="flex:1;text-align:center;padding:10px 20px;background:linear-gradient(135deg,#9b59b6,#8e44ad);color:#fff;border-radius:var(--radius-md);font-weight:700;font-size:0.85rem;text-decoration:none;">
+                <i class="bi bi-gem"></i> Re-subscribe
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ═══ ELITE STATUS (if any) ═══ -->
+    {% if elite_sub %}
+    <div style="padding:var(--space-lg);background:linear-gradient(135deg,rgba(212,168,67,0.08),rgba(114,47,55,0.05));border:1px solid rgba(212,168,67,0.25);border-radius:var(--radius-lg);margin-bottom:var(--space-lg);">
+        <div style="display:flex;align-items:center;gap:var(--space-md);">
+            <div style="font-size:1.3rem;">✦</div>
+            <div style="flex:1;">
+                <div style="font-size:0.9rem;font-weight:600;color:var(--gold);">WiamElite Subscription</div>
+                <div style="font-size:0.8rem;color:var(--text-secondary);">
+                    Status: <span style="text-transform:capitalize;font-weight:600;">{{ elite_sub.status }}</span>
+                    {% if elite_sub.expires_at %} · {{ 'Access until' if elite_sub.status == 'cancelled' else 'Renews' }} {{ elite_sub.expires_at.strftime('%b %d, %Y') }}{% endif %}
+                </div>
+            </div>
+            <a href="{{ url_for('elite.subscribe_page') }}" style="font-size:0.75rem;color:var(--gold);text-decoration:none;">Manage →</a>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ═══ BILLING HISTORY ═══ -->
+    <h2 style="font-size:1rem;font-family:var(--font-display);color:var(--text);margin-bottom:var(--space-md);">Billing History</h2>
+
+    {% set history = [] %}
+    {% for s in all_premium %}
+        {% if history.append({'type': 'Premium', 'amount': s.amount_ghs, 'status': s.status, 'date': s.created_at, 'ref': s.paystack_reference or '—'}) %}{% endif %}
+    {% endfor %}
+    {% for s in all_elite %}
+        {% if history.append({'type': 'Elite', 'amount': s.amount_ghs, 'status': s.status, 'date': s.created_at, 'ref': s.paystack_reference or '—'}) %}{% endif %}
+    {% endfor %}
+
+    {% if history %}
+    <div style="background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);overflow:hidden;">
+        {% for item in history|sort(attribute='date', reverse=True) %}
+        <div style="padding:var(--space-md);display:flex;align-items:center;gap:var(--space-md);{% if not loop.last %}border-bottom:1px solid var(--border-subtle);{% endif %}">
+            <div style="width:36px;height:36px;border-radius:50%;background:{% if item.type == 'Premium' %}rgba(155,89,182,0.15){% else %}rgba(212,168,67,0.15){% endif %};display:flex;align-items:center;justify-content:center;font-size:0.8rem;flex-shrink:0;">
+                {% if item.type == 'Premium' %}<i class="bi bi-gem" style="color:#9b59b6;"></i>{% else %}✦{% endif %}
+            </div>
+            <div style="flex:1;min-width:0;">
+                <div style="font-size:0.85rem;font-weight:600;color:var(--text);">{{ item.type }} · GH₵{{ '%.2f'|format(item.amount) }}</div>
+                <div style="font-size:0.7rem;color:var(--text-muted);">{{ item.date.strftime('%b %d, %Y') if item.date else '—' }}</div>
+            </div>
+            <div style="text-align:right;">
+                <span style="font-size:0.7rem;padding:2px 8px;border-radius:10px;font-weight:600;
+                    {% if item.status == 'active' %}background:rgba(46,204,113,0.15);color:#2ecc71;
+                    {% elif item.status == 'cancelled' %}background:rgba(231,76,60,0.15);color:#e74c3c;
+                    {% else %}background:rgba(149,165,166,0.15);color:#95a5a6;{% endif %}">
+                    {{ item.status|capitalize }}
+                </span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:var(--space-2xl);color:var(--text-muted);font-size:0.85rem;">
+        <i class="bi bi-receipt" style="font-size:2rem;display:block;margin-bottom:var(--space-sm);"></i>
+        No billing history yet.
+        <a href="{{ url_for('premium.premium_page') }}" style="color:#9b59b6;text-decoration:none;font-weight:600;display:block;margin-top:var(--space-sm);">Explore WiamPremium →</a>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

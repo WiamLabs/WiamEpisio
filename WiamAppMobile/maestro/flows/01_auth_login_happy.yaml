@@ -1,0 +1,6 @@
+appId: com.wiamapp.mobile
+---
+- launchApp
+- assertVisible: "Welcome Back"
+- assertVisible: "Sign In"
+- assertVisible: "Forgot password?"

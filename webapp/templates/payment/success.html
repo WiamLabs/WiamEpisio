@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+{% block title %}Purchase Successful — WiamApp{% endblock %}
+
+{% block extra_head %}
+<style>
+.success-page { position: relative; min-height: 80vh; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+#confettiCanvas { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+
+.success-wrap { position: relative; z-index: 1; text-align: center; padding: 2rem 1rem; max-width: 500px; width: 100%; }
+
+/* ── Animated check ── */
+.success-ring {
+    width: 100px; height: 100px;
+    margin: 0 auto 1.5rem;
+    position: relative;
+}
+.success-ring-bg {
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(74,222,128,0.15), rgba(74,222,128,0.05));
+    border: 3px solid rgba(74,222,128,0.3);
+    display: flex; align-items: center; justify-content: center;
+    animation: ringPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.success-ring-bg i { font-size: 2.5rem; color: #4ade80; animation: checkDrop 0.4s 0.3s ease both; }
+@keyframes ringPop {
+    0% { transform: scale(0); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+@keyframes checkDrop {
+    0% { transform: scale(0) rotate(-45deg); opacity: 0; }
+    100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+.success-ring::after {
+    content: ''; position: absolute; inset: -8px;
+    border-radius: 50%;
+    border: 2px solid rgba(74,222,128,0.15);
+    animation: ringPulse 2s ease-in-out infinite;
+}
+@keyframes ringPulse {
+    0%, 100% { transform: scale(1); opacity: 0.5; }
+    50% { transform: scale(1.15); opacity: 0; }
+}
+
+.success-title {
+    font-family: var(--font-display);
+    font-size: 1.8rem; font-weight: 800;
+    background: linear-gradient(135deg, #4ade80, #86efac);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.3rem;
+    animation: fadeUp 0.5s 0.2s ease both;
+}
+.success-sub {
+    color: var(--text-muted); font-size: 0.92rem;
+    margin-bottom: 1.5rem;
+    animation: fadeUp 0.5s 0.3s ease both;
+}
+
+/* ── Coins added showcase ── */
+.coins-added-showcase {
+    animation: fadeUp 0.5s 0.4s ease both;
+    margin-bottom: 1.5rem;
+}
+.coins-added-amount {
+    font-family: var(--font-display);
+    font-size: 3rem; font-weight: 800;
+    color: var(--gold);
+    line-height: 1;
+}
+.coins-added-amount i { font-size: 2.2rem; vertical-align: middle; }
+.coins-added-label { color: var(--text-muted); font-size: 0.8rem; margin-top: 0.3rem; }
+
+/* ── Details glass card ── */
+.details-glass {
+    background: linear-gradient(135deg, rgba(212,168,67,0.06), rgba(212,168,67,0.02));
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(212,168,67,0.15);
+    border-radius: 18px;
+    padding: 1.2rem 1.5rem;
+    margin-bottom: 1.5rem;
+    text-align: left;
+    animation: fadeUp 0.5s 0.5s ease both;
+}
+.detail-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0.6rem 0;
+    font-size: 0.88rem;
+}
+.detail-row + .detail-row { border-top: 1px solid rgba(255,255,255,0.05); }
+.detail-label { color: var(--text-muted); }
+.detail-value { color: var(--text); font-weight: 600; }
+
+/* ── New balance display ── */
+.new-balance-section { animation: fadeUp 0.5s 0.6s ease both; margin-bottom: 2rem; }
+.new-balance-label { color: var(--text-muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; }
+.new-balance-glass {
+    display: inline-flex; align-items: center; gap: 0.6rem;
+    background: linear-gradient(135deg, rgba(212,168,67,0.1), rgba(212,168,67,0.03));
+    border: 1px solid rgba(212,168,67,0.2);
+    border-radius: 50px;
+    padding: 0.7rem 1.8rem;
+    margin-top: 0.6rem;
+}
+.new-balance-coin {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, #d4a843, #f5d98a);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; color: #000;
+    box-shadow: 0 0 15px rgba(212,168,67,0.4);
+}
+.new-balance-num {
+    font-family: var(--font-display);
+    font-size: 1.8rem; font-weight: 800;
+    color: var(--gold);
+}
+
+/* ── Action buttons ── */
+.success-actions {
+    display: flex; gap: 0.8rem; justify-content: center; flex-wrap: wrap;
+    animation: fadeUp 0.5s 0.7s ease both;
+}
+.s-btn {
+    padding: 0.7rem 1.5rem;
+    border-radius: 12px;
+    font-weight: 700; font-size: 0.88rem;
+    text-decoration: none;
+    transition: all 0.25s;
+    display: inline-flex; align-items: center; gap: 0.4rem;
+}
+.s-btn-gold { background: linear-gradient(135deg, #d4a843, #f5d98a); color: #000; }
+.s-btn-gold:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(212,168,67,0.3); color: #000; }
+.s-btn-outline { border: 1px solid var(--border-subtle); color: var(--text-secondary); background: transparent; }
+.s-btn-outline:hover { border-color: var(--gold); color: var(--gold); transform: translateY(-2px); }
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="success-page">
+    <canvas id="confettiCanvas"></canvas>
+
+    <div class="success-wrap">
+
+        <!-- Animated check -->
+        <div class="success-ring">
+            <div class="success-ring-bg">
+                <i class="bi bi-check-lg"></i>
+            </div>
+        </div>
+
+        <h1 class="success-title">Coins Added!</h1>
+        <p class="success-sub">Your purchase was successful. Enjoy your reading!</p>
+
+        {% if transaction %}
+        <!-- Big coin amount showcase -->
+        <div class="coins-added-showcase">
+            <div class="coins-added-amount">
+                <i class="bi bi-coin"></i> +{{ transaction.amount }}
+            </div>
+            <div class="coins-added-label">coins credited to your account</div>
+        </div>
+
+        <!-- Transaction details -->
+        <div class="details-glass">
+            <div class="detail-row">
+                <span class="detail-label">Coins Added</span>
+                <span class="detail-value" style="color: var(--gold);">{{ transaction.amount }} coins</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Reference</span>
+                <span class="detail-value" style="font-size: 0.78rem; font-family: monospace; opacity: 0.7;">{{ transaction.reference[:20] }}...</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Date</span>
+                <span class="detail-value">{{ transaction.created_at.strftime('%b %d, %Y at %H:%M') }}</span>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- New balance -->
+        <div class="new-balance-section">
+            <div class="new-balance-label">Your Balance</div>
+            <div class="new-balance-glass">
+                <div class="new-balance-coin"><i class="bi bi-coin"></i></div>
+                <div class="new-balance-num">{{ balance.balance }}</div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="success-actions">
+            <a href="{{ url_for('home.home') }}" class="s-btn s-btn-gold">
+                <i class="bi bi-book"></i> Start Reading
+            </a>
+            <a href="{{ url_for('payment.coins') }}" class="s-btn s-btn-outline">
+                <i class="bi bi-coin"></i> Buy More
+            </a>
+            <a href="{{ url_for('payment.history') }}" class="s-btn s-btn-outline">
+                <i class="bi bi-clock-history"></i> History
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ── Confetti celebration ──
+(function(){
+    var c = document.getElementById('confettiCanvas');
+    if (!c) return;
+    var ctx = c.getContext('2d');
+    var W, H;
+    function resize() { W = c.width = window.innerWidth; H = c.height = window.innerHeight; }
+    resize(); window.addEventListener('resize', resize);
+
+    var colors = ['#d4a843','#f5d98a','#4ade80','#a78bfa','#60a5fa','#f472b6','#fb923c'];
+    var pieces = [];
+
+    for (var i = 0; i < 80; i++) {
+        pieces.push({
+            x: Math.random() * W,
+            y: Math.random() * -H,
+            r: Math.random() * 5 + 3,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            speed: Math.random() * 3 + 1.5,
+            spin: Math.random() * 0.2 - 0.1,
+            angle: Math.random() * Math.PI * 2,
+            drift: (Math.random() - 0.5) * 2,
+            opacity: 1,
+            decay: Math.random() * 0.003 + 0.001
+        });
+    }
+
+    var frame = 0;
+    function draw() {
+        ctx.clearRect(0, 0, W, H);
+        var alive = false;
+        for (var i = 0; i < pieces.length; i++) {
+            var p = pieces[i];
+            if (p.opacity <= 0) continue;
+            alive = true;
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.angle);
+            ctx.globalAlpha = p.opacity;
+            ctx.fillStyle = p.color;
+            ctx.fillRect(-p.r, -p.r / 2, p.r * 2, p.r);
+            ctx.restore();
+            p.y += p.speed;
+            p.x += p.drift;
+            p.angle += p.spin;
+            if (p.y > H + 20) p.opacity -= 0.05;
+            if (frame > 120) p.opacity -= p.decay;
+        }
+        frame++;
+        if (alive) requestAnimationFrame(draw);
+    }
+    draw();
+})();
+</script>
+{% endblock %}

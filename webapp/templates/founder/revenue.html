@@ -1,0 +1,176 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Revenue — Control Panel{% endblock %}
+{% block sidebar_title %}Control Panel{% endblock %}
+
+{% block sidebar_nav %}
+<a class="nav-link" href="{{ url_for('founder_dash.overview') }}"><i class="bi bi-speedometer2"></i> Overview</a>
+<a class="nav-link" href="{{ url_for('founder_dash.users') }}"><i class="bi bi-people"></i> Users</a>
+<a class="nav-link" href="{{ url_for('founder_dash.content') }}"><i class="bi bi-book"></i> Content</a>
+<a class="nav-link active" href="{{ url_for('founder_dash.revenue') }}"><i class="bi bi-cash-stack"></i> Revenue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.financial_dashboard') }}"><i class="bi bi-bank" style="color:var(--gold);"></i> Financial v5</a>
+<a class="nav-link" href="{{ url_for('founder_dash.premium_analytics') }}"><i class="bi bi-gem" style="color:#c084fc;"></i> Premium Analytics</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payouts') }}"><i class="bi bi-send-check"></i> Payouts</a>
+<a class="nav-link" href="{{ url_for('founder_dash.withdrawals') }}"><i class="bi bi-arrow-up-right-circle" style="color:var(--gold);"></i> Withdrawals</a>
+<a class="nav-link" href="{{ url_for('founder_dash.subscribers') }}"><i class="bi bi-gem" style="color:#9b59b6;"></i> Subscribers</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payroll') }}"><i class="bi bi-wallet2" style="color:#2ecc71;"></i> Team Payroll</a>
+<a class="nav-link" href="{{ url_for('founder_dash.creators') }}"><i class="bi bi-person-badge"></i> Creators</a>
+<a class="nav-link" href="{{ url_for('founder_dash.genres') }}"><i class="bi bi-tags"></i> Genres</a>
+<a class="nav-link" href="{{ url_for('founder_dash.announcements') }}"><i class="bi bi-megaphone"></i> Announcements</a>
+<a class="nav-link" href="{{ url_for('founder_dash.collections') }}"><i class="bi bi-grid"></i> Collections</a>
+<a class="nav-link" href="{{ url_for('founder_dash.moderation') }}"><i class="bi bi-shield-exclamation"></i> Moderation</a>
+<a class="nav-link" href="{{ url_for('founder_dash.warnings_list') }}"><i class="bi bi-exclamation-triangle" style="color:#f59e0b;"></i> Warnings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.elite_manage') }}"><span style="color:var(--gold);">?</span> WiamElite</a>
+<a class="nav-link" href="{{ url_for('wiambot.apex_review') }}"><i class="bi bi-trophy-fill" style="color:var(--gold);"></i> Apex Review</a>
+<a class="nav-link" href="{{ url_for('founder_dash.review_queue') }}"><i class="bi bi-robot"></i> Bot Review Queue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.platform_settings') }}"><i class="bi bi-sliders"></i> Platform Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.forms_dashboard') }}"><i class="bi bi-file-earmark-text"></i> Application Forms</a>
+<a class="nav-link" href="{{ url_for('founder_dash.email_studio') }}"><i class="bi bi-envelope-paper" style="color:var(--gold);"></i> Email Studio</a>
+<a class="nav-link" href="{{ url_for('founder_dash.team_management') }}"><i class="bi bi-people-fill"></i> Team</a>
+<a class="nav-link" href="{{ url_for('founder_dash.account_management') }}"><i class="bi bi-person-x"></i> Account Management</a>
+<a class="nav-link" href="{{ url_for('founder_dash.notification_testing') }}"><i class="bi bi-bell" style="color:#fbbf24;"></i> Notifications</a>
+<a class="nav-link" href="{{ url_for('classics.dashboard') }}"><i class="bi bi-journal-bookmark" style="color:#a78bfa;"></i> Content Seeder</a>
+<a class="nav-link" href="{{ url_for('founder_dash.settings') }}"><i class="bi bi-gear"></i> Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.admins') }}"><i class="bi bi-shield-check"></i> Admins</a>
+{% endblock %}
+
+{% block dash_content %}
+<div class="dash-header">
+    <h1><i class="bi bi-cash-stack" style="color:var(--gold);"></i> Revenue & Earnings</h1>
+    <p>Coin purchases, subscriptions, and creator earnings overview</p>
+</div>
+
+<!-- -- Top Stats -- -->
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="label"><i class="bi bi-graph-up" style="margin-right:4px;opacity:0.6;"></i> All-Time Revenue</div>
+        <div class="value gold">GH&#8373;{{ '%.2f'|format(total_revenue_ghs) }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label"><i class="bi bi-calendar3" style="margin-right:4px;opacity:0.6;"></i> This Month</div>
+        <div class="value gold">GH&#8373;{{ '%.2f'|format(month_revenue_ghs) }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label"><i class="bi bi-coin" style="margin-right:4px;opacity:0.6;"></i> Coin Purchases</div>
+        <div class="value">{{ total_purchases }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label"><i class="bi bi-star" style="margin-right:4px;opacity:0.6;color:#d4a843;"></i> Elite Subs</div>
+        <div class="value" style="color:#d4a843;">{{ active_subs }}</div>
+    </div>
+</div>
+
+<!-- -- Revenue Breakdown -- -->
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;margin-bottom:1.5rem;">
+    <div class="dash-card">
+        <h3><i class="bi bi-coin me-2" style="color:var(--gold)"></i>Coin Revenue</h3>
+        <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.5rem;">From readers buying coin packages</div>
+        <div style="font-size:1.8rem;font-weight:700;color:var(--gold);">GH&#8373;{{ '%.2f'|format(month_coin_revenue_ghs) }}</div>
+        <div style="font-size:0.75rem;color:var(--text-muted);">this month &middot; {{ total_purchases }} total purchases</div>
+    </div>
+    <div class="dash-card">
+        <h3><span style="color:var(--gold);">?</span> Subscription Revenue</h3>
+        <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.5rem;">From WiamElite monthly subscriptions</div>
+        <div style="font-size:1.8rem;font-weight:700;color:var(--gold);">GH&#8373;{{ '%.2f'|format(monthly_sub_revenue_ghs) }}</div>
+        <div style="font-size:0.75rem;color:var(--text-muted);">{{ active_subs }} active subscribers &times; GH&#8373;{{ '%.0f'|format(cfg.elite_price_ghs) }}/mo</div>
+    </div>
+    <div class="dash-card">
+        <h3><i class="bi bi-send me-2" style="color:var(--gold)"></i>Pending Payouts</h3>
+        <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.5rem;">Creator payouts awaiting processing</div>
+        <div style="font-size:1.8rem;font-weight:700;color:{% if pending_payouts %}#facc15{% else %}#4ade80{% endif %};">{{ pending_payouts }}</div>
+        <div style="font-size:0.75rem;color:var(--text-muted);">min payout: GH&#8373;{{ '%.0f'|format(cfg.min_payout_ghs) }}</div>
+    </div>
+</div>
+
+<!-- -- Revenue Split Rules -- -->
+<div class="dash-card" style="margin-bottom:1.5rem;">
+    <h3><i class="bi bi-sliders me-2" style="color:var(--gold)"></i>Revenue Split Rules</h3>
+    <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:1rem;">
+        Priority: SPECIAL_BOOK &gt; SPECIAL_CREATOR &gt; APEX &gt; ELITE &gt; DEFAULT
+    </p>
+    <table class="dash-table">
+        <thead>
+            <tr><th>Type</th><th>Target</th><th>Creator %</th><th>Platform %</th><th>Action</th></tr>
+        </thead>
+        <tbody>
+        {% for rule in revenue_rules %}
+        <tr>
+            <td><span style="font-weight:600;">{{ rule.rule_type }}</span></td>
+            <td>{{ rule.target_id or '—' }}</td>
+            <td>
+                <form method="POST" action="{{ url_for('founder_dash.update_revenue_rule') }}" style="display:flex;gap:4px;align-items:center;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="rule_id" value="{{ rule.id }}">
+                    <input type="number" name="creator_share_pct" value="{{ rule.creator_share_pct|int }}" min="0" max="100" step="1"
+                        style="width:60px;padding:4px 6px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:6px;color:var(--text-primary);font-size:0.8rem;">
+                    <span style="font-size:0.8rem;color:var(--text-muted);">%</span>
+                    <button type="submit" style="background:var(--gold);color:#000;border:none;border-radius:6px;padding:4px 10px;font-size:0.75rem;cursor:pointer;">Save</button>
+                </form>
+            </td>
+            <td style="color:var(--text-muted);">{{ rule.platform_share_pct|int }}%</td>
+            <td>
+                {% if rule.rule_type not in ('DEFAULT', 'ELITE', 'APEX') %}
+                <form method="POST" action="{{ url_for('founder_dash.delete_revenue_rule', rule_id=rule.id) }}" style="display:inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" onclick="return confirm('Delete this rule?')" style="background:rgba(239,68,68,0.15);color:#f87171;border:none;border-radius:6px;padding:4px 10px;font-size:0.75rem;cursor:pointer;">Delete</button>
+                </form>
+                {% else %}
+                <span style="font-size:0.7rem;color:var(--text-muted)">System</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+        {% if not revenue_rules %}
+        <tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:1rem">No revenue rules. They will be seeded on next restart.</td></tr>
+        {% endif %}
+        </tbody>
+    </table>
+
+    <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border-subtle);">
+        <h4 style="font-size:0.85rem;margin-bottom:0.5rem;">Add Special Rule</h4>
+        <form method="POST" action="{{ url_for('founder_dash.add_revenue_rule') }}" style="display:flex;gap:0.5rem;align-items:end;flex-wrap:wrap;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div>
+                <label style="font-size:0.7rem;color:var(--text-muted);display:block;">Type</label>
+                <select name="rule_type" required style="padding:6px 8px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:6px;color:var(--text-primary);font-size:0.8rem;">
+                    <option value="SPECIAL_CREATOR">Special Creator</option>
+                    <option value="SPECIAL_BOOK">Special Book</option>
+                </select>
+            </div>
+            <div>
+                <label style="font-size:0.7rem;color:var(--text-muted);display:block;">Target ID</label>
+                <input type="number" name="target_id" required placeholder="Creator/Book ID" style="width:120px;padding:6px 8px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:6px;color:var(--text-primary);font-size:0.8rem;">
+            </div>
+            <div>
+                <label style="font-size:0.7rem;color:var(--text-muted);display:block;">Creator %</label>
+                <input type="number" name="creator_share_pct" required value="60" min="0" max="100" step="1" style="width:70px;padding:6px 8px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:6px;color:var(--text-primary);font-size:0.8rem;">
+            </div>
+            <button type="submit" style="background:var(--gold);color:#000;border:none;border-radius:8px;padding:6px 16px;font-size:0.8rem;font-weight:600;cursor:pointer;">Add Rule</button>
+        </form>
+    </div>
+</div>
+
+<!-- -- Per-Creator Earnings -- -->
+<div class="dash-card">
+    <h3>Per-Creator Earnings (All Time)</h3>
+    <table class="dash-table">
+        <thead>
+            <tr><th>Creator</th><th>Coins Earned</th><th>Creator Share</th></tr>
+        </thead>
+        <tbody>
+        {% for c in earnings_list %}
+        <tr>
+            <td>
+                <strong>{{ c.name }}</strong>
+                {% if c.username %}<br><small style="color:var(--text-muted)">@{{ c.username }}</small>{% endif %}
+            </td>
+            <td>{{ c.total_coins }} coins</td>
+            <td style="color:var(--gold)">GH&#8373;{{ '%.2f'|format(c.creator_ghs) }}</td>
+        </tr>
+        {% endfor %}
+        {% if not earnings_list %}
+        <tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:2rem">No creator earnings yet. Earnings appear when readers unlock chapters or tip creators.</td></tr>
+        {% endif %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

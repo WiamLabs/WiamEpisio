@@ -1,0 +1,83 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Collections — WiamApp{% endblock %}
+{% block sidebar_title %}Control Panel{% endblock %}
+
+{% block sidebar_nav %}
+<a class="nav-link" href="{{ url_for('founder_dash.overview') }}"><i class="bi bi-speedometer2"></i> Overview</a>
+<a class="nav-link" href="{{ url_for('founder_dash.users') }}"><i class="bi bi-people"></i> Users</a>
+<a class="nav-link" href="{{ url_for('founder_dash.content') }}"><i class="bi bi-book"></i> Content</a>
+
+<a class="nav-link" href="{{ url_for('founder_dash.revenue') }}"><i class="bi bi-cash-stack"></i> Revenue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.financial_dashboard') }}"><i class="bi bi-bank" style="color:var(--gold);"></i> Financial v5</a>
+<a class="nav-link" href="{{ url_for('founder_dash.premium_analytics') }}"><i class="bi bi-gem" style="color:#c084fc;"></i> Premium Analytics</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payouts') }}"><i class="bi bi-send-check"></i> Payouts</a>
+<a class="nav-link" href="{{ url_for('founder_dash.withdrawals') }}"><i class="bi bi-arrow-up-right-circle" style="color:var(--gold);"></i> Withdrawals</a>
+<a class="nav-link" href="{{ url_for('founder_dash.subscribers') }}"><i class="bi bi-gem" style="color:#9b59b6;"></i> Subscribers</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payroll') }}"><i class="bi bi-wallet2" style="color:#2ecc71;"></i> Team Payroll</a>
+<a class="nav-link" href="{{ url_for('founder_dash.creators') }}"><i class="bi bi-person-badge"></i> Creators</a>
+<a class="nav-link" href="{{ url_for('founder_dash.genres') }}"><i class="bi bi-tags"></i> Genres</a>
+<a class="nav-link" href="{{ url_for('founder_dash.announcements') }}"><i class="bi bi-megaphone"></i> Announcements</a>
+<a class="nav-link" href="{{ url_for('founder_dash.moderation') }}"><i class="bi bi-shield-exclamation"></i> Moderation</a>
+<a class="nav-link" href="{{ url_for('founder_dash.warnings_list') }}"><i class="bi bi-exclamation-triangle" style="color:#f59e0b;"></i> Warnings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.elite_manage') }}"><span style="color:var(--gold);">?</span> WiamElite</a>
+<a class="nav-link" href="{{ url_for('wiambot.apex_review') }}"><i class="bi bi-trophy-fill" style="color:var(--gold);"></i> Apex Review</a>
+<a class="nav-link" href="{{ url_for('founder_dash.review_queue') }}"><i class="bi bi-robot"></i> Bot Review Queue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.platform_settings') }}"><i class="bi bi-sliders"></i> Platform Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.forms_dashboard') }}"><i class="bi bi-file-earmark-text"></i> Application Forms</a>
+<a class="nav-link" href="{{ url_for('founder_dash.email_studio') }}"><i class="bi bi-envelope-paper" style="color:var(--gold);"></i> Email Studio</a>
+<a class="nav-link" href="{{ url_for('founder_dash.team_management') }}"><i class="bi bi-people-fill"></i> Team</a>
+<a class="nav-link" href="{{ url_for('founder_dash.account_management') }}"><i class="bi bi-person-x"></i> Account Management</a>
+<a class="nav-link active" href="{{ url_for('founder_dash.collections') }}"><i class="bi bi-grid"></i> Collections</a>
+<a class="nav-link" href="{{ url_for('founder_dash.notification_testing') }}"><i class="bi bi-bell" style="color:#fbbf24;"></i> Notifications</a>
+<a class="nav-link" href="{{ url_for('classics.dashboard') }}"><i class="bi bi-journal-bookmark" style="color:#a78bfa;"></i> Content Seeder</a>
+<a class="nav-link" href="{{ url_for('founder_dash.settings') }}"><i class="bi bi-gear"></i> Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.admins') }}"><i class="bi bi-shield-check"></i> Admins</a>
+{% endblock %}
+
+{% block dash_content %}
+<div class="dash-header">
+    <h1>?? Book Collections</h1>
+    <p>Create curated lists that appear on the home page.</p>
+</div>
+
+<div class="card mb-4" style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:12px;padding:1.5rem;">
+    <h3 style="margin:0 0 1rem;font-size:1.1rem;">New Collection</h3>
+    <form method="POST" action="{{ url_for('founder_dash.create_collection') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="mb-3">
+            <input type="text" name="title" required placeholder="Collection title, e.g. 'Staff Picks'" style="width:100%;padding:0.6rem 0.8rem;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-color);color:var(--text-color);font-size:0.95rem;">
+        </div>
+        <div class="mb-3">
+            <input type="text" name="description" placeholder="Short description..." style="width:100%;padding:0.6rem 0.8rem;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-color);color:var(--text-color);font-size:0.95rem;">
+        </div>
+        <button type="submit" class="btn btn-primary" style="background:var(--accent-color);border:none;padding:0.5rem 1.2rem;border-radius:8px;font-weight:600;">Create Collection</button>
+    </form>
+</div>
+
+{% if collections %}
+<div style="display:flex;flex-direction:column;gap:0.8rem;">
+    {% for item in collections %}
+    {% set c = item.collection %}
+    <div class="card" style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:10px;padding:1rem 1.2rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;">
+        <div style="flex:1;min-width:200px;">
+            <a href="{{ url_for('founder_dash.collection_detail', coll_id=c.id) }}" style="font-weight:600;color:var(--text-color);text-decoration:none;">{{ c.title }}</a>
+            {% if c.is_active %}<span style="background:#22c55e;color:#fff;padding:2px 8px;border-radius:20px;font-size:0.7rem;margin-left:0.5rem;">ACTIVE</span>{% else %}<span style="background:#6b7280;color:#fff;padding:2px 8px;border-radius:20px;font-size:0.7rem;margin-left:0.5rem;">HIDDEN</span>{% endif %}
+            <div style="color:var(--text-muted);font-size:0.85rem;">{{ item.count }} books · {{ c.created_at.strftime('%b %d, %Y') }}</div>
+        </div>
+        <div style="display:flex;gap:0.5rem;">
+            <form method="POST" action="{{ url_for('founder_dash.toggle_collection', coll_id=c.id) }}" style="margin:0;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-sm" style="border:1px solid var(--border-color);border-radius:8px;padding:0.3rem 0.8rem;background:transparent;color:var(--text-color);font-size:0.8rem;">{{ 'Hide' if c.is_active else 'Show' }}</button>
+            </form>
+            <form method="POST" action="{{ url_for('founder_dash.delete_collection', coll_id=c.id) }}" style="margin:0;" onsubmit="return confirm('Delete this collection?');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-sm" style="border:1px solid #ef4444;border-radius:8px;padding:0.3rem 0.8rem;background:transparent;color:#ef4444;font-size:0.8rem;">Delete</button>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<p style="color:var(--text-muted);">No collections yet.</p>
+{% endif %}
+{% endblock %}

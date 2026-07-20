@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamEpisio — Unlock Takeover</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{ --navy:#08081A; --gold:#D4A017; --gold-dark:#A07810; --text-dim:#C9C9DE; --text-faint:#7D7D97; }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:#000; border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); }
+  .video-bg{ position:absolute; inset:0; background:linear-gradient(160deg,#1a1030,#0d0d24,#000); filter:brightness(0.35); }
+
+  .top-bar{ position:absolute; top:44px; left:0; right:0; padding:0 18px; display:flex; align-items:center; justify-content:space-between; z-index:3; opacity:0.5; }
+  .back-btn{ width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center; }
+  .ep-indicator{ font-size:12.5px; color:#fff; font-weight:600; }
+
+  .center-block{ position:absolute; top:44%; left:50%; transform:translate(-50%,-50%); text-align:center; width:100%; padding:0 30px; z-index:3; }
+  .message{ font-size:15px; color:#fff; font-weight:600; line-height:1.5; margin:0 0 22px; }
+  .unlock-btn{ padding:15px 40px; border-radius:16px; background:var(--gold); color:var(--navy); font-size:14.5px; font-weight:800; border:none; display:inline-flex; align-items:center; gap:8px; }
+  .unlock-btn svg{ width:15px; height:15px; }
+
+  .action-rail{ position:absolute; right:12px; bottom:170px; display:flex; flex-direction:column; align-items:center; gap:20px; z-index:3; opacity:0.6; }
+  .rail-item{ display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .rail-icon{ width:42px; height:42px; border-radius:50%; background:rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center; }
+  .rail-label{ font-size:10px; color:#fff; font-weight:600; }
+
+  .bottom-info{ position:absolute; bottom:78px; left:18px; right:80px; z-index:3; opacity:0.5; }
+  .series-title{ font-size:14px; font-weight:700; color:#fff; margin:0 0 4px; }
+  .ep-caption{ font-size:11.5px; color:var(--text-dim); line-height:1.4; margin:0; }
+
+  .bottombar{ position:absolute; bottom:0; left:0; right:0; height:60px; background:rgba(8,8,26,0.85); border-top:1px solid rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:space-between; padding:0 18px; }
+  .member-pill{ display:flex; align-items:center; gap:6px; color:var(--gold); font-size:12.5px; font-weight:700; }
+  .download-text{ font-size:12.5px; color:var(--text-faint); font-weight:600; }
+
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="video-bg"></div>
+
+  <div class="top-bar">
+    <div class="back-btn"><svg viewBox="0 0 24 24" width="16" height="16" color="#fff"><polyline points="15 18 9 12 15 6"/></svg></div>
+    <span class="ep-indicator">EP 29</span>
+    <div style="width:34px;"></div>
+  </div>
+
+  <div class="center-block">
+    <p class="message">This episode requires unlocking<br/>before you can watch.</p>
+    <button class="unlock-btn">
+      <svg viewBox="0 0 24 24" fill="#08081A" stroke="none"><circle cx="12" cy="12" r="10"/></svg>
+      Unlock Now — 15 coins
+    </button>
+  </div>
+
+  <div class="action-rail">
+    <div class="rail-item"><div class="rail-icon"><svg viewBox="0 0 24 24" width="19" height="19" color="#fff"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div><span class="rail-label">158K</span></div>
+    <div class="rail-item"><div class="rail-icon"><svg viewBox="0 0 24 24" width="19" height="19" color="#fff"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><span class="rail-label">Episodes</span></div>
+    <div class="rail-item"><div class="rail-icon"><svg viewBox="0 0 24 24" width="19" height="19" color="#fff"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></svg></div><span class="rail-label">Share</span></div>
+  </div>
+
+  <div class="bottom-info">
+    <p class="series-title">My Father is Thor</p>
+    <p class="ep-caption">Allen, the son of Thor, was raised in the Lost Lands from childhood...</p>
+  </div>
+
+  <div class="bottombar">
+    <span class="member-pill"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" stroke="none"><path d="M12 2l2.4 2.6 3.5-.6.6 3.5L21.1 9l-2 3 2 3-3.6 1.5-.6 3.5-3.5-.6L12 22l-2.4-2.6-3.5.6-.6-3.5L2 15l2-3-2-3 3.6-1.5.6-3.5 3.5.6z"/></svg>Join Membership</span>
+    <span class="download-text">Download</span>
+  </div>
+</div>
+
+</body>
+</html>

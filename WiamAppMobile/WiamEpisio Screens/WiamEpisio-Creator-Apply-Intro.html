@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamEpisio — Become a Creator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); display:flex; flex-direction:column; }
+  .statusbar{ height:44px; flex-shrink:0; }
+
+  .hero{ position:relative; height:230px; flex-shrink:0; background:linear-gradient(160deg,#241a3a,#0d0d24); overflow:hidden; }
+  .hero-glow{ position:absolute; inset:0; background:radial-gradient(circle at 30% 20%, rgba(212,160,23,0.25), transparent 55%); }
+  .close-btn{ position:absolute; top:2px; left:20px; width:34px; height:34px; border-radius:50%; background:rgba(0,0,0,0.4); display:flex; align-items:center; justify-content:center; z-index:2; }
+  .hero-content{ position:absolute; bottom:20px; left:24px; right:24px; }
+  .hero-badge{ font-size:9.5px; font-weight:800; color:var(--navy); background:var(--gold); padding:4px 10px; border-radius:6px; letter-spacing:0.4px; }
+  .hero h1{ font-size:22px; font-weight:800; color:#fff; margin:12px 0 6px; letter-spacing:-0.3px; }
+  .hero p{ font-size:12px; color:#C9C9DE; margin:0; }
+
+  .scroll{ flex:1; overflow-y:auto; padding:20px 22px; }
+
+  .ladder{ margin-bottom:22px; }
+  .ladder-title{ font-size:12px; font-weight:800; color:var(--text-dim); letter-spacing:0.4px; text-transform:uppercase; margin:0 0 14px; }
+  .step{ display:flex; gap:12px; margin-bottom:16px; }
+  .step-num{ width:26px; height:26px; border-radius:50%; background:var(--navy-card); border:1px solid var(--navy-line); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; color:var(--gold); flex-shrink:0; }
+  .step-line{ width:1px; flex:1; background:var(--navy-line); margin:2px auto; }
+  .step-body b{ font-size:12.5px; font-weight:700; color:#fff; display:block; margin-bottom:2px; }
+  .step-body span{ font-size:11px; color:var(--text-dim); line-height:1.5; }
+
+  .rules-card{ background:var(--navy-card); border:1px solid var(--navy-line); border-radius:16px; padding:15px 16px; margin-bottom:20px; }
+  .rules-title{ font-size:12.5px; font-weight:800; color:#fff; margin:0 0 10px; }
+  .rule-item{ display:flex; gap:9px; margin-bottom:9px; font-size:11.5px; color:var(--text-dim); line-height:1.5; }
+  .rule-item:last-child{ margin-bottom:0; }
+  .rule-item svg{ width:14px; height:14px; color:var(--gold); flex-shrink:0; margin-top:1px; }
+
+  .footer{ flex-shrink:0; padding:12px 22px 26px; }
+  .btn-primary{ width:100%; padding:16px; border-radius:16px; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); border:none; color:var(--navy); font-size:15px; font-weight:800; box-shadow:0 14px 30px rgba(212,160,23,0.3); font-family:'Inter',sans-serif; margin-bottom:10px; }
+  .not-now{ text-align:center; display:block; font-size:12px; color:var(--text-faint); font-weight:600; }
+
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"></div>
+  <div class="hero">
+    <div class="hero-glow"></div>
+    <div class="close-btn"><svg viewBox="0 0 24 24" width="16" height="16" color="#fff"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+    <div class="hero-content">
+      <span class="hero-badge">WIAMSTUDIO</span>
+      <h1>Tell African stories.<br/>Earn from every episode.</h1>
+      <p>High quality African drama — made by you.</p>
+    </div>
+  </div>
+
+  <div class="scroll">
+    <div class="ladder">
+      <p class="ladder-title">How it works</p>
+
+      <div class="step">
+        <div>
+          <div class="step-num">1</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step-body"><b>Apply with a sample</b><span>Show us 60–180 seconds of your work, or a link to something you've made.</span></div>
+      </div>
+
+      <div class="step">
+        <div>
+          <div class="step-num">2</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step-body"><b>Build in private WiamStudio</b><span>Upload episodes and a trailer. Nothing is public yet.</span></div>
+      </div>
+
+      <div class="step">
+        <div>
+          <div class="step-num">3</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step-body"><b>Pass the quality gate</b><span>Complete series, trailer QA, correct sizing — no half-finished shows.</span></div>
+      </div>
+
+      <div class="step">
+        <div>
+          <div class="step-num">4</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step-body"><b>Go live</b><span>Reviewed within 72 hours, or automatically once every gate is green.</span></div>
+      </div>
+
+      <div class="step">
+        <div><div class="step-num">5</div></div>
+        <div class="step-body"><b>Earn</b><span>Get paid as viewers watch and unlock your episodes.</span></div>
+      </div>
+    </div>
+
+    <div class="rules-card">
+      <p class="rules-title">Before you apply</p>
+      <div class="rule-item"><svg viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/></svg><span>Episodes must be vertical, 9:16 — 4 to 5 minutes each</span></div>
+      <div class="rule-item"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>We only publish complete series, never half-finished shows</span></div>
+      <div class="rule-item"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span>You keep full rights — we just need proof you own the work</span></div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <button class="btn-primary">Start Application</button>
+    <span class="not-now">Not now</span>
+  </div>
+</div>
+
+</body>
+</html>

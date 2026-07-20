@@ -1,0 +1,254 @@
+{% extends "dashboard_base.html" %}
+{% block title %}QA Tester Dashboard — WiamApp{% endblock %}
+{% block sidebar_title %}QA Panel{% endblock %}
+
+{% block sidebar_nav %}
+<a class="nav-link active" href="{{ url_for('team.dashboard') }}"><i class="bi bi-speedometer2"></i> Overview</a>
+<div class="sidebar-title" style="margin-top:1rem;">Testing</div>
+<a class="nav-link" href="{{ url_for('admin_dash.content') }}"><i class="bi bi-journal-text"></i> All Content</a>
+<a class="nav-link" href="{{ url_for('team.admin_user_list') }}"><i class="bi bi-people"></i> Users</a>
+<a class="nav-link" href="{{ url_for('team.mod_flagged_stories') }}"><i class="bi bi-flag" style="color:#f87171;"></i> Flagged Stories</a>
+<div class="sidebar-title" style="margin-top:1rem;">Infrastructure</div>
+<a class="nav-link" href="https://github.com/WiamLabs/WiamApp/issues" target="_blank"><i class="bi bi-github"></i> GitHub Issues</a>
+<div class="sidebar-title" style="margin-top:1rem;">Account</div>
+<a class="nav-link" href="{{ url_for('profile.account_safety') }}"><i class="bi bi-shield-check"></i> Account Safety</a>
+{% endblock %}
+
+{% block dash_content %}
+{% include "team/_dashboard_switcher.html" ignore missing %}
+{% include "team/_greeting.html" ignore missing %}
+<div class="dash-header">
+    <h1><i class="bi bi-bug" style="color:#ef4444;"></i> QA Tester Dashboard</h1>
+</div>
+
+<!-- AI QA Release Gate -->
+<div class="dash-card" style="border-left:3px solid {% if qa_ai_summary.state == 'READY' %}#22c55e{% else %}#ef4444{% endif %};">
+    <h3>
+        <i class="bi bi-robot" style="color:{% if qa_ai_summary.state == 'READY' %}#22c55e{% else %}#ef4444{% endif %};margin-right:6px;"></i>
+        AI QA Release Gate
+    </h3>
+    <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:10px;">
+        <div style="padding:12px;background:rgba(255,255,255,0.03);border-radius:10px;min-width:180px;">
+            <div style="font-size:0.72rem;color:var(--text-muted);">Launch State</div>
+            <div style="font-size:1.1rem;font-weight:800;color:{% if qa_ai_summary.state == 'READY' %}#22c55e{% else %}#ef4444{% endif %};">
+                {{ qa_ai_summary.state|replace('_', ' ') }}
+            </div>
+        </div>
+        <div style="padding:12px;background:rgba(255,255,255,0.03);border-radius:10px;min-width:180px;">
+            <div style="font-size:0.72rem;color:var(--text-muted);">Quality Score</div>
+            <div style="font-size:1.1rem;font-weight:800;color:var(--gold);">{{ qa_ai_summary.score }}/100</div>
+        </div>
+        <div style="padding:12px;background:rgba(255,255,255,0.03);border-radius:10px;min-width:180px;">
+            <div style="font-size:0.72rem;color:var(--text-muted);">Flagged Ratio</div>
+            <div style="font-size:1.1rem;font-weight:800;color:#60a5fa;">{{ flagged_ratio_pct }}%</div>
+        </div>
+        <div style="padding:12px;background:rgba(255,255,255,0.03);border-radius:10px;min-width:180px;">
+            <div style="font-size:0.72rem;color:var(--text-muted);">Security Logs (24h)</div>
+            <div style="font-size:1.1rem;font-weight:800;color:#a78bfa;">{{ security_audit_24h.events }}</div>
+        </div>
+    </div>
+
+    {% if qa_ai_summary.blockers %}
+    <div style="padding:10px 12px;border-radius:10px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);margin-bottom:10px;">
+        <div style="font-size:0.8rem;font-weight:700;color:#ef4444;margin-bottom:6px;"><i class="bi bi-exclamation-octagon"></i> Launch Blockers</div>
+        <ul style="margin:0;padding-left:1.1rem;font-size:0.82rem;color:#fecaca;">
+            {% for item in qa_ai_summary.blockers %}
+            <li>{{ item }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    {% if qa_ai_summary.warnings %}
+    <div style="padding:10px 12px;border-radius:10px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);margin-bottom:10px;">
+        <div style="font-size:0.8rem;font-weight:700;color:#f59e0b;margin-bottom:6px;"><i class="bi bi-exclamation-triangle"></i> Warnings</div>
+        <ul style="margin:0;padding-left:1.1rem;font-size:0.82rem;color:#fde68a;">
+            {% for item in qa_ai_summary.warnings %}
+            <li>{{ item }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <table class="dash-table">
+        <thead>
+            <tr><th>Check</th><th>Status</th><th>Details</th></tr>
+        </thead>
+        <tbody>
+        {% for row in qa_ai_summary.checks %}
+        <tr>
+            <td>{{ row.name }}</td>
+            <td>
+                {% if row.status == 'pass' %}
+                <span style="color:#4ade80;font-weight:700;font-size:0.8rem;"><i class="bi bi-check-circle-fill"></i> PASS</span>
+                {% elif row.status == 'warn' %}
+                <span style="color:#f59e0b;font-weight:700;font-size:0.8rem;"><i class="bi bi-exclamation-triangle-fill"></i> WARN</span>
+                {% else %}
+                <span style="color:#ef4444;font-weight:700;font-size:0.8rem;"><i class="bi bi-x-circle-fill"></i> FAIL</span>
+                {% endif %}
+            </td>
+            <td style="color:var(--text-muted);font-size:0.8rem;">{{ row.detail }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Stats -->
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="label">Total Users</div>
+        <div class="value gold">{{ total_users }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Total Stories</div>
+        <div class="value" style="color:#60a5fa;">{{ total_stories }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Published</div>
+        <div class="value" style="color:#4ade80;">{{ published_stories }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Flagged</div>
+        <div class="value" style="color:#f87171;">{{ flagged_stories }}</div>
+    </div>
+</div>
+
+<!-- QA Automation Feed -->
+<div class="dash-card" style="border-left:3px solid #38bdf8;">
+    <h3><i class="bi bi-cpu" style="color:#38bdf8;margin-right:6px;"></i> Enterprise QA Automation Feed</h3>
+    <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.75rem;">
+        Daily/on-push automated checks from CI pipeline. This is your always-on QA stream.
+    </p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:10px;">
+        <div style="padding:10px;background:rgba(255,255,255,0.03);border-radius:10px;">
+            <div style="font-size:0.72rem;color:var(--text-muted);">Reports</div>
+            <div style="font-size:1.05rem;font-weight:700;color:#38bdf8;">{{ qa_automation_stats.total }}</div>
+        </div>
+        <div style="padding:10px;background:rgba(255,255,255,0.03);border-radius:10px;">
+            <div style="font-size:0.72rem;color:var(--text-muted);">Pass</div>
+            <div style="font-size:1.05rem;font-weight:700;color:#4ade80;">{{ qa_automation_stats.pass }}</div>
+        </div>
+        <div style="padding:10px;background:rgba(255,255,255,0.03);border-radius:10px;">
+            <div style="font-size:0.72rem;color:var(--text-muted);">Fail</div>
+            <div style="font-size:1.05rem;font-weight:700;color:#ef4444;">{{ qa_automation_stats.fail }}</div>
+        </div>
+    </div>
+    <table class="dash-table">
+        <thead>
+            <tr><th>Suite</th><th>Status</th><th>Env</th><th>Summary</th><th>Run</th></tr>
+        </thead>
+        <tbody>
+        {% for rr in qa_automation_reports %}
+        <tr>
+            <td><code style="font-size:0.8rem;">{{ rr.suite }}</code></td>
+            <td>
+                {% if rr.status == 'pass' %}
+                <span style="color:#4ade80;font-weight:700;font-size:0.8rem;"><i class="bi bi-check-circle-fill"></i> PASS</span>
+                {% elif rr.status in ['fail','failed'] %}
+                <span style="color:#ef4444;font-weight:700;font-size:0.8rem;"><i class="bi bi-x-circle-fill"></i> FAIL</span>
+                {% else %}
+                <span style="color:#f59e0b;font-weight:700;font-size:0.8rem;"><i class="bi bi-question-circle-fill"></i> {{ rr.status|upper }}</span>
+                {% endif %}
+            </td>
+            <td style="font-size:0.8rem;color:var(--text-muted);">{{ rr.environment }} / {{ rr.platform }}</td>
+            <td style="font-size:0.8rem;color:var(--text-muted);">{{ rr.summary or '—' }}</td>
+            <td>
+                {% if rr.run_url %}
+                <a href="{{ rr.run_url }}" target="_blank" style="font-size:0.78rem;color:#60a5fa;">Open Run</a>
+                {% else %}—{% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+        {% if not qa_automation_reports %}
+        <tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:1.25rem;">No automation reports yet. Connect CI webhook to start live QA feed.</td></tr>
+        {% endif %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Alert Routing Preview -->
+<div class="dash-card" style="border-left:3px solid #f59e0b;">
+    <h3><i class="bi bi-envelope-check" style="color:#f59e0b;margin-right:6px;"></i> QA Alert Routing (Founder + Engineers)</h3>
+    <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.75rem;">
+        On failure, QA sends hourly reminder emails with likely causes + fix hints until status returns to PASS.
+    </p>
+    <div style="padding:10px 12px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:10px;">
+        {% if qa_alert_recipients_preview %}
+        <div style="font-size:0.8rem;color:#fcd34d;font-weight:700;margin-bottom:6px;">Current recipients:</div>
+        <ul style="margin:0;padding-left:1.1rem;color:#fde68a;font-size:0.8rem;">
+            {% for em in qa_alert_recipients_preview %}
+            <li><code style="font-size:0.78rem;">{{ em }}</code></li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <div style="font-size:0.82rem;color:#fca5a5;">No recipients found. Configure founder/engineer emails before relying on alerts.</div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Feature Flags -->
+<div class="dash-card" style="border-left:3px solid #ef4444;">
+    <h3><i class="bi bi-toggle-on" style="color:#ef4444;margin-right:6px;"></i> Feature Flags</h3>
+    <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.75rem;">Current state of all platform feature flags — read-only view for testing reference.</p>
+    <table class="dash-table">
+        <thead>
+            <tr><th>Flag</th><th>Status</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+        {% for ff in feature_flags %}
+        <tr>
+            <td><code style="font-size:0.82rem;">{{ ff.key }}</code></td>
+            <td>
+                {% if ff.is_enabled %}
+                <span style="color:#4ade80;font-weight:700;font-size:0.8rem;"><i class="bi bi-check-circle-fill"></i> ON</span>
+                {% else %}
+                <span style="color:#f87171;font-weight:700;font-size:0.8rem;"><i class="bi bi-x-circle-fill"></i> OFF</span>
+                {% endif %}
+            </td>
+            <td style="color:var(--text-muted);font-size:0.8rem;">{{ ff.description or '—' }}</td>
+        </tr>
+        {% endfor %}
+        {% if not feature_flags %}
+        <tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:1.5rem;">No feature flags configured</td></tr>
+        {% endif %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Platform Config -->
+{% if platform_config %}
+<div class="dash-card">
+    <h3><i class="bi bi-sliders" style="color:var(--gold);margin-right:6px;"></i> Platform Config (Read-Only)</h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;">
+        <div style="padding:12px;background:rgba(255,255,255,0.03);border-radius:10px;">
+            <div style="font-size:0.72rem;color:var(--text-muted);">Elite Price (GHS)</div>
+            <div style="font-size:1.1rem;font-weight:700;color:var(--gold);">{{ platform_config.elite_price_ghs }}</div>
+        </div>
+        <div style="padding:12px;background:rgba(255,255,255,0.03);border-radius:10px;">
+            <div style="font-size:0.72rem;color:var(--text-muted);">Min Payout (GHS)</div>
+            <div style="font-size:1.1rem;font-weight:700;color:#4ade80;">{{ platform_config.min_payout_ghs }}</div>
+        </div>
+        <div style="padding:12px;background:rgba(255,255,255,0.03);border-radius:10px;">
+            <div style="font-size:0.72rem;color:var(--text-muted);">Ads Enabled</div>
+            <div style="font-size:1.1rem;font-weight:700;color:{% if platform_config.ads_enabled %}#4ade80{% else %}#f87171{% endif %};">{{ 'Yes' if platform_config.ads_enabled else 'No' }}</div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- QA Checklist -->
+<div class="dash-card">
+    <h3><i class="bi bi-clipboard-check" style="color:#a78bfa;margin-right:6px;"></i> Testing Reminders</h3>
+    <div style="padding:1rem;background:rgba(167,139,250,0.06);border-radius:10px;font-size:0.85rem;line-height:1.7;color:var(--text-secondary,#ccc);">
+        <p style="margin:0 0 8px;"><strong style="color:#a78bfa;">Your focus areas:</strong></p>
+        <ul style="margin:0;padding-left:1.2rem;">
+            <li>Test new features before they go live — verify on both web and mobile</li>
+            <li>Report bugs to <strong>{{ config.COMPANY_EMAIL or 'labs@wiamapp.com' }}</strong> with screenshots and steps to reproduce</li>
+            <li>Verify feature flags match expected states for current release</li>
+            <li>Check flagged stories for content rendering issues</li>
+            <li>Test payment flows, account creation, and reading experience regularly</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,200 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Premium Analytics — WiamApp{% endblock %}
+{% block sidebar_title %}Control Panel{% endblock %}
+
+{% block sidebar_nav %}
+<a class="nav-link" href="{{ url_for('founder_dash.overview') }}"><i class="bi bi-speedometer2"></i> Overview</a>
+<a class="nav-link" href="{{ url_for('founder_dash.users') }}"><i class="bi bi-people"></i> Users</a>
+<a class="nav-link" href="{{ url_for('founder_dash.content') }}"><i class="bi bi-book"></i> Content</a>
+<a class="nav-link" href="{{ url_for('founder_dash.revenue') }}"><i class="bi bi-cash-stack"></i> Revenue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.financial_dashboard') }}"><i class="bi bi-bank" style="color:var(--gold);"></i> Financial v5</a>
+<a class="nav-link active" href="{{ url_for('founder_dash.premium_analytics') }}"><i class="bi bi-gem" style="color:#c084fc;"></i> Premium Analytics</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payouts') }}"><i class="bi bi-send-check"></i> Payouts</a>
+<a class="nav-link" href="{{ url_for('founder_dash.withdrawals') }}"><i class="bi bi-arrow-up-right-circle" style="color:var(--gold);"></i> Withdrawals</a>
+<a class="nav-link" href="{{ url_for('founder_dash.subscribers') }}"><i class="bi bi-gem" style="color:#9b59b6;"></i> Subscribers</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payroll') }}"><i class="bi bi-wallet2" style="color:#2ecc71;"></i> Team Payroll</a>
+<a class="nav-link" href="{{ url_for('founder_dash.creators') }}"><i class="bi bi-person-badge"></i> Creators</a>
+<a class="nav-link" href="{{ url_for('founder_dash.genres') }}"><i class="bi bi-tags"></i> Genres</a>
+<a class="nav-link" href="{{ url_for('founder_dash.announcements') }}"><i class="bi bi-megaphone"></i> Announcements</a>
+<a class="nav-link" href="{{ url_for('founder_dash.collections') }}"><i class="bi bi-grid"></i> Collections</a>
+<a class="nav-link" href="{{ url_for('founder_dash.moderation') }}"><i class="bi bi-shield-exclamation"></i> Moderation</a>
+<a class="nav-link" href="{{ url_for('founder_dash.warnings_list') }}"><i class="bi bi-exclamation-triangle" style="color:#f59e0b;"></i> Warnings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.elite_manage') }}"><span style="color:var(--gold);">✦</span> WiamElite</a>
+<a class="nav-link" href="{{ url_for('wiambot.apex_review') }}"><i class="bi bi-trophy-fill" style="color:var(--gold);"></i> Apex Review</a>
+<a class="nav-link" href="{{ url_for('founder_dash.ai_status') }}"><i class="bi bi-cpu" style="color:#38bdf8;"></i> AI & Protection</a>
+<a class="nav-link" href="{{ url_for('founder_dash.review_queue') }}"><i class="bi bi-robot"></i> Bot Review Queue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.platform_settings') }}"><i class="bi bi-sliders"></i> Platform Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.forms_dashboard') }}"><i class="bi bi-file-earmark-text"></i> Application Forms</a>
+<a class="nav-link" href="{{ url_for('founder_dash.email_studio') }}"><i class="bi bi-envelope-paper" style="color:var(--gold);"></i> Email Studio</a>
+<a class="nav-link" href="{{ url_for('founder_dash.team_management') }}"><i class="bi bi-people-fill"></i> Team</a>
+<a class="nav-link" href="{{ url_for('founder_dash.account_management') }}"><i class="bi bi-person-x"></i> Account Management</a>
+<a class="nav-link" href="{{ url_for('founder_dash.notification_testing') }}"><i class="bi bi-bell" style="color:#fbbf24;"></i> Notifications</a>
+<a class="nav-link" href="{{ url_for('classics.dashboard') }}"><i class="bi bi-journal-bookmark" style="color:#a78bfa;"></i> Content Seeder</a>
+<a class="nav-link" href="{{ url_for('founder_dash.settings') }}"><i class="bi bi-gear"></i> Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.admins') }}"><i class="bi bi-shield-check"></i> Admins</a>
+{% endblock %}
+
+{% block dash_content %}
+<div class="dash-header">
+    <h1><i class="bi bi-gem" style="color:#c084fc;"></i> WiamPremium Analytics</h1>
+    <p>Subscription metrics, credits usage, and ad revenue overview</p>
+</div>
+
+<!-- Subscription Stats -->
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="label"><i class="bi bi-gem" style="margin-right:4px;color:#c084fc;"></i> Active Premium</div>
+        <div class="value" style="color:#c084fc;">{{ total_premium }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label"><i class="bi bi-check-circle" style="margin-right:4px;color:#22c55e;"></i> Paid Active</div>
+        <div class="value" style="color:#22c55e;">{{ active_count }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label"><i class="bi bi-hourglass-split" style="margin-right:4px;color:#fbbf24;"></i> On Trial</div>
+        <div class="value" style="color:#fbbf24;">{{ trial_count }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label"><i class="bi bi-x-circle" style="margin-right:4px;color:#f87171;"></i> Expired</div>
+        <div class="value" style="color:#f87171;">{{ expired_count }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label"><i class="bi bi-exclamation-triangle" style="margin-right:4px;color:#fb923c;"></i> Expiring Soon</div>
+        <div class="value" style="color:#fb923c;">{{ expiring_soon }}</div>
+    </div>
+</div>
+
+<!-- Plan Breakdown -->
+<h3 style="margin-top:28px;color:var(--gold);"><i class="bi bi-pie-chart"></i> Plan Breakdown</h3>
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="label"><i class="bi bi-star" style="margin-right:4px;color:#d4a843;"></i> Basic</div>
+        <div class="value" style="color:#d4a843;">{{ basic_count }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label"><i class="bi bi-diamond" style="margin-right:4px;color:#60a5fa;"></i> Plus</div>
+        <div class="value" style="color:#60a5fa;">{{ plus_count }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label"><i class="bi bi-award" style="margin-right:4px;color:#d4a843;"></i> Unlimited</div>
+        <div class="value" style="color:#d4a843;">{{ unlimited_count }}</div>
+    </div>
+</div>
+
+<!-- Credits & Ads -->
+<h3 style="margin-top:28px;color:var(--gold);"><i class="bi bi-coin"></i> Credits & Ad Revenue</h3>
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="label"><i class="bi bi-plus-circle" style="margin-right:4px;color:#22c55e;"></i> Credits Granted</div>
+        <div class="value" style="color:#22c55e;">{{ total_credits_granted }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label"><i class="bi bi-dash-circle" style="margin-right:4px;color:#f87171;"></i> Credits Spent</div>
+        <div class="value" style="color:#f87171;">{{ total_credits_spent }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label"><i class="bi bi-eye" style="margin-right:4px;color:#60a5fa;"></i> Ad Impressions (30d)</div>
+        <div class="value" style="color:#60a5fa;">{{ impressions_30d }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label"><i class="bi bi-currency-dollar" style="margin-right:4px;color:#22c55e;"></i> Est. Ad Revenue</div>
+        <div class="value" style="color:#22c55e;">${{ "%.2f"|format(est_revenue|float) }}</div>
+    </div>
+</div>
+
+<!-- Admin Actions -->
+<h3 style="margin-top:28px;color:var(--gold);"><i class="bi bi-tools"></i> Admin Actions</h3>
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="card" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;">
+            <h5 style="color:#c084fc;margin-bottom:12px;"><i class="bi bi-gift"></i> Grant Premium</h5>
+            <form action="{{ url_for('founder_dash.premium_grant') }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="mb-2">
+                    <label class="form-label" style="color:var(--muted);">User ID</label>
+                    <input type="number" name="user_id" class="form-control form-control-sm" required placeholder="User ID (pk)">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label" style="color:var(--muted);">Plan</label>
+                    <select name="plan" class="form-select form-select-sm">
+                        <option value="basic">Basic</option>
+                        <option value="plus">Plus</option>
+                        <option value="unlimited">Unlimited</option>
+                    </select>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label" style="color:var(--muted);">Days</label>
+                    <input type="number" name="days" class="form-control form-control-sm" value="30" min="1" max="365">
+                </div>
+                <button type="submit" class="btn btn-sm" style="background:#c084fc;color:#fff;border:none;border-radius:8px;">Grant Premium</button>
+            </form>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;">
+            <h5 style="color:#f87171;margin-bottom:12px;"><i class="bi bi-x-octagon"></i> Revoke Premium</h5>
+            <form action="{{ url_for('founder_dash.premium_revoke') }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="mb-2">
+                    <label class="form-label" style="color:var(--muted);">User ID</label>
+                    <input type="number" name="user_id" class="form-control form-control-sm" required placeholder="User ID (pk)">
+                </div>
+                <button type="submit" class="btn btn-sm" style="background:#f87171;color:#fff;border:none;border-radius:8px;">Revoke Premium</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Subscribers -->
+<h3 style="margin-top:28px;color:var(--gold);"><i class="bi bi-clock-history"></i> Recent Subscribers (30 days)</h3>
+<div class="table-responsive" style="margin-bottom:40px;">
+    <table class="table table-dark table-hover" style="border-radius:12px;overflow:hidden;">
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Plan</th>
+                <th>Status</th>
+                <th>Started</th>
+                <th>Expires</th>
+                <th>Provider</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for u in recent_subs %}
+            <tr>
+                <td>
+                    <strong style="color:var(--text-primary);">{{ u.display_name or u.username }}</strong>
+                    <span style="color:var(--muted);font-size:0.8rem;"> #{{ u.id }}</span>
+                </td>
+                <td>
+                    {% if u.premium_plan == 'basic' %}
+                        <span class="badge" style="background:#d4a843;color:#000;">⭐ Basic</span>
+                    {% elif u.premium_plan == 'plus' %}
+                        <span class="badge" style="background:#60a5fa;color:#000;">💎 Plus</span>
+                    {% elif u.premium_plan == 'unlimited' %}
+                        <span class="badge" style="background:linear-gradient(135deg,#d4a843,#c084fc);color:#000;">👑 Unlimited</span>
+                    {% else %}
+                        <span class="badge bg-secondary">{{ u.premium_plan or '—' }}</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if u.premium_status == 'active' %}
+                        <span style="color:#22c55e;">● Active</span>
+                    {% elif u.premium_status == 'trial' %}
+                        <span style="color:#fbbf24;">● Trial</span>
+                    {% else %}
+                        <span style="color:#f87171;">● {{ u.premium_status }}</span>
+                    {% endif %}
+                </td>
+                <td style="color:var(--muted);">{{ u.premium_started_at.strftime('%b %d, %Y') if u.premium_started_at else '—' }}</td>
+                <td style="color:var(--muted);">{{ u.premium_expires_at.strftime('%b %d, %Y') if u.premium_expires_at else '—' }}</td>
+                <td style="color:var(--muted);">{{ u.premium_provider or '—' }}</td>
+            </tr>
+            {% endfor %}
+            {% if not recent_subs %}
+            <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px;">No recent premium subscribers</td></tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

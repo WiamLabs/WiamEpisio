@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamEpisio — Autoplay Countdown</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{ --navy:#08081A; --gold:#D4A017; --gold-dark:#A07810; --text-dim:#C9C9DE; }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:#000; border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); }
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+
+  .video-bg{ position:absolute; inset:0; background:linear-gradient(160deg,#1a1030,#0d0d24,#000); filter:brightness(0.35); }
+  .statusbar{ height:44px; position:relative; z-index:3; }
+
+  .top-row{ position:relative; z-index:3; display:flex; align-items:center; justify-content:space-between; padding:0 20px; }
+  .icon-btn{ width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center; }
+
+  .countdown-card{ position:absolute; bottom:0; left:0; right:0; z-index:4; padding:0 22px 34px; background:linear-gradient(0deg, rgba(0,0,0,0.95) 30%, transparent); }
+
+  .up-next-label{ font-size:10.5px; font-weight:800; color:var(--gold); letter-spacing:0.4px; text-transform:uppercase; margin:0 0 12px; }
+
+  .preview-row{ display:flex; gap:13px; align-items:center; margin-bottom:18px; }
+  .preview-thumb{ width:104px; height:59px; border-radius:10px; background:linear-gradient(160deg,#241a3a,#0d0d24); position:relative; flex-shrink:0; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+  .ring-wrap{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
+  .ring-svg{ transform:rotate(-90deg); }
+  .ring-bg{ fill:none; stroke:rgba(255,255,255,0.25); stroke-width:4; }
+  .ring-fg{ fill:none; stroke:var(--gold); stroke-width:4; stroke-linecap:round; stroke-dasharray:113; stroke-dashoffset:34; }
+  .countdown-num{ position:absolute; font-size:20px; font-weight:800; color:#fff; }
+
+  .ep-title{ font-size:14px; font-weight:800; color:#fff; margin:0 0 4px; }
+  .ep-sub{ font-size:11px; color:var(--text-dim); margin:0; }
+
+  .action-row{ display:flex; gap:10px; }
+  .btn-play{ flex:1; padding:14px; border-radius:14px; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); border:none; color:var(--navy); font-size:13.5px; font-weight:800; display:flex; align-items:center; justify-content:center; gap:8px; font-family:'Inter',sans-serif; }
+  .btn-cancel{ padding:14px 20px; border-radius:14px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); color:#fff; font-size:13px; font-weight:700; font-family:'Inter',sans-serif; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="video-bg"></div>
+  <div class="statusbar"></div>
+  <div class="top-row">
+    <div class="icon-btn"><svg viewBox="0 0 24 24" width="15" height="15" color="#fff"><polyline points="15 18 9 12 15 6"/></svg></div>
+    <div class="icon-btn"><svg viewBox="0 0 24 24" width="14" height="14" color="#fff"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+  </div>
+
+  <div class="countdown-card">
+    <p class="up-next-label">Up Next</p>
+
+    <div class="preview-row">
+      <div class="preview-thumb">
+        <div class="ring-wrap">
+          <svg class="ring-svg" width="46" height="46" viewBox="0 0 42 42">
+            <circle class="ring-bg" cx="21" cy="21" r="18"/>
+            <circle class="ring-fg" cx="21" cy="21" r="18"/>
+          </svg>
+          <span class="countdown-num">3</span>
+        </div>
+      </div>
+      <div>
+        <p class="ep-title">EP 16 — The Second Letter</p>
+        <p class="ep-sub">The Chief's Daughter · Autoplaying in 3s</p>
+      </div>
+    </div>
+
+    <div class="action-row">
+      <button class="btn-play"><svg viewBox="0 0 24 24" width="15" height="15" stroke="#08081A" fill="#08081A"><polygon points="6 3 20 12 6 21 6 3"/></svg>Play Now</button>
+      <button class="btn-cancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

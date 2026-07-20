@@ -1,0 +1,309 @@
+{% extends "base.html" %}
+{% block title %}About WiamApp — Africa's home for free stories{% endblock %}
+{% block meta_description %}About WiamApp — Africa's premier free storytelling platform. Discover incredible stories, empower creators, and join a global reading community.{% endblock %}
+{% block og_title %}About WiamApp{% endblock %}
+{% block og_description %}WiamApp is Africa's premier free storytelling platform. Discover incredible stories, empower creators, and join a global reading community.{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/support.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="about-page">
+    <a href="javascript:void(0)" onclick="window.history.length>1?history.back():location.href='/'" class="about-back" data-no-loader>
+        <i class="bi bi-arrow-left"></i> Back
+    </a>
+
+    <!-- ── Hero ── -->
+    <div class="about-hero">
+        <img src="{{ url_for('static', filename='img/WiamLogo.png') }}" alt="WiamApp">
+        <h1>WiamApp</h1>
+        <div class="tagline">Africa's Home for Storytelling</div>
+        <div class="version">Version 2.0</div>
+        <p class="hero-desc">A free, world-class reading platform where readers discover incredible stories and creators share their voice with millions. Built in Ghana, designed for the world.</p>
+    </div>
+
+    <!-- ── Our Story ── -->
+    <div class="about-section">
+        <h2><i class="bi bi-book-half"></i> Our Story</h2>
+        <p>WiamApp was born from a simple but powerful observation: Africa is home to some of the most vibrant, diverse, and compelling storytelling traditions on Earth — yet African writers have historically lacked access to the platforms, tools, and audiences that their talent deserves.</p>
+        <p>We set out to change that. WiamApp is a purpose-built novel reading platform designed from the ground up to serve African storytellers and readers, while welcoming creators and readers from every corner of the globe. Our mission is clear: <strong>make storytelling accessible, empower creators, and build the largest community of readers and writers in Africa and beyond.</strong></p>
+        <p>Every design decision, every feature, and every line of code in WiamApp is guided by one question: <em>Does this help writers tell better stories and readers discover them?</em></p>
+    </div>
+
+    <div class="about-divider"></div>
+
+    <!-- ── What Makes WiamApp Different ── -->
+    <div class="about-section">
+        <h2><i class="bi bi-lightning-charge"></i> What Makes WiamApp Different</h2>
+        <p>There are many reading apps in the world. Here's what sets WiamApp apart:</p>
+
+        <div class="value-grid">
+            <div class="value-card">
+                <i class="bi bi-unlock"></i>
+                <div>
+                    <div class="vt">Free First, Always</div>
+                    <div class="vd">Every story on WiamApp is free to start reading. The first 10 chapters of any story are always free — no exceptions. We believe in earning your attention, not gating it behind paywalls.</div>
+                </div>
+            </div>
+            <div class="value-card">
+                <i class="bi bi-globe-africa"></i>
+                <div>
+                    <div class="vt">Built for Africa</div>
+                    <div class="vd">Designed for low-bandwidth environments, mobile-first experiences, and the unique needs of African readers and creators. From mobile money payouts to offline reading support — WiamApp is made for how people actually use technology across the continent.</div>
+                </div>
+            </div>
+            <div class="value-card">
+                <i class="bi bi-wallet2"></i>
+                <div>
+                    <div class="vt">Creators Get Paid</div>
+                    <div class="vd">Our Wiam Coins system lets readers directly support the creators they love. Qualified creators receive monthly payouts to their mobile money accounts. Your words have value — WiamApp makes sure you get it.</div>
+                </div>
+            </div>
+            <div class="value-card">
+                <i class="bi bi-shield-check"></i>
+                <div>
+                    <div class="vt">Safe & Moderated</div>
+                    <div class="vd">WiamApp uses advanced content screening and community standards enforcement to keep the platform safe for everyone — readers, creators, and young adults alike. We take safety seriously.</div>
+                </div>
+            </div>
+            <div class="value-card">
+                <i class="bi bi-trophy"></i>
+                <div>
+                    <div class="vt">Meritocracy, Not Popularity</div>
+                    <div class="vd">Our WiamElite hall of fame is entirely algorithm-driven. No paid placements, no staff picks. The best stories rise based on reader engagement, ratings, and quality — nothing else.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="about-divider"></div>
+
+    <!-- ── Platform Features ── -->
+    <div class="about-section">
+        <h2><i class="bi bi-grid-3x3-gap"></i> Platform Features</h2>
+        <div class="feat-grid">
+            <div class="feat-card">
+                <i class="bi bi-book"></i>
+                <div class="ft">Free Reading</div>
+                <div class="fd">Thousands of stories across 20+ genres, completely free to read</div>
+            </div>
+            <div class="feat-card">
+                <i class="bi bi-pen"></i>
+                <div class="ft">WiamStudio</div>
+                <div class="fd">Professional writing & publishing tools built for creators</div>
+            </div>
+            <div class="feat-card">
+                <i class="bi bi-coin"></i>
+                <div class="ft">Wiam Coins</div>
+                <div class="fd">Support your favourite creators with tips and premium unlocks</div>
+            </div>
+            <div class="feat-card">
+                <i class="bi bi-star"></i>
+                <div class="ft">WiamElite</div>
+                <div class="fd">Algorithmic hall of fame for the very best stories</div>
+            </div>
+            <div class="feat-card">
+                <i class="bi bi-megaphone"></i>
+                <div class="ft">Bulletin</div>
+                <div class="fd">Creator announcements channel — stay connected with writers you follow</div>
+            </div>
+            <div class="feat-card">
+                <i class="bi bi-chat-dots"></i>
+                <div class="ft">Paragraph Comments</div>
+                <div class="fd">React and comment on individual paragraphs while reading</div>
+            </div>
+            <div class="feat-card">
+                <i class="bi bi-bar-chart"></i>
+                <div class="ft">Creator Analytics</div>
+                <div class="fd">Real-time insights on readers, engagement, and earnings</div>
+            </div>
+            <div class="feat-card">
+                <i class="bi bi-phone"></i>
+                <div class="ft">PWA Support</div>
+                <div class="fd">Install WiamApp on your phone — works like a native app</div>
+            </div>
+            <div class="feat-card">
+                <i class="bi bi-bookmark-heart"></i>
+                <div class="ft">Smart Library</div>
+                <div class="fd">Shelves, favourites, bookmarks, and reading progress synced everywhere</div>
+            </div>
+            <div class="feat-card">
+                <i class="bi bi-palette"></i>
+                <div class="ft">Reader Themes</div>
+                <div class="fd">Dark mode, sepia, custom fonts, and reading preferences</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="about-divider"></div>
+
+    <!-- ── For Readers ── -->
+    <div class="about-section">
+        <h2><i class="bi bi-eyeglasses"></i> For Readers</h2>
+        <p>WiamApp is your personal reading space — a place where discovering your next favourite story takes seconds, not hours.</p>
+        <ul>
+            <li><strong>Browse by Genre:</strong> From Romance and Fantasy to African Literature, Thriller, Sci-Fi, and more — find stories that match your taste.</li>
+            <li><strong>Smart Recommendations:</strong> The more you read, the better WiamApp understands your preferences. Our curation system highlights stories you'll love.</li>
+            <li><strong>Reading Streaks:</strong> Build daily reading habits with streak tracking. The longer your streak, the more badges and recognition you earn.</li>
+            <li><strong>Paragraph Reactions:</strong> Love a line? React to individual paragraphs with emojis. See what other readers loved too.</li>
+            <li><strong>Offline Reading:</strong> Install WiamApp as a PWA and access your library even without an internet connection.</li>
+            <li><strong>Beautiful Reader:</strong> Adjustable font sizes, multiple themes (dark, light, sepia), and a distraction-free reading experience designed for hours of comfortable reading.</li>
+        </ul>
+    </div>
+
+    <div class="about-divider"></div>
+
+    <!-- ── For Creators ── -->
+    <div class="about-section">
+        <h2><i class="bi bi-pencil-square"></i> For Creators</h2>
+        <p>WiamStudio is a full-featured creative workspace that gives you everything you need to write, publish, and grow your audience.</p>
+        <ul>
+            <li><strong>Rich Text Editor:</strong> A clean, powerful editor with formatting tools, auto-save, and chapter management.</li>
+            <li><strong>Instant Publishing:</strong> Write a chapter and publish it to the world with one click. No approval queues for updates — your chapters go live immediately.</li>
+            <li><strong>Cover Art:</strong> Upload beautiful cover images to make your story stand out on the shelves.</li>
+            <li><strong>Analytics Dashboard:</strong> Track views, unique readers, read-through rates, ratings, favourites, and engagement in real-time.</li>
+            <li><strong>Monetisation:</strong> Eligible creators earn Wiam Coins from reader tips and premium chapter unlocks. Monthly payouts via mobile money.</li>
+            <li><strong>Creator Bulletin:</strong> Announce updates, share thoughts, and keep your followers engaged through your personal Bulletin channel.</li>
+            <li><strong>Follower Management:</strong> See who follows you, track growth, and build a loyal readership.</li>
+        </ul>
+    </div>
+
+    <div class="about-divider"></div>
+
+    <!-- ── Wiam Coins Economy ── -->
+    <div class="about-section">
+        <h2><i class="bi bi-coin"></i> The Wiam Coins Economy</h2>
+        <p>Wiam Coins are WiamApp's virtual currency — the bridge between readers who want to support great writing and creators who deserve to be rewarded for it.</p>
+        <h3>How It Works</h3>
+        <ul>
+            <li><strong>Buy Coins:</strong> Readers purchase Wiam Coins through Paystack using mobile money or card payments.</li>
+            <li><strong>Spend Coins:</strong> Tip your favourite creators, unlock premium chapters (beyond Chapter 10), and show appreciation for great storytelling.</li>
+            <li><strong>Creator Earnings:</strong> Creators accumulate coins from reader tips and premium unlocks. WiamApp processes monthly payouts, splitting revenue 50/50 between the creator and the platform.</li>
+            <li><strong>Mobile Money Payouts:</strong> Earnings are paid directly to creators via MTN MoMo, Vodafone Cash, or AirtelTigo Money through Paystack's secure transfer system.</li>
+        </ul>
+        <p>Wiam Coins never expire as long as your account is in good standing. And the first 10 chapters of every story are always free — coins are never required to start reading anything on WiamApp.</p>
+    </div>
+
+    <div class="about-divider"></div>
+
+    <!-- ── WiamElite ── -->
+    <div class="about-section">
+        <h2><i class="bi bi-award"></i> WiamElite — The Hall of Fame</h2>
+        <p>WiamElite is the most prestigious recognition a story can achieve on WiamApp. It is our algorithmic hall of fame — a showcase of the very best writing the platform has to offer.</p>
+        <p>Unlike other platforms where visibility is determined by paid promotion or staff curation, WiamElite is <strong>100% merit-based.</strong> Stories are promoted and demoted based on quantitative performance metrics:</p>
+        <ul>
+            <li>Total reads and unique reader counts</li>
+            <li>Average rating and number of ratings</li>
+            <li>Reader completion rates and active engagement</li>
+            <li>Favourite and vote counts</li>
+            <li>Community standing and violation history</li>
+        </ul>
+        <p>No payment, sponsorship, or personal connection can influence Elite status. The algorithm runs daily, and the best stories rise — pure and simple.</p>
+    </div>
+
+    <div class="about-divider"></div>
+
+    <!-- ── Safety & Community ── -->
+    <div class="about-section">
+        <h2><i class="bi bi-shield-lock"></i> Safety & Community Standards</h2>
+        <p>WiamApp is committed to maintaining a safe, respectful, and welcoming environment for all users. Our multi-layered content moderation system screens all user-submitted content against community guidelines, automatically detecting and preventing harmful material before it reaches other users.</p>
+        <p>We enforce a progressive discipline system — users who violate our guidelines receive escalating warnings, and repeated violations result in account suspension. Severe violations (threats, exploitation, doxxing) result in immediate permanent bans.</p>
+        <p>Our community reporting tools empower users to flag inappropriate content or behaviour. All reports are reviewed and acted upon promptly. We believe every reader and creator deserves a platform where they feel safe to express themselves.</p>
+    </div>
+
+    <div class="about-divider"></div>
+
+    <!-- ── Our Journey ── -->
+    <div class="about-section">
+        <h2><i class="bi bi-clock-history"></i> Our Journey</h2>
+        <div class="timeline">
+            <div class="timeline-item">
+                <div class="tl-date">2024</div>
+                <div class="tl-text">WiamApp concept begins — a Telegram bot experiment to share stories with friends. The idea of a dedicated reading platform for African storytellers takes shape.</div>
+            </div>
+            <div class="timeline-item">
+                <div class="tl-date">Early 2025</div>
+                <div class="tl-text">WiamApp launches as a Telegram-first reading bot. Early users discover and share stories entirely within the messaging app. The community starts to grow organically.</div>
+            </div>
+            <div class="timeline-item">
+                <div class="tl-date">Mid 2025</div>
+                <div class="tl-text">WiamApp expands to a full web application — WiamStudio launches, giving creators professional tools to write and publish. The reader experience is transformed with the web reader.</div>
+            </div>
+            <div class="timeline-item">
+                <div class="tl-date">Late 2025</div>
+                <div class="tl-text">Major platform upgrades: Wiam Coins economy, creator monetisation, WiamElite hall of fame, Bulletin system, reading streaks, and advanced content moderation. WiamApp becomes a complete ecosystem.</div>
+            </div>
+            <div class="timeline-item">
+                <div class="tl-date">2026</div>
+                <div class="tl-text">WiamApp 2.0 — comprehensive platform refinement, enhanced safety systems, progressive web app support, and preparation for pan-African expansion. The best is yet to come.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="about-divider"></div>
+
+    <!-- ── WiamLabs ── -->
+    <div class="lab-card">
+        <div class="lab-logo"><i class="bi bi-cpu"></i></div>
+        <h3>WiamLabs</h3>
+        <div class="lab-tag">Building the Future of African Tech</div>
+        <p>WiamLabs is the technology company behind WiamApp. Founded in Ghana, WiamLabs is driven by a singular mission: to build world-class digital products that serve African users first, then scale globally.</p>
+        <p>We believe that the next generation of transformative technology companies will emerge from Africa — and we intend to be at the forefront. WiamApp is our first product, but not our last.</p>
+        <p>WiamLabs operates with lean engineering principles: small teams, big ambitions, and a relentless focus on quality. Every product we build is designed to work beautifully on the devices and networks that real people use every day.</p>
+    </div>
+
+    <div class="about-section">
+        <h2><i class="bi bi-lightbulb"></i> Our Principles</h2>
+        <div class="value-grid">
+            <div class="value-card">
+                <i class="bi bi-people"></i>
+                <div>
+                    <div class="vt">Users First</div>
+                    <div class="vd">Every decision starts with the question: does this make the experience better for our users? If it doesn't, we don't build it.</div>
+                </div>
+            </div>
+            <div class="value-card">
+                <i class="bi bi-code-slash"></i>
+                <div>
+                    <div class="vt">Engineering Excellence</div>
+                    <div class="vd">We write clean, maintainable, production-grade code. We don't ship prototypes — we ship products that work reliably at scale.</div>
+                </div>
+            </div>
+            <div class="value-card">
+                <i class="bi bi-heart"></i>
+                <div>
+                    <div class="vt">African Innovation</div>
+                    <div class="vd">We solve African problems with African ingenuity. We don't clone Silicon Valley products — we build solutions designed for our context.</div>
+                </div>
+            </div>
+            <div class="value-card">
+                <i class="bi bi-graph-up-arrow"></i>
+                <div>
+                    <div class="vt">Sustainable Growth</div>
+                    <div class="vd">We build for the long term. No growth hacks, no dark patterns. Just a great product that people want to use and creators want to build on.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="about-divider"></div>
+
+    <!-- ── Join Us ── -->
+    <div class="about-section">
+        <h2><i class="bi bi-rocket-takeoff"></i> Join the Movement</h2>
+        <p>WiamApp is more than a reading app. It's a movement to amplify African voices, support emerging writers, and build a reading culture that spans the continent and beyond.</p>
+        <p>Whether you're a reader looking for your next favourite story, a creator ready to share your voice with the world, or simply someone who believes in the power of storytelling — <strong>you belong here.</strong></p>
+        <p>Every story read, every coin tipped, every chapter published brings us closer to a world where every African storyteller has a stage and every reader has a library.</p>
+        <p style="font-size:0.9rem;color:var(--gold);font-weight:700;text-align:center;margin-top:1.2rem;">Welcome to WiamApp. Your story starts here.</p>
+    </div>
+
+    <!-- ── Footer ── -->
+    <div class="about-footer">
+        <a href="{{ url_for('profile.terms') }}">Terms & Conditions</a>
+        <a href="{{ url_for('profile.privacy_policy') }}">Privacy Policy</a>
+        <a href="{{ url_for('profile.feedback') }}">Send Feedback</a>
+        <div class="copy">© {{ now().year if now is defined else 2026 }} WiamLabs · Built in Ghana, for the world</div>
+    </div>
+</div>
+{% endblock %}

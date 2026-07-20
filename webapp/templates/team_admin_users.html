@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block title %}User Management — WiamApp Team{% endblock %}
+
+{% block extra_head %}
+<style>
+.users-wrap{max-width:1000px;margin:0 auto;padding:24px 16px 60px;}
+.back-link{display:inline-flex;align-items:center;gap:6px;color:var(--text-muted,#888);font-size:0.85rem;text-decoration:none;margin-bottom:20px;}
+.back-link:hover{color:var(--gold,#d4a843);}
+.page-title{font-size:1.3rem;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:10px;}
+.page-title i{color:var(--gold,#d4a843);}
+.page-subtitle{font-size:0.82rem;color:var(--text-muted,#888);margin-bottom:24px;}
+.filters{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;align-items:center;}
+.filters input[type="text"]{flex:1;min-width:200px;padding:10px 14px;background:rgba(255,255,255,0.04);border:1.5px solid rgba(255,255,255,0.1);border-radius:10px;color:#e0e0e0;font-size:0.88rem;outline:none;}
+.filters input:focus{border-color:rgba(212,168,67,0.4);}
+.filters select{padding:10px 14px;background:rgba(255,255,255,0.04);border:1.5px solid rgba(255,255,255,0.1);border-radius:10px;color:#e0e0e0;font-size:0.82rem;outline:none;appearance:none;cursor:pointer;min-width:120px;}
+.filters button{padding:10px 20px;background:linear-gradient(135deg,#d4a843,#b8860b);border:none;border-radius:10px;color:#000;font-weight:600;font-size:0.85rem;cursor:pointer;}
+.user-table{width:100%;border-collapse:separate;border-spacing:0 6px;}
+.user-table th{text-align:left;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted,#888);padding:8px 14px;font-weight:600;}
+.user-table td{padding:12px 14px;background:var(--card-bg,#111);font-size:0.85rem;color:var(--text-primary,#e0e0e0);}
+.user-table tr td:first-child{border-radius:10px 0 0 10px;}
+.user-table tr td:last-child{border-radius:0 10px 10px 0;}
+.user-name{font-weight:600;color:var(--text-primary,#fff);}
+.user-email{font-size:0.78rem;color:var(--text-muted,#888);}
+.role-badge{display:inline-block;padding:2px 10px;border-radius:6px;font-size:0.7rem;font-weight:600;text-transform:uppercase;}
+.role-user{background:rgba(156,163,175,0.12);color:#9ca3af;}
+.role-creator{background:rgba(96,165,250,0.12);color:#60a5fa;}
+.role-editor{background:rgba(96,165,250,0.12);color:#60a5fa;}
+.role-moderator{background:rgba(74,222,128,0.12);color:#4ade80;}
+.role-admin{background:rgba(251,191,36,0.12);color:#fbbf24;}
+.role-founder{background:rgba(212,168,67,0.15);color:#d4a843;}
+.role-engineer{background:rgba(167,139,250,0.12);color:#a78bfa;}
+.role-marketing{background:rgba(244,114,182,0.12);color:#f472b6;}
+.role-translator{background:rgba(56,189,248,0.12);color:#38bdf8;}
+.status-active{color:#4ade80;}
+.status-banned{color:#f87171;}
+.status-deactivated{color:#9ca3af;}
+.act-sm{padding:5px 12px;border:none;border-radius:6px;font-weight:600;font-size:0.72rem;cursor:pointer;display:inline-flex;align-items:center;gap:3px;transition:opacity 0.15s;}
+.act-sm:hover{opacity:0.85;}
+.act-sm.ban{background:rgba(248,113,113,0.12);color:#f87171;}
+.act-sm.unban{background:rgba(74,222,128,0.12);color:#4ade80;}
+.pagination{display:flex;justify-content:center;gap:6px;margin-top:24px;}
+.pagination a,.pagination span{padding:8px 14px;border-radius:8px;font-size:0.82rem;font-weight:600;text-decoration:none;transition:background 0.15s;}
+.pagination a{background:rgba(255,255,255,0.04);color:var(--text-muted,#888);border:1px solid var(--border-color,#222);}
+.pagination a:hover{background:rgba(212,168,67,0.1);color:#d4a843;}
+.pagination .active{background:linear-gradient(135deg,#d4a843,#b8860b);color:#000;border:none;}
+.empty{text-align:center;padding:60px 20px;color:var(--text-muted,#888);}
+@media(max-width:700px){
+    .user-table{font-size:0.78rem;}
+    .user-table th:nth-child(4),.user-table td:nth-child(4),
+    .user-table th:nth-child(5),.user-table td:nth-child(5){display:none;}
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="users-wrap">
+    <a href="{{ url_for('team.dashboard') }}" class="back-link"><i class="bi bi-arrow-left"></i> Back to Dashboard</a>
+
+    <h1 class="page-title"><i class="bi bi-people-fill"></i> User Management</h1>
+    <p class="page-subtitle">{{ total }} user{{ 's' if total != 1 else '' }} found</p>
+
+    <form class="filters" method="GET" action="{{ url_for('team.admin_user_list') }}">
+        <input type="text" name="q" placeholder="Search name, username, email..." value="{{ q }}">
+        <select name="role">
+            <option value="">All Roles</option>
+            <option value="user" {{ 'selected' if role_filter=='user' }}>User</option>
+            <option value="creator" {{ 'selected' if role_filter=='creator' }}>Creator</option>
+            <option value="editor" {{ 'selected' if role_filter=='editor' }}>Editor</option>
+            <option value="moderator" {{ 'selected' if role_filter=='moderator' }}>Moderator</option>
+            <option value="admin" {{ 'selected' if role_filter=='admin' }}>Admin</option>
+            <option value="engineer" {{ 'selected' if role_filter=='engineer' }}>Engineer</option>
+            <option value="marketing" {{ 'selected' if role_filter=='marketing' }}>Marketing</option>
+            <option value="translator" {{ 'selected' if role_filter=='translator' }}>Translator</option>
+        </select>
+        <select name="status">
+            <option value="">All Status</option>
+            <option value="active" {{ 'selected' if status_filter=='active' }}>Active</option>
+            <option value="banned" {{ 'selected' if status_filter=='banned' }}>Banned</option>
+            <option value="deactivated" {{ 'selected' if status_filter=='deactivated' }}>Deactivated</option>
+        </select>
+        <button type="submit"><i class="bi bi-search"></i> Search</button>
+    </form>
+
+    {% if users %}
+    <table class="user-table">
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Joined</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for u in users %}
+            <tr>
+                <td>
+                    <div class="user-name">{{ u.display_name }}</div>
+                    <div class="user-email">{{ u.email or u.username or ('ID: ' ~ u.id) }}</div>
+                </td>
+                <td><span class="role-badge role-{{ u.role }}">{{ u.role }}</span></td>
+                <td><span class="status-{{ u.status or 'active' }}">{{ u.status or 'active' }}</span></td>
+                <td style="font-size:0.78rem;color:var(--text-muted);">{{ u.date_joined.strftime('%b %d, %Y') if u.date_joined else 'N/A' }}</td>
+                <td>
+                    {% if u.role != 'founder' %}
+                        {% if u.status == 'banned' %}
+                        <form method="POST" action="{{ url_for('team.mod_unban_user', user_id=u.id) }}" style="display:inline;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="act-sm unban"><i class="bi bi-unlock"></i> Unban</button>
+                        </form>
+                        {% else %}
+                        <form method="POST" action="{{ url_for('team.mod_ban_user', user_id=u.id) }}" style="display:inline;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="reason" value="Banned by admin">
+                            <button type="submit" class="act-sm ban" onclick="return confirm('Ban {{ u.display_name }}?');"><i class="bi bi-slash-circle"></i> Ban</button>
+                        </form>
+                        {% endif %}
+                    {% else %}
+                    <span style="font-size:0.72rem;color:var(--text-muted);">—</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if total_pages > 1 %}
+    <div class="pagination">
+        {% for p in range(1, total_pages + 1) %}
+            {% if p == page %}
+            <span class="active">{{ p }}</span>
+            {% else %}
+            <a href="{{ url_for('team.admin_user_list', q=q, role=role_filter, status=status_filter, page=p) }}">{{ p }}</a>
+            {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="empty">
+        <i class="bi bi-search" style="font-size:2rem;opacity:0.3;display:block;margin-bottom:12px;"></i>
+        <p>No users found matching your criteria.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

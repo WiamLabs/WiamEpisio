@@ -1,0 +1,177 @@
+{% extends "dashboard_base.html" %}
+{% block title %}WiamElite Management — WiamApp{% endblock %}
+{% block sidebar_title %}Control Panel{% endblock %}
+
+{% block sidebar_nav %}
+<a class="nav-link" href="{{ url_for('founder_dash.overview') }}"><i class="bi bi-speedometer2"></i> Overview</a>
+<a class="nav-link" href="{{ url_for('founder_dash.users') }}"><i class="bi bi-people"></i> Users</a>
+<a class="nav-link" href="{{ url_for('founder_dash.content') }}"><i class="bi bi-book"></i> Content</a>
+
+<a class="nav-link" href="{{ url_for('founder_dash.revenue') }}"><i class="bi bi-cash-stack"></i> Revenue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.financial_dashboard') }}"><i class="bi bi-bank" style="color:var(--gold);"></i> Financial v5</a>
+<a class="nav-link" href="{{ url_for('founder_dash.premium_analytics') }}"><i class="bi bi-gem" style="color:#c084fc;"></i> Premium Analytics</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payouts') }}"><i class="bi bi-send-check"></i> Payouts</a>
+<a class="nav-link" href="{{ url_for('founder_dash.withdrawals') }}"><i class="bi bi-arrow-up-right-circle" style="color:var(--gold);"></i> Withdrawals</a>
+<a class="nav-link" href="{{ url_for('founder_dash.subscribers') }}"><i class="bi bi-gem" style="color:#9b59b6;"></i> Subscribers</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payroll') }}"><i class="bi bi-wallet2" style="color:#2ecc71;"></i> Team Payroll</a>
+<a class="nav-link" href="{{ url_for('founder_dash.creators') }}"><i class="bi bi-person-badge"></i> Creators</a>
+<a class="nav-link" href="{{ url_for('founder_dash.genres') }}"><i class="bi bi-tags"></i> Genres</a>
+<a class="nav-link" href="{{ url_for('founder_dash.announcements') }}"><i class="bi bi-megaphone"></i> Announcements</a>
+<a class="nav-link" href="{{ url_for('founder_dash.collections') }}"><i class="bi bi-grid"></i> Collections</a>
+<a class="nav-link" href="{{ url_for('founder_dash.moderation') }}"><i class="bi bi-shield-exclamation"></i> Moderation</a>
+<a class="nav-link active" href="{{ url_for('founder_dash.elite_manage') }}"><span style="color:var(--gold);">✦</span> WiamElite</a>
+<a class="nav-link" href="{{ url_for('wiambot.apex_review') }}"><i class="bi bi-trophy-fill" style="color:var(--gold);"></i> Apex Review</a>
+<a class="nav-link" href="{{ url_for('founder_dash.review_queue') }}"><i class="bi bi-robot"></i> Bot Review Queue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.platform_settings') }}"><i class="bi bi-sliders"></i> Platform Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.forms_dashboard') }}"><i class="bi bi-file-earmark-text"></i> Application Forms</a>
+<a class="nav-link" href="{{ url_for('founder_dash.email_studio') }}"><i class="bi bi-envelope-paper" style="color:var(--gold);"></i> Email Studio</a>
+<a class="nav-link" href="{{ url_for('founder_dash.team_management') }}"><i class="bi bi-people-fill"></i> Team</a>
+<a class="nav-link" href="{{ url_for('founder_dash.account_management') }}"><i class="bi bi-person-x"></i> Account Management</a>
+<a class="nav-link" href="{{ url_for('founder_dash.notification_testing') }}"><i class="bi bi-bell" style="color:#fbbf24;"></i> Notifications</a>
+<a class="nav-link" href="{{ url_for('classics.dashboard') }}"><i class="bi bi-journal-bookmark" style="color:#a78bfa;"></i> Content Seeder</a>
+<a class="nav-link" href="{{ url_for('founder_dash.settings') }}"><i class="bi bi-gear"></i> Settings</a>
+{% endblock %}
+
+{% block dashboard_content %}
+<div style="margin-bottom:var(--space-xl);">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--space-md);margin-bottom:var(--space-lg);">
+        <div>
+            <h1 style="font-size:1.5rem;margin:0;font-family:var(--font-display);">
+                <span style="color:var(--gold);">✦</span> WiamElite Management
+            </h1>
+            <p style="color:var(--text-muted);font-size:0.85rem;margin:4px 0 0;">
+                {{ total_active }} active Elite stories
+            </p>
+        </div>
+        <form method="POST" action="{{ url_for('founder_dash.elite_run_algorithm') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-sm" style="background:var(--gold);color:#000;font-weight:600;border:none;padding:8px 16px;border-radius:var(--radius-md);">
+                <i class="bi bi-lightning-charge"></i> Run Algorithm Now
+            </button>
+        </form>
+    </div>
+
+    <!-- Current Thresholds -->
+    <div style="background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:var(--space-md);margin-bottom:var(--space-xl);">
+        <h3 style="font-size:0.85rem;color:var(--text-muted);margin-bottom:var(--space-sm);text-transform:uppercase;letter-spacing:1px;">Promotion Thresholds (All Must Be Met)</h3>
+        <div style="display:flex;flex-wrap:wrap;gap:var(--space-md);">
+            {% for key, val in thresholds.items() %}
+            <div style="font-size:0.8rem;padding:4px 10px;background:var(--gold-dim);border-radius:var(--radius-sm);">
+                <strong style="color:var(--gold);">{{ val }}</strong>
+                <span style="color:var(--text-secondary);">{{ key.replace('_', ' ').title() }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Active Elite Stories -->
+    <h2 style="font-size:1.1rem;margin-bottom:var(--space-md);">
+        <span style="color:var(--gold);">✦</span> Active Elite Stories ({{ total_active }})
+    </h2>
+
+    {% if elite_data %}
+    <div style="display:grid;gap:var(--space-md);margin-bottom:var(--space-2xl);">
+        {% for item in elite_data %}
+        <div style="background:var(--bg-card);border:1px solid rgba(212,168,67,0.2);border-radius:var(--radius-md);padding:var(--space-md);display:flex;align-items:center;gap:var(--space-md);flex-wrap:wrap;">
+            <!-- Cover -->
+            <div style="width:50px;height:70px;border-radius:var(--radius-sm);overflow:hidden;flex-shrink:0;border:1px solid rgba(212,168,67,0.2);">
+                {% if item.story.cover_file_id %}
+                <img src="{{ item.story.cover_url }}" style="width:100%;height:100%;object-fit:cover;" alt="">
+                {% else %}
+                <div style="width:100%;height:100%;background:var(--wine);display:flex;align-items:center;justify-content:center;">
+                    <i class="bi bi-book" style="color:var(--gold);opacity:0.5;"></i>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Info -->
+            <div style="flex:1;min-width:150px;">
+                <div style="display:flex;align-items:center;gap:var(--space-xs);flex-wrap:wrap;">
+                    <a href="{{ url_for('book.detail', book_id=item.story.id) }}" style="font-weight:600;color:var(--text);text-decoration:none;font-size:0.95rem;">{{ item.story.title }}</a>
+                    <span style="background:linear-gradient(135deg,#d4a843,#b8860b);color:#000;font-size:0.55rem;font-weight:700;padding:1px 6px;border-radius:10px;">✦ Elite</span>
+                </div>
+                <div style="font-size:0.8rem;color:var(--text-muted);margin-top:2px;">
+                    by {{ item.story.author or 'Unknown' }} · Promoted {{ item.elite.promoted_at.strftime('%b %d, %Y') }}
+                </div>
+            </div>
+
+            <!-- Metrics -->
+            <div style="display:flex;gap:var(--space-md);flex-wrap:wrap;font-size:0.75rem;color:var(--text-secondary);">
+                <div title="Total Reads"><i class="bi bi-eye"></i> {{ item.elite.total_reads }}</div>
+                <div title="Unique Readers"><i class="bi bi-people"></i> {{ item.elite.unique_readers }}</div>
+                <div title="Average Rating"><i class="bi bi-star"></i> {{ '%.1f'|format(item.elite.avg_rating) }}</div>
+                <div title="Chapters"><i class="bi bi-list-ol"></i> {{ item.elite.chapter_count }}</div>
+                <div title="Active 30d"><i class="bi bi-activity"></i> {{ item.elite.active_readers_30d }}</div>
+                <div title="Favorites"><i class="bi bi-heart"></i> {{ item.elite.total_votes }}</div>
+            </div>
+
+            <!-- Actions -->
+            <form method="POST" action="{{ url_for('founder_dash.elite_demote', content_id=item.story.id) }}" style="flex-shrink:0;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-sm" style="background:var(--bg-elevated);color:var(--text-muted);border:1px solid var(--border-subtle);font-size:0.75rem;" onclick="return confirm('Remove this story from WiamElite?')">
+                    <i class="bi bi-x-circle"></i> Demote
+                </button>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:var(--space-xl) var(--space-lg);color:var(--text-muted);background:var(--bg-card);border-radius:var(--radius-md);margin-bottom:var(--space-2xl);">
+        <div style="font-size:2.5rem;margin-bottom:var(--space-md);background:linear-gradient(135deg,#d4a843,#b8860b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">✦</div>
+        <h3 style="font-size:1.05rem;margin-bottom:0.5rem;color:var(--text-primary);">No Elite Stories Yet</h3>
+        <p style="font-size:0.85rem;max-width:440px;margin:0 auto 1rem;line-height:1.6;">
+            WiamElite is the hall of fame for top-performing stories. Stories are promoted automatically when they meet all thresholds, or you can promote manually below.
+        </p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:0.4rem;max-width:500px;margin:0 auto;font-size:0.72rem;">
+            <span style="padding:0.3rem 0.5rem;background:rgba(212,168,67,0.1);border-radius:6px;color:#d4a843;">500+ reads</span>
+            <span style="padding:0.3rem 0.5rem;background:rgba(212,168,67,0.1);border-radius:6px;color:#d4a843;">100+ readers</span>
+            <span style="padding:0.3rem 0.5rem;background:rgba(212,168,67,0.1);border-radius:6px;color:#d4a843;">4.0+ rating</span>
+            <span style="padding:0.3rem 0.5rem;background:rgba(212,168,67,0.1);border-radius:6px;color:#d4a843;">50+ favorites</span>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Manual Promote -->
+    <div style="background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:var(--space-lg);margin-bottom:var(--space-2xl);">
+        <h3 style="font-size:0.95rem;margin-bottom:var(--space-md);">Manual Promote (Founder Override)</h3>
+        <form method="POST" action="" id="promoteForm" style="display:flex;gap:var(--space-sm);align-items:end;flex-wrap:wrap;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div style="flex:1;min-width:200px;">
+                <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:4px;">Story ID</label>
+                <input type="number" id="promoteContentId" placeholder="Enter content ID" style="width:100%;padding:8px 12px;border:1px solid var(--border-subtle);border-radius:var(--radius-sm);background:var(--bg-elevated);color:var(--text);font-size:0.9rem;" required>
+            </div>
+            <button type="submit" class="btn btn-sm" style="background:var(--gold);color:#000;font-weight:600;border:none;padding:8px 16px;border-radius:var(--radius-md);" onclick="this.form.action='/founder/elite/promote/' + document.getElementById('promoteContentId').value; return true;">
+                <i class="bi bi-award"></i> Promote to Elite
+            </button>
+        </form>
+        <p style="font-size:0.75rem;color:var(--text-muted);margin-top:var(--space-sm);">
+            This bypasses threshold checks. Use sparingly. The story's current metrics will still be recorded.
+        </p>
+    </div>
+
+    <!-- Demoted Stories History -->
+    {% if demoted_data %}
+    <h2 style="font-size:1.1rem;margin-bottom:var(--space-md);color:var(--text-secondary);">
+        Previously Demoted ({{ total_demoted }})
+    </h2>
+    <div style="display:grid;gap:var(--space-sm);">
+        {% for item in demoted_data %}
+        <div style="background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:var(--space-md);display:flex;align-items:center;gap:var(--space-md);opacity:0.7;">
+            <div style="flex:1;">
+                <a href="{{ url_for('book.detail', book_id=item.story.id) }}" style="color:var(--text);text-decoration:none;font-size:0.9rem;">{{ item.story.title }}</a>
+                <span style="font-size:0.75rem;color:var(--text-muted);margin-left:8px;">
+                    Demoted {{ item.elite.demoted_at.strftime('%b %d, %Y') if item.elite.demoted_at else 'N/A' }}
+                </span>
+            </div>
+            <form method="POST" action="{{ url_for('founder_dash.elite_promote', content_id=item.story.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-sm" style="background:var(--gold-dim);color:var(--gold);border:none;font-size:0.75rem;">
+                    <i class="bi bi-arrow-up-circle"></i> Re-promote
+                </button>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

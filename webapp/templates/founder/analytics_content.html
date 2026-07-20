@@ -1,0 +1,90 @@
+{% extends "founder/dashboard.html" %}
+
+{% block title %}Content Analytics — Founder Dashboard{% endblock %}
+{% block content %}
+<div class="dashboard-container">
+    {% include 'founder/_dashboard_switcher.html' %}
+    
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-graph-up"></i> Content Trends (30 days)</h5>
+                </div>
+                <div class="card-body">
+                    {% if trends.error %}
+                        <div class="alert alert-danger">{{ trends.error }}</div>
+                    {% else %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Genre Distribution</h6>
+                                <div class="progress" style="height:20px;">
+                                    {% for genre, count in trends.trends.genres.items() %}
+                                        <div class="progress-bar" style="width: {{ (count / trends.trends.total * 100)|round }}%; background: var(--gold);"></div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Status Distribution</h6>
+                                <div class="progress" style="height:20px;">
+                                    {% for status, count in trends.trends.status_distribution.items() %}
+                                        <div class="progress-bar" style="width: {{ (count / trends.trends.total * 100)|round }}%; background: {{ 'var(--success)' if status == 'published' else 'var(--warning)' }};"></div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-md-12 mt-3">
+                                <h6>Average Rating: <span class="badge bg-warning">{{ trends.trends.avg_rating|round(1) }}/5.0</span></h6>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <h6><i class="bi bi-lightbulb"></i> Key Insights</h6>
+                            <div class="insights-grid">
+                                {% for insight in trends.insights %}
+                                    <div class="insight-item">{{ insight }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-trophy"></i> Top Performing Content</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Genre</th>
+                                    <th>Rating</th>
+                                    <th>Tips</th>
+                                    <th>Comments</th>
+                                    <th>Engagement</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for content in trends.top_content %}
+                                    <tr>
+                                        <td><a href="{{ url_for('founder.content', book_id=content.id) }}">{{ content.title }}</a></td>
+                                        <td>{{ content.genre or 'N/A' }}</td>
+                                        <td>{{ content.avg_rating|round(1) }}/5.0</td>
+                                        <td>{{ content.coin_tips }}</td>
+                                        <td>{{ content.comment_count }}</td>
+                                        <td>{{ content.engagement_score }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

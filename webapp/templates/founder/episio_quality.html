@@ -1,0 +1,140 @@
+{% extends "dashboard_base.html" %}
+{% block title %}WiamEpisio Season QC — Founder{% endblock %}
+{% block sidebar_title %}Founder Dashboard{% endblock %}
+
+{% block sidebar_nav %}
+<a class="nav-link" href="{{ url_for('founder_dash.overview') }}"><i class="bi bi-speedometer2"></i> Overview</a>
+<a class="nav-link" href="{{ url_for('founder_dash.content') }}"><i class="bi bi-book"></i> Content</a>
+<a class="nav-link" href="{{ url_for('founder_dash.creators') }}"><i class="bi bi-person-badge"></i> Creators</a>
+<a class="nav-link" href="{{ url_for('founder_dash.review_queue') }}"><i class="bi bi-robot"></i> Bot Review Queue</a>
+<a class="nav-link active" href="{{ url_for('founder_dash.episio_quality') }}"><i class="bi bi-camera-reels" style="color:var(--gold);"></i> Episio Season QC</a>
+<a class="nav-link" href="{{ url_for('founder_dash.platform_settings') }}"><i class="bi bi-sliders"></i> Platform Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.settings') }}"><i class="bi bi-gear"></i> Settings</a>
+{% endblock %}
+
+{% block dash_content %}
+<div class="dash-header">
+  <h1><i class="bi bi-camera-reels" style="color:var(--gold);"></i> WiamEpisio Season QC</h1>
+  <p>System checks <b>trailer + every episode + cover/banner</b> (picture, sound, light, frame). You do a light final check, then publish. Toggle pipeline ON/OFF anytime.</p>
+</div>
+
+<div class="stat-grid">
+  <div class="stat-card"><div class="label">Pipeline</div><div class="value" style="color:{{ '#4ade80' if stats.pipeline_on else '#f87171' }};">{{ 'ON' if stats.pipeline_on else 'OFF' }}</div></div>
+  <div class="stat-card"><div class="label">Queued</div><div class="value gold">{{ stats.queued }}</div></div>
+  <div class="stat-card"><div class="label">Borderline</div><div class="value" style="color:#facc15;">{{ stats.borderline }}</div></div>
+  <div class="stat-card"><div class="label">Passed</div><div class="value" style="color:#4ade80;">{{ stats.passed }}</div></div>
+  <div class="stat-card"><div class="label">Failed</div><div class="value" style="color:#f87171;">{{ stats.failed }}</div></div>
+</div>
+
+<div class="dash-card" style="margin-bottom:20px;">
+  <h3 style="margin-bottom:8px;"><i class="bi bi-cpu" style="color:var(--gold);"></i> Review toolkit (what machines check)</h3>
+  <p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:10px;">
+    Compute for a 20-ep season ≈ <b>{{ timing_example.compute_hours_estimate }}h</b> machine time.
+    Creator-facing promise: <b>up to {{ timing_example.human_sla_hours_default }}h</b> (tier SLA: new 72h · rising 48h · trusted 24h · elite 12h) for queue + human borderline — not because each file takes days.
+  </p>
+  <table style="width:100%;border-collapse:collapse;font-size:0.78rem;margin-bottom:8px;">
+    <thead>
+      <tr style="color:var(--text-muted);text-align:left;">
+        <th style="padding:6px;">Tool</th>
+        <th style="padding:6px;">Catches</th>
+        <th style="padding:6px;">Host</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for t in tool_catalog %}
+      <tr style="border-top:1px solid var(--border-subtle);">
+        <td style="padding:8px 6px;"><b>{{ t.name }}</b><div style="color:var(--text-muted);font-size:0.7rem;">{{ t.when }}</div></td>
+        <td style="padding:8px 6px;">{{ t.catches }}</td>
+        <td style="padding:8px 6px;color:{{ '#4ade80' if t.installed else '#f87171' }};">{{ 'installed' if t.installed else 'missing — install on worker' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="dash-card" style="margin-bottom:20px;">
+  <h3 style="margin-bottom:8px;"><i class="bi bi-toggles" style="color:var(--gold);"></i> Pipeline controls (Founder)</h3>
+  <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:14px;">Master OFF = skip auto QC (still can publish manually). Stages OFF = skip that layer only.</p>
+  <form method="post" action="{{ url_for('founder_dash.episio_quality_flags') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;">
+      {% set flags = [
+        ('ff_season_quality_pipeline', 'MASTER — Full-season QC (trailer + all episodes)', cfg.ff_season_quality_pipeline),
+        ('ff_require_complete_series', 'Require complete season before live', cfg.ff_require_complete_series),
+        ('ff_trailer_quality_gate', 'Trailer asset gate (legacy toggle)', cfg.ff_trailer_quality_gate),
+        ('ff_season_qc_technical', 'FFprobe technical (aspect, duration, codec)', cfg.ff_season_qc_technical),
+        ('ff_season_qc_visual', 'OpenCV visual (blur / light / shake)', cfg.ff_season_qc_visual),
+        ('ff_season_qc_audio', 'EBU R128 loudness + dialogue layer', cfg.ff_season_qc_audio),
+        ('ff_season_qc_vmaf', 'VMAF Netflix (source vs delivery encode)', cfg.ff_season_qc_vmaf),
+        ('ff_season_qc_ssim', 'SSIM cross-check', cfg.ff_season_qc_ssim),
+        ('ff_season_qc_scenedetect', 'PySceneDetect scene sampling', cfg.ff_season_qc_scenedetect),
+        ('ff_season_qc_vad', 'WebRTC VAD dialogue / silence', cfg.ff_season_qc_vad),
+        ('ff_season_qc_phash', 'pHash duplicate / stolen content', cfg.ff_season_qc_phash),
+        ('ff_season_qc_watermark', 'Corner watermark detector', cfg.ff_season_qc_watermark),
+        ('ff_season_qc_blackdetect', 'FFmpeg blackdetect / freezedetect', cfg.ff_season_qc_blackdetect),
+        ('ff_season_qc_integrity', 'Integrity aggregate layer', cfg.ff_season_qc_integrity),
+        ('ff_season_qc_auto_reject_poor', 'Auto-reject Poor band', cfg.ff_season_qc_auto_reject_poor),
+        ('ff_season_qc_auto_clear_good', 'Auto-clear Good/Excellent (still founder publish)', cfg.ff_season_qc_auto_clear_good),
+        ('ff_season_qc_sla_auto_decide', 'SLA auto: after 72/48/24/12h — Good→publish, else Needs Changes', cfg.ff_season_qc_sla_auto_decide),
+      ] %}
+      {% for key, label, val in flags %}
+      <label style="display:flex;gap:10px;align-items:flex-start;background:rgba(255,255,255,0.02);border:1px solid var(--border-subtle);border-radius:10px;padding:12px;cursor:pointer;">
+        <input type="checkbox" name="{{ key }}" {{ 'checked' if val else '' }} style="margin-top:3px;">
+        <span style="font-size:0.8rem;color:var(--text);line-height:1.35;">{{ label }}</span>
+      </label>
+      {% endfor %}
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;">
+      <button type="submit" style="padding:10px 22px;background:var(--gold);color:#000;border:none;border-radius:10px;font-weight:700;cursor:pointer;">Save ON/OFF flags</button>
+    </div>
+  </form>
+  <form method="post" action="{{ url_for('founder_dash.episio_quality_run_queue') }}" style="margin-top:10px;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" style="padding:10px 22px;background:rgba(212,160,23,0.15);color:var(--gold);border:1px solid rgba(212,160,23,0.4);border-radius:10px;font-weight:700;cursor:pointer;">Run queued jobs now</button>
+  </form>
+</div>
+
+<div class="dash-card">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+    <h3 style="margin:0;">Season QC jobs</h3>
+    <form method="get" style="display:flex;gap:8px;">
+      <select name="status" style="padding:6px 10px;background:var(--bg);border:1px solid var(--border-subtle);color:var(--text);border-radius:8px;">
+        <option value="">All</option>
+        {% for s in ['queued','running','borderline','passed','failed','needs_changes'] %}
+        <option value="{{ s }}" {{ 'selected' if status_filter == s }}>{{ s }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border-subtle);background:var(--bg);color:var(--text);">Filter</button>
+    </form>
+  </div>
+  <div style="overflow-x:auto;">
+    <table style="width:100%;border-collapse:collapse;font-size:0.82rem;">
+      <thead>
+        <tr style="color:var(--text-muted);text-align:left;">
+          <th style="padding:8px;">Job</th>
+          <th style="padding:8px;">Series</th>
+          <th style="padding:8px;">Status</th>
+          <th style="padding:8px;">Band</th>
+          <th style="padding:8px;">Assets</th>
+          <th style="padding:8px;"></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for j in jobs %}
+        {% set s = series_map.get(j.content_id) %}
+        <tr style="border-top:1px solid var(--border-subtle);">
+          <td style="padding:10px 8px;">#{{ j.id }}</td>
+          <td style="padding:10px 8px;">{{ s.title if s else ('Series ' ~ j.content_id) }}</td>
+          <td style="padding:10px 8px;">{{ j.status }}</td>
+          <td style="padding:10px 8px;">{{ j.overall_band or '—' }}</td>
+          <td style="padding:10px 8px;">{{ j.assets_passed }}/{{ j.assets_total }} ok · {{ j.assets_borderline }} edge · {{ j.assets_failed }} fail</td>
+          <td style="padding:10px 8px;"><a href="{{ url_for('founder_dash.episio_quality_job', job_id=j.id) }}" style="color:var(--gold);font-weight:700;">Open →</a></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" style="padding:20px;color:var(--text-muted);">No season QC jobs yet. When a creator submits a locked season, a job appears here.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

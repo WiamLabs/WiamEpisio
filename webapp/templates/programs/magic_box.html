@@ -1,0 +1,360 @@
+{% extends "base.html" %}
+{% block title %}Magic Box — WiamApp{% endblock %}
+{% block content %}
+<style>
+.mb-wrap { max-width:750px; margin:0 auto; padding:var(--space-xl) var(--space-md); }
+.mb-hero {
+    text-align:center; padding:var(--space-2xl) var(--space-lg);
+    background:linear-gradient(135deg,rgba(212,168,67,0.1),rgba(114,47,55,0.08));
+    border-radius:var(--radius-lg); border:1px solid rgba(212,168,67,0.2);
+    margin-bottom:var(--space-xl);
+}
+.mb-hero h1 { font-size:1.8rem; font-family:var(--font-display); color:var(--text); margin-bottom:var(--space-xs); }
+.mb-hero p { color:var(--text-secondary); font-size:0.85rem; }
+.mb-week { font-size:0.75rem; color:var(--gold); font-weight:600; margin-bottom:var(--space-sm); }
+
+/* Section */
+.mb-section { margin-bottom:var(--space-xl); }
+.mb-section-title { font-size:1.05rem; font-weight:700; color:var(--text); margin-bottom:var(--space-md); display:flex; align-items:center; gap:8px; }
+
+/* Goals */
+.mb-goals { display:grid; gap:8px; margin-bottom:var(--space-lg); }
+.mb-goal {
+    display:flex; align-items:center; gap:12px; padding:12px 16px;
+    background:var(--bg-card); border:1px solid var(--border-subtle);
+    border-radius:var(--radius-md); font-size:0.82rem; color:var(--text-secondary);
+}
+.mb-goal.met { border-color:rgba(46,204,113,0.3); background:rgba(46,204,113,0.06); }
+.mb-goal-check { width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.7rem; flex-shrink:0; }
+.mb-goal.met .mb-goal-check { background:#2ecc71; color:#fff; }
+.mb-goal:not(.met) .mb-goal-check { background:var(--bg-elevated); color:var(--text-muted); border:1px solid var(--border-subtle); }
+
+/* Tier indicator */
+.mb-tier-bar {
+    display:flex; gap:6px; margin-bottom:var(--space-md); padding:12px 16px;
+    background:var(--bg-card); border:1px solid var(--border-subtle); border-radius:var(--radius-md);
+    align-items:center;
+}
+.mb-tier-pip {
+    width:28px; height:8px; border-radius:4px; background:var(--bg-elevated);
+    border:1px solid var(--border-subtle); transition:all 0.3s;
+}
+.mb-tier-pip.filled { border-color:transparent; }
+.mb-tier-pip.filled.bronze { background:#cd7f32; }
+.mb-tier-pip.filled.silver { background:#c0c0c0; }
+.mb-tier-pip.filled.gold { background:#d4a843; }
+.mb-tier-pip.filled.diamond { background:#b9f2ff; box-shadow:0 0 6px rgba(185,242,255,0.5); }
+.mb-tier-label { margin-left:auto; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+
+/* Crate */
+.mb-crate-area { text-align:center; padding:var(--space-xl) 0; }
+.mb-crate {
+    width:120px; height:120px; margin:0 auto var(--space-md);
+    position:relative; cursor:pointer; transition:transform 0.2s;
+}
+.mb-crate:hover { transform:scale(1.05); }
+.mb-crate-icon { font-size:5rem; line-height:1; }
+.mb-crate-tier {
+    position:absolute; bottom:-4px; right:-4px; padding:3px 8px;
+    font-size:0.6rem; font-weight:800; text-transform:uppercase;
+    border-radius:8px; letter-spacing:0.05em;
+}
+.mb-crate-tier.bronze { background:#cd7f32; color:#fff; }
+.mb-crate-tier.silver { background:#c0c0c0; color:#333; }
+.mb-crate-tier.gold { background:#d4a843; color:#1a1a2e; }
+.mb-crate-tier.diamond { background:linear-gradient(135deg,#b9f2ff,#7dd3fc); color:#1a1a2e; }
+
+.mb-earn-btn, .mb-open-btn {
+    display:inline-block; padding:12px 28px; border-radius:var(--radius-md);
+    font-weight:700; font-size:0.85rem; border:none; cursor:pointer;
+    text-decoration:none; transition:all 0.2s;
+}
+.mb-earn-btn { background:var(--gold); color:#1a1a2e; }
+.mb-earn-btn:hover { filter:brightness(1.1); transform:translateY(-1px); }
+.mb-earn-btn:disabled, .mb-earn-btn.disabled { opacity:0.4; cursor:not-allowed; pointer-events:none; }
+.mb-open-btn { background:linear-gradient(135deg,#d4a843,#f59e0b); color:#1a1a2e; }
+.mb-open-btn:hover { filter:brightness(1.1); transform:translateY(-1px); }
+
+/* Rewards reveal */
+.mb-rewards { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:var(--space-md); margin-top:var(--space-lg); }
+.mb-reward-card {
+    text-align:center; padding:var(--space-lg) var(--space-sm);
+    background:var(--bg-card); border:1px solid rgba(212,168,67,0.2);
+    border-radius:var(--radius-md);
+}
+.mb-reward-icon { font-size:1.8rem; margin-bottom:var(--space-xs); }
+.mb-reward-label { font-size:0.78rem; font-weight:600; color:var(--text); }
+.mb-reward-qty { font-size:0.65rem; color:var(--text-muted); }
+
+/* Past boxes */
+.mb-past { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:var(--space-md); }
+.mb-past-box {
+    text-align:center; padding:var(--space-md);
+    background:var(--bg-card); border:1px solid var(--border-subtle);
+    border-radius:var(--radius-md); opacity:0.7;
+}
+.mb-past-box.opened { opacity:1; }
+
+/* Open animation overlay */
+.mb-overlay {
+    display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85);
+    z-index:9999; align-items:center; justify-content:center; flex-direction:column;
+}
+.mb-overlay.show { display:flex; }
+.mb-anim-crate { font-size:6rem; animation:mb-shake 0.6s ease-in-out; }
+.mb-anim-rewards { opacity:0; animation:mb-fadeUp 0.6s 0.8s forwards; }
+@keyframes mb-shake {
+    0%,100% { transform:rotate(0deg); }
+    20% { transform:rotate(-8deg) scale(1.1); }
+    40% { transform:rotate(8deg) scale(1.15); }
+    60% { transform:rotate(-5deg) scale(1.1); }
+    80% { transform:rotate(3deg) scale(1.05); }
+}
+@keyframes mb-fadeUp {
+    from { opacity:0; transform:translateY(20px); }
+    to { opacity:1; transform:translateY(0); }
+}
+.mb-anim-reward-item {
+    display:inline-flex; flex-direction:column; align-items:center; gap:6px;
+    padding:16px 20px; margin:8px; background:rgba(212,168,67,0.1);
+    border:1px solid rgba(212,168,67,0.3); border-radius:var(--radius-md);
+    font-size:0.85rem; color:var(--text);
+}
+.mb-anim-reward-item span { font-size:2rem; }
+.mb-anim-close {
+    margin-top:24px; padding:10px 24px; border-radius:var(--radius-md);
+    background:var(--gold); color:#1a1a2e; border:none; cursor:pointer;
+    font-weight:700; font-size:0.85rem;
+}
+
+@media (max-width:600px) {
+    .mb-hero h1 { font-size:1.3rem; }
+    .mb-crate-icon { font-size:3.5rem; }
+    .mb-crate { width:90px; height:90px; }
+    .mb-rewards { grid-template-columns:repeat(2,1fr); }
+}
+</style>
+
+<div class="mb-wrap">
+
+    <!-- Hero -->
+    <div class="mb-hero">
+        <div class="mb-week">Week of {{ week_start.strftime('%b %d, %Y') }}</div>
+        <h1>📦 Magic Box</h1>
+        <p>Complete weekly goals to earn loot crates filled with mystery rewards!</p>
+    </div>
+
+    <!-- ═══ READER GOALS ═══ -->
+    <div class="mb-section">
+        <div class="mb-section-title"><i class="bi bi-book" style="color:#3498db;"></i> Reader Goals</div>
+
+        <div class="mb-goals">
+            {% for g in reader_goals %}
+            <div class="mb-goal {{ 'met' if g.key in reader_goals_met else '' }}">
+                <div class="mb-goal-check">{% if g.key in reader_goals_met %}<i class="bi bi-check"></i>{% else %}&nbsp;{% endif %}</div>
+                {{ g.label }}
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Tier progress -->
+        <div class="mb-tier-bar">
+            <span style="font-size:0.7rem;color:var(--text-muted);margin-right:8px;">Tier:</span>
+            {% for tier_name in ['bronze','silver','gold','diamond'] %}
+            <div class="mb-tier-pip {{ 'filled ' + tier_name if reader_goals_met|length >= tier_thresholds[tier_name] else '' }}" title="{{ tier_name|title }}: {{ tier_thresholds[tier_name] }} goals"></div>
+            {% endfor %}
+            <div class="mb-tier-label" style="color:{% if reader_tier == 'diamond' %}#b9f2ff{% elif reader_tier == 'gold' %}#d4a843{% elif reader_tier == 'silver' %}#c0c0c0{% elif reader_tier == 'bronze' %}#cd7f32{% else %}var(--text-muted){% endif %};">
+                {{ reader_tier|title if reader_tier else 'Not yet' }}
+            </div>
+        </div>
+
+        <!-- Crate area -->
+        <div class="mb-crate-area">
+            {% if reader_box and reader_box.opened_at %}
+                <!-- Already opened -->
+                <div class="mb-crate" style="opacity:0.5;cursor:default;">
+                    <div class="mb-crate-icon">📭</div>
+                    <div class="mb-crate-tier {{ reader_box.tier }}">{{ reader_box.tier }}</div>
+                </div>
+                <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:var(--space-sm);">Opened!</p>
+                <div class="mb-rewards">
+                    {% for rw in reader_rewards %}
+                    <div class="mb-reward-card">
+                        <div class="mb-reward-icon">{% if rw.reward_type == 'coins' %}🪙{% elif rw.reward_type == 'streak_shield' %}🛡️{% elif rw.reward_type == 'badge' %}🏅{% elif rw.reward_type == 'xp_boost' %}⚡{% endif %}</div>
+                        <div class="mb-reward-label">{{ rw.reward_label }}</div>
+                        {% if rw.quantity > 1 %}<div class="mb-reward-qty">x{{ rw.quantity }}</div>{% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            {% elif reader_box and not reader_box.opened_at %}
+                <!-- Earned but sealed -->
+                <div class="mb-crate" onclick="openCrate({{ reader_box.id }})">
+                    <div class="mb-crate-icon">📦</div>
+                    <div class="mb-crate-tier {{ reader_box.tier }}">{{ reader_box.tier }}</div>
+                </div>
+                <button class="mb-open-btn" onclick="openCrate({{ reader_box.id }})">Open {{ reader_box.tier|title }} Crate!</button>
+            {% elif reader_tier %}
+                <!-- Ready to earn -->
+                <div class="mb-crate" style="opacity:0.8;">
+                    <div class="mb-crate-icon">🎁</div>
+                    <div class="mb-crate-tier {{ reader_tier }}">{{ reader_tier }}</div>
+                </div>
+                <form action="{{ url_for('programs.magic_box_earn') }}" method="post" style="display:inline;">
+                    <input type="hidden" name="source" value="reader">
+                    <button type="submit" class="mb-earn-btn">Claim {{ reader_tier|title }} Crate</button>
+                </form>
+            {% else %}
+                <!-- Not enough goals -->
+                <div class="mb-crate" style="opacity:0.3;cursor:default;">
+                    <div class="mb-crate-icon">📦</div>
+                </div>
+                <p style="font-size:0.8rem;color:var(--text-muted);">Complete at least 2 goals to earn a crate</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ═══ CREATOR GOALS ═══ -->
+    {% if current_user.is_creator %}
+    <div class="mb-section">
+        <div class="mb-section-title"><i class="bi bi-pencil-square" style="color:#9b59b6;"></i> Creator Goals</div>
+
+        <div class="mb-goals">
+            {% for g in creator_goals %}
+            <div class="mb-goal {{ 'met' if g.key in creator_goals_met else '' }}">
+                <div class="mb-goal-check">{% if g.key in creator_goals_met %}<i class="bi bi-check"></i>{% else %}&nbsp;{% endif %}</div>
+                {{ g.label }}
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="mb-crate-area">
+            {% if creator_box and creator_box.opened_at %}
+                <div class="mb-crate" style="opacity:0.5;cursor:default;">
+                    <div class="mb-crate-icon">📭</div>
+                    <div class="mb-crate-tier {{ creator_box.tier }}">{{ creator_box.tier }}</div>
+                </div>
+                <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:var(--space-sm);">Opened!</p>
+                <div class="mb-rewards">
+                    {% for rw in creator_rewards %}
+                    <div class="mb-reward-card">
+                        <div class="mb-reward-icon">{% if rw.reward_type == 'coins' %}🪙{% elif rw.reward_type == 'streak_shield' %}🛡️{% elif rw.reward_type == 'badge' %}🏅{% elif rw.reward_type == 'xp_boost' %}⚡{% endif %}</div>
+                        <div class="mb-reward-label">{{ rw.reward_label }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% elif creator_box and not creator_box.opened_at %}
+                <div class="mb-crate" onclick="openCrate({{ creator_box.id }})">
+                    <div class="mb-crate-icon">📦</div>
+                    <div class="mb-crate-tier {{ creator_box.tier }}">{{ creator_box.tier }}</div>
+                </div>
+                <button class="mb-open-btn" onclick="openCrate({{ creator_box.id }})">Open {{ creator_box.tier|title }} Crate!</button>
+            {% elif creator_tier %}
+                <div class="mb-crate" style="opacity:0.8;">
+                    <div class="mb-crate-icon">🎁</div>
+                    <div class="mb-crate-tier {{ creator_tier }}">{{ creator_tier }}</div>
+                </div>
+                <form action="{{ url_for('programs.magic_box_earn') }}" method="post" style="display:inline;">
+                    <input type="hidden" name="source" value="creator">
+                    <button type="submit" class="mb-earn-btn">Claim {{ creator_tier|title }} Crate</button>
+                </form>
+            {% else %}
+                <div class="mb-crate" style="opacity:0.3;cursor:default;">
+                    <div class="mb-crate-icon">📦</div>
+                </div>
+                <p style="font-size:0.8rem;color:var(--text-muted);">Complete at least 1 creator goal to earn a crate</p>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ═══ PAST BOXES ═══ -->
+    {% if past_boxes %}
+    <div class="mb-section">
+        <div class="mb-section-title"><i class="bi bi-clock-history" style="color:var(--text-muted);"></i> Past Crates</div>
+        <div class="mb-past">
+            {% for box in past_boxes %}
+            <div class="mb-past-box {{ 'opened' if box.opened_at else '' }}">
+                <div style="font-size:1.5rem;">{{ '📭' if box.opened_at else '📦' }}</div>
+                <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;color:{% if box.tier == 'diamond' %}#b9f2ff{% elif box.tier == 'gold' %}#d4a843{% elif box.tier == 'silver' %}#c0c0c0{% else %}#cd7f32{% endif %};">{{ box.tier }}</div>
+                <div style="font-size:0.6rem;color:var(--text-muted);">{{ box.week_start.strftime('%b %d') }}</div>
+                <div style="font-size:0.55rem;color:var(--text-muted);opacity:0.6;">{{ box.source }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Reward info -->
+    <div style="padding:var(--space-lg);background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);margin-bottom:var(--space-xl);">
+        <h3 style="font-size:0.9rem;font-weight:700;color:var(--text);margin-bottom:var(--space-sm);">How It Works</h3>
+        <div style="font-size:0.78rem;color:var(--text-secondary);line-height:1.7;">
+            <p>Complete weekly reading goals to earn crates. The more goals you hit, the better the crate:</p>
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:var(--space-sm);">
+                <div><span style="color:#cd7f32;font-weight:700;">Bronze</span> — 2 goals (5-15 coins)</div>
+                <div><span style="color:#c0c0c0;font-weight:700;">Silver</span> — 3 goals (10-30 coins)</div>
+                <div><span style="color:#d4a843;font-weight:700;">Gold</span> — 4 goals (20-50 coins)</div>
+                <div><span style="color:#b9f2ff;font-weight:700;">Diamond</span> — 5 goals (40-80 coins)</div>
+            </div>
+            <p style="margin-top:var(--space-sm);">Crates may also contain Streak Shields, XP Boosts, and Mystery Badges!</p>
+        </div>
+    </div>
+
+    <!-- Back -->
+    <div style="text-align:center;">
+        <a href="{{ url_for('programs.hub') }}" style="color:var(--text-secondary);font-size:0.85rem;text-decoration:none;">
+            <i class="bi bi-arrow-left"></i> Back to Programs
+        </a>
+    </div>
+</div>
+
+<!-- Open Animation Overlay -->
+<div class="mb-overlay" id="openOverlay">
+    <div class="mb-anim-crate" id="animCrate">📦</div>
+    <div class="mb-anim-rewards" id="animRewards"></div>
+    <button class="mb-anim-close" onclick="closeOverlay()">Awesome!</button>
+</div>
+
+<script>
+function openCrate(boxId) {
+    const overlay = document.getElementById('openOverlay');
+    const animCrate = document.getElementById('animCrate');
+    const animRewards = document.getElementById('animRewards');
+
+    overlay.classList.add('show');
+    animCrate.style.animation = 'none';
+    animRewards.style.animation = 'none';
+    animRewards.innerHTML = '';
+
+    // Re-trigger animation
+    void animCrate.offsetWidth;
+    animCrate.style.animation = 'mb-shake 0.6s ease-in-out';
+
+    fetch(`{{ url_for('programs.magic_box', _external=False) }}/open/${boxId}`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (!data.ok) { closeOverlay(); location.reload(); return; }
+
+        // Show rewards after animation
+        setTimeout(() => {
+            animCrate.textContent = '🎉';
+            let html = '';
+            data.rewards.forEach(r => {
+                const icons = {coins:'🪙', streak_shield:'🛡️', badge:'🏅', xp_boost:'⚡'};
+                html += `<div class="mb-anim-reward-item"><span>${icons[r.type]||'🎁'}</span>${r.label}</div>`;
+            });
+            animRewards.innerHTML = html;
+            animRewards.style.animation = 'mb-fadeUp 0.6s forwards';
+        }, 800);
+    })
+    .catch(() => { closeOverlay(); location.reload(); });
+}
+
+function closeOverlay() {
+    document.getElementById('openOverlay').classList.remove('show');
+    location.reload();
+}
+</script>
+{% endblock %}

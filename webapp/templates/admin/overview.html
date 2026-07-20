@@ -1,0 +1,44 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Admin Panel — WiamApp{% endblock %}
+{% block sidebar_title %}Admin Panel{% endblock %}
+
+{% block sidebar_nav %}
+<a class="nav-link active" href="{{ url_for('admin_dash.overview') }}"><i class="bi bi-speedometer2"></i> Overview</a>
+<a class="nav-link" href="{{ url_for('admin_dash.content') }}"><i class="bi bi-book"></i> Content</a>
+<a class="nav-link" href="{{ url_for('admin_dash.users') }}"><i class="bi bi-people"></i> Users</a>
+<a class="nav-link" href="{{ url_for('admin_dash.creators') }}"><i class="bi bi-person-badge"></i> Applications{% if pending_apps %} <span class="badge bg-warning text-dark ms-auto">{{ pending_apps }}</span>{% endif %}</a>
+{% endblock %}
+
+{% block dash_content %}
+<div class="dash-header">
+    <h1>Admin Overview</h1>
+    <p>Platform at a glance</p>
+</div>
+
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="label">Total Users</div>
+        <div class="value">{{ total_users }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Total Books</div>
+        <div class="value">{{ total_books }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Published</div>
+        <div class="value gold">{{ published_books }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Creator Applications</div>
+        <div class="value" style="color: {% if pending_apps %}#facc15{% else %}#4ade80{% endif %}">{{ pending_apps }}</div>
+    </div>
+</div>
+
+<div class="d-flex gap-2 flex-wrap">
+    {% if pending_apps %}
+    <a href="{{ url_for('admin_dash.creators') }}" class="btn-dash btn-dash-primary" style="padding:0.5rem 1.2rem">
+        Review {{ pending_apps }} Application{{ 's' if pending_apps != 1 else '' }}
+    </a>
+    {% endif %}
+</div>
+{% endblock %}

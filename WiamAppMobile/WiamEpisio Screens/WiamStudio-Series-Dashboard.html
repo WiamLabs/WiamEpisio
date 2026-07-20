@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamStudio — Series Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75; --green:#3BB273;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); display:flex; flex-direction:column; }
+  .statusbar{ height:44px; flex-shrink:0; }
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+
+  .topbar{ display:flex; align-items:center; gap:12px; padding:2px 20px 14px; flex-shrink:0; }
+  .icon-btn{ width:34px; height:34px; border-radius:50%; background:var(--navy-card); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .topbar h1{ font-size:16px; font-weight:800; color:#fff; margin:0; }
+  .topbar span{ display:block; font-size:10.5px; color:var(--green); font-weight:700; margin-top:1px; }
+
+  .scroll{ flex:1; overflow-y:auto; padding:0 20px 20px; }
+
+  .series-hero{ display:flex; gap:12px; align-items:center; background:var(--navy-card); border:1px solid var(--navy-line); border-radius:16px; padding:13px; margin-bottom:16px; }
+  .series-poster{ width:48px; height:69px; border-radius:9px; background:linear-gradient(160deg,#3a1420,#12122a); flex-shrink:0; position:relative; }
+  .live-tag{ position:absolute; top:5px; left:5px; font-size:7px; font-weight:800; color:#fff; background:#E4573D; padding:2px 5px; border-radius:4px; }
+  .series-title{ font-size:14px; font-weight:800; color:#fff; margin:0 0 3px; }
+  .series-sub{ font-size:10.5px; color:var(--text-dim); margin:0; }
+  .manage-btn{ margin-left:auto; padding:8px 13px; border-radius:10px; background:var(--navy-soft); color:var(--gold); font-size:11px; font-weight:700; flex-shrink:0; }
+
+  .stat-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px; }
+  .stat-card{ background:var(--navy-card); border:1px solid var(--navy-line); border-radius:14px; padding:13px 14px; }
+  .stat-label{ font-size:10px; color:var(--text-faint); font-weight:700; margin:0 0 6px; text-transform:uppercase; letter-spacing:0.3px; }
+  .stat-value{ font-size:19px; font-weight:800; color:#fff; margin:0 0 4px; }
+  .stat-delta{ font-size:10px; font-weight:700; }
+  .stat-delta.up{ color:var(--green); }
+  .stat-delta.down{ color:#E4573D; }
+
+  .chart-card{ background:var(--navy-card); border:1px solid var(--navy-line); border-radius:16px; padding:16px; margin-bottom:16px; }
+  .chart-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+  .chart-head span{ font-size:12.5px; font-weight:700; color:#fff; }
+  .chart-period{ font-size:10.5px; color:var(--text-faint); }
+  .bars{ display:flex; align-items:flex-end; gap:6px; height:70px; }
+  .bar{ flex:1; background:linear-gradient(180deg,var(--gold),var(--gold-dark)); border-radius:4px 4px 0 0; opacity:0.85; }
+  .bar.peak{ opacity:1; }
+  .bar-labels{ display:flex; gap:6px; margin-top:6px; }
+  .bar-labels span{ flex:1; text-align:center; font-size:8px; color:var(--text-faint); }
+
+  .ep-perf-title{ font-size:12px; font-weight:800; color:var(--text-dim); letter-spacing:0.4px; text-transform:uppercase; margin:4px 0 12px; }
+  .ep-row{ display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--navy-line); }
+  .ep-row:last-child{ border-bottom:none; }
+  .ep-num{ width:26px; font-size:11px; font-weight:800; color:var(--text-faint); }
+  .ep-bar-track{ flex:1; height:6px; background:var(--navy-line); border-radius:99px; overflow:hidden; }
+  .ep-bar-fill{ height:100%; background:var(--gold); border-radius:99px; }
+  .ep-views{ font-size:10.5px; color:var(--text-dim); font-weight:600; width:44px; text-align:right; flex-shrink:0; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"></div>
+  <div class="topbar">
+    <div class="icon-btn"><svg viewBox="0 0 24 24" width="15" height="15" color="#fff"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></div>
+    <div>
+      <h1>Series Dashboard</h1>
+      <span>● Live · Last 7 days</span>
+    </div>
+  </div>
+
+  <div class="scroll">
+
+    <div class="series-hero">
+      <div class="series-poster"><span class="live-tag">LIVE</span></div>
+      <div>
+        <p class="series-title">Love Delayed</p>
+        <p class="series-sub">40 Episodes · Published 3 months ago</p>
+      </div>
+      <span class="manage-btn">Manage</span>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card"><p class="stat-label">Total Views</p><p class="stat-value">412K</p><span class="stat-delta up">▲ 12.4% this week</span></div>
+      <div class="stat-card"><p class="stat-label">Watch Time</p><p class="stat-value">18.2K hrs</p><span class="stat-delta up">▲ 8.1% this week</span></div>
+      <div class="stat-card"><p class="stat-label">Unlocks</p><p class="stat-value">6,204</p><span class="stat-delta up">▲ 22.0% this week</span></div>
+      <div class="stat-card"><p class="stat-label">Earnings</p><p class="stat-value">₵3,120</p><span class="stat-delta down">▼ 3.2% this week</span></div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-head"><span>Daily Views</span><span class="chart-period">Last 7 days</span></div>
+      <div class="bars">
+        <div class="bar" style="height:40%;"></div>
+        <div class="bar" style="height:55%;"></div>
+        <div class="bar" style="height:48%;"></div>
+        <div class="bar" style="height:70%;"></div>
+        <div class="bar peak" style="height:100%;"></div>
+        <div class="bar" style="height:82%;"></div>
+        <div class="bar" style="height:65%;"></div>
+      </div>
+      <div class="bar-labels"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
+    </div>
+
+    <p class="ep-perf-title">Top Episodes This Week</p>
+    <div class="ep-row"><span class="ep-num">EP1</span><div class="ep-bar-track"><div class="ep-bar-fill" style="width:96%;"></div></div><span class="ep-views">41.2K</span></div>
+    <div class="ep-row"><span class="ep-num">EP2</span><div class="ep-bar-track"><div class="ep-bar-fill" style="width:78%;"></div></div><span class="ep-views">33.5K</span></div>
+    <div class="ep-row"><span class="ep-num">EP12</span><div class="ep-bar-track"><div class="ep-bar-fill" style="width:64%;"></div></div><span class="ep-views">27.1K</span></div>
+    <div class="ep-row"><span class="ep-num">EP3</span><div class="ep-bar-track"><div class="ep-bar-fill" style="width:52%;"></div></div><span class="ep-views">22.0K</span></div>
+
+  </div>
+</div>
+
+</body>
+</html>

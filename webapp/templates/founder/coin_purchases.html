@@ -1,0 +1,110 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Coin Purchases — Control Panel{% endblock %}
+{% block sidebar_title %}Control Panel{% endblock %}
+
+{% block sidebar_nav %}
+<a class="nav-link" href="{{ url_for('founder_dash.overview') }}"><i class="bi bi-speedometer2"></i> Overview</a>
+<a class="nav-link" href="{{ url_for('founder_dash.users') }}"><i class="bi bi-people"></i> Users</a>
+<a class="nav-link" href="{{ url_for('founder_dash.content') }}"><i class="bi bi-book"></i> Content</a>
+<a class="nav-link" href="{{ url_for('founder_dash.revenue') }}"><i class="bi bi-cash-stack"></i> Revenue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.financial_dashboard') }}"><i class="bi bi-bank" style="color:var(--gold);"></i> Financial v5</a>
+<a class="nav-link" href="{{ url_for('founder_dash.premium_analytics') }}"><i class="bi bi-gem" style="color:#c084fc;"></i> Premium Analytics</a>
+<a class="nav-link active" href="{{ url_for('founder_dash.coin_purchases') }}"><i class="bi bi-coin"></i> Coin Purchases</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payouts') }}"><i class="bi bi-send-check"></i> Payouts</a>
+<a class="nav-link" href="{{ url_for('founder_dash.withdrawals') }}"><i class="bi bi-arrow-up-right-circle" style="color:var(--gold);"></i> Withdrawals</a>
+<a class="nav-link" href="{{ url_for('founder_dash.subscribers') }}"><i class="bi bi-gem" style="color:#9b59b6;"></i> Subscribers</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payroll') }}"><i class="bi bi-wallet2" style="color:#2ecc71;"></i> Team Payroll</a>
+<a class="nav-link" href="{{ url_for('founder_dash.creators') }}"><i class="bi bi-person-badge"></i> Creators</a>
+<a class="nav-link" href="{{ url_for('founder_dash.genres') }}"><i class="bi bi-tags"></i> Genres</a>
+<a class="nav-link" href="{{ url_for('founder_dash.announcements') }}"><i class="bi bi-megaphone"></i> Announcements</a>
+<a class="nav-link" href="{{ url_for('founder_dash.collections') }}"><i class="bi bi-grid"></i> Collections</a>
+<a class="nav-link" href="{{ url_for('founder_dash.moderation') }}"><i class="bi bi-shield-exclamation"></i> Moderation</a>
+<a class="nav-link" href="{{ url_for('founder_dash.warnings_list') }}"><i class="bi bi-exclamation-triangle" style="color:#f59e0b;"></i> Warnings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.elite_manage') }}"><span style="color:var(--gold);">?</span> WiamElite</a>
+<a class="nav-link" href="{{ url_for('wiambot.apex_review') }}"><i class="bi bi-trophy-fill" style="color:var(--gold);"></i> Apex Review</a>
+<a class="nav-link" href="{{ url_for('founder_dash.review_queue') }}"><i class="bi bi-robot"></i> Bot Review Queue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.platform_settings') }}"><i class="bi bi-sliders"></i> Platform Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.forms_dashboard') }}"><i class="bi bi-file-earmark-text"></i> Application Forms</a>
+<a class="nav-link" href="{{ url_for('founder_dash.email_studio') }}"><i class="bi bi-envelope-paper" style="color:var(--gold);"></i> Email Studio</a>
+<a class="nav-link" href="{{ url_for('founder_dash.team_management') }}"><i class="bi bi-people-fill"></i> Team</a>
+<a class="nav-link" href="{{ url_for('founder_dash.account_management') }}"><i class="bi bi-person-x"></i> Account Management</a>
+<a class="nav-link" href="{{ url_for('founder_dash.notification_testing') }}"><i class="bi bi-bell" style="color:#fbbf24;"></i> Notifications</a>
+<a class="nav-link" href="{{ url_for('classics.dashboard') }}"><i class="bi bi-journal-bookmark" style="color:#a78bfa;"></i> Content Seeder</a>
+<a class="nav-link" href="{{ url_for('founder_dash.settings') }}"><i class="bi bi-gear"></i> Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.admins') }}"><i class="bi bi-shield-check"></i> Admins</a>
+{% endblock %}
+
+{% block dash_content %}
+<div class="dash-header">
+    <h1><i class="bi bi-coin me-2" style="color:var(--gold)"></i>Coin Transactions</h1>
+    <p>All coin purchases, unlocks, tips, and transfers</p>
+</div>
+
+<div class="filter-bar" style="margin-bottom:1rem;">
+    <a href="?type=" class="btn-dash {% if not type_filter %}btn-dash-primary{% endif %}">All</a>
+    <a href="?type=purchase" class="btn-dash {% if type_filter == 'purchase' %}btn-dash-primary{% endif %}">Purchases</a>
+    <a href="?type=unlock" class="btn-dash {% if type_filter == 'unlock' %}btn-dash-primary{% endif %}">Unlocks</a>
+    <a href="?type=tip" class="btn-dash {% if type_filter == 'tip' %}btn-dash-primary{% endif %}">Tips</a>
+    <a href="?type=gift" class="btn-dash {% if type_filter == 'gift' %}btn-dash-primary{% endif %}">Gifts</a>
+</div>
+
+<div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:1rem;">
+    Showing {{ transactions|length }} of {{ total }} transactions (page {{ page }})
+</div>
+
+<div class="dash-card">
+    <table class="dash-table">
+        <thead>
+            <tr><th>Date</th><th>User</th><th>Type</th><th>Amount</th><th>Details</th></tr>
+        </thead>
+        <tbody>
+        {% for t in transactions %}
+        {% set user = users_map.get(t.user_id) %}
+        <tr>
+            <td style="white-space:nowrap;font-size:0.82rem;">{{ t.created_at.strftime('%b %d, %Y') if t.created_at else '—' }}<br><small style="color:var(--text-muted)">{{ t.created_at.strftime('%H:%M') if t.created_at else '' }}</small></td>
+            <td>
+                {% if user %}
+                {{ user.display_name }}<br><small style="color:var(--text-muted)">@{{ user.username or '—' }}</small>
+                {% else %}
+                <span style="color:var(--text-muted)">ID: {{ t.user_id }}</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if t.type == 'purchase' %}
+                <span style="background:rgba(34,197,94,0.15);color:#22c55e;padding:2px 8px;border-radius:10px;font-size:0.75rem;font-weight:600;">Purchase</span>
+                {% elif t.type == 'unlock' %}
+                <span style="background:rgba(59,130,246,0.15);color:#3b82f6;padding:2px 8px;border-radius:10px;font-size:0.75rem;font-weight:600;">Unlock</span>
+                {% elif t.type == 'tip' %}
+                <span style="background:rgba(212,168,67,0.15);color:#d4a843;padding:2px 8px;border-radius:10px;font-size:0.75rem;font-weight:600;">Tip</span>
+                {% elif t.type == 'gift' %}
+                <span style="background:rgba(168,85,247,0.15);color:#a855f7;padding:2px 8px;border-radius:10px;font-size:0.75rem;font-weight:600;">Gift</span>
+                {% else %}
+                <span style="background:rgba(148,163,184,0.15);color:#94a3b8;padding:2px 8px;border-radius:10px;font-size:0.75rem;font-weight:600;">{{ t.type or '—' }}</span>
+                {% endif %}
+            </td>
+            <td style="font-weight:700;color:{% if t.amount and t.amount > 0 %}#22c55e{% else %}var(--text){% endif %};">
+                {% if t.amount %}{{ '+' if t.amount > 0 else '' }}{{ t.amount }} coins{% else %}—{% endif %}
+            </td>
+            <td style="font-size:0.82rem;color:var(--text-muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;">
+                {{ t.description or t.reference or '—' }}
+            </td>
+        </tr>
+        {% endfor %}
+        {% if not transactions %}
+        <tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:2rem">No transactions found</td></tr>
+        {% endif %}
+        </tbody>
+    </table>
+</div>
+
+{% if total > per_page %}
+<div style="display:flex;justify-content:center;gap:0.5rem;margin-top:1rem;">
+    {% if page > 1 %}
+    <a href="?type={{ type_filter }}&page={{ page - 1 }}" class="btn-dash">&laquo; Previous</a>
+    {% endif %}
+    {% if page * per_page < total %}
+    <a href="?type={{ type_filter }}&page={{ page + 1 }}" class="btn-dash">Next &raquo;</a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,380 @@
+{% extends "base.html" %}
+{% block title %}WiamStudio — WiamApp{% endblock %}
+{% block extra_head %}
+<style>
+    :root { --wine: #722f37; --wine-soft: rgba(114,47,55,0.12); }
+
+    .ws { max-width: 1020px; margin: 0 auto; padding: 1.75rem 1.25rem 3rem; }
+
+    /* ── Hero Banner ── */
+    .ws-hero {
+        position: relative; overflow: hidden;
+        background: linear-gradient(135deg, rgba(114,47,55,0.18) 0%, rgba(212,168,67,0.08) 50%, rgba(15,15,28,0.95) 100%);
+        border: 1px solid rgba(212,168,67,0.1); border-radius: 20px;
+        padding: 2rem 2.25rem; margin-bottom: 2rem;
+    }
+    .ws-hero::before {
+        content: ''; position: absolute; top: -40%; right: -10%; width: 320px; height: 320px;
+        background: radial-gradient(circle, rgba(212,168,67,0.06) 0%, transparent 70%);
+        pointer-events: none;
+    }
+    .ws-hero-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 1.5rem; position: relative; }
+    .ws-hero-left h1 { font-size: 1.6rem; font-weight: 800; color: var(--text); margin: 0 0 0.2rem; letter-spacing: -0.02em; }
+    .ws-hero-left h1 span { background: linear-gradient(135deg, var(--gold), #f0d078); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .ws-hero-left p { color: var(--text-muted); font-size: 0.88rem; margin: 0; }
+
+    .btn-new {
+        display: inline-flex; align-items: center; gap: 0.55rem;
+        background: linear-gradient(135deg, var(--gold), #e8c55a); color: #0a0a0c;
+        padding: 0.7rem 1.6rem; border-radius: 14px; text-decoration: none;
+        font-weight: 700; font-size: 0.92rem; transition: all 0.3s;
+        box-shadow: 0 4px 20px rgba(212,168,67,0.25); white-space: nowrap;
+    }
+    .btn-new:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(212,168,67,0.35); color: #0a0a0c; }
+
+    /* ── Stat Chips ── */
+    .ws-stats { display: flex; gap: 0.75rem; flex-wrap: wrap; position: relative; }
+    .ws-stat {
+        display: flex; align-items: center; gap: 0.55rem;
+        background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 12px; padding: 0.6rem 1rem;
+    }
+    .ws-stat-icon {
+        width: 36px; height: 36px; border-radius: 10px;
+        display: flex; align-items: center; justify-content: center; font-size: 1rem;
+    }
+    .ws-stat-icon.gold { background: rgba(212,168,67,0.12); color: var(--gold); }
+    .ws-stat-icon.blue { background: rgba(59,130,246,0.12); color: #60a5fa; }
+    .ws-stat-icon.green { background: rgba(34,197,94,0.12); color: #4ade80; }
+    .ws-stat-icon.purple { background: rgba(139,92,246,0.12); color: #a78bfa; }
+    .ws-stat-val { font-size: 1.15rem; font-weight: 700; color: var(--text); line-height: 1.1; }
+    .ws-stat-lbl { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+
+    /* ── Section Header ── */
+    .ws-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+    .ws-section h2 { font-size: 1.1rem; font-weight: 700; color: var(--text); margin: 0; }
+    .ws-section .count { font-size: 0.78rem; color: var(--text-muted); background: rgba(255,255,255,0.04); padding: 0.2rem 0.65rem; border-radius: 20px; }
+
+    /* ── Story Cards ── */
+    .ws-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.1rem; }
+    .ws-card {
+        background: linear-gradient(145deg, rgba(18,18,32,0.9) 0%, rgba(12,12,24,0.95) 100%);
+        border: 1px solid rgba(255,255,255,0.05); border-radius: 16px;
+        overflow: hidden; transition: all 0.3s ease; position: relative;
+    }
+    .ws-card::after {
+        content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+        background: linear-gradient(90deg, var(--gold), #722f37); opacity: 0; transition: opacity 0.3s;
+    }
+    .ws-card:hover { border-color: rgba(212,168,67,0.15); transform: translateY(-4px); box-shadow: 0 16px 48px rgba(0,0,0,0.35); }
+    .ws-card:hover::after { opacity: 1; }
+
+    .ws-card-inner { display: flex; gap: 1rem; padding: 1.15rem; }
+    .ws-card-cover {
+        width: 72px; height: 100px; border-radius: 10px; flex-shrink: 0;
+        background: linear-gradient(135deg, rgba(114,47,55,0.25), rgba(212,168,67,0.1));
+        display: flex; align-items: center; justify-content: center;
+        overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    }
+    .ws-card-cover img { width: 100%; height: 100%; object-fit: cover; }
+    .ws-card-cover i { font-size: 1.4rem; color: rgba(212,168,67,0.3); }
+
+    .ws-card-body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+    .ws-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.3rem; }
+    .ws-card-title {
+        font-size: 0.98rem; font-weight: 700; color: var(--text); margin: 0;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .ws-card-genre { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.45rem; }
+
+    .ws-badge {
+        padding: 0.15rem 0.5rem; border-radius: 20px; font-size: 0.65rem;
+        font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; flex-shrink: 0;
+    }
+    .ws-badge-draft { background: rgba(156,163,175,0.1); color: #9ca3af; }
+    .ws-badge-ongoing { background: rgba(59,130,246,0.12); color: #60a5fa; }
+    .ws-badge-complete { background: rgba(34,197,94,0.12); color: #4ade80; }
+    .ws-badge-approved { background: rgba(34,197,94,0.12); color: #4ade80; }
+    .ws-badge-published { background: rgba(34,197,94,0.12); color: #4ade80; }
+    .ws-badge-hidden { background: rgba(156,163,175,0.1); color: #9ca3af; }
+
+    .ws-review {
+        display: inline-flex; align-items: center; gap: 0.25rem;
+        padding: 0.12rem 0.45rem; border-radius: 6px; font-size: 0.65rem; font-weight: 600;
+    }
+    .ws-review-approved { background: rgba(34,197,94,0.1); color: #4ade80; }
+    .ws-review-under_review { background: rgba(59,130,246,0.1); color: #60a5fa; }
+    .ws-review-rejected { background: rgba(239,68,68,0.1); color: #f87171; }
+    .ws-review-revision_requested { background: rgba(251,191,36,0.1); color: #fbbf24; }
+    .ws-review-unreviewed { background: rgba(156,163,175,0.06); color: #6b7280; }
+
+    .ws-card-stats {
+        display: flex; gap: 0.85rem; font-size: 0.73rem; color: var(--text-muted); margin-top: auto;
+    }
+    .ws-card-stats span { display: flex; align-items: center; gap: 0.25rem; }
+    .ws-card-stats i { font-size: 0.68rem; }
+
+    .ws-card-footer {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 0.6rem 1.15rem; border-top: 1px solid rgba(255,255,255,0.04);
+        background: rgba(0,0,0,0.15);
+    }
+    .ws-card-actions { display: flex; gap: 0.4rem; }
+    .ws-act {
+        display: inline-flex; align-items: center; gap: 0.25rem;
+        padding: 0.28rem 0.6rem; border-radius: 8px; font-size: 0.72rem;
+        border: none; cursor: pointer; transition: all 0.2s; text-decoration: none;
+    }
+    .ws-act-edit { background: rgba(212,168,67,0.08); color: var(--gold); }
+    .ws-act-edit:hover { background: rgba(212,168,67,0.18); color: var(--gold); }
+    .ws-act-del { background: rgba(239,68,68,0.06); color: #f87171; }
+    .ws-act-del:hover { background: rgba(239,68,68,0.18); color: #fca5a5; }
+
+    /* ── Empty State ── */
+    .ws-empty {
+        text-align: center; padding: 4.5rem 2rem;
+        background: linear-gradient(135deg, rgba(18,18,32,0.6), rgba(12,12,24,0.8));
+        border: 1px dashed rgba(212,168,67,0.15); border-radius: 20px;
+    }
+    .ws-empty-icon {
+        width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 1.25rem;
+        background: linear-gradient(135deg, rgba(212,168,67,0.08), rgba(114,47,55,0.08));
+        display: flex; align-items: center; justify-content: center;
+    }
+    .ws-empty-icon i { font-size: 2.2rem; color: rgba(212,168,67,0.35); }
+    .ws-empty h2 { font-size: 1.25rem; font-weight: 700; color: var(--text); margin-bottom: 0.4rem; }
+    .ws-empty p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.75rem; max-width: 380px; margin-left: auto; margin-right: auto; }
+
+    /* ── Tips Bar ── */
+    .ws-tip {
+        display: flex; align-items: center; gap: 0.75rem; margin-top: 2rem;
+        background: rgba(59,130,246,0.04); border: 1px solid rgba(59,130,246,0.08);
+        border-radius: 14px; padding: 0.9rem 1.25rem;
+    }
+    .ws-tip-icon { font-size: 1.2rem; color: #60a5fa; flex-shrink: 0; }
+    .ws-tip p { font-size: 0.82rem; color: var(--text-muted); margin: 0; line-height: 1.5; }
+    .ws-tip strong { color: var(--text); }
+
+    /* ── Eligibility Progress ── */
+    .ws-elig {
+        background: linear-gradient(145deg, rgba(18,18,32,0.85), rgba(12,12,24,0.95));
+        border: 1px solid rgba(212,168,67,0.1); border-radius: 18px;
+        padding: 1.5rem 1.5rem 1.25rem; margin-bottom: 2rem;
+    }
+    .ws-elig-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.1rem; }
+    .ws-elig-head h2 { font-size: 1.05rem; font-weight: 700; color: var(--text); margin: 0; display: flex; align-items: center; gap: 0.5rem; }
+    .ws-elig-head .elig-pct { font-size: 0.82rem; font-weight: 700; padding: 0.2rem 0.7rem; border-radius: 20px; }
+    .ws-elig-rows { display: flex; flex-direction: column; gap: 0.65rem; }
+    .ws-elig-row { display: flex; align-items: center; gap: 0.75rem; }
+    .ws-elig-lbl { width: 140px; flex-shrink: 0; font-size: 0.78rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ws-elig-bar-wrap { flex: 1; height: 8px; background: rgba(255,255,255,0.04); border-radius: 6px; overflow: hidden; position: relative; }
+    .ws-elig-bar { height: 100%; border-radius: 6px; transition: width 0.6s ease; min-width: 2px; }
+    .ws-elig-bar.green { background: linear-gradient(90deg, #22c55e, #4ade80); }
+    .ws-elig-bar.gold { background: linear-gradient(90deg, #d4a843, #f0d078); }
+    .ws-elig-bar.red { background: linear-gradient(90deg, #ef4444, #f87171); }
+    .ws-elig-val { width: 80px; flex-shrink: 0; font-size: 0.72rem; color: var(--text-muted); text-align: right; white-space: nowrap; }
+    .ws-elig-val .done { color: #4ade80; font-weight: 700; }
+
+    @media(max-width:640px) {
+        .ws-hero { padding: 1.5rem 1.25rem; border-radius: 16px; }
+        .ws-hero-top { flex-direction: column; }
+        .ws-stats { gap: 0.5rem; }
+        .ws-stat { padding: 0.5rem 0.75rem; }
+        .ws-grid { grid-template-columns: 1fr; }
+        .ws-card-inner { padding: 1rem; }
+        .ws-elig-lbl { width: 110px; }
+        .ws-elig-val { width: 68px; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{% set total_stories = books|length %}
+{% set total_words = word_counts.values()|sum %}
+{% set total_chapters = chapter_counts.values()|sum %}
+{% set total_views = books|map(attribute='views')|select('integer')|sum %}
+
+<div class="ws">
+    <!-- ═══════ Hero Banner ═══════ -->
+    <div class="ws-hero">
+        <div class="ws-hero-top">
+            <div class="ws-hero-left">
+                <h1><span>WiamStudio</span></h1>
+                <p>Your creative workspace — write, publish, and grow your audience</p>
+            </div>
+            <a href="{{ url_for('studio.new_book') }}" class="btn-new">
+                <i class="bi bi-plus-lg"></i> New Story
+            </a>
+        </div>
+
+        <!-- Quick Actions -->
+        <div style="display:flex;gap:0.6rem;flex-wrap:wrap;margin-bottom:1.25rem;">
+            <a href="{{ url_for('studio.top_readers') }}" style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.5rem 1rem;background:rgba(236,72,153,0.08);border:1px solid rgba(236,72,153,0.2);border-radius:12px;color:#ec4899;font-size:0.82rem;font-weight:600;text-decoration:none;transition:all 0.2s;">
+                <i class="bi bi-people-fill"></i> Top Readers &amp; Gifts
+            </a>
+            <a href="{{ url_for('studio.monetization_guide') }}" style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.5rem 1rem;background:rgba(212,168,67,0.08);border:1px solid rgba(212,168,67,0.2);border-radius:12px;color:var(--gold);font-size:0.82rem;font-weight:600;text-decoration:none;transition:all 0.2s;">
+                <i class="bi bi-cash-coin"></i> Monetization Guide
+            </a>
+            <a href="{{ url_for('dashboard.index', tab='earnings') }}" style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.5rem 1rem;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:12px;color:#4ade80;font-size:0.82rem;font-weight:600;text-decoration:none;transition:all 0.2s;">
+                <i class="bi bi-graph-up-arrow"></i> Earnings
+            </a>
+        </div>
+
+        <div class="ws-stats">
+            <div class="ws-stat">
+                <div class="ws-stat-icon gold"><i class="bi bi-book"></i></div>
+                <div>
+                    <div class="ws-stat-val">{{ total_stories }}</div>
+                    <div class="ws-stat-lbl">Stories</div>
+                </div>
+            </div>
+            <div class="ws-stat">
+                <div class="ws-stat-icon blue"><i class="bi bi-file-text"></i></div>
+                <div>
+                    <div class="ws-stat-val">{{ total_chapters }}</div>
+                    <div class="ws-stat-lbl">Chapters</div>
+                </div>
+            </div>
+            <div class="ws-stat">
+                <div class="ws-stat-icon green"><i class="bi bi-text-paragraph"></i></div>
+                <div>
+                    <div class="ws-stat-val">{{ '{:,}'.format(total_words) }}</div>
+                    <div class="ws-stat-lbl">Words</div>
+                </div>
+            </div>
+            <div class="ws-stat">
+                <div class="ws-stat-icon purple"><i class="bi bi-eye"></i></div>
+                <div>
+                    <div class="ws-stat-val">{{ '{:,}'.format(total_views) }}</div>
+                    <div class="ws-stat-lbl">Views</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if elig %}
+    <!-- ═══════ Eligibility Progress ═══════ -->
+    {% set elig_order = ['account_age','stories','chapters','readers','followers','rating_count','avg_rating','violations','trust'] %}
+    {% set ns = namespace(met=0, total=0) %}
+    {% for key in elig_order %}
+        {% set item = elig[key] %}
+        {% set ns.total = ns.total + 1 %}
+        {% if item.get('inverse') %}
+            {% if item.val <= item.req %}{% set ns.met = ns.met + 1 %}{% endif %}
+        {% else %}
+            {% if item.val >= item.req %}{% set ns.met = ns.met + 1 %}{% endif %}
+        {% endif %}
+    {% endfor %}
+    {% set overall_pct = (ns.met * 100 / ns.total)|int if ns.total else 0 %}
+    <div class="ws-elig">
+        <div class="ws-elig-head">
+            <h2><i class="bi bi-trophy" style="color:var(--gold);"></i> Monetization Eligibility</h2>
+            <span class="elig-pct" style="background:{% if overall_pct == 100 %}rgba(34,197,94,0.12);color:#4ade80{% elif overall_pct >= 50 %}rgba(212,168,67,0.12);color:var(--gold){% else %}rgba(239,68,68,0.1);color:#f87171{% endif %};">{{ ns.met }}/{{ ns.total }} met</span>
+        </div>
+        <div class="ws-elig-rows">
+            {% for key in elig_order %}
+            {% set item = elig[key] %}
+            {% if item.get('inverse') %}
+                {% set passed = item.val <= item.req %}
+                {% set pct = 100 if passed else [0, 100 - (item.val * 50)]|max %}
+            {% else %}
+                {% set passed = item.val >= item.req %}
+                {% set pct = [(item.val / item.req * 100)|int, 100]|min if item.req else 100 %}
+            {% endif %}
+            <div class="ws-elig-row">
+                <div class="ws-elig-lbl">{{ item.label }}</div>
+                <div class="ws-elig-bar-wrap">
+                    <div class="ws-elig-bar {% if passed %}green{% elif pct >= 50 %}gold{% else %}red{% endif %}" style="width:{{ pct }}%"></div>
+                </div>
+                <div class="ws-elig-val">
+                    {% if passed %}<span class="done">&#10003; {{ item.val }}{{ item.unit }}</span>
+                    {% else %}{{ item.val }}{{ item.unit }} / {{ item.req }}{{ item.unit }}{% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if books %}
+    <!-- ═══════ Stories Section ═══════ -->
+    <div class="ws-section">
+        <h2><i class="bi bi-journal-richtext me-2" style="color:var(--gold)"></i>Your Stories</h2>
+        <span class="count">{{ total_stories }} {{ 'story' if total_stories == 1 else 'stories' }}</span>
+    </div>
+
+    <div class="ws-grid">
+        {% for b in books %}
+        <div class="ws-card">
+            <a href="{{ url_for('studio.editor', book_id=b.id) }}" style="text-decoration:none;color:inherit;display:block;">
+                <div class="ws-card-inner">
+                    <div class="ws-card-cover">
+                        {% if b.cover_file_id %}
+                        <img src="{{ b.cover_url }}" alt="{{ b.title }}">
+                        {% else %}
+                        <i class="bi bi-journal-text"></i>
+                        {% endif %}
+                    </div>
+                    <div class="ws-card-body">
+                        <div class="ws-card-top">
+                            <h3 class="ws-card-title">{{ b.title }}</h3>
+                            <span class="ws-badge ws-badge-{{ b.status }}">{{ b.status }}</span>
+                        </div>
+                        <div class="ws-card-genre">
+                            {{ b.genre or 'No genre' }} · {{ b.author or 'Unknown' }}
+                            {% if b.status in ('ongoing', 'complete', 'approved', 'published') %}
+                            {% set rs = b.review_status or 'unreviewed' %}
+                            <span class="ws-review ws-review-{{ rs }}">
+                                {% if rs == 'approved' or rs == 'elite_approved' or rs == 'apex_approved' %}✓ Monetized
+                                {% elif rs == 'under_review' %}⏳ Review
+                                {% elif rs == 'rejected' %}✗ Rejected
+                                {% elif rs == 'revision_requested' %}✎ Revision
+                                {% else %}—{% endif %}
+                            </span>
+                            {% if b.review_score is not none %}
+                            <span style="font-size:0.65rem;color:{% if b.review_score >= 70 %}#4ade80{% elif b.review_score >= 40 %}#facc15{% else %}#f87171{% endif %}">{{ b.review_score }}pts</span>
+                            {% endif %}
+                            {% endif %}
+                        </div>
+                        <div class="ws-card-stats">
+                            <span><i class="bi bi-file-text"></i> {{ chapter_counts.get(b.id, 0) }} ch</span>
+                            <span><i class="bi bi-text-paragraph"></i> {{ '{:,}'.format(word_counts.get(b.id, 0)) }}w</span>
+                            <span><i class="bi bi-eye"></i> {{ b.views or 0 }}</span>
+                        </div>
+                    </div>
+                </div>
+            </a>
+            <div class="ws-card-footer">
+                <div class="ws-card-actions">
+                    <a href="{{ url_for('studio.editor', book_id=b.id) }}" class="ws-act ws-act-edit"><i class="bi bi-pen"></i> Write</a>
+                    <a href="{{ url_for('studio.preview', book_id=b.id) }}" class="ws-act ws-act-edit"><i class="bi bi-eye"></i> Preview</a>
+                </div>
+                <form method="POST" action="{{ url_for('studio.delete_book', book_id=b.id) }}" style="margin:0;"
+                      onsubmit="return confirm('PERMANENTLY DELETE &quot;{{ b.title }}&quot; and ALL its chapters, comments, reactions, and reviews? This cannot be undone!');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="ws-act ws-act-del"><i class="bi bi-trash3"></i></button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- ═══════ Writing Tip ═══════ -->
+    <div class="ws-tip">
+        <div class="ws-tip-icon"><i class="bi bi-lightbulb"></i></div>
+        <p><strong>Pro Tip:</strong> Consistency is key! Publish at least one chapter per week to keep your readers engaged and grow your audience faster.</p>
+    </div>
+
+    {% else %}
+    <!-- ═══════ Empty State ═══════ -->
+    <div class="ws-empty">
+        <div class="ws-empty-icon"><i class="bi bi-feather"></i></div>
+        <h2>Your story begins here</h2>
+        <p>Every great author started with a blank page. Create your first story and share your imagination with the world.</p>
+        <a href="{{ url_for('studio.new_book') }}" class="btn-new">
+            <i class="bi bi-pen"></i> Write Your First Story
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamEpisio — Confirm Unlock</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); }
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+
+  .backdrop{ position:absolute; inset:0; background:linear-gradient(160deg,#1a1030,#0d0d24,#000); filter:brightness(0.3); }
+  .veil{ position:absolute; inset:0; background:rgba(0,0,0,0.55); }
+
+  .modal{ position:absolute; top:50%; left:20px; right:20px; transform:translateY(-50%); background:var(--navy-soft); border:1px solid var(--navy-line); border-radius:20px; padding:22px 22px 20px; box-shadow:0 24px 60px rgba(0,0,0,0.5); }
+
+  .ep-row{ display:flex; gap:12px; align-items:center; margin-bottom:18px; }
+  .ep-thumb{ width:52px; height:74px; border-radius:10px; background:linear-gradient(160deg,#241a3a,#0d0d24); flex-shrink:0; }
+  .ep-title{ font-size:13.5px; font-weight:800; color:#fff; margin:0 0 3px; }
+  .ep-sub{ font-size:11px; color:var(--text-dim); margin:0; }
+
+  .cost-row{ display:flex; align-items:center; justify-content:space-between; background:var(--navy-card); border:1px solid var(--navy-line); border-radius:14px; padding:14px 16px; margin-bottom:14px; }
+  .cost-label{ font-size:12px; color:var(--text-dim); font-weight:600; }
+  .cost-value{ display:flex; align-items:center; gap:6px; }
+  .cost-value svg{ color:var(--gold); width:16px; height:16px; }
+  .cost-value b{ font-size:17px; color:#fff; font-weight:800; }
+
+  .balance-row{ display:flex; align-items:center; justify-content:space-between; padding:0 2px; margin-bottom:22px; }
+  .balance-row span{ font-size:11px; color:var(--text-faint); }
+  .balance-row b{ font-size:11.5px; color:#fff; font-weight:700; }
+  .balance-row b.after{ color:var(--gold); }
+
+  .btn-row{ display:flex; gap:10px; }
+  .btn-cancel{ flex:1; padding:14px; border-radius:14px; background:var(--navy-card); border:1px solid var(--navy-line); color:#C9C9DE; font-size:13px; font-weight:700; font-family:'Inter',sans-serif; }
+  .btn-confirm{ flex:1.4; padding:14px; border-radius:14px; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); border:none; color:var(--navy); font-size:13px; font-weight:800; font-family:'Inter',sans-serif; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="backdrop"></div>
+  <div class="veil"></div>
+
+  <div class="modal">
+    <div class="ep-row">
+      <div class="ep-thumb"></div>
+      <div>
+        <p class="ep-title">Unlock EP 15</p>
+        <p class="ep-sub">The Chief's Daughter</p>
+      </div>
+    </div>
+
+    <div class="cost-row">
+      <span class="cost-label">This episode costs</span>
+      <div class="cost-value"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 4.9 0c0 1.5-2.4 2-2.4 3.5"/><line x1="12" y1="16" x2="12" y2="16.01"/></svg><b>15</b></div>
+    </div>
+
+    <div class="balance-row"><span>Current balance</span><b>934 coins</b></div>
+    <div class="balance-row"><span>After unlock</span><b class="after">919 coins</b></div>
+
+    <div class="btn-row">
+      <button class="btn-cancel">Cancel</button>
+      <button class="btn-confirm">Unlock &amp; Watch</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

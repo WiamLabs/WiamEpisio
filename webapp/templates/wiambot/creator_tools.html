@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}Creator Tools — WiamBot{% endblock %}
+
+{% block extra_head %}
+<style>
+    .tools-container{max-width:700px;margin:0 auto;padding-bottom:100px;}
+    .tools-header{padding:1.5rem 0 1rem;}
+    .tools-header h1{font-size:1.3rem;font-weight:700;margin:0 0 4px;}
+    .tools-header p{color:var(--text-muted);font-size:0.85rem;margin:0;}
+
+    .tool-card{background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:14px;padding:18px;margin-bottom:14px;cursor:pointer;transition:border-color 0.2s;}
+    .tool-card:hover{border-color:var(--gold);}
+    .tool-card h3{font-size:0.95rem;font-weight:700;margin:0 0 4px;display:flex;align-items:center;gap:8px;}
+    .tool-card p{color:var(--text-muted);font-size:0.8rem;margin:0;}
+
+    .template-content{display:none;background:var(--bg);border:1px solid var(--border-subtle);border-radius:12px;padding:16px;margin-top:10px;font-size:0.85rem;line-height:1.6;white-space:pre-wrap;color:var(--text-secondary);}
+    .template-content.open{display:block;}
+
+    .analyzer-section{background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:14px;padding:18px;margin-top:20px;}
+    .analyzer-section h2{font-size:1.05rem;font-weight:700;margin:0 0 12px;display:flex;align-items:center;gap:8px;}
+    .analyzer-section textarea{width:100%;min-height:200px;padding:12px;border-radius:10px;border:1px solid var(--border-subtle);background:var(--bg);color:var(--text);font-size:0.85rem;resize:vertical;}
+    .analyzer-section textarea:focus{border-color:var(--gold);outline:none;}
+    .analyze-btn{width:100%;padding:12px;border-radius:10px;border:none;background:var(--gold);color:#000;font-weight:700;font-size:0.9rem;cursor:pointer;margin-top:10px;}
+    .analyze-btn:disabled{opacity:0.4;cursor:default;}
+
+    .feedback-card{background:var(--bg);border-radius:10px;padding:14px;margin-top:12px;border-left:4px solid var(--gold);}
+    .feedback-card.high{border-left-color:#ef4444;}
+    .feedback-card.medium{border-left-color:#facc15;}
+    .feedback-card.low{border-left-color:#4ade80;}
+    .feedback-card h4{font-size:0.85rem;font-weight:700;margin:0 0 4px;}
+    .feedback-card p{font-size:0.8rem;color:var(--text-muted);margin:0;}
+    .score-badge{display:inline-block;padding:4px 12px;border-radius:8px;font-size:0.8rem;font-weight:700;margin-bottom:8px;}
+    .score-badge.excellent{background:rgba(74,222,128,0.15);color:#4ade80;}
+    .score-badge.good{background:rgba(250,204,21,0.15);color:#facc15;}
+    .score-badge.needs-work{background:rgba(251,146,60,0.15);color:#fb923c;}
+    .score-badge.major{background:rgba(239,68,68,0.15);color:#ef4444;}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="tools-container">
+    <div class="tools-header">
+        <h1>🛠️ Creator Writing Tools</h1>
+        <p>Templates and analysis to help you write better stories</p>
+    </div>
+
+    <h2 style="font-size:1rem;font-weight:700;margin:0 0 12px;">📄 Writing Templates</h2>
+
+    {% for key, tmpl in templates.items() %}
+    <div class="tool-card" onclick="toggleTemplate('tmpl_{{ key }}')">
+        <h3>
+            {% if key == 'logline' %}🎯{% elif key == 'synopsis' %}📋{% elif key == 'outline' %}📐{% else %}👤{% endif %}
+            {{ tmpl.title }}
+        </h3>
+        <p>Tap to view template</p>
+        <div class="template-content" id="tmpl_{{ key }}">{{ tmpl.content }}</div>
+    </div>
+    {% endfor %}
+
+    <div class="analyzer-section">
+        <h2>🔍 Manuscript Analyzer</h2>
+        <p style="color:var(--text-muted);font-size:0.8rem;margin-bottom:12px;">Paste your chapter or manuscript text below for instant feedback on hook, dialogue, formatting, and more.</p>
+        <textarea id="manuscriptText" placeholder="Paste your chapter text here (minimum 50 characters)..."></textarea>
+        <button class="analyze-btn" onclick="analyzeText()" id="analyzeBtn">Analyze My Writing</button>
+        <div id="analysisResults"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleTemplate(id) {
+    var el = document.getElementById(id);
+    if (el) el.classList.toggle('open');
+}
+
+function analyzeText() {
+    var text = document.getElementById('manuscriptText').value.trim();
+    if (text.length < 50) { alert('Please paste at least 50 characters.'); return; }
+
+    var btn = document.getElementById('analyzeBtn');
+    btn.disabled = true;
+    btn.textContent = 'Analyzing...';
+
+    fetch('/api/bot/analyze', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({text: text})
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+        var html = '';
+        var scoreClass = d.score === 'Excellent' ? 'excellent' : d.score === 'Good' ? 'good' : d.score === 'Needs Work' ? 'needs-work' : 'major';
+        html += '<div class="score-badge ' + scoreClass + '">' + d.score + '</div>';
+        html += '<p style="font-size:0.85rem;margin-bottom:12px;">' + d.summary + '</p>';
+        html += '<p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:8px;">' + d.word_count + ' words · ' + d.paragraph_count + ' paragraphs · ' + d.sentence_count + ' sentences</p>';
+
+        if (d.issues && d.issues.length > 0) {
+            d.issues.forEach(function(issue) {
+                html += '<div class="feedback-card ' + issue.severity + '">';
+                html += '<h4>' + issue.issue + '</h4>';
+                html += '<p>' + issue.detail + '</p>';
+                html += '</div>';
+            });
+        } else {
+            html += '<div class="feedback-card" style="border-left-color:#4ade80;"><h4>No issues found!</h4><p>Your writing looks clean and well-structured.</p></div>';
+        }
+
+        document.getElementById('analysisResults').innerHTML = html;
+    })
+    .catch(function() {
+        document.getElementById('analysisResults').innerHTML = '<p style="color:#ef4444;">Error analyzing text. Please try again.</p>';
+    })
+    .finally(function() {
+        btn.disabled = false;
+        btn.textContent = 'Analyze My Writing';
+    });
+}
+</script>
+{% endblock %}

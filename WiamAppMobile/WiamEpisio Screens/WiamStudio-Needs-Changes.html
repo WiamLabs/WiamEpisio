@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamStudio — Needs Changes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75;
+    --red:#E4573D;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); display:flex; flex-direction:column; }
+  .statusbar{ height:44px; flex-shrink:0; }
+
+  .topbar{ display:flex; align-items:center; gap:12px; padding:2px 20px 14px; flex-shrink:0; }
+  .icon-btn{ width:34px; height:34px; border-radius:50%; background:var(--navy-card); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .topbar h1{ font-size:16px; font-weight:800; color:#fff; margin:0; }
+  .topbar span{ display:block; font-size:10.5px; color:var(--text-faint); font-weight:600; margin-top:1px; }
+
+  .scroll{ flex:1; overflow-y:auto; padding:6px 20px 20px; }
+
+  .status-banner{ display:flex; gap:12px; align-items:center; background:rgba(228,87,61,0.1); border:1px solid rgba(228,87,61,0.3); border-radius:16px; padding:14px 15px; margin-bottom:20px; }
+  .status-icon{ width:38px; height:38px; border-radius:11px; background:var(--red); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .status-banner b{ display:block; font-size:13px; font-weight:800; color:#fff; margin-bottom:2px; }
+  .status-banner span{ font-size:11px; color:#E0A79A; line-height:1.4; }
+
+  .series-title-row{ display:flex; align-items:center; gap:10px; margin-bottom:18px; }
+  .series-poster{ width:40px; height:58px; border-radius:8px; background:linear-gradient(160deg,#1a2a3a,#12122a); flex-shrink:0; }
+  .series-title-row b{ font-size:14px; font-weight:800; color:#fff; display:block; }
+  .series-title-row span{ font-size:10.5px; color:var(--text-faint); }
+
+  .section-title{ font-size:12px; font-weight:800; color:var(--text-dim); letter-spacing:0.4px; margin:0 0 12px; text-transform:uppercase; }
+
+  .note-card{ background:var(--navy-card); border:1px solid var(--navy-line); border-radius:16px; padding:14px 15px; margin-bottom:12px; }
+  .note-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+  .note-tag{ font-size:9.5px; font-weight:800; padding:3px 8px; border-radius:6px; background:rgba(228,87,61,0.16); color:var(--red); letter-spacing:0.3px; }
+  .note-fix{ font-size:11px; font-weight:700; color:var(--gold); }
+  .note-title{ font-size:12.5px; font-weight:700; color:#fff; margin:0 0 5px; }
+  .note-text{ font-size:11.5px; color:var(--text-dim); line-height:1.6; margin:0; }
+
+  .footer{ flex-shrink:0; padding:12px 20px 26px; }
+  .btn-primary{ width:100%; padding:16px; border-radius:16px; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); border:none; color:var(--navy); font-size:15px; font-weight:800; box-shadow:0 14px 30px rgba(212,160,23,0.3); font-family:'Inter',sans-serif; }
+  .footer-note{ text-align:center; font-size:10.5px; color:var(--text-faint); margin-top:10px; }
+
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"></div>
+  <div class="topbar">
+    <div class="icon-btn"><svg viewBox="0 0 24 24" width="15" height="15" color="#fff"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></div>
+    <div>
+      <h1>Reviewer Feedback</h1>
+      <span>Reviewed today, 11:20 AM</span>
+    </div>
+  </div>
+
+  <div class="scroll">
+
+    <div class="status-banner">
+      <div class="status-icon"><svg viewBox="0 0 24 24" width="18" height="18" stroke="#fff"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+      <div>
+        <b>Needs changes before going live</b>
+        <span>Fix the items below, then resubmit — no need to redo what already passed.</span>
+      </div>
+    </div>
+
+    <div class="series-title-row">
+      <div class="series-poster"></div>
+      <div>
+        <b>The Chief's Daughter</b>
+        <span>20 Episodes · Drama · Royal &amp; Palace</span>
+      </div>
+    </div>
+
+    <p class="section-title">3 items to fix</p>
+
+    <div class="note-card">
+      <div class="note-head"><span class="note-tag">AUDIO</span><span class="note-fix">Fix in Episodes →</span></div>
+      <p class="note-title">Episodes 14–16 have low dialogue volume</p>
+      <p class="note-text">Voices are hard to hear under the background music from 0:40 onward. Re-export with dialogue at least 6dB above music.</p>
+    </div>
+
+    <div class="note-card">
+      <div class="note-head"><span class="note-tag">VISUAL QUALITY</span><span class="note-fix">Fix in Trailer →</span></div>
+      <p class="note-title">Trailer has visible compression artifacts</p>
+      <p class="note-text">Frames 8s–14s look soft and blocky. Re-export at a higher bitrate before re-uploading.</p>
+    </div>
+
+    <div class="note-card">
+      <div class="note-head"><span class="note-tag">RIGHTS</span><span class="note-fix">Fix in Rights →</span></div>
+      <p class="note-title">Background music license missing</p>
+      <p class="note-text">Episode 9 uses a licensed track without proof of rights. Upload a license or replace the track.</p>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <button class="btn-primary">Open Items &amp; Fix</button>
+    <p class="footer-note">Resubmit once all 3 items are resolved</p>
+  </div>
+</div>
+
+</body>
+</html>

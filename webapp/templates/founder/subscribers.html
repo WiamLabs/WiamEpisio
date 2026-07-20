@@ -1,0 +1,188 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Subscribers — Control Panel{% endblock %}
+{% block sidebar_title %}Control Panel{% endblock %}
+
+{% block sidebar_nav %}
+<a class="nav-link" href="{{ url_for('founder_dash.overview') }}"><i class="bi bi-speedometer2"></i> Overview</a>
+<a class="nav-link" href="{{ url_for('founder_dash.users') }}"><i class="bi bi-people"></i> Users</a>
+<a class="nav-link" href="{{ url_for('founder_dash.content') }}"><i class="bi bi-book"></i> Content</a>
+<a class="nav-link" href="{{ url_for('founder_dash.revenue') }}"><i class="bi bi-cash-stack"></i> Revenue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.financial_dashboard') }}"><i class="bi bi-bank" style="color:var(--gold);"></i> Financial v5</a>
+<a class="nav-link" href="{{ url_for('founder_dash.premium_analytics') }}"><i class="bi bi-gem" style="color:#c084fc;"></i> Premium Analytics</a>
+<a class="nav-link active" href="{{ url_for('founder_dash.subscribers') }}"><i class="bi bi-gem" style="color:#9b59b6;"></i> Subscribers</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payouts') }}"><i class="bi bi-send-check"></i> Payouts</a>
+<a class="nav-link" href="{{ url_for('founder_dash.withdrawals') }}"><i class="bi bi-arrow-up-right-circle" style="color:var(--gold);"></i> Withdrawals</a>
+<a class="nav-link" href="{{ url_for('founder_dash.creators') }}"><i class="bi bi-person-badge"></i> Creators</a>
+<a class="nav-link" href="{{ url_for('founder_dash.genres') }}"><i class="bi bi-tags"></i> Genres</a>
+<a class="nav-link" href="{{ url_for('founder_dash.announcements') }}"><i class="bi bi-megaphone"></i> Announcements</a>
+<a class="nav-link" href="{{ url_for('founder_dash.collections') }}"><i class="bi bi-grid"></i> Collections</a>
+<a class="nav-link" href="{{ url_for('founder_dash.moderation') }}"><i class="bi bi-shield-exclamation"></i> Moderation</a>
+<a class="nav-link" href="{{ url_for('founder_dash.warnings_list') }}"><i class="bi bi-exclamation-triangle" style="color:#f59e0b;"></i> Warnings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.elite_manage') }}"><span style="color:var(--gold);">?</span> WiamElite</a>
+<a class="nav-link" href="{{ url_for('wiambot.apex_review') }}"><i class="bi bi-trophy-fill" style="color:var(--gold);"></i> Apex Review</a>
+<a class="nav-link" href="{{ url_for('founder_dash.review_queue') }}"><i class="bi bi-robot"></i> Bot Review Queue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.platform_settings') }}"><i class="bi bi-sliders"></i> Platform Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.forms_dashboard') }}"><i class="bi bi-file-earmark-text"></i> Application Forms</a>
+<a class="nav-link" href="{{ url_for('founder_dash.email_studio') }}"><i class="bi bi-envelope-paper" style="color:var(--gold);"></i> Email Studio</a>
+<a class="nav-link" href="{{ url_for('founder_dash.team_management') }}"><i class="bi bi-people-fill"></i> Team</a>
+<a class="nav-link" href="{{ url_for('founder_dash.account_management') }}"><i class="bi bi-person-x"></i> Account Management</a>
+<a class="nav-link" href="{{ url_for('founder_dash.notification_testing') }}"><i class="bi bi-bell" style="color:#fbbf24;"></i> Notifications</a>
+<a class="nav-link" href="{{ url_for('classics.dashboard') }}"><i class="bi bi-journal-bookmark" style="color:#a78bfa;"></i> Content Seeder</a>
+<a class="nav-link" href="{{ url_for('founder_dash.settings') }}"><i class="bi bi-gear"></i> Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.admins') }}"><i class="bi bi-shield-check"></i> Admins</a>
+{% endblock %}
+
+{% block dash_content %}
+<div class="dash-header">
+    <h1><i class="bi bi-gem" style="color:#9b59b6;"></i> Subscribers Dashboard</h1>
+    <p>WiamPremium & WiamElite subscriber overview, revenue, and churn metrics</p>
+</div>
+
+<!-- Stats Cards -->
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:var(--space-md);margin-bottom:var(--space-xl);">
+    <div style="padding:var(--space-lg);background:linear-gradient(135deg,rgba(155,89,182,0.12),rgba(142,68,173,0.05));border:1px solid rgba(155,89,182,0.25);border-radius:var(--radius-md);text-align:center;">
+        <div style="font-size:1.8rem;font-weight:800;color:#9b59b6;">{{ premium_active }}</div>
+        <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">Premium Active</div>
+    </div>
+    <div style="padding:var(--space-lg);background:linear-gradient(135deg,rgba(212,168,67,0.12),rgba(114,47,55,0.05));border:1px solid rgba(212,168,67,0.25);border-radius:var(--radius-md);text-align:center;">
+        <div style="font-size:1.8rem;font-weight:800;color:var(--gold);">{{ elite_active }}</div>
+        <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">Elite Active</div>
+    </div>
+    <div style="padding:var(--space-lg);background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);text-align:center;">
+        <div style="font-size:1.8rem;font-weight:800;color:#2ecc71;">GH&#8373;{{ '%.2f'|format(total_revenue) }}</div>
+        <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">Total Revenue</div>
+    </div>
+    <div style="padding:var(--space-lg);background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);text-align:center;">
+        <div style="font-size:1.8rem;font-weight:800;color:var(--text);">{{ premium_users_count }}</div>
+        <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">Premium Users</div>
+    </div>
+</div>
+
+<!-- 30-day metrics -->
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:var(--space-md);margin-bottom:var(--space-xl);">
+    <div style="padding:var(--space-md);background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);display:flex;align-items:center;gap:var(--space-md);">
+        <div style="width:40px;height:40px;border-radius:50%;background:rgba(155,89,182,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i class="bi bi-gem" style="color:#9b59b6;"></i>
+        </div>
+        <div>
+            <div style="font-size:1.2rem;font-weight:700;color:var(--text);">+{{ new_premium_30d }}</div>
+            <div style="font-size:0.7rem;color:var(--text-muted);">New Premium (30d)</div>
+        </div>
+    </div>
+    <div style="padding:var(--space-md);background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);display:flex;align-items:center;gap:var(--space-md);">
+        <div style="width:40px;height:40px;border-radius:50%;background:rgba(212,168,67,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <span style="color:var(--gold);">?</span>
+        </div>
+        <div>
+            <div style="font-size:1.2rem;font-weight:700;color:var(--text);">+{{ new_elite_30d }}</div>
+            <div style="font-size:0.7rem;color:var(--text-muted);">New Elite (30d)</div>
+        </div>
+    </div>
+    <div style="padding:var(--space-md);background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);display:flex;align-items:center;gap:var(--space-md);">
+        <div style="width:40px;height:40px;border-radius:50%;background:rgba(231,76,60,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i class="bi bi-x-circle" style="color:#e74c3c;"></i>
+        </div>
+        <div>
+            <div style="font-size:1.2rem;font-weight:700;color:var(--text);">{{ premium_cancelled + elite_cancelled }}</div>
+            <div style="font-size:0.7rem;color:var(--text-muted);">Total Cancelled</div>
+        </div>
+    </div>
+</div>
+
+<!-- Premium Subscribers Table -->
+<div style="margin-bottom:var(--space-xl);">
+    <h2 style="font-size:1rem;font-family:var(--font-display);color:var(--text);margin-bottom:var(--space-md);display:flex;align-items:center;gap:8px;">
+        <i class="bi bi-gem" style="color:#9b59b6;"></i> WiamPremium Subscribers ({{ premium_total }})
+    </h2>
+
+    {% if premium_subs %}
+    <div style="background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);overflow-x:auto;-webkit-overflow-scrolling:touch;">
+        <table style="width:100%;min-width:560px;border-collapse:collapse;font-size:0.8rem;">
+            <thead>
+                <tr style="border-bottom:1px solid var(--border-subtle);text-align:left;">
+                    <th style="padding:10px 12px;color:var(--text-muted);font-weight:600;font-size:0.7rem;text-transform:uppercase;white-space:nowrap;">User</th>
+                    <th style="padding:10px 12px;color:var(--text-muted);font-weight:600;font-size:0.7rem;text-transform:uppercase;white-space:nowrap;">Amount</th>
+                    <th style="padding:10px 12px;color:var(--text-muted);font-weight:600;font-size:0.7rem;text-transform:uppercase;white-space:nowrap;">Status</th>
+                    <th style="padding:10px 12px;color:var(--text-muted);font-weight:600;font-size:0.7rem;text-transform:uppercase;white-space:nowrap;">Started</th>
+                    <th style="padding:10px 12px;color:var(--text-muted);font-weight:600;font-size:0.7rem;text-transform:uppercase;white-space:nowrap;">Expires</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sub, user in premium_subs %}
+                <tr style="border-bottom:1px solid var(--border-subtle);">
+                    <td style="padding:10px 12px;">
+                        <div style="font-weight:600;color:var(--text);">{{ user.display_name }}</div>
+                        <div style="font-size:0.7rem;color:var(--text-muted);">{{ user.email or '—' }}</div>
+                    </td>
+                    <td style="padding:10px 12px;color:var(--text);">GH&#8373;{{ '%.2f'|format(sub.amount_ghs) }}</td>
+                    <td style="padding:10px 12px;">
+                        <span style="font-size:0.7rem;padding:2px 8px;border-radius:10px;font-weight:600;
+                            {% if sub.status == 'active' %}background:rgba(46,204,113,0.15);color:#2ecc71;
+                            {% elif sub.status == 'cancelled' %}background:rgba(231,76,60,0.15);color:#e74c3c;
+                            {% else %}background:rgba(149,165,166,0.15);color:#95a5a6;{% endif %}">
+                            {{ sub.status|capitalize }}
+                        </span>
+                    </td>
+                    <td style="padding:10px 12px;color:var(--text-muted);font-size:0.75rem;">{{ sub.started_at.strftime('%b %d, %Y') if sub.started_at else '—' }}</td>
+                    <td style="padding:10px 12px;color:var(--text-muted);font-size:0.75rem;">{{ sub.expires_at.strftime('%b %d, %Y') if sub.expires_at else '—' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:var(--space-xl);background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);color:var(--text-muted);font-size:0.85rem;">
+        No premium subscribers yet.
+    </div>
+    {% endif %}
+</div>
+
+<!-- Elite Subscribers Table -->
+<div style="margin-bottom:var(--space-xl);">
+    <h2 style="font-size:1rem;font-family:var(--font-display);color:var(--text);margin-bottom:var(--space-md);display:flex;align-items:center;gap:8px;">
+        <span style="color:var(--gold);">?</span> WiamElite Subscribers ({{ elite_total }})
+    </h2>
+
+    {% if elite_subs %}
+    <div style="background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);overflow-x:auto;-webkit-overflow-scrolling:touch;">
+        <table style="width:100%;min-width:560px;border-collapse:collapse;font-size:0.8rem;">
+            <thead>
+                <tr style="border-bottom:1px solid var(--border-subtle);text-align:left;">
+                    <th style="padding:10px 12px;color:var(--text-muted);font-weight:600;font-size:0.7rem;text-transform:uppercase;white-space:nowrap;">User</th>
+                    <th style="padding:10px 12px;color:var(--text-muted);font-weight:600;font-size:0.7rem;text-transform:uppercase;white-space:nowrap;">Amount</th>
+                    <th style="padding:10px 12px;color:var(--text-muted);font-weight:600;font-size:0.7rem;text-transform:uppercase;white-space:nowrap;">Status</th>
+                    <th style="padding:10px 12px;color:var(--text-muted);font-weight:600;font-size:0.7rem;text-transform:uppercase;white-space:nowrap;">Started</th>
+                    <th style="padding:10px 12px;color:var(--text-muted);font-weight:600;font-size:0.7rem;text-transform:uppercase;white-space:nowrap;">Expires</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sub, user in elite_subs %}
+                <tr style="border-bottom:1px solid var(--border-subtle);">
+                    <td style="padding:10px 12px;">
+                        <div style="font-weight:600;color:var(--text);">{{ user.display_name }}</div>
+                        <div style="font-size:0.7rem;color:var(--text-muted);">{{ user.email or '—' }}</div>
+                    </td>
+                    <td style="padding:10px 12px;color:var(--text);">GH&#8373;{{ '%.2f'|format(sub.amount_ghs) }}</td>
+                    <td style="padding:10px 12px;">
+                        <span style="font-size:0.7rem;padding:2px 8px;border-radius:10px;font-weight:600;
+                            {% if sub.status == 'active' %}background:rgba(46,204,113,0.15);color:#2ecc71;
+                            {% elif sub.status == 'cancelled' %}background:rgba(231,76,60,0.15);color:#e74c3c;
+                            {% else %}background:rgba(149,165,166,0.15);color:#95a5a6;{% endif %}">
+                            {{ sub.status|capitalize }}
+                        </span>
+                    </td>
+                    <td style="padding:10px 12px;color:var(--text-muted);font-size:0.75rem;">{{ sub.started_at.strftime('%b %d, %Y') if sub.started_at else '—' }}</td>
+                    <td style="padding:10px 12px;color:var(--text-muted);font-size:0.75rem;">{{ sub.expires_at.strftime('%b %d, %Y') if sub.expires_at else '—' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:var(--space-xl);background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);color:var(--text-muted);font-size:0.85rem;">
+        No elite subscribers yet.
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

@@ -1,0 +1,9 @@
+appId: com.wiamapp.mobile
+---
+# Requires logged-in test session
+- launchApp
+- tapOn: "Home"
+- tapOn: "Browse"
+- tapOn: "Library"
+- tapOn: "Profile"
+- assertVisible: "Overview"

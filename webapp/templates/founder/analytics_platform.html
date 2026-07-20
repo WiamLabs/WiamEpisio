@@ -1,0 +1,137 @@
+{% extends "founder/dashboard.html" %}
+
+{% block title %}Platform Health — Founder Dashboard{% endblock %}
+{% block content %}
+<div class="dashboard-container">
+    {% include 'founder/_dashboard_switcher.html' %}
+    
+    <div class="row">
+        <!-- Health Score -->
+        <div class="col-md-6">
+            <div class="card text-center">
+                <div class="card-header">
+                    <h5><i class="bi bi-heart-pulse"></i> Platform Health</h5>
+                </div>
+                <div class="card-body">
+                    <div class="health-score-display">
+                        <div class="score {{ 'bg-success' if health.health_status == 'Excellent' else 'bg-warning' if health.health_status == 'Good' else 'bg-danger' }}">
+                            {{ health.health_score }}/100
+                        </div>
+                        <div class="status">{{ health.health_status }}</div>
+                    </div>
+                    <div class="small text-muted mt-2">
+                        Score based on: content publish rate, average rating, user activity
+                    </div>
+                </div>
+            </div>
+        
+        <!-- Key Metrics -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-bar-chart"></i> Content Metrics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <h6>{{ health.metrics.total_content }}</h6>
+                            <div class="text-muted">Total Content</div>
+                        </div>
+                        <div class="col-md-3">
+                            <h6>{{ health.metrics.published_content }}</h6>
+                            <div class="text-muted">Published</div>
+                        </div>
+                        <div class="col-md-3">
+                            <h6>{{ ((health.metrics.published_content / health.metrics.total_content) * 100)|round if health.metrics.total_content else 0 }}%</h6>
+                            <div class="text-muted">Publish Rate</div>
+                        </div>
+                        <div class="col-md-3">
+                            <h6>{{ health.metrics.total_content - health.metrics.published_content }}</h6>
+                            <div class="text-muted">Drafts</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-people"></i> User Metrics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <h6>{{ health.metrics.total_users }}</h6>
+                            <div class="text-muted">Total Users</div>
+                        </div>
+                        <div class="col-md-3">
+                            <h6>{{ health.metrics.active_users }}</h6>
+                            <div class="text-muted">Active (7d)</div>
+                        </div>
+                        <div class="col-md-3">
+                            <h6>{{ ((health.metrics.active_users / health.metrics.total_users) * 100)|round if health.metrics.total_users else 0 }}%</h6>
+                            <div class="text-muted">Active Rate</div>
+                        </div>
+                        <div class="col-md-3">
+                            <h6>{{ '✅' if health.metrics.total_users and ((health.metrics.active_users / health.metrics.total_users) * 100) > 30 else '⚠️' }}</h6>
+                            <div class="text-muted">Activity Health</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-star"></i> Engagement Metrics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <h6>{{ health.metrics.total_ratings }}</h6>
+                            <div class="text-muted">Total Ratings</div>
+                        </div>
+                        <div class="col-md-3">
+                            <h6>{{ health.metrics.total_comments }}</h6>
+                            <div class="text-muted">Total Comments</div>
+                        </div>
+                        <div class="col-md-3">
+                            <h6>{{ health.metrics.total_tips }}</h6>
+                            <div class="text-muted">Total Tips</div>
+                        </div>
+                        <div class="col-md-3">
+                            <h6>{{ health.metrics.avg_rating|round(1) }}/5.0</h6>
+                            <div class="text-muted">Avg Rating</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-lightbulb"></i> Health Recommendations</h5>
+                </div>
+                <div class="card-body">
+                    {% if health.health_status == 'Excellent' %}
+                        <div class="alert alert-success">
+                            <strong>Excellent platform health!</strong> Keep up the great work.
+                        </div>
+                    {% elif health.health_status == 'Good' %}
+                        <div class="alert alert-warning">
+                            <strong>Good platform health.</strong> Consider focusing on improving content publish rates.
+                        </div>
+                    {% else %}
+                        <div class="alert alert-danger">
+                            <strong>Platform needs attention.</strong> Focus on content quality and user engagement strategies.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

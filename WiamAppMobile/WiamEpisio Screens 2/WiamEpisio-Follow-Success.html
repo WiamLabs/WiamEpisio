@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamEpisio — Follow Success</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75; --green:#3BB273;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); }
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+
+  /* Background: creator profile context, dimmed */
+  .bg-context{ position:absolute; inset:0; opacity:0.55; }
+  .banner{ height:118px; background:linear-gradient(150deg,#241a3a,#0d0d24); }
+  .statusbar{ height:44px; }
+  .profile-header{ padding:0 20px; margin-top:-38px; }
+  .avatar{ width:76px; height:76px; border-radius:20px; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); border:4px solid var(--navy); margin-bottom:10px; }
+  .name-bar{ width:140px; height:16px; border-radius:4px; background:var(--navy-card); margin-bottom:8px; }
+  .sub-bar{ width:100px; height:11px; border-radius:4px; background:var(--navy-card); }
+
+  /* Toast */
+  .toast{ position:absolute; top:70px; left:20px; right:20px; z-index:5; display:flex; align-items:center; gap:10px; background:rgba(18,18,42,0.94); backdrop-filter:blur(10px); border-radius:14px; padding:12px 15px; box-shadow:0 14px 30px rgba(0,0,0,0.4); border:1px solid rgba(59,178,115,0.35); }
+  .toast-icon{ width:26px; height:26px; border-radius:50%; background:var(--green); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .toast-icon svg{ color:#08081A; width:14px; height:14px; stroke-width:3; }
+  .toast-text{ flex:1; }
+  .toast-text b{ display:block; font-size:12px; font-weight:700; color:#fff; }
+  .toast-text span{ font-size:10.5px; color:var(--text-dim); }
+
+  /* Follow button state change demo */
+  .btn-demo-row{ position:absolute; top:150px; left:20px; right:20px; z-index:5; display:flex; gap:14px; align-items:center; justify-content:center; }
+  .btn-demo{ text-align:center; }
+  .demo-btn{ padding:9px 20px; border-radius:999px; font-size:12px; font-weight:700; margin-bottom:6px; }
+  .demo-btn.before{ background:none; border:1.5px solid var(--gold); color:var(--gold); }
+  .demo-btn.after{ background:var(--navy-card); border:1px solid var(--navy-line); color:#C9C9DE; display:flex; align-items:center; gap:5px; }
+  .demo-btn.after svg{ width:12px; height:12px; color:var(--green); }
+  .demo-label{ font-size:9.5px; color:var(--text-faint); }
+  .arrow{ color:var(--text-faint); }
+
+  .label-tag{ position:absolute; bottom:24px; left:20px; right:20px; text-align:center; font-size:10px; color:var(--text-faint); background:var(--navy-card); border:1px solid var(--navy-line); border-radius:10px; padding:8px; z-index:6; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="bg-context">
+    <div class="banner"></div>
+    <div class="statusbar" style="margin-top:-118px;"></div>
+    <div class="profile-header">
+      <div class="avatar"></div>
+      <div class="name-bar"></div>
+      <div class="sub-bar"></div>
+    </div>
+  </div>
+
+  <div class="toast">
+    <div class="toast-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+    <div class="toast-text"><b>Now following Kwabena Studios</b><span>You'll see their new series first</span></div>
+  </div>
+
+  <div class="btn-demo-row">
+    <div class="btn-demo"><div class="demo-btn before">+ Follow</div><span class="demo-label">Before tap</span></div>
+    <svg class="arrow" viewBox="0 0 24 24" width="16" height="16"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+    <div class="btn-demo"><div class="demo-btn after"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Following</div><span class="demo-label">After tap</span></div>
+  </div>
+
+  <div class="label-tag">Follow-success pattern — button state changes instantly, toast confirms</div>
+</div>
+
+</body>
+</html>

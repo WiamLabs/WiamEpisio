@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamEpisio — More You'll Love</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{ --navy:#08081A; --navy-card:#12122A; --navy-line:#1E1E42; --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:#000; border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); }
+  .video-bg{ position:absolute; top:0; left:0; right:0; height:460px; background:linear-gradient(160deg,#1a1030,#0d0d24); }
+  .video-fade{ position:absolute; top:360px; left:0; right:0; height:100px; background:linear-gradient(180deg, transparent, var(--navy)); }
+
+  .panel{ position:absolute; top:460px; left:0; right:0; bottom:0; background:var(--navy); padding:26px 24px; text-align:center; }
+  h1{ font-size:18px; font-weight:800; color:#fff; margin:0 0 20px; }
+
+  .carousel{ position:relative; display:flex; align-items:center; justify-content:center; margin-bottom:18px; height:170px; }
+  .peek{ position:absolute; width:90px; height:130px; border-radius:14px; background:linear-gradient(160deg,var(--navy-card),#0d0d24); opacity:0.5; }
+  .peek.left{ left:6px; }
+  .peek.right{ right:6px; }
+  .center-poster{ width:130px; height:170px; border-radius:16px; background:linear-gradient(160deg,var(--navy-card),#0d0d24); z-index:2; box-shadow:0 12px 30px rgba(0,0,0,0.5); }
+
+  .rec-title{ font-size:15px; font-weight:700; color:#fff; margin:0 0 5px; }
+  .rec-meta{ font-size:12px; color:var(--text-dim); margin:0 0 22px; }
+
+  .action-row{ display:flex; gap:12px; }
+  .btn{ flex:1; padding:14px; border-radius:14px; font-size:13.5px; font-weight:700; border:none; }
+  .btn-exit{ background:var(--navy-card); border:1px solid var(--navy-line); color:#C9C9DE; }
+  .btn-watch{ background:var(--gold); color:var(--navy); }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="video-bg"></div>
+  <div class="video-fade"></div>
+
+  <div class="panel">
+    <h1>More Dramas You'll Love</h1>
+    <div class="carousel">
+      <div class="peek left"></div>
+      <div class="center-poster"></div>
+      <div class="peek right"></div>
+    </div>
+    <p class="rec-title">Definitely Not The Dragon God</p>
+    <p class="rec-meta">Hidden Identity, Underdog Story</p>
+    <div class="action-row">
+      <button class="btn btn-exit">Exit</button>
+      <button class="btn btn-watch">Watch</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

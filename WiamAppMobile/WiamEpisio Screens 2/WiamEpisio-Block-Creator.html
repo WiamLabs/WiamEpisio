@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamEpisio — Block Creator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75; --red:#E4573D;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); }
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+
+  .backdrop{ position:absolute; inset:0; background:linear-gradient(160deg,#1a1030,#0d0d24,#000); filter:brightness(0.3); }
+
+  .sheet{ position:absolute; left:0; right:0; bottom:0; background:var(--navy-soft); border-radius:26px 26px 0 0; padding:14px 24px 34px; box-shadow:0 -20px 50px rgba(0,0,0,0.5); }
+  .sheet-handle{ width:36px; height:4px; background:var(--navy-line); border-radius:99px; margin:0 auto 22px; }
+
+  .creator-row{ display:flex; flex-direction:column; align-items:center; text-align:center; margin-bottom:20px; }
+  .creator-avatar{ width:64px; height:64px; border-radius:50%; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); display:flex; align-items:center; justify-content:center; color:var(--navy); font-weight:800; font-size:26px; margin-bottom:12px; }
+  .creator-name{ font-size:15px; font-weight:800; color:#fff; margin:0 0 4px; }
+  .creator-sub{ font-size:11px; color:var(--text-faint); margin:0; }
+
+  .warn-icon{ width:44px; height:44px; border-radius:50%; background:rgba(228,87,61,0.15); border:1px solid rgba(228,87,61,0.35); display:flex; align-items:center; justify-content:center; margin:0 auto 14px; }
+  .warn-icon svg{ color:var(--red); width:20px; height:20px; }
+
+  .confirm-title{ text-align:center; font-size:16px; font-weight:800; color:#fff; margin:0 0 10px; }
+  .confirm-sub{ text-align:center; font-size:12px; color:var(--text-dim); line-height:1.6; margin:0 0 22px; }
+  .confirm-sub b{ color:#fff; }
+
+  .effect-list{ background:var(--navy-card); border:1px solid var(--navy-line); border-radius:14px; padding:14px 16px; margin-bottom:22px; }
+  .effect-item{ display:flex; gap:9px; margin-bottom:9px; font-size:11.5px; color:var(--text-dim); line-height:1.5; }
+  .effect-item:last-child{ margin-bottom:0; }
+  .effect-item svg{ width:14px; height:14px; color:var(--text-faint); flex-shrink:0; margin-top:1px; }
+
+  .btn-block{ width:100%; padding:16px; border-radius:16px; background:var(--red); border:none; color:#fff; font-size:14.5px; font-weight:800; font-family:'Inter',sans-serif; margin-bottom:10px; }
+  .btn-cancel{ width:100%; padding:14px; border-radius:16px; background:none; border:none; color:var(--text-dim); font-size:13px; font-weight:600; font-family:'Inter',sans-serif; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="backdrop"></div>
+
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+
+    <div class="creator-row">
+      <div class="creator-avatar">K</div>
+      <p class="creator-name">Kwabena Studios</p>
+      <p class="creator-sub">18.2K followers</p>
+    </div>
+
+    <div class="warn-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="4.9" y1="4.9" x2="19.1" y2="19.1"/></svg></div>
+    <p class="confirm-title">Block this creator?</p>
+    <p class="confirm-sub">You won't see content from <b>Kwabena Studios</b> anywhere in the app, and they won't be notified.</p>
+
+    <div class="effect-list">
+      <div class="effect-item"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Their series disappear from your Home and Discover feeds</div>
+      <div class="effect-item"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>You'll automatically unfollow them</div>
+      <div class="effect-item"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>You can unblock anytime from Settings → Blocked Creators</div>
+    </div>
+
+    <button class="btn-block">Block Creator</button>
+    <button class="btn-cancel">Cancel</button>
+  </div>
+</div>
+
+</body>
+</html>

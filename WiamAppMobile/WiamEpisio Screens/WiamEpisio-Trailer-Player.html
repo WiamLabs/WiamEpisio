@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamEpisio — Trailer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:#000; border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); }
+
+  /* Full bleed 9:16 trailer frame */
+  .frame{ position:absolute; inset:0; background:
+      radial-gradient(circle at 30% 20%, rgba(120,30,40,0.5), transparent 55%),
+      radial-gradient(circle at 70% 75%, rgba(30,20,90,0.55), transparent 55%),
+      linear-gradient(165deg,#241030,#0a0a18 60%); }
+  .frame-noise{ position:absolute; inset:0; opacity:0.05; background-image:repeating-linear-gradient(0deg,#fff 0 1px,transparent 1px 3px); }
+
+  .topgrad{ position:absolute; top:0; left:0; right:0; height:170px; background:linear-gradient(180deg, rgba(0,0,0,0.75), transparent); z-index:3; }
+  .botgrad{ position:absolute; bottom:0; left:0; right:0; height:56%; background:linear-gradient(0deg, rgba(4,4,12,0.98) 10%, rgba(4,4,12,0.75) 45%, transparent 100%); z-index:3; }
+
+  .statusbar{ height:44px; position:relative; z-index:5; }
+
+  .topbar{ position:relative; z-index:5; display:flex; align-items:center; justify-content:space-between; padding:2px 18px 0; }
+  .icon-btn{ width:36px; height:36px; border-radius:50%; background:rgba(0,0,0,0.4); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center; }
+  .trailer-pill{ font-size:10px; font-weight:800; letter-spacing:0.6px; color:var(--navy); background:var(--gold); padding:5px 12px; border-radius:999px; }
+
+  .center-play{ position:absolute; top:44%; left:50%; transform:translate(-50%,-50%); z-index:4; width:68px; height:68px; border-radius:50%; background:rgba(255,255,255,0.14); backdrop-filter:blur(4px); border:1.5px solid rgba(255,255,255,0.3); display:flex; align-items:center; justify-content:center; }
+
+  .scrub{ position:absolute; left:18px; right:18px; bottom:calc(56% + 8px); z-index:5; }
+  .scrub-track{ height:3px; background:rgba(255,255,255,0.25); border-radius:99px; position:relative; }
+  .scrub-fill{ position:absolute; left:0; top:0; bottom:0; width:38%; background:var(--gold); border-radius:99px; }
+  .scrub-dot{ position:absolute; left:38%; top:50%; transform:translate(-50%,-50%); width:11px; height:11px; border-radius:50%; background:var(--gold); box-shadow:0 0 0 3px rgba(212,160,23,0.25); }
+  .scrub-time{ display:flex; justify-content:space-between; font-size:10px; color:#C9C9DE; margin-top:6px; }
+
+  .content{ position:absolute; left:0; right:0; bottom:0; z-index:5; padding:0 22px 30px; }
+  .badge-row{ display:flex; gap:8px; margin-bottom:10px; }
+  .meta-badge{ font-size:9.5px; font-weight:700; color:#C9C9DE; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.12); padding:4px 9px; border-radius:6px; }
+  .meta-badge.origin{ color:var(--navy); background:var(--gold); border-color:var(--gold); }
+
+  .title{ font-size:24px; font-weight:800; color:#fff; margin:0 0 8px; letter-spacing:-0.4px; line-height:1.15; }
+  .meta-line{ font-size:12px; color:#B8B8CC; margin:0 0 16px; }
+  .meta-line b{ color:var(--gold); }
+
+  .creator-row{ display:flex; align-items:center; gap:10px; margin-bottom:20px; }
+  .creator-avatar{ width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); display:flex; align-items:center; justify-content:center; color:var(--navy); font-weight:800; font-size:14px; flex-shrink:0; }
+  .creator-info{ flex:1; }
+  .creator-name{ font-size:12.5px; font-weight:700; color:#fff; margin:0; }
+  .creator-sub{ font-size:10.5px; color:var(--text-dim); margin:1px 0 0; }
+  .follow-btn{ padding:8px 16px; border-radius:999px; border:1.5px solid var(--gold); color:var(--gold); font-size:12px; font-weight:700; background:none; }
+
+  .action-row{ display:flex; gap:10px; }
+  .btn-watch{ flex:1; padding:15px; border-radius:15px; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); border:none; color:var(--navy); font-size:14.5px; font-weight:800; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 12px 26px rgba(212,160,23,0.3); font-family:'Inter',sans-serif; }
+  .btn-remind{ width:52px; border-radius:15px; background:var(--navy-card); border:1px solid var(--navy-line); display:flex; align-items:center; justify-content:center; }
+
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="frame"></div>
+  <div class="frame-noise"></div>
+  <div class="topgrad"></div>
+  <div class="botgrad"></div>
+
+  <div class="center-play"><svg viewBox="0 0 24 24" width="26" height="26" fill="#fff" stroke="none"><polygon points="6 3 20 12 6 21 6 3"/></svg></div>
+
+  <div class="scrub">
+    <div class="scrub-track"><div class="scrub-fill"></div><div class="scrub-dot"></div></div>
+    <div class="scrub-time"><span>0:11</span><span>0:29</span></div>
+  </div>
+
+  <div class="statusbar"></div>
+  <div class="topbar">
+    <div class="icon-btn"><svg viewBox="0 0 24 24" width="16" height="16" color="#fff"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></div>
+    <span class="trailer-pill">TRAILER</span>
+    <div class="icon-btn"><svg viewBox="0 0 24 24" width="16" height="16" color="#fff"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></div>
+  </div>
+
+  <div class="content">
+    <div class="badge-row">
+      <span class="meta-badge origin">WIAM ORIGIN</span>
+      <span class="meta-badge">Drama · Revenge</span>
+    </div>
+    <h1 class="title">Accra Nights</h1>
+    <p class="meta-line">Coming Soon · 24 Episodes · <b>1,204</b> reminded</p>
+
+    <div class="creator-row">
+      <div class="creator-avatar">K</div>
+      <div class="creator-info">
+        <p class="creator-name">Kwabena Studios</p>
+        <p class="creator-sub">18.2K followers</p>
+      </div>
+      <button class="follow-btn">+ Follow</button>
+    </div>
+
+    <div class="action-row">
+      <button class="btn-watch"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#08081A"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>Remind Me</button>
+      <div class="btn-remind"><svg viewBox="0 0 24 24" width="17" height="17" color="#C9C9DE"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="10.5" x2="15.4" y2="6.5"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/></svg></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

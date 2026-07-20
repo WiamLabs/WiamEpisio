@@ -1,0 +1,268 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Team Payroll — Control Panel{% endblock %}
+{% block sidebar_title %}Control Panel{% endblock %}
+
+{% block sidebar_nav %}
+<a class="nav-link" href="{{ url_for('founder_dash.overview') }}"><i class="bi bi-speedometer2"></i> Overview</a>
+<a class="nav-link" href="{{ url_for('founder_dash.users') }}"><i class="bi bi-people"></i> Users</a>
+<a class="nav-link" href="{{ url_for('founder_dash.content') }}"><i class="bi bi-book"></i> Content</a>
+<a class="nav-link" href="{{ url_for('founder_dash.revenue') }}"><i class="bi bi-cash-stack"></i> Revenue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.financial_dashboard') }}"><i class="bi bi-bank" style="color:var(--gold);"></i> Financial v5</a>
+<a class="nav-link" href="{{ url_for('founder_dash.premium_analytics') }}"><i class="bi bi-gem" style="color:#c084fc;"></i> Premium Analytics</a>
+<a class="nav-link" href="{{ url_for('founder_dash.subscribers') }}"><i class="bi bi-gem" style="color:#9b59b6;"></i> Subscribers</a>
+<a class="nav-link active" href="{{ url_for('founder_dash.payroll') }}"><i class="bi bi-wallet2" style="color:#2ecc71;"></i> Team Payroll</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payouts') }}"><i class="bi bi-send-check"></i> Payouts</a>
+<a class="nav-link" href="{{ url_for('founder_dash.withdrawals') }}"><i class="bi bi-arrow-up-right-circle" style="color:var(--gold);"></i> Withdrawals</a>
+<a class="nav-link" href="{{ url_for('founder_dash.creators') }}"><i class="bi bi-person-badge"></i> Creators</a>
+<a class="nav-link" href="{{ url_for('founder_dash.genres') }}"><i class="bi bi-tags"></i> Genres</a>
+<a class="nav-link" href="{{ url_for('founder_dash.announcements') }}"><i class="bi bi-megaphone"></i> Announcements</a>
+<a class="nav-link" href="{{ url_for('founder_dash.collections') }}"><i class="bi bi-grid"></i> Collections</a>
+<a class="nav-link" href="{{ url_for('founder_dash.moderation') }}"><i class="bi bi-shield-exclamation"></i> Moderation</a>
+<a class="nav-link" href="{{ url_for('founder_dash.warnings_list') }}"><i class="bi bi-exclamation-triangle" style="color:#f59e0b;"></i> Warnings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.elite_manage') }}"><span style="color:var(--gold);">?</span> WiamElite</a>
+<a class="nav-link" href="{{ url_for('wiambot.apex_review') }}"><i class="bi bi-trophy-fill" style="color:var(--gold);"></i> Apex Review</a>
+<a class="nav-link" href="{{ url_for('founder_dash.review_queue') }}"><i class="bi bi-robot"></i> Bot Review Queue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.platform_settings') }}"><i class="bi bi-sliders"></i> Platform Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.forms_dashboard') }}"><i class="bi bi-file-earmark-text"></i> Application Forms</a>
+<a class="nav-link" href="{{ url_for('founder_dash.email_studio') }}"><i class="bi bi-envelope-paper" style="color:var(--gold);"></i> Email Studio</a>
+<a class="nav-link" href="{{ url_for('founder_dash.team_management') }}"><i class="bi bi-people-fill"></i> Team</a>
+<a class="nav-link" href="{{ url_for('founder_dash.account_management') }}"><i class="bi bi-person-x"></i> Account Management</a>
+<a class="nav-link" href="{{ url_for('founder_dash.notification_testing') }}"><i class="bi bi-bell" style="color:#fbbf24;"></i> Notifications</a>
+<a class="nav-link" href="{{ url_for('classics.dashboard') }}"><i class="bi bi-journal-bookmark" style="color:#a78bfa;"></i> Content Seeder</a>
+<a class="nav-link" href="{{ url_for('founder_dash.settings') }}"><i class="bi bi-gear"></i> Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.admins') }}"><i class="bi bi-shield-check"></i> Admins</a>
+{% endblock %}
+
+{% block dash_content %}
+<div class="dash-header">
+    <h1><i class="bi bi-wallet2" style="color:#2ecc71;"></i> Team Payroll</h1>
+    <p>Manage automatic monthly payments to WiamApp team members via Paystack Mobile Money</p>
+</div>
+
+<!-- Global Status -->
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:var(--space-md);margin-bottom:var(--space-xl);">
+    <div style="padding:var(--space-lg);background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);text-align:center;">
+        <div style="font-size:1.6rem;font-weight:800;color:var(--text);">{{ workers|length }}</div>
+        <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;">Workers</div>
+    </div>
+    <div style="padding:var(--space-lg);background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);text-align:center;">
+        <div style="font-size:1.6rem;font-weight:800;color:#2ecc71;">GH&#8373;{{ '%.2f'|format(summary.total_amount) }}</div>
+        <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;">Total {{ month }}/{{ year }}</div>
+    </div>
+    <div style="padding:var(--space-lg);background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);text-align:center;">
+        <div style="font-size:1.6rem;font-weight:800;color:#3498db;">{{ summary.sent }}</div>
+        <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;">Sent</div>
+    </div>
+    <div style="padding:var(--space-lg);background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);text-align:center;">
+        <div style="font-size:1.6rem;font-weight:800;color:{% if summary.failed > 0 %}#e74c3c{% else %}var(--text-muted){% endif %};">{{ summary.failed }}</div>
+        <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;">Failed</div>
+    </div>
+</div>
+
+<!-- Period selector + Actions -->
+<div style="display:flex;align-items:center;gap:var(--space-md);flex-wrap:wrap;margin-bottom:var(--space-xl);">
+    <form method="GET" action="{{ url_for('founder_dash.payroll') }}" style="display:flex;gap:var(--space-sm);align-items:center;">
+        <select name="month" style="padding:6px 10px;background:var(--bg-card);color:var(--text);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);font-size:0.8rem;">
+            {% for m in range(1,13) %}
+            <option value="{{ m }}" {% if m == month %}selected{% endif %}>{{ ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m-1] }}</option>
+            {% endfor %}
+        </select>
+        <select name="year" style="padding:6px 10px;background:var(--bg-card);color:var(--text);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);font-size:0.8rem;">
+            {% for y in range(current_dt.year - 1, current_dt.year + 2) %}
+            <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" style="padding:6px 14px;background:var(--bg-elevated);color:var(--text);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);font-size:0.8rem;cursor:pointer;">View</button>
+    </form>
+
+    <div style="display:flex;gap:var(--space-sm);margin-left:auto;">
+        <form method="POST" action="{{ url_for('founder_dash.payroll_generate') }}" style="display:inline;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="year" value="{{ year }}">
+            <input type="hidden" name="month" value="{{ month }}">
+            <button type="submit" style="padding:6px 14px;background:rgba(52,152,219,0.15);color:#3498db;border:1px solid rgba(52,152,219,0.3);border-radius:var(--radius-sm);font-size:0.8rem;font-weight:600;cursor:pointer;" onclick="return confirm('Generate payroll records for {{ month }}/{{ year }}?')">
+                <i class="bi bi-file-earmark-plus"></i> Generate Payroll
+            </button>
+        </form>
+        {% if summary.pending > 0 %}
+        <form method="POST" action="{{ url_for('founder_dash.payroll_run') }}" style="display:inline;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="year" value="{{ year }}">
+            <input type="hidden" name="month" value="{{ month }}">
+            <button type="submit" style="padding:6px 14px;background:rgba(46,204,113,0.15);color:#2ecc71;border:1px solid rgba(46,204,113,0.3);border-radius:var(--radius-sm);font-size:0.8rem;font-weight:600;cursor:pointer;" onclick="return confirm('Send {{ summary.pending }} pending transfers via Paystack? This will debit your Paystack balance.')">
+                <i class="bi bi-send-fill"></i> Run Payroll ({{ summary.pending }} pending)
+            </button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Payroll Records for Period -->
+{% if summary.records %}
+<div style="margin-bottom:var(--space-xl);">
+    <h2 style="font-size:1rem;font-family:var(--font-display);color:var(--text);margin-bottom:var(--space-md);">
+        Payroll Records — {{ ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][month-1] }} {{ year }}
+    </h2>
+    <div style="background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:0.8rem;">
+            <thead>
+                <tr style="border-bottom:1px solid var(--border-subtle);text-align:left;">
+                    <th style="padding:10px 12px;color:var(--text-muted);font-weight:600;font-size:0.7rem;text-transform:uppercase;">Worker</th>
+                    <th style="padding:10px 12px;color:var(--text-muted);font-weight:600;font-size:0.7rem;text-transform:uppercase;">Role</th>
+                    <th style="padding:10px 12px;color:var(--text-muted);font-weight:600;font-size:0.7rem;text-transform:uppercase;">Amount</th>
+                    <th style="padding:10px 12px;color:var(--text-muted);font-weight:600;font-size:0.7rem;text-transform:uppercase;">Provider</th>
+                    <th style="padding:10px 12px;color:var(--text-muted);font-weight:600;font-size:0.7rem;text-transform:uppercase;">Status</th>
+                    <th style="padding:10px 12px;color:var(--text-muted);font-weight:600;font-size:0.7rem;text-transform:uppercase;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in summary.records %}
+                <tr style="border-bottom:1px solid var(--border-subtle);">
+                    <td style="padding:10px 12px;color:var(--text);">{{ record.account_name or 'Worker #'~record.user_id }}</td>
+                    <td style="padding:10px 12px;color:var(--text-secondary);">{{ record.role_name }}</td>
+                    <td style="padding:10px 12px;color:var(--text);font-weight:600;">GH&#8373;{{ '%.2f'|format(record.amount_ghs) }}</td>
+                    <td style="padding:10px 12px;color:var(--text-muted);">{{ record.provider }} · {{ record.account_number[-4:] if record.account_number|length > 4 else record.account_number }}</td>
+                    <td style="padding:10px 12px;">
+                        <span style="font-size:0.7rem;padding:2px 8px;border-radius:10px;font-weight:600;
+                            {% if record.status == 'sent' %}background:rgba(46,204,113,0.15);color:#2ecc71;
+                            {% elif record.status == 'failed' %}background:rgba(231,76,60,0.15);color:#e74c3c;
+                            {% elif record.status == 'processing' %}background:rgba(52,152,219,0.15);color:#3498db;
+                            {% elif record.status == 'skipped' %}background:rgba(149,165,166,0.15);color:#95a5a6;
+                            {% else %}background:rgba(241,196,15,0.15);color:#f1c40f;{% endif %}">
+                            {{ record.status|capitalize }}
+                        </span>
+                        {% if record.failure_reason %}
+                        <div style="font-size:0.65rem;color:#e74c3c;margin-top:2px;">{{ record.failure_reason[:60] }}</div>
+                        {% endif %}
+                    </td>
+                    <td style="padding:10px 12px;">
+                        {% if record.status == 'failed' %}
+                        <form method="POST" action="{{ url_for('founder_dash.payroll_retry', payroll_id=record.id) }}" style="display:inline;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" style="padding:4px 10px;background:rgba(231,76,60,0.1);color:#e74c3c;border:1px solid rgba(231,76,60,0.25);border-radius:var(--radius-sm);font-size:0.7rem;cursor:pointer;">Retry</button>
+                        </form>
+                        {% elif record.status == 'sent' %}
+                        <span style="font-size:0.7rem;color:var(--text-muted);">?</span>
+                        {% else %}
+                        <span style="font-size:0.7rem;color:var(--text-muted);">—</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- Workers Configuration -->
+<div style="margin-bottom:var(--space-xl);">
+    <h2 style="font-size:1rem;font-family:var(--font-display);color:var(--text);margin-bottom:var(--space-md);">
+        <i class="bi bi-people-fill"></i> Configured Workers
+    </h2>
+
+    {% if workers %}
+    <div style="display:grid;gap:var(--space-md);">
+        {% for w in workers %}
+        <div style="padding:var(--space-md);background:var(--bg-card);border:1px solid {% if w.is_active %}var(--border-subtle){% else %}rgba(231,76,60,0.2){% endif %};border-radius:var(--radius-md);display:flex;align-items:center;gap:var(--space-md);flex-wrap:wrap;{% if not w.is_active %}opacity:0.6;{% endif %}">
+            <div style="flex:1;min-width:150px;">
+                <div style="font-weight:600;color:var(--text);font-size:0.85rem;">
+                    {{ worker_users[w.user_id].display_name if w.user_id in worker_users else w.account_name or 'Worker' }}
+                </div>
+                <div style="font-size:0.7rem;color:var(--text-muted);">{{ w.role_name }} · {{ w.provider }} {{ w.account_number }}</div>
+            </div>
+            <div style="text-align:center;">
+                <div style="font-size:1rem;font-weight:700;color:#2ecc71;">GH&#8373;{{ '%.2f'|format(w.monthly_salary_ghs) }}</div>
+                <div style="font-size:0.65rem;color:var(--text-muted);">/month</div>
+            </div>
+            <div style="display:flex;gap:var(--space-xs);">
+                {% if not w.paystack_recipient_code %}
+                <form method="POST" action="{{ url_for('founder_dash.payroll_create_recipient', user_id=w.user_id) }}" style="display:inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" style="padding:4px 10px;background:rgba(52,152,219,0.1);color:#3498db;border:1px solid rgba(52,152,219,0.25);border-radius:var(--radius-sm);font-size:0.7rem;cursor:pointer;" title="Create Paystack recipient">
+                        <i class="bi bi-link-45deg"></i> Link Paystack
+                    </button>
+                </form>
+                {% else %}
+                <span style="font-size:0.65rem;color:#2ecc71;padding:4px 8px;"><i class="bi bi-check-circle-fill"></i> Linked</span>
+                {% endif %}
+                <form method="POST" action="{{ url_for('founder_dash.payroll_toggle_worker', user_id=w.user_id) }}" style="display:inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" style="padding:4px 10px;background:{% if w.is_active %}rgba(241,196,15,0.1){% else %}rgba(46,204,113,0.1){% endif %};color:{% if w.is_active %}#f1c40f{% else %}#2ecc71{% endif %};border:1px solid {% if w.is_active %}rgba(241,196,15,0.25){% else %}rgba(46,204,113,0.25){% endif %};border-radius:var(--radius-sm);font-size:0.7rem;cursor:pointer;">
+                        {% if w.is_active %}<i class="bi bi-pause-fill"></i> Pause{% else %}<i class="bi bi-play-fill"></i> Enable{% endif %}
+                    </button>
+                </form>
+                <form method="POST" action="{{ url_for('founder_dash.payroll_remove_worker', user_id=w.user_id) }}" style="display:inline;" onsubmit="return confirm('Remove this worker from payroll?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" style="padding:4px 10px;background:rgba(231,76,60,0.1);color:#e74c3c;border:1px solid rgba(231,76,60,0.25);border-radius:var(--radius-sm);font-size:0.7rem;cursor:pointer;">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:var(--space-xl);background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);color:var(--text-muted);font-size:0.85rem;">
+        No workers configured yet. Add your first team member below.
+    </div>
+    {% endif %}
+</div>
+
+<!-- Add Worker Form -->
+<div style="padding:var(--space-xl);background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);">
+    <h2 style="font-size:1rem;font-family:var(--font-display);color:var(--text);margin-bottom:var(--space-lg);">
+        <i class="bi bi-person-plus"></i> Add / Update Worker
+    </h2>
+    <form method="POST" action="{{ url_for('founder_dash.payroll_add_worker') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-md);">
+            <div>
+                <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:4px;">Worker Email</label>
+                <input type="email" name="email" required placeholder="worker@email.com" style="width:100%;padding:8px 12px;background:var(--bg-elevated);color:var(--text);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);font-size:0.85rem;">
+            </div>
+            <div>
+                <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:4px;">Role Name</label>
+                <input type="text" name="role_name" required placeholder="e.g. editor, moderator" style="width:100%;padding:8px 12px;background:var(--bg-elevated);color:var(--text);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);font-size:0.85rem;">
+            </div>
+            <div>
+                <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:4px;">Monthly Salary (GH&#8373;)</label>
+                <input type="number" name="salary" step="0.01" min="0" required placeholder="0.00" style="width:100%;padding:8px 12px;background:var(--bg-elevated);color:var(--text);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);font-size:0.85rem;">
+            </div>
+            <div>
+                <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:4px;">MoMo Provider</label>
+                <select name="provider" style="width:100%;padding:8px 12px;background:var(--bg-elevated);color:var(--text);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);font-size:0.85rem;">
+                    <option value="MTN">MTN Mobile Money</option>
+                    <option value="VODAFONE">Vodafone Cash</option>
+                    <option value="AIRTELTIGO">AirtelTigo Money</option>
+                </select>
+            </div>
+            <div>
+                <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:4px;">MoMo Number</label>
+                <input type="text" name="account_number" required placeholder="0244123456" style="width:100%;padding:8px 12px;background:var(--bg-elevated);color:var(--text);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);font-size:0.85rem;">
+            </div>
+            <div>
+                <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:4px;">Account Name</label>
+                <input type="text" name="account_name" required placeholder="Full name on MoMo" style="width:100%;padding:8px 12px;background:var(--bg-elevated);color:var(--text);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);font-size:0.85rem;">
+            </div>
+        </div>
+        <div style="margin-top:var(--space-lg);">
+            <button type="submit" style="padding:10px 24px;background:linear-gradient(135deg,#2ecc71,#27ae60);color:#fff;border:none;border-radius:var(--radius-md);font-weight:700;font-size:0.85rem;cursor:pointer;">
+                <i class="bi bi-person-plus"></i> Save Worker
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- How it works -->
+<div style="margin-top:var(--space-xl);padding:var(--space-lg);background:rgba(52,152,219,0.05);border:1px solid rgba(52,152,219,0.15);border-radius:var(--radius-md);">
+    <h3 style="font-size:0.85rem;color:var(--text);margin-bottom:var(--space-sm);">How Payroll Works</h3>
+    <ol style="font-size:0.8rem;color:var(--text-secondary);line-height:1.8;margin:0;padding-left:1.2rem;">
+        <li><b>Add Workers</b> — Enter each team member's email, role, salary, and MoMo details above.</li>
+        <li><b>Link Paystack</b> — Click "Link Paystack" to create a transfer recipient for each worker.</li>
+        <li><b>Generate Payroll</b> — At the start of each month, click "Generate Payroll" to create pending records.</li>
+        <li><b>Run Payroll</b> — Click "Run Payroll" to send all pending transfers from your Paystack balance.</li>
+        <li><b>Pause/Resume</b> — Toggle any worker off if funds are tight. They won't be included in next generation.</li>
+    </ol>
+</div>
+{% endblock %}

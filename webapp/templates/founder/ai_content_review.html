@@ -1,0 +1,92 @@
+{% extends "founder/dashboard.html" %}
+
+{% block title %}AI Content Review — Founder Dashboard{% endblock %}
+{% block content %}
+<div class="dashboard-container">
+    {% include 'founder/_dashboard_switcher.html' %}
+    
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-robot"></i> AI-Assisted Content Review</h5>
+                    <div class="text-muted">Automated analysis for {{ content.items|length }} content items</div>
+                </div>
+                <div class="card-body">
+                    {% if content.error %}
+                        <div class="alert alert-danger">{{ content.error }}</div>
+                    {% else %}
+                        <!-- Status Filter -->
+                        <div class="mb-3">
+                            <div class="btn-group" role="group">
+                                <a href="{{ url_for(request.endpoint, status='') }}" class="btn {% if status_filter == '' %}btn-primary{% else %}btn-outline-primary{% endif %}">All</a>
+                                <a href="{{ url_for(request.endpoint, status='pending_review') }}" class="btn {% if status_filter == 'pending_review' %}btn-warning{% else %}btn-outline-warning{% endif %}">Pending Review</a>
+                                <a href="{{ url_for(request.endpoint, status='flagged') }}" class="btn {% if status_filter == 'flagged' %}btn-danger{% else %}btn-outline-danger{% endif %}">Flagged</a>
+                            </div>
+                        </div>
+                        
+                        <!-- Content Table -->
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Content</th>
+                                        <th>Status</th>
+                                        <th>AI Issues</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in content.items %}
+                                        <tr class="{% if item.issues %}table-warning{% endif %}">
+                                            <td>
+                                                <a href="{{ url_for('founder.content', book_id=item.content.id) }}">{{ item.content.title }}</a>
+                                                {% if item.content.status == 'published' %}
+                                                    <span class="badge bg-success">{{ item.content.status }}</span>
+                                                {% elif item.content.status == 'pending_review' %}
+                                                    <span class="badge bg-warning">{{ item.content.status }}</span>
+                                                {% elif item.content.status == 'flagged' %}
+                                                    <span class="badge bg-danger">{{ item.content.status }}</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">{{ item.content.status }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ item.content.status }}</td>
+                                            <td>
+                                                {% if item.issues %}
+                                                    {% for issue in item.issues %}
+                                                        <span class="badge bg-warning">{{ issue }}</span>
+                                                    {% endfor %}
+                                                {% else %}
+                                                    <span class="badge bg-success">Clean</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <a href="{{ url_for('founder.approve_book', book_id=item.content.id) }}" class="btn btn-success btn-sm">Approve</a>
+                                                <a href="{{ url_for('founder.reject_book', book_id=item.content.id) }}" class="btn btn-danger btn-sm">Reject</a>
+                                                <a href="{{ url_for('founder.ai_content_review', content_id=item.content.id) }}" class="btn btn-outline-primary btn-sm">Review</a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Pagination -->
+                        {% if content.has_prev or content.has_next %}
+                            <div class="pagination-controls mt-3">
+                                {% if content.has_prev %}
+                                    <a href="{{ url_for(request.endpoint, page=content.prev_num, status=status_filter) }}" class="btn btn-outline-secondary">← Previous</a>
+                                {% endif %}
+                                {% if content.has_next %}
+                                    <a href="{{ url_for(request.endpoint, page=content.next_num, status=status_filter) }}" class="btn btn-outline-secondary">Next →</a>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

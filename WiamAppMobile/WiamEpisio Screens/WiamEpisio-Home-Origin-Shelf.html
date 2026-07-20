@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamEpisio — Wiam Origin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); display:flex; flex-direction:column; }
+  .statusbar{ height:44px; flex-shrink:0; }
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+
+  .topbar{ display:flex; align-items:center; gap:12px; padding:2px 20px 14px; flex-shrink:0; }
+  .icon-btn{ width:34px; height:34px; border-radius:50%; background:var(--navy-card); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .topbar h1{ font-size:18px; font-weight:800; color:#fff; margin:0; display:flex; align-items:center; gap:7px; }
+  .topbar h1 svg{ color:var(--gold); width:17px; height:17px; }
+
+  .scroll{ flex:1; overflow-y:auto; padding:0 20px 84px; }
+
+  .explainer{ position:relative; border-radius:18px; overflow:hidden; padding:18px; margin-bottom:20px; background:linear-gradient(150deg,#241a08,#12122a 60%); border:1px solid rgba(212,160,23,0.3); }
+  .explainer-glow{ position:absolute; inset:0; background:radial-gradient(circle at 80% -10%, rgba(212,160,23,0.25), transparent 60%); }
+  .origin-badge{ position:relative; font-size:9.5px; font-weight:800; color:var(--navy); background:var(--gold); padding:4px 10px; border-radius:6px; letter-spacing:0.4px; display:inline-block; margin-bottom:10px; }
+  .explainer h2{ position:relative; font-size:16px; font-weight:800; color:#fff; margin:0 0 6px; }
+  .explainer p{ position:relative; font-size:11.5px; color:#D9C89A; line-height:1.6; margin:0; }
+
+  .grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .card{ border-radius:14px; overflow:hidden; }
+  .card-art{ aspect-ratio:2/3; border-radius:14px; position:relative; overflow:hidden; }
+  .card-art.g1{ background:linear-gradient(160deg,#3a1420,#12122a); }
+  .card-art.g2{ background:linear-gradient(160deg,#1a2a3a,#12122a); }
+  .card-art.g3{ background:linear-gradient(160deg,#241a3a,#0d0d24); }
+  .card-art.g4{ background:linear-gradient(160deg,#3a2a14,#12122a); }
+  .card-badge{ position:absolute; top:8px; left:8px; display:flex; align-items:center; gap:3px; font-size:8px; font-weight:800; color:var(--navy); background:var(--gold); padding:3px 7px; border-radius:5px; }
+  .card-badge svg{ width:8px; height:8px; }
+  .card-new{ position:absolute; top:8px; right:8px; font-size:7.5px; font-weight:800; color:#fff; background:#E4573D; padding:2px 6px; border-radius:4px; }
+  .card-title{ font-size:12px; font-weight:700; color:#fff; margin:8px 0 2px; }
+  .card-meta{ font-size:10px; color:var(--text-dim); margin:0; }
+
+  .bottomnav{ position:absolute; bottom:0; left:0; right:0; height:84px; background:var(--navy-soft); border-top:1px solid #1C1C38; display:flex; align-items:flex-start; justify-content:space-around; padding-top:12px; }
+  .navitem{ display:flex; flex-direction:column; align-items:center; gap:4px; width:60px; }
+  .navitem span{ font-size:9.5px; }
+  .navitem svg{ width:20px; height:20px; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"></div>
+  <div class="topbar">
+    <div class="icon-btn"><svg viewBox="0 0 24 24" width="15" height="15" color="#fff"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></div>
+    <h1><svg viewBox="0 0 24 24"><path d="M12 2l2.4 6.8L21 11l-6.6 2.2L12 20l-2.4-6.8L3 11l6.6-2.2z"/></svg>Wiam Origin</h1>
+  </div>
+
+  <div class="scroll">
+
+    <div class="explainer">
+      <div class="explainer-glow"></div>
+      <span class="origin-badge">EXCLUSIVE</span>
+      <h2>Made only for WiamEpisio</h2>
+      <p>Origin titles are commissioned or specially licensed — you won't find these anywhere else. New drops every month.</p>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="card-art g1"><span class="card-badge"><svg viewBox="0 0 24 24"><path d="M12 2l2.4 6.8L21 11l-6.6 2.2L12 20l-2.4-6.8L3 11l6.6-2.2z"/></svg>ORIGIN</span><span class="card-new">NEW</span></div>
+        <p class="card-title">Accra Nights</p>
+        <p class="card-meta">Drama · Revenge</p>
+      </div>
+      <div class="card">
+        <div class="card-art g2"><span class="card-badge"><svg viewBox="0 0 24 24"><path d="M12 2l2.4 6.8L21 11l-6.6 2.2L12 20l-2.4-6.8L3 11l6.6-2.2z"/></svg>ORIGIN</span></div>
+        <p class="card-title">The Chief's Daughter</p>
+        <p class="card-meta">Royal &amp; Palace</p>
+      </div>
+      <div class="card">
+        <div class="card-art g3"><span class="card-badge"><svg viewBox="0 0 24 24"><path d="M12 2l2.4 6.8L21 11l-6.6 2.2L12 20l-2.4-6.8L3 11l6.6-2.2z"/></svg>ORIGIN</span></div>
+        <p class="card-title">Kumasi Heiress</p>
+        <p class="card-meta">Family Feud</p>
+      </div>
+      <div class="card">
+        <div class="card-art g4"><span class="card-badge"><svg viewBox="0 0 24 24"><path d="M12 2l2.4 6.8L21 11l-6.6 2.2L12 20l-2.4-6.8L3 11l6.6-2.2z"/></svg>ORIGIN</span></div>
+        <p class="card-title">Blood &amp; Palm Wine</p>
+        <p class="card-meta">Thriller</p>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="bottomnav">
+    <div class="navitem active"><svg viewBox="0 0 24 24" fill="#D4A017" stroke="none"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10" fill="none" stroke="#D4A017" stroke-width="1.8"/></svg><span style="color:#D4A017">Home</span></div>
+    <div class="navitem" style="color:#5A5A75"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span>Discover</span></div>
+    <div class="navitem" style="color:#5A5A75"><svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="3"/><polygon points="10 9 10 15 15 12" fill="#5A5A75"/></svg><span>Member</span></div>
+    <div class="navitem" style="color:#5A5A75"><svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span>My List</span></div>
+    <div class="navitem" style="color:#5A5A75"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Profile</span></div>
+  </div>
+</div>
+
+</body>
+</html>

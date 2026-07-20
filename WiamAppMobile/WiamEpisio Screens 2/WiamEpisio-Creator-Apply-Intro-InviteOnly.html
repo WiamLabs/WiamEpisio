@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamEpisio — Creators (Invite Only)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); display:flex; flex-direction:column; }
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+
+  .hero{ position:relative; height:230px; flex-shrink:0; background:linear-gradient(160deg,#241a3a,#0d0d24); overflow:hidden; }
+  .hero-glow{ position:absolute; inset:0; background:radial-gradient(circle at 30% 20%, rgba(212,160,23,0.25), transparent 55%); }
+  .statusbar{ height:44px; position:relative; z-index:2; }
+  .close-btn{ position:absolute; top:2px; left:20px; width:34px; height:34px; border-radius:50%; background:rgba(0,0,0,0.4); display:flex; align-items:center; justify-content:center; z-index:2; }
+  .hero-content{ position:absolute; bottom:20px; left:24px; right:24px; }
+  .hero-badge{ font-size:9.5px; font-weight:800; color:var(--navy); background:var(--gold); padding:4px 10px; border-radius:6px; letter-spacing:0.4px; display:inline-flex; align-items:center; gap:5px; }
+  .hero-badge svg{ width:10px; height:10px; }
+  .hero h1{ font-size:21px; font-weight:800; color:#fff; margin:12px 0 6px; letter-spacing:-0.3px; }
+  .hero p{ font-size:12px; color:#C9C9DE; margin:0; }
+
+  .scroll{ flex:1; overflow-y:auto; padding:22px; }
+
+  .status-card{ background:linear-gradient(150deg, rgba(212,160,23,0.14), rgba(18,18,42,0.9)); border:1px solid rgba(212,160,23,0.3); border-radius:16px; padding:16px 17px; margin-bottom:20px; }
+  .status-title{ display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+  .status-title svg{ color:var(--gold); width:16px; height:16px; }
+  .status-title span{ font-size:13px; font-weight:800; color:#fff; }
+  .status-text{ font-size:11.5px; color:#D9C89A; line-height:1.65; margin:0; }
+
+  .why-title{ font-size:12px; font-weight:800; color:var(--text-dim); letter-spacing:0.4px; text-transform:uppercase; margin:4px 0 12px; }
+  .why-item{ display:flex; gap:10px; margin-bottom:12px; }
+  .why-item svg{ width:15px; height:15px; color:var(--gold); flex-shrink:0; margin-top:1px; }
+  .why-item span{ font-size:11.5px; color:#D9D9E8; line-height:1.55; }
+
+  .waitlist-card{ background:var(--navy-card); border:1px solid var(--navy-line); border-radius:16px; padding:16px; margin-top:20px; }
+  .waitlist-title{ font-size:13px; font-weight:800; color:#fff; margin:0 0 6px; }
+  .waitlist-sub{ font-size:11.5px; color:var(--text-dim); line-height:1.6; margin:0 0 14px; }
+  .field-box{ background:var(--navy-soft); border:1px solid var(--navy-line); border-radius:13px; padding:12px 14px; margin-bottom:12px; }
+  .field-box input{ background:none; border:none; outline:none; color:#fff; font-size:13px; font-family:inherit; width:100%; }
+  .field-box input::placeholder{ color:var(--text-faint); }
+  .waitlist-btn{ width:100%; padding:14px; border-radius:14px; background:var(--gold); color:var(--navy); font-size:13.5px; font-weight:800; border:none; font-family:'Inter',sans-serif; }
+
+  .have-code{ text-align:center; margin-top:18px; }
+  .have-code span{ font-size:12px; color:var(--text-faint); font-weight:600; }
+  .have-code b{ color:var(--gold); font-weight:700; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="hero">
+    <div class="hero-glow"></div>
+    <div class="statusbar"></div>
+    <div class="close-btn"><svg viewBox="0 0 24 24" width="16" height="16" color="#fff"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+    <div class="hero-content">
+      <span class="hero-badge"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>INVITE ONLY</span>
+      <h1>WiamStudio is by invitation right now</h1>
+      <p>We're keeping the first wave small on purpose.</p>
+    </div>
+  </div>
+
+  <div class="scroll">
+
+    <div class="status-card">
+      <div class="status-title"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>Applications aren't open yet</span></div>
+      <p class="status-text">We're personally reviewing every creator in this first phase to set the quality bar before opening WiamStudio to everyone. This won't stay closed forever.</p>
+    </div>
+
+    <p class="why-title">Why we're doing it this way</p>
+    <div class="why-item"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span>We want every series on WiamEpisio to be finished, well-shot, and worth a viewer's time — that starts with who we let in first.</span></div>
+    <div class="why-item"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span>The standards we set now become the rules that scale to everyone later.</span></div>
+    <div class="why-item"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span>Public applications open once we have enough proven creators and a system in place to review at scale.</span></div>
+
+    <div class="waitlist-card">
+      <p class="waitlist-title">Join the waitlist</p>
+      <p class="waitlist-sub">We'll reach out directly when applications open, or if we spot your work and want to invite you sooner.</p>
+      <div class="field-box"><input placeholder="Email address" value="kwabena@studio.co" /></div>
+      <div class="field-box"><input placeholder="Link to your work (optional)" value="instagram.com/kwabenastudios" /></div>
+      <button class="waitlist-btn">Join Waitlist</button>
+    </div>
+
+    <div class="have-code"><span>Already have an invite code? <b>Enter it here</b></span></div>
+
+  </div>
+</div>
+
+</body>
+</html>

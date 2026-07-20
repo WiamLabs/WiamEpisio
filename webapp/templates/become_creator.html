@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Become a Creator — Write & Share Stories on WiamApp{% endblock %}
+{% block meta_description %}Start your writing journey on WiamApp. Share your stories with readers across Africa and beyond, earn from your creativity, and join a thriving community of creators.{% endblock %}
+
+{% block extra_head %}
+<style>
+    .bc-page { max-width: 480px; margin: 0 auto; padding: 2rem 1rem 6rem; }
+    .bc-header { text-align: center; margin-bottom: 1.5rem; }
+    .bc-header h1 { font-size: 1.5rem; font-weight: 700; color: var(--text); margin: 0 0 0.3rem; }
+    .bc-header p { font-size: 0.85rem; color: var(--text-muted); margin: 0; line-height: 1.5; }
+    .bc-icon { font-size: 2.5rem; color: var(--gold); margin-bottom: 0.5rem; }
+    .bc-card {
+        background: var(--bg-card); border: 1px solid var(--border-subtle);
+        border-radius: 14px; padding: 1.25rem; margin-bottom: 1rem;
+    }
+    .bc-card label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--text); margin-bottom: 0.4rem; }
+    .bc-card input, .bc-card textarea {
+        width: 100%; padding: 0.6rem 0.8rem; background: rgba(255,255,255,0.04);
+        border: 1px solid var(--border-subtle); border-radius: 10px; color: var(--text);
+        font-size: 0.88rem; outline: none; transition: border-color 0.15s;
+    }
+    .bc-card input:focus, .bc-card textarea:focus { border-color: var(--gold); }
+    .bc-card textarea { resize: vertical; min-height: 80px; }
+    .bc-submit {
+        width: 100%; padding: 0.7rem; background: var(--gold); border: none; border-radius: 12px;
+        color: #000; font-weight: 700; font-size: 0.92rem; cursor: pointer; transition: opacity 0.15s;
+    }
+    .bc-submit:hover { opacity: 0.9; }
+    .bc-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+    .bc-status {
+        text-align: center; padding: 1.5rem; background: var(--bg-card);
+        border: 1px solid var(--border-subtle); border-radius: 14px;
+    }
+    .bc-status .icon { font-size: 2rem; margin-bottom: 0.5rem; }
+    .bc-status h3 { font-size: 1.1rem; font-weight: 700; color: var(--text); margin: 0 0 0.3rem; }
+    .bc-status p { font-size: 0.82rem; color: var(--text-muted); margin: 0; }
+    .bc-perks { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin: 1rem 0; }
+    .bc-perk {
+        background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle);
+        border-radius: 10px; padding: 0.7rem; text-align: center;
+    }
+    .bc-perk i { font-size: 1.2rem; color: var(--gold); display: block; margin-bottom: 0.3rem; }
+    .bc-perk span { font-size: 0.75rem; color: var(--text-secondary); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="bc-page">
+    <div class="bc-header">
+        <div class="bc-icon"><i class="bi bi-pen"></i></div>
+        <h1>Become a Creator</h1>
+        <p>Share your stories with the world. Write, publish, and build your audience on WiamApp.</p>
+    </div>
+
+    <div class="bc-perks">
+        <div class="bc-perk"><i class="bi bi-pen"></i><span>Write & Publish Stories</span></div>
+        <div class="bc-perk"><i class="bi bi-people"></i><span>Build Your Audience</span></div>
+        <div class="bc-perk"><i class="bi bi-coin"></i><span>Earn Coins</span></div>
+        <div class="bc-perk"><i class="bi bi-megaphone"></i><span>Creator Bulletin</span></div>
+    </div>
+    {% include "become_creator_form.html" %}
+</div>
+{% endblock %}

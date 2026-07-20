@@ -1,0 +1,47 @@
+{
+  "cli": {
+    "version": ">= 16.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": false,
+      "distribution": "internal",
+      "channel": "development",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://episio.wiamlabs.com/api/v1",
+        "EXPO_PUBLIC_RC_APPLE_KEY": "REPLACE_ME_REVENUECAT_APPLE_PUBLIC_KEY",
+        "EXPO_PUBLIC_RC_GOOGLE_KEY": "goog_QpVJEwqyCUDqziyYDfUSiYvKCjx",
+        "EXPO_PUBLIC_PLAY_INTEGRITY_CLOUD_PROJECT_NUMBER": "276106603244"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "channel": "preview",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://episio.wiamlabs.com/api/v1",
+        "EXPO_PUBLIC_RC_APPLE_KEY": "REPLACE_ME_REVENUECAT_APPLE_PUBLIC_KEY",
+        "EXPO_PUBLIC_RC_GOOGLE_KEY": "goog_QpVJEwqyCUDqziyYDfUSiYvKCjx",
+        "EXPO_PUBLIC_PLAY_INTEGRITY_CLOUD_PROJECT_NUMBER": "276106603244"
+      }
+    },
+    "production": {
+      "channel": "production",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://episio.wiamlabs.com/api/v1",
+        "EXPO_PUBLIC_RC_APPLE_KEY": "REPLACE_ME_REVENUECAT_APPLE_PUBLIC_KEY",
+        "EXPO_PUBLIC_RC_GOOGLE_KEY": "goog_QpVJEwqyCUDqziyYDfUSiYvKCjx",
+        "EXPO_PUBLIC_PLAY_INTEGRITY_CLOUD_PROJECT_NUMBER": "276106603244"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "android": {
+        "serviceAccountKeyPath": "./play-service-account.json",
+        "track": "internal",
+        "releaseStatus": "draft"
+      }
+    }
+  }
+}

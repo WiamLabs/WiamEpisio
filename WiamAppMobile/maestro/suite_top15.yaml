@@ -1,0 +1,17 @@
+appId: com.wiamapp.mobile
+---
+- runFlow: flows/01_auth_login_happy.yaml
+- runFlow: flows/02_auth_register_validation.yaml
+- runFlow: flows/03_auth_switch_login_register.yaml
+- runFlow: flows/04_tabs_navigation_core.yaml
+- runFlow: flows/05_profile_overview_links_1.yaml
+- runFlow: flows/06_profile_overview_links_2.yaml
+- runFlow: flows/07_profile_overview_links_3.yaml
+- runFlow: flows/08_settings_tab_access.yaml
+- runFlow: flows/09_library_tab_access.yaml
+- runFlow: flows/10_browse_tab_access.yaml
+- runFlow: flows/11_premium_open.yaml
+- runFlow: flows/12_wallet_open.yaml
+- runFlow: flows/13_offline_open.yaml
+- runFlow: flows/14_help_and_careers_open.yaml
+- runFlow: flows/15_qa_entry_visibility.yaml

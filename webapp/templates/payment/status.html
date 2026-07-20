@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Order Status — WiamApp{% endblock %}
+
+{% block extra_head %}
+<style>
+    .status-card { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: var(--space-xl); max-width: 560px; margin: 0 auto; text-align: center; }
+    .status-icon { font-size: 3rem; display: block; margin-bottom: var(--space-md); }
+    .status-icon.pending { color: #facc15; }
+    .status-icon.approved { color: #4ade80; }
+    .status-icon.rejected { color: #f87171; }
+    .status-badge { display: inline-block; padding: 4px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; }
+    .status-badge.pending_review, .status-badge.proof_submitted { background: rgba(234,179,8,0.15); color: #facc15; }
+    .status-badge.approved { background: rgba(34,197,94,0.15); color: #4ade80; }
+    .status-badge.rejected { background: rgba(239,68,68,0.15); color: #f87171; }
+    .status-badge.awaiting_payment { background: rgba(59,130,246,0.15); color: #60a5fa; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: var(--space-2xl); padding-bottom: var(--space-2xl);">
+    <div class="status-card">
+        {% if order.status == 'approved' %}
+        <i class="bi bi-check-circle-fill status-icon approved"></i>
+        <h2 class="font-display" style="font-size: 1.3rem; margin-bottom: var(--space-sm);">Payment Approved!</h2>
+        <p style="color: var(--text-secondary); margin-bottom: var(--space-lg);">
+            Your access to <strong>{{ book.title }}</strong> is now active.
+            {% if order.access_type == 'temporary' %}You have {{ order.rent_days }} days to read.{% endif %}
+        </p>
+        <a href="{{ url_for('book.read_book', book_id=book.id) }}" class="btn btn-gold" style="padding: 10px 24px;">
+            <i class="bi bi-book me-1"></i> Start Reading
+        </a>
+
+        {% elif order.status == 'rejected' %}
+        <i class="bi bi-x-circle-fill status-icon rejected"></i>
+        <h2 class="font-display" style="font-size: 1.3rem; margin-bottom: var(--space-sm);">Payment Rejected</h2>
+        <p style="color: var(--text-secondary); margin-bottom: var(--space-lg);">
+            Your payment for <strong>{{ book.title }}</strong> could not be verified. Please try again or contact support.
+        </p>
+        <a href="{{ url_for('payment.buy', book_id=book.id) }}" class="btn btn-gold" style="padding: 10px 24px;">
+            <i class="bi bi-arrow-clockwise me-1"></i> Try Again
+        </a>
+
+        {% else %}
+        <i class="bi bi-hourglass-split status-icon pending"></i>
+        <h2 class="font-display" style="font-size: 1.3rem; margin-bottom: var(--space-sm);">Payment Under Review</h2>
+        <p style="color: var(--text-secondary); margin-bottom: var(--space-md);">
+            Your payment for <strong>{{ book.title }}</strong> is being verified.
+        </p>
+        <div style="margin-bottom: var(--space-lg);">
+            <span class="status-badge {{ order.status }}">{{ order.status|replace('_', ' ')|title }}</span>
+        </div>
+        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: var(--space-lg);">
+            Order #{{ order.id }} &middot; {{ "%.0f"|format(order.price or 0) }} GHS
+            {% if order.access_type == 'temporary' %} &middot; {{ order.rent_days }}-day rental{% endif %}
+        </p>
+        <a href="{{ url_for('book.detail', book_id=book.id) }}" class="btn-ghost" style="color: var(--text-muted);">
+            <i class="bi bi-arrow-left me-1"></i> Back to book
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

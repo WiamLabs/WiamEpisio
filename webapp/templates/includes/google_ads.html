@@ -1,0 +1,21 @@
+{#
+  Google AdSense ad unit — reusable include.
+  Usage: {% include 'includes/google_ads.html' with context %}
+  Pass `ad_slot` (optional) and `ad_format` (optional) from the parent.
+  Ads only render when platform_config.ads_enabled is True.
+  Premium users see no ads if ff_ad_free_premium_enabled is set.
+#}
+{% if g_ads_enabled | default(false) %}
+{% if not (current_user.is_authenticated and current_user.premium_status == 'active' and g_ads_adfree_premium | default(false)) %}
+<div class="wiam-ad-container" style="text-align:center;margin:1.5rem auto;padding:8px 0;max-width:728px;overflow:hidden;">
+    <div style="font-size:0.6rem;color:var(--text-muted, #888);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Advertisement</div>
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="{{ g_ads_client_id | default('') }}"
+         data-ad-slot="{{ ad_slot | default('') }}"
+         data-ad-format="{{ ad_format | default('auto') }}"
+         data-full-width-responsive="true"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+</div>
+{% endif %}
+{% endif %}

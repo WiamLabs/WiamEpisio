@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+{% block title %}Install WiamApp{% endblock %}
+
+{% block extra_head %}
+<style>
+/* ═══════════════════════════════════════════════════════════════════════
+   PWA INSTALL GATE — Premium, Polite & Strict
+   ═══════════════════════════════════════════════════════════════════════ */
+.pwa-page {
+    min-height: 85vh; display: flex; align-items: center; justify-content: center;
+    padding: 1.5rem 1rem 6rem;
+}
+.pwa-card {
+    max-width: 420px; width: 100%; background: rgba(18,18,28,0.95);
+    border: 1px solid rgba(255,255,255,0.06); border-radius: 22px;
+    padding: 2rem 1.5rem; text-align: center; position: relative; overflow: hidden;
+    box-shadow: 0 16px 64px rgba(0,0,0,0.4);
+}
+.pwa-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--gold), rgba(212,168,67,0.2), var(--gold));
+}
+.pwa-logo {
+    width: 80px; height: 80px; border-radius: 20px; margin: 0 auto 1.2rem;
+    background: linear-gradient(135deg, rgba(212,168,67,0.12), rgba(114,47,55,0.12));
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid rgba(212,168,67,0.2);
+    box-shadow: 0 8px 32px rgba(212,168,67,0.1);
+}
+.pwa-logo img { width: 56px; height: 56px; object-fit: contain; }
+.pwa-title {
+    font-size: 1.3rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;
+    line-height: 1.3;
+}
+.pwa-subtitle {
+    font-size: 0.84rem; color: var(--text-muted); line-height: 1.55;
+    margin-bottom: 1.5rem;
+}
+.pwa-features {
+    display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.5rem;
+    text-align: left; padding: 0 0.5rem;
+}
+.pwa-feat {
+    display: flex; align-items: center; gap: 0.6rem;
+    font-size: 0.8rem; color: var(--text-secondary, #ccc);
+}
+.pwa-feat-icon {
+    width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 0.8rem;
+}
+.pwa-feat-icon.gold { background: rgba(212,168,67,0.12); color: var(--gold); }
+.pwa-feat-icon.blue { background: rgba(59,130,246,0.12); color: #60a5fa; }
+.pwa-feat-icon.green { background: rgba(34,197,94,0.12); color: #4ade80; }
+.pwa-feat-icon.purple { background: rgba(168,85,247,0.12); color: #a855f7; }
+
+.pwa-install-btn {
+    width: 100%; padding: 0.85rem; border-radius: 14px; border: none;
+    background: linear-gradient(135deg, var(--gold), #c4982d);
+    color: #000; font-weight: 700; font-size: 0.95rem; cursor: pointer;
+    transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+}
+.pwa-install-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(212,168,67,0.3); }
+.pwa-install-btn:active { transform: translateY(0); }
+.pwa-install-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+.pwa-installed-btn {
+    width: 100%; padding: 0.75rem; border-radius: 14px; border: none;
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: #fff; font-weight: 700; font-size: 0.92rem; cursor: pointer;
+    display: none; align-items: center; justify-content: center; gap: 0.5rem;
+    transition: all 0.2s;
+}
+.pwa-installed-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(34,197,94,0.3); }
+
+.pwa-note {
+    font-size: 0.7rem; color: var(--text-muted); margin-top: 1rem; line-height: 1.4;
+    opacity: 0.6;
+}
+
+/* iOS instructions */
+.pwa-ios {
+    text-align: left; padding: 0.8rem 1rem; border-radius: 12px;
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+    margin-bottom: 1rem;
+}
+.pwa-ios-title { font-size: 0.82rem; font-weight: 600; color: #fff; margin-bottom: 0.5rem; }
+.pwa-ios-step {
+    display: flex; align-items: flex-start; gap: 0.5rem;
+    font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 0.4rem; line-height: 1.4;
+}
+.pwa-ios-num {
+    width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0;
+    background: rgba(212,168,67,0.15); color: var(--gold);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.65rem; font-weight: 700;
+}
+
+.pwa-pulse { animation: pwaPulse 2s ease-in-out infinite; }
+@keyframes pwaPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(212,168,67,0.3); }
+    50% { box-shadow: 0 0 0 12px rgba(212,168,67,0); }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="pwa-page">
+    <div class="pwa-card">
+        <div class="pwa-logo pwa-pulse">
+            <img src="{{ url_for('static', filename='img/WiamLogo.png') }}" alt="WiamApp">
+        </div>
+
+        <h1 class="pwa-title">One Last Step!</h1>
+        <p class="pwa-subtitle">
+            Install WiamApp on your device for the best experience.
+            It takes just one tap and you'll have instant access anytime!
+        </p>
+
+        <div class="pwa-features">
+            <div class="pwa-feat">
+                <div class="pwa-feat-icon gold"><i class="bi bi-lightning-charge-fill"></i></div>
+                <span>Lightning-fast access from your home screen</span>
+            </div>
+            <div class="pwa-feat">
+                <div class="pwa-feat-icon blue"><i class="bi bi-bell-fill"></i></div>
+                <span>Get notified when new chapters drop</span>
+            </div>
+            <div class="pwa-feat">
+                <div class="pwa-feat-icon green"><i class="bi bi-phone-fill"></i></div>
+                <span>Beautiful full-screen reading experience</span>
+            </div>
+            <div class="pwa-feat">
+                <div class="pwa-feat-icon purple"><i class="bi bi-download"></i></div>
+                <span>No app store needed — installs instantly</span>
+            </div>
+        </div>
+
+        <!-- Android/Chrome install button -->
+        <div id="pwaAndroid">
+            <button class="pwa-install-btn" id="pwaInstallBtn" onclick="pwaInstall()" disabled>
+                <i class="bi bi-download"></i> Install WiamApp
+            </button>
+            <p class="pwa-note" id="pwaWaitMsg">Preparing installation...</p>
+        </div>
+
+        <!-- iOS manual instructions -->
+        <div id="pwaIOS" style="display:none;">
+            <div class="pwa-ios">
+                <div class="pwa-ios-title">How to install on iPhone/iPad:</div>
+                <div class="pwa-ios-step">
+                    <div class="pwa-ios-num">1</div>
+                    <span>Tap the <strong>Share</strong> button <i class="bi bi-box-arrow-up" style="color:var(--gold);"></i> at the bottom of Safari</span>
+                </div>
+                <div class="pwa-ios-step">
+                    <div class="pwa-ios-num">2</div>
+                    <span>Scroll down and tap <strong>"Add to Home Screen"</strong></span>
+                </div>
+                <div class="pwa-ios-step">
+                    <div class="pwa-ios-num">3</div>
+                    <span>Tap <strong>"Add"</strong> in the top right corner</span>
+                </div>
+                <div class="pwa-ios-step">
+                    <div class="pwa-ios-num">4</div>
+                    <span>Open WiamApp from your home screen and tap below!</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Already installed / completed -->
+        <form method="POST" action="{{ url_for('auth.install_app_complete') }}" id="pwaCompleteForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="pwa-installed-btn" id="pwaDoneBtn">
+                <i class="bi bi-check-circle-fill"></i> I've Added It — Let's Go!
+            </button>
+        </form>
+
+        <p class="pwa-note" style="margin-top:1.2rem;">
+            WiamApp works like a real app on your phone.<br>
+            No storage space needed, no app store fees!
+        </p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function(){
+    var installPrompt = null;
+    var installBtn = document.getElementById('pwaInstallBtn');
+    var doneBtn = document.getElementById('pwaDoneBtn');
+    var waitMsg = document.getElementById('pwaWaitMsg');
+    var androidDiv = document.getElementById('pwaAndroid');
+    var iosDiv = document.getElementById('pwaIOS');
+
+    // Check if already running as installed PWA
+    if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+        // Already installed! Auto-submit the form
+        document.getElementById('pwaCompleteForm').submit();
+        return;
+    }
+
+    // Detect iOS
+    var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (isIOS) {
+        androidDiv.style.display = 'none';
+        iosDiv.style.display = 'block';
+        doneBtn.style.display = 'flex';
+        return;
+    }
+
+    // Capture the beforeinstallprompt event
+    window.addEventListener('beforeinstallprompt', function(e) {
+        e.preventDefault();
+        installPrompt = e;
+        installBtn.disabled = false;
+        waitMsg.textContent = 'Ready to install! Tap the button above.';
+        waitMsg.style.color = 'var(--gold)';
+        waitMsg.style.opacity = '1';
+    });
+
+    // If no beforeinstallprompt after 4 seconds, show iOS-style instructions or done button
+    setTimeout(function() {
+        if (!installPrompt) {
+            waitMsg.textContent = 'If your browser shows an install prompt in the address bar, tap it! Otherwise, tap below when ready.';
+            waitMsg.style.opacity = '0.8';
+            doneBtn.style.display = 'flex';
+        }
+    }, 4000);
+
+    function autoComplete() {
+        installBtn.style.display = 'none';
+        waitMsg.innerHTML = '<i class="bi bi-check-circle-fill" style="color:#4ade80;margin-right:4px;"></i> Installed! Redirecting...';
+        waitMsg.style.color = '#4ade80';
+        waitMsg.style.opacity = '1';
+        waitMsg.style.fontSize = '0.88rem';
+        waitMsg.style.fontWeight = '600';
+        // Auto-submit after a brief moment so user sees the success
+        setTimeout(function(){ document.getElementById('pwaCompleteForm').submit(); }, 800);
+    }
+
+    window.pwaInstall = function() {
+        if (!installPrompt) return;
+        installBtn.disabled = true;
+        installBtn.innerHTML = '<i class="bi bi-arrow-repeat" style="animation:spin 1s linear infinite;display:inline-block;"></i> Installing...';
+        installPrompt.prompt();
+        installPrompt.userChoice.then(function(result) {
+            if (result.outcome === 'accepted') {
+                autoComplete();
+            } else {
+                // User dismissed — re-enable button
+                installBtn.disabled = false;
+                installBtn.innerHTML = '<i class="bi bi-download"></i> Install WiamApp';
+            }
+            installPrompt = null;
+        });
+    };
+
+    // Listen for app installed event (backup — auto-complete)
+    window.addEventListener('appinstalled', function() {
+        autoComplete();
+    });
+})();
+</script>
+{% endblock %}

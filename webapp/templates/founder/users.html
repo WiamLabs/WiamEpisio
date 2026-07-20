@@ -1,0 +1,112 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Users — Control Panel{% endblock %}
+{% block sidebar_title %}Control Panel{% endblock %}
+
+{% block sidebar_nav %}
+<a class="nav-link" href="{{ url_for('founder_dash.overview') }}"><i class="bi bi-speedometer2"></i> Overview</a>
+<a class="nav-link active" href="{{ url_for('founder_dash.users') }}"><i class="bi bi-people"></i> Users</a>
+<a class="nav-link" href="{{ url_for('founder_dash.content') }}"><i class="bi bi-book"></i> Content</a>
+
+<a class="nav-link" href="{{ url_for('founder_dash.revenue') }}"><i class="bi bi-cash-stack"></i> Revenue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.financial_dashboard') }}"><i class="bi bi-bank" style="color:var(--gold);"></i> Financial v5</a>
+<a class="nav-link" href="{{ url_for('founder_dash.premium_analytics') }}"><i class="bi bi-gem" style="color:#c084fc;"></i> Premium Analytics</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payouts') }}"><i class="bi bi-send-check"></i> Payouts</a>
+<a class="nav-link" href="{{ url_for('founder_dash.withdrawals') }}"><i class="bi bi-arrow-up-right-circle" style="color:var(--gold);"></i> Withdrawals</a>
+<a class="nav-link" href="{{ url_for('founder_dash.subscribers') }}"><i class="bi bi-gem" style="color:#9b59b6;"></i> Subscribers</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payroll') }}"><i class="bi bi-wallet2" style="color:#2ecc71;"></i> Team Payroll</a>
+<a class="nav-link" href="{{ url_for('founder_dash.creators') }}"><i class="bi bi-person-badge"></i> Creators</a>
+<a class="nav-link" href="{{ url_for('founder_dash.moderation') }}"><i class="bi bi-shield-exclamation"></i> Moderation</a>
+<a class="nav-link" href="{{ url_for('founder_dash.warnings_list') }}"><i class="bi bi-exclamation-triangle" style="color:#f59e0b;"></i> Warnings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.elite_manage') }}"><span style="color:var(--gold);">?</span> WiamElite</a>
+<a class="nav-link" href="{{ url_for('wiambot.apex_review') }}"><i class="bi bi-trophy-fill" style="color:var(--gold);"></i> Apex Review</a>
+<a class="nav-link" href="{{ url_for('founder_dash.review_queue') }}"><i class="bi bi-robot"></i> Bot Review Queue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.platform_settings') }}"><i class="bi bi-sliders"></i> Platform Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.forms_dashboard') }}"><i class="bi bi-file-earmark-text"></i> Application Forms</a>
+<a class="nav-link" href="{{ url_for('founder_dash.email_studio') }}"><i class="bi bi-envelope-paper" style="color:var(--gold);"></i> Email Studio</a>
+<a class="nav-link" href="{{ url_for('founder_dash.team_management') }}"><i class="bi bi-people-fill"></i> Team</a>
+<a class="nav-link" href="{{ url_for('founder_dash.account_management') }}"><i class="bi bi-person-x"></i> Account Management</a>
+<a class="nav-link" href="{{ url_for('founder_dash.notification_testing') }}"><i class="bi bi-bell" style="color:#fbbf24;"></i> Notifications</a>
+<a class="nav-link" href="{{ url_for('classics.dashboard') }}"><i class="bi bi-journal-bookmark" style="color:#a78bfa;"></i> Content Seeder</a>
+<a class="nav-link" href="{{ url_for('founder_dash.settings') }}"><i class="bi bi-gear"></i> Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.admins') }}"><i class="bi bi-shield-check"></i> Admins</a>
+{% endblock %}
+
+{% block dash_content %}
+<div class="dash-header">
+    <h1><i class="bi bi-people" style="color:var(--gold);"></i> User Management</h1>
+    <p>View, search, and manage all platform users</p>
+</div>
+
+<div class="filter-bar">
+    <form method="get" class="d-flex gap-2 flex-wrap">
+        <input type="text" name="q" value="{{ search }}" placeholder="Search users...">
+        <select name="role" onchange="this.form.submit()">
+            <option value="">All roles</option>
+            <option value="user" {% if role_filter == 'user' %}selected{% endif %}>User</option>
+            <option value="creator" {% if role_filter == 'creator' %}selected{% endif %}>Creator</option>
+            <option value="admin" {% if role_filter == 'admin' %}selected{% endif %}>Admin</option>
+            <option value="founder" {% if role_filter == 'founder' %}selected{% endif %}>Founder</option>
+        </select>
+        <button type="submit" class="btn-dash btn-dash-primary">Search</button>
+    </form>
+</div>
+
+<div class="dash-card">
+    <table class="dash-table">
+        <thead>
+            <tr><th>User</th><th>Role</th><th>Status</th><th>Joined</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+        {% for u in users.items %}
+        <tr>
+            <td>
+                <strong>{{ u.display_name }}</strong><br>
+                <small style="color:var(--text-muted)">@{{ u.username or '—' }} · ID: {{ u.id }}</small>
+            </td>
+            <td><span class="badge-status badge-{{ u.role }}">{{ u.role }}</span></td>
+            <td><span class="badge-status badge-{{ u.status or 'active' }}">{{ u.status or 'active' }}</span></td>
+            <td style="white-space:nowrap">{{ u.date_joined.strftime('%b %d, %Y') if u.date_joined else '—' }}</td>
+            <td>
+                {% if u.role != 'founder' and u.id != current_user.id %}
+                <div class="d-flex gap-1 flex-wrap">
+                    <form method="post" action="{{ url_for('founder_dash.change_role', user_id=u.id) }}" style="display:inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <select name="role" onchange="this.form.submit()" class="form-select form-select-sm" style="width:auto;background:var(--bg);color:var(--text);border-color:var(--border-subtle);font-size:0.78rem;padding:0.15rem 0.4rem;">
+                            <option value="user" {% if u.role == 'user' %}selected{% endif %}>User</option>
+                            <option value="creator" {% if u.role == 'creator' %}selected{% endif %}>Creator</option>
+                            <option value="admin" {% if u.role == 'admin' %}selected{% endif %}>Admin</option>
+                        </select>
+                    </form>
+                    <form method="post" action="{{ url_for('founder_dash.toggle_ban', user_id=u.id) }}" style="display:inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="btn-dash btn-dash-sm {% if u.status == 'banned' %}btn-dash-primary{% else %}btn-dash-danger{% endif %}">
+                            {{ 'Unban' if u.status == 'banned' else 'Ban' }}
+                        </button>
+                    </form>
+                </div>
+                {% else %}
+                <span style="color:var(--text-muted);font-size:0.8rem">—</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if users.pages > 1 %}
+<nav class="d-flex justify-content-center mt-3">
+    <ul class="pagination pagination-sm">
+        {% for p in users.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+        {% if p %}
+        <li class="page-item {% if p == users.page %}active{% endif %}">
+            <a class="page-link" href="?page={{ p }}&role={{ role_filter }}&q={{ search }}" style="background:rgba(20,20,35,0.9);border-color:rgba(255,255,255,0.06);color:var(--text)">{{ p }}</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled"><span class="page-link" style="background:rgba(20,20,35,0.9);border-color:rgba(255,255,255,0.06);color:var(--text-muted)">…</span></li>
+        {% endif %}
+        {% endfor %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

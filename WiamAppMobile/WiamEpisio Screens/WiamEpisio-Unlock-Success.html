@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamEpisio — Unlock Success</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{ --navy:#08081A; --gold:#D4A017; --gold-dark:#A07810; --text-dim:#C9C9DE; --green:#3BB273; }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:#000; border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); }
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+
+  .video-bg{ position:absolute; inset:0; background:linear-gradient(160deg,#1a1030,#0d0d24,#000); filter:brightness(0.4); }
+
+  .toast{ position:absolute; top:96px; left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:10px; background:rgba(18,18,42,0.92); backdrop-filter:blur(8px); border:1px solid rgba(59,178,115,0.35); border-radius:14px; padding:12px 18px; z-index:5; box-shadow:0 12px 30px rgba(0,0,0,0.4); }
+  .toast-icon{ width:26px; height:26px; border-radius:50%; background:var(--green); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .toast-icon svg{ color:#08081A; width:14px; height:14px; stroke-width:3; }
+  .toast-text b{ display:block; font-size:12.5px; font-weight:700; color:#fff; }
+  .toast-text span{ font-size:10.5px; color:var(--text-dim); }
+
+  .center-block{ position:absolute; top:44%; left:50%; transform:translate(-50%,-50%); text-align:center; z-index:3; }
+  .play-ring{ width:64px; height:64px; border-radius:50%; background:rgba(212,160,23,0.9); display:flex; align-items:center; justify-content:center; margin:0 auto 14px; }
+  .resume-text{ font-size:12.5px; color:#fff; font-weight:600; }
+  .resume-sub{ font-size:11px; color:var(--text-dim); margin-top:4px; }
+
+  .bottom-info{ position:absolute; bottom:36px; left:20px; right:20px; z-index:3; }
+  .series-title{ font-size:14px; font-weight:700; color:#fff; margin:0 0 4px; }
+  .ep-caption{ font-size:11.5px; color:var(--text-dim); line-height:1.4; margin:0; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="video-bg"></div>
+
+  <div class="toast">
+    <div class="toast-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+    <div class="toast-text"><b>Episode unlocked</b><span>15 coins spent · 234 coins left</span></div>
+  </div>
+
+  <div class="center-block">
+    <div class="play-ring"><svg viewBox="0 0 24 24" width="24" height="24" fill="#08081A" stroke="none"><polygon points="6 3 20 12 6 21 6 3"/></svg></div>
+    <p class="resume-text">Resuming playback…</p>
+    <p class="resume-sub">EP 29 starts in a moment</p>
+  </div>
+
+  <div class="bottom-info">
+    <p class="series-title">My Father is Thor</p>
+    <p class="ep-caption">Allen, the son of Thor, was raised in the Lost Lands from childhood...</p>
+  </div>
+</div>
+
+</body>
+</html>

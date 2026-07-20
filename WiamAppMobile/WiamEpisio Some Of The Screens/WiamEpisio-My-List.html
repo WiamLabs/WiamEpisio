@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamEpisio — My List</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{ --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42; --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75; }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); }
+  .statusbar{ height:44px; }
+
+  .topfixed{ padding:12px 20px 10px; display:flex; align-items:center; justify-content:space-between; }
+  .tabs{ display:flex; gap:20px; }
+  .tab{ font-size:14px; font-weight:600; color:var(--text-faint); padding-bottom:8px; border-bottom:2px solid transparent; }
+  .tab.active{ color:#fff; border-color:var(--gold); }
+  .edit-icon{ color:var(--text-faint); }
+
+  .scrollarea{ height:calc(100% - 44px - 62px - 84px); overflow-y:auto; padding:0 20px; }
+
+  .hist-row{ display:flex; gap:12px; padding:12px 0; border-bottom:1px solid var(--navy-line); }
+  .hist-poster{ width:76px; height:104px; border-radius:11px; background:linear-gradient(160deg,var(--navy-soft),#0d0d24); flex-shrink:0; position:relative; overflow:hidden; }
+  .hist-badge{ position:absolute; top:6px; left:6px; font-size:8.5px; font-weight:700; padding:2px 6px; border-radius:4px; background:#EF4444; color:#fff; }
+  .hist-progress{ position:absolute; bottom:0; left:0; height:3px; background:var(--gold); }
+  .hist-info{ flex:1; display:flex; flex-direction:column; justify-content:center; }
+  .hist-title{ font-size:14px; font-weight:700; color:#fff; margin:0 0 4px; }
+  .hist-tags{ font-size:11px; color:var(--text-faint); margin:0 0 8px; line-height:1.4; }
+  .hist-eps{ font-size:12.5px; color:#B8B8CC; }
+
+  .section-label{ font-size:17px; font-weight:700; color:#fff; margin:20px 0 14px; }
+  .trend-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px 10px; padding-bottom:20px; }
+  .trend-item{ position:relative; }
+  .trend-poster{ aspect-ratio:2/3; border-radius:12px; background:linear-gradient(160deg,var(--navy-card),#0d0d24); position:relative; margin-bottom:6px; }
+  .rank-badge{ position:absolute; top:0; left:0; width:26px; height:26px; border-radius:8px 0 12px 0; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; color:#fff; }
+  .rank-badge.r1{ background:#F5A623; }
+  .rank-badge.r2{ background:#22C55E; }
+  .rank-badge.r3{ background:#3B82F6; }
+  .rank-badge.other{ background:#3a3a5a; }
+  .flame-views{ position:absolute; bottom:6px; right:6px; display:flex; align-items:center; gap:2px; font-size:9px; color:#fff; font-weight:600; background:rgba(0,0,0,0.4); padding:2px 6px; border-radius:999px; }
+  .flame-views svg{ width:9px; height:9px; color:#F5A623; }
+  .trend-title{ font-size:11.5px; font-weight:600; color:#fff; margin:0; line-height:1.3; }
+  .trend-tag{ font-size:10px; color:var(--text-faint); margin:2px 0 0; }
+
+  .radio-circle{ position:absolute; top:-30px; left:-8px; width:20px; height:20px; border-radius:50%; border:1.5px solid var(--text-faint); background:var(--navy); }
+
+  .footer-copy{ text-align:center; font-size:10px; color:#3A3A56; padding:0 0 20px; }
+
+  .bottomnav{ position:absolute; bottom:0; left:0; right:0; height:84px; background:var(--navy-soft); border-top:1px solid #1C1C38; display:flex; align-items:flex-start; justify-content:space-around; padding-top:12px; }
+  .navitem{ display:flex; flex-direction:column; align-items:center; gap:4px; width:60px; }
+  .navitem span{ font-size:9.5px; color:var(--text-faint); }
+  .navitem.active span{ color:var(--gold); }
+  .navitem svg{ width:19px; height:19px; }
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"></div>
+  <div class="topfixed">
+    <div class="tabs">
+      <span class="tab">Following</span>
+      <span class="tab active">History</span>
+      <span class="tab">Reminder Set</span>
+    </div>
+    <svg class="edit-icon" viewBox="0 0 24 24" width="18" height="18"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+  </div>
+
+  <div class="scrollarea">
+    <div class="hist-row">
+      <div class="hist-poster"><span class="hist-badge">HOT</span><div class="hist-progress" style="width:30%;"></div></div>
+      <div class="hist-info">
+        <p class="hist-title">Definitely Not The Dragon God</p>
+        <p class="hist-tags">Hidden Identity, Underdog Story</p>
+        <p class="hist-eps">EP.20 / EP.68</p>
+      </div>
+    </div>
+
+    <div class="hist-row">
+      <div class="hist-poster"><div class="hist-progress" style="width:8%;"></div></div>
+      <div class="hist-info">
+        <p class="hist-title">My father is Thor</p>
+        <p class="hist-tags">Hidden Identity, Fantasy, Family Bonds</p>
+        <p class="hist-eps">EP.4 / EP.51</p>
+      </div>
+    </div>
+
+    <div class="hist-row">
+      <div class="hist-poster"><div class="hist-progress" style="width:2%;"></div></div>
+      <div class="hist-info">
+        <p class="hist-title">My Husband is a Hidden Hero!</p>
+        <p class="hist-tags">Hidden Identity, Powerful Male Lead</p>
+        <p class="hist-eps">EP.1 / EP.57</p>
+      </div>
+    </div>
+
+    <div class="hist-row">
+      <div class="hist-poster"><span class="hist-badge">HOT</span><div class="hist-progress" style="width:23%;"></div></div>
+      <div class="hist-info">
+        <p class="hist-title">My Fortune Angel Made Me a Queen</p>
+        <p class="hist-tags">Revenge, The Chosen One, Billionaire</p>
+        <p class="hist-eps">EP.12 / EP.52</p>
+      </div>
+    </div>
+
+    <p class="section-label">Most Trending</p>
+    <div class="trend-grid">
+      <div class="trend-item">
+        <div class="trend-poster">
+          <span class="rank-badge r1">1</span>
+          <span class="flame-views"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2C10 6 6 8 6 13a6 6 0 0 0 12 0c0-3-2-4-2-7-1 2-2 2-2 0 0-2-1-3-2-4z"/></svg>471K</span>
+        </div>
+        <p class="trend-title">Definitely Not The Dragon God</p>
+        <p class="trend-tag">Hidden Identity</p>
+      </div>
+      <div class="trend-item">
+        <div class="trend-poster">
+          <span class="rank-badge r2">2</span>
+          <span class="flame-views"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2C10 6 6 8 6 13a6 6 0 0 0 12 0c0-3-2-4-2-7-1 2-2 2-2 0 0-2-1-3-2-4z"/></svg>253K</span>
+        </div>
+        <p class="trend-title">Step Back! I'm the Hidden King</p>
+        <p class="trend-tag">Hidden Identity</p>
+      </div>
+      <div class="trend-item">
+        <div class="trend-poster">
+          <span class="rank-badge r3">3</span>
+          <span class="flame-views"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2C10 6 6 8 6 13a6 6 0 0 0 12 0c0-3-2-4-2-7-1 2-2 2-2 0 0-2-1-3-2-4z"/></svg>248K</span>
+        </div>
+        <p class="trend-title">Tempest: The Last Mecha</p>
+        <p class="trend-tag">Hidden Identity</p>
+      </div>
+      <div class="trend-item">
+        <div class="trend-poster">
+          <span class="rank-badge other">4</span>
+          <span class="flame-views"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2C10 6 6 8 6 13a6 6 0 0 0 12 0c0-3-2-4-2-7-1 2-2 2-2 0 0-2-1-3-2-4z"/></svg>206K</span>
+        </div>
+        <p class="trend-title">My Fortune Angel Made Me a Queen</p>
+        <p class="trend-tag">Revenge</p>
+      </div>
+      <div class="trend-item">
+        <div class="trend-poster">
+          <span class="rank-badge other">5</span>
+          <span class="flame-views"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2C10 6 6 8 6 13a6 6 0 0 0 12 0c0-3-2-4-2-7-1 2-2 2-2 0 0-2-1-3-2-4z"/></svg>138K</span>
+        </div>
+        <p class="trend-title">Vampire Queen Rules All</p>
+        <p class="trend-tag">Revenge</p>
+      </div>
+      <div class="trend-item">
+        <div class="trend-poster">
+          <span class="rank-badge other">6</span>
+          <span class="flame-views"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2C10 6 6 8 6 13a6 6 0 0 0 12 0c0-3-2-4-2-7-1 2-2 2-2 0 0-2-1-3-2-4z"/></svg>124K</span>
+        </div>
+        <p class="trend-title">Submitting to My Bestie's Dad</p>
+        <p class="trend-tag">Forbidden Love</p>
+      </div>
+    </div>
+
+    <p class="footer-copy">© 2026 WiamEpisio · Powered by WiamLabs</p>
+  </div>
+
+  <div class="bottomnav">
+    <div class="navitem" style="color:#5A5A75"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg><span>Home</span></div>
+    <div class="navitem" style="color:#5A5A75"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg><span>For You</span></div>
+    <div class="navitem" style="color:#5A5A75"><svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="3"/></svg><span>Member</span></div>
+    <div class="navitem active"><svg viewBox="0 0 24 24" fill="#D4A017" stroke="none"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span style="color:#D4A017">My List</span></div>
+    <div class="navitem" style="color:#5A5A75"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Profile</span></div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamEpisio — Downloads</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{ --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42; --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75; --green:#3BB273; }
+  *{box-sizing:border-box;} body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); display:flex; flex-direction:column; }
+  .statusbar{ height:44px; flex-shrink:0; } svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+  .topbar{ display:flex; align-items:center; gap:12px; padding:2px 20px 14px; flex-shrink:0; }
+  .icon-btn{ width:34px; height:34px; border-radius:50%; background:var(--navy-card); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .topbar h1{ font-size:18px; font-weight:800; color:#fff; margin:0; flex:1; }
+  .edit-link{ font-size:11.5px; color:var(--gold); font-weight:700; }
+  .storage-card{ margin:0 20px 18px; background:var(--navy-card); border:1px solid var(--navy-line); border-radius:16px; padding:15px 16px; flex-shrink:0; }
+  .storage-row{ display:flex; justify-content:space-between; margin-bottom:8px; }
+  .storage-row span{ font-size:11px; color:var(--text-dim); font-weight:600; }
+  .storage-row b{ font-size:11px; color:#fff; }
+  .storage-bar{ height:6px; background:var(--navy-line); border-radius:99px; overflow:hidden; }
+  .storage-fill{ height:100%; width:38%; background:linear-gradient(90deg,var(--gold),var(--gold-dark)); border-radius:99px; }
+  .scroll{ flex:1; overflow-y:auto; padding:0 20px 20px; }
+  .group-title{ font-size:11px; font-weight:800; color:var(--text-faint); letter-spacing:0.4px; text-transform:uppercase; margin:10px 0 12px; }
+  .dl-row{ display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--navy-line); }
+  .dl-thumb{ width:52px; height:74px; border-radius:9px; flex-shrink:0; position:relative; }
+  .dl-thumb.t1{ background:linear-gradient(160deg,#3a1420,#12122a); } .dl-thumb.t2{ background:linear-gradient(160deg,#1a2a3a,#12122a); } .dl-thumb.t3{ background:linear-gradient(160deg,#241a3a,#0d0d24); }
+  .dl-check{ position:absolute; top:5px; left:5px; width:16px; height:16px; border-radius:4px; background:var(--green); display:flex; align-items:center; justify-content:center; }
+  .dl-check svg{ width:9px; height:9px; stroke:#08081A; stroke-width:3; }
+  .dl-body{ flex:1; min-width:0; } .dl-title{ font-size:12.5px; font-weight:700; color:#fff; margin:0 0 3px; } .dl-meta{ font-size:10.5px; color:var(--text-faint); margin:0; }
+  .dl-size{ font-size:10.5px; color:var(--text-dim); font-weight:600; flex-shrink:0; }
+  .delete-btn{ color:var(--text-faint); flex-shrink:0; }
+  .wifi-note{ display:flex; gap:8px; font-size:10.5px; color:var(--text-faint); line-height:1.6; margin-top:18px; }
+  .wifi-note svg{ width:13px; height:13px; flex-shrink:0; margin-top:1px; }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="statusbar"></div>
+  <div class="topbar"><div class="icon-btn"><svg viewBox="0 0 24 24" width="15" height="15" color="#fff"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></div><h1>Downloads</h1><span class="edit-link">Edit</span></div>
+
+  <div class="storage-card">
+    <div class="storage-row"><span>Storage used</span><b>2.1 GB of 5.5 GB</b></div>
+    <div class="storage-bar"><div class="storage-fill"></div></div>
+  </div>
+
+  <div class="scroll">
+    <p class="group-title">The Chief's Daughter — 3 downloaded</p>
+    <div class="dl-row"><div class="dl-thumb t1"><div class="dl-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div></div><div class="dl-body"><p class="dl-title">EP 12 — Palace Politics</p><p class="dl-meta">4:42 · 1080p</p></div><span class="dl-size">218 MB</span><svg class="delete-btn" viewBox="0 0 24 24" width="16" height="16"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg></div>
+    <div class="dl-row"><div class="dl-thumb t2"><div class="dl-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div></div><div class="dl-body"><p class="dl-title">EP 13 — The Warning</p><p class="dl-meta">4:35 · 1080p</p></div><span class="dl-size">204 MB</span><svg class="delete-btn" viewBox="0 0 24 24" width="16" height="16"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg></div>
+    <div class="dl-row"><div class="dl-thumb t3"><div class="dl-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div></div><div class="dl-body"><p class="dl-title">EP 14 — Old Wounds</p><p class="dl-meta">4:51 · 1080p</p></div><span class="dl-size">231 MB</span><svg class="delete-btn" viewBox="0 0 24 24" width="16" height="16"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg></div>
+
+    <p class="group-title">Accra Nights — 5 downloaded</p>
+    <div class="dl-row"><div class="dl-thumb t3"><div class="dl-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div></div><div class="dl-body"><p class="dl-title">EP 1 — The Return</p><p class="dl-meta">4:32 · 720p</p></div><span class="dl-size">156 MB</span><svg class="delete-btn" viewBox="0 0 24 24" width="16" height="16"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg></div>
+    <div class="dl-row"><div class="dl-thumb t1"><div class="dl-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div></div><div class="dl-body"><p class="dl-title">EP 2 — Old Faces</p><p class="dl-meta">4:20 · 720p</p></div><span class="dl-size">148 MB</span><svg class="delete-btn" viewBox="0 0 24 24" width="16" height="16"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg></div>
+
+    <p class="wifi-note"><svg viewBox="0 0 24 24"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.58 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>Downloads only save over Wi-Fi by default — change this in Settings → Playback.</p>
+  </div>
+</div>
+</body>
+</html>

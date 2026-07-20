@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamStudio — Trailer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75;
+    --green:#3BB273; --red:#E4573D;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); display:flex; flex-direction:column; }
+  .statusbar{ height:44px; flex-shrink:0; }
+
+  .topbar{ display:flex; align-items:center; gap:12px; padding:2px 20px 14px; flex-shrink:0; }
+  .icon-btn{ width:34px; height:34px; border-radius:50%; background:var(--navy-card); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .topbar h1{ font-size:16px; font-weight:800; color:#fff; margin:0; }
+  .topbar span{ display:block; font-size:10.5px; color:var(--text-faint); font-weight:600; margin-top:1px; }
+
+  .scroll{ flex:1; overflow-y:auto; padding:0 20px 20px; display:flex; gap:20px; }
+  .left{ width:130px; flex-shrink:0; }
+  .right{ flex:1; min-width:0; }
+
+  /* 9:16 preview frame */
+  .preview{ width:130px; height:231px; border-radius:16px; background:linear-gradient(160deg,#241030,#0a0a18); position:relative; overflow:hidden; border:1px solid var(--navy-line); }
+  .preview-glow{ position:absolute; inset:0; background:radial-gradient(circle at 40% 30%, rgba(120,30,40,0.5), transparent 60%); }
+  .preview-play{ position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:38px; height:38px; border-radius:50%; background:rgba(255,255,255,0.14); display:flex; align-items:center; justify-content:center; }
+  .preview-badge{ position:absolute; top:8px; left:8px; font-size:8px; font-weight:800; color:var(--navy); background:var(--gold); padding:3px 7px; border-radius:5px; }
+  .preview-time{ position:absolute; bottom:8px; right:8px; font-size:9px; color:#fff; background:rgba(0,0,0,0.5); padding:2px 6px; border-radius:5px; }
+
+  .duration-meter{ margin-top:12px; }
+  .duration-track{ height:5px; background:var(--navy-line); border-radius:99px; position:relative; overflow:visible; }
+  .duration-fill{ position:absolute; left:15%; right:52%; top:0; bottom:0; background:var(--green); border-radius:99px; }
+  .duration-marker{ position:absolute; top:-3px; width:2px; height:11px; background:var(--text-faint); }
+  .duration-labels{ display:flex; justify-content:space-between; font-size:8.5px; color:var(--text-faint); margin-top:5px; }
+  .duration-current{ font-size:11px; font-weight:800; color:var(--green); text-align:center; margin-top:6px; }
+
+  .replace-btn{ width:100%; margin-top:12px; padding:9px; border-radius:10px; background:var(--navy-card); border:1px solid var(--navy-line); color:#C9C9DE; font-size:10.5px; font-weight:700; font-family:'Inter',sans-serif; }
+
+  .qa-card{ background:var(--navy-card); border:1px solid var(--navy-line); border-radius:16px; padding:15px; margin-bottom:14px; }
+  .qa-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+  .qa-head span{ font-size:12.5px; font-weight:700; color:#fff; }
+  .qa-badge{ display:flex; align-items:center; gap:5px; font-size:10.5px; font-weight:800; padding:5px 10px; border-radius:8px; }
+  .qa-badge.pass{ background:rgba(59,178,115,0.16); color:var(--green); }
+  .qa-badge svg{ width:12px; height:12px; }
+
+  .qa-check{ display:flex; align-items:center; gap:8px; font-size:11.5px; color:var(--text-dim); margin-bottom:9px; }
+  .qa-check:last-child{ margin-bottom:0; }
+  .qa-check svg{ width:15px; height:15px; color:var(--green); flex-shrink:0; }
+
+  .refresh-btn{ width:100%; padding:11px; border-radius:12px; background:var(--navy-soft); border:1px solid var(--navy-line); color:var(--gold); font-size:11.5px; font-weight:700; margin-top:10px; font-family:'Inter',sans-serif; display:flex; align-items:center; justify-content:center; gap:7px; }
+
+  .meta-row{ display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--navy-line); font-size:11px; }
+  .meta-row:last-child{ border-bottom:none; }
+  .meta-row .k{ color:var(--text-dim); }
+  .meta-row .v{ color:#fff; font-weight:700; }
+
+  .footer{ flex-shrink:0; padding:12px 20px 26px; }
+  .btn-primary{ width:100%; padding:16px; border-radius:16px; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); border:none; color:var(--navy); font-size:15px; font-weight:800; box-shadow:0 14px 30px rgba(212,160,23,0.3); font-family:'Inter',sans-serif; }
+
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"></div>
+  <div class="topbar">
+    <div class="icon-btn"><svg viewBox="0 0 24 24" width="15" height="15" color="#fff"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></div>
+    <div>
+      <h1>Trailer</h1>
+      <span>The Chief's Daughter</span>
+    </div>
+  </div>
+
+  <div class="scroll">
+    <div class="left">
+      <div class="preview">
+        <div class="preview-glow"></div>
+        <span class="preview-badge">TRAILER</span>
+        <div class="preview-play"><svg viewBox="0 0 24 24" width="15" height="15" fill="#fff" stroke="none"><polygon points="6 3 20 12 6 21 6 3"/></svg></div>
+        <span class="preview-time">0:42</span>
+      </div>
+
+      <div class="duration-meter">
+        <div class="duration-track">
+          <div class="duration-marker" style="left:15%;"></div>
+          <div class="duration-fill"></div>
+          <div class="duration-marker" style="left:48%;"></div>
+        </div>
+        <div class="duration-labels"><span>15s</span><span>60s</span></div>
+        <p class="duration-current">42s — in range</p>
+      </div>
+
+      <button class="replace-btn">Replace Video</button>
+    </div>
+
+    <div class="right">
+      <div class="qa-card">
+        <div class="qa-head">
+          <span>Quality Check</span>
+          <span class="qa-badge pass"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>PASS</span>
+        </div>
+        <div class="qa-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>9:16 aspect ratio confirmed</div>
+        <div class="qa-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Resolution 1080 × 1920</div>
+        <div class="qa-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Duration within 15–60s</div>
+        <div class="qa-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>No black frames detected</div>
+        <button class="refresh-btn"><svg viewBox="0 0 24 24" width="12" height="12"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Re-run Quality Check</button>
+      </div>
+
+      <div class="qa-card">
+        <div class="qa-head"><span>File Details</span></div>
+        <div class="meta-row"><span class="k">Codec</span><span class="v">H.264 / AAC</span></div>
+        <div class="meta-row"><span class="k">File size</span><span class="v">18.4 MB</span></div>
+        <div class="meta-row"><span class="k">Uploaded</span><span class="v">2 hours ago</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <button class="btn-primary">Save &amp; Continue</button>
+  </div>
+</div>
+
+</body>
+</html>

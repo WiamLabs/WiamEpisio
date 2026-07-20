@@ -1,0 +1,511 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Email Writer Studio — Control Panel{% endblock %}
+{% block sidebar_title %}Control Panel{% endblock %}
+
+{% block sidebar_nav %}
+<a class="nav-link" href="{{ url_for('founder_dash.overview') }}"><i class="bi bi-speedometer2"></i> Overview</a>
+<a class="nav-link" href="{{ url_for('founder_dash.users') }}"><i class="bi bi-people"></i> Users</a>
+<a class="nav-link" href="{{ url_for('founder_dash.content') }}"><i class="bi bi-book"></i> Content</a>
+<a class="nav-link" href="{{ url_for('founder_dash.revenue') }}"><i class="bi bi-cash-stack"></i> Revenue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.financial_dashboard') }}"><i class="bi bi-bank" style="color:var(--gold);"></i> Financial v5</a>
+<a class="nav-link" href="{{ url_for('founder_dash.premium_analytics') }}"><i class="bi bi-gem" style="color:#c084fc;"></i> Premium Analytics</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payouts') }}"><i class="bi bi-send-check"></i> Payouts</a>
+<a class="nav-link" href="{{ url_for('founder_dash.withdrawals') }}"><i class="bi bi-arrow-up-right-circle" style="color:var(--gold);"></i> Withdrawals</a>
+<a class="nav-link" href="{{ url_for('founder_dash.subscribers') }}"><i class="bi bi-gem" style="color:#9b59b6;"></i> Subscribers</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payroll') }}"><i class="bi bi-wallet2" style="color:#2ecc71;"></i> Team Payroll</a>
+<a class="nav-link" href="{{ url_for('founder_dash.creators') }}"><i class="bi bi-person-badge"></i> Creators</a>
+<a class="nav-link" href="{{ url_for('founder_dash.moderation') }}"><i class="bi bi-shield-exclamation"></i> Moderation</a>
+<a class="nav-link" href="{{ url_for('founder_dash.warnings_list') }}"><i class="bi bi-exclamation-triangle" style="color:#f59e0b;"></i> Warnings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.elite_manage') }}"><span style="color:var(--gold);">?</span> WiamElite</a>
+<a class="nav-link" href="{{ url_for('wiambot.apex_review') }}"><i class="bi bi-trophy-fill" style="color:var(--gold);"></i> Apex Review</a>
+<a class="nav-link" href="{{ url_for('founder_dash.review_queue') }}"><i class="bi bi-robot"></i> Bot Review Queue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.platform_settings') }}"><i class="bi bi-sliders"></i> Platform Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.forms_dashboard') }}"><i class="bi bi-file-earmark-text"></i> Application Forms</a>
+<a class="nav-link active" href="{{ url_for('founder_dash.email_studio') }}"><i class="bi bi-envelope-paper" style="color:var(--gold);"></i> Email Studio</a>
+<a class="nav-link" href="{{ url_for('founder_dash.team_management') }}"><i class="bi bi-people-fill"></i> Team</a>
+<a class="nav-link" href="{{ url_for('founder_dash.account_management') }}"><i class="bi bi-person-x"></i> Account Management</a>
+<a class="nav-link" href="{{ url_for('founder_dash.notification_testing') }}"><i class="bi bi-bell" style="color:#fbbf24;"></i> Notifications</a>
+<a class="nav-link" href="{{ url_for('classics.dashboard') }}"><i class="bi bi-journal-bookmark" style="color:#a78bfa;"></i> Content Seeder</a>
+<a class="nav-link" href="{{ url_for('founder_dash.settings') }}"><i class="bi bi-gear"></i> Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.admins') }}"><i class="bi bi-shield-check"></i> Admins</a>
+{% endblock %}
+
+{% block dash_content %}
+<style>
+    .es-header { margin-bottom: 1.5rem; }
+    .es-header h1 { font-family: 'Playfair Display', Georgia, serif; font-size: 1.5rem; color: #fff; margin: 0 0 4px; }
+    .es-header p { color: var(--text-muted); font-size: 0.85rem; margin: 0; }
+    .es-stats { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 1.5rem; }
+    .es-stat {
+        background: var(--card-bg); border: 1px solid var(--border-subtle); border-radius: 12px;
+        padding: 14px 18px; flex: 1; min-width: 120px; text-align: center;
+    }
+    .es-stat .num { font-size: 1.3rem; font-weight: 700; color: var(--gold); }
+    .es-stat .lbl { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; margin-top: 2px; }
+    .es-card {
+        background: var(--card-bg); border: 1px solid var(--border-subtle); border-radius: 14px;
+        padding: 24px; margin-bottom: 1.5rem;
+    }
+    .es-card h2 {
+        font-size: 0.85rem; font-weight: 700; color: var(--gold); text-transform: uppercase;
+        letter-spacing: 0.5px; margin: 0 0 16px; display: flex; align-items: center; gap: 8px;
+    }
+    .es-field { margin-bottom: 16px; }
+    .es-field label {
+        display: block; font-size: 0.78rem; font-weight: 600; color: #bbb; margin-bottom: 6px;
+    }
+    .es-field input, .es-field textarea, .es-field select {
+        width: 100%; background: #0d0d1a; border: 1px solid var(--border-subtle); border-radius: 10px;
+        color: #e0e0e0; font-size: 0.88rem; padding: 10px 14px; font-family: inherit;
+        transition: border-color 0.2s;
+    }
+    .es-field input:focus, .es-field textarea:focus, .es-field select:focus {
+        outline: none; border-color: var(--gold);
+    }
+    .es-field textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
+    .es-field .hint { font-size: 0.72rem; color: #666; margin-top: 4px; }
+    .es-audience-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
+    .es-audience-btn {
+        background: #0d0d1a; border: 1px solid var(--border-subtle); border-radius: 10px;
+        padding: 12px 14px; cursor: pointer; text-align: center; transition: all 0.2s;
+        position: relative;
+    }
+    .es-audience-btn:hover { border-color: var(--gold); }
+    .es-audience-btn.active { border-color: var(--gold); background: rgba(212,168,67,0.08); }
+    .es-audience-btn input[type="radio"] { display: none; }
+    .es-audience-btn .aud-icon { font-size: 1.3rem; margin-bottom: 4px; display: block; }
+    .es-audience-btn .aud-label { font-size: 0.78rem; font-weight: 600; color: #ccc; display: block; }
+    .es-audience-btn .aud-count { font-size: 0.7rem; color: var(--gold); margin-top: 2px; display: block; }
+    .es-role-select { display: none; margin-top: 10px; }
+    .es-role-select.visible { display: block; }
+    .es-single-search { display: none; margin-top: 10px; position: relative; }
+    .es-single-search.visible { display: block; }
+    .es-search-results {
+        position: absolute; top: 100%; left: 0; right: 0; z-index: 20;
+        background: #111118; border: 1px solid var(--border-subtle); border-radius: 10px;
+        max-height: 240px; overflow-y: auto; margin-top: 4px; display: none;
+    }
+    .es-search-results.open { display: block; }
+    .es-search-item {
+        padding: 10px 14px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.04);
+        transition: background 0.15s;
+    }
+    .es-search-item:hover { background: rgba(212,168,67,0.08); }
+    .es-search-item:last-child { border-bottom: none; }
+    .es-search-item .si-name { font-size: 0.82rem; font-weight: 600; color: #e0e0e0; }
+    .es-search-item .si-email { font-size: 0.72rem; color: #888; }
+    .es-search-item .si-badge {
+        display: inline-block; font-size: 0.65rem; padding: 1px 7px; border-radius: 6px;
+        background: rgba(212,168,67,0.15); color: var(--gold); margin-left: 6px; vertical-align: middle;
+    }
+    .es-selected-user {
+        display: none; margin-top: 8px; padding: 10px 14px; border-radius: 10px;
+        background: rgba(212,168,67,0.06); border: 1px solid rgba(212,168,67,0.2);
+        font-size: 0.82rem; color: #ccc; align-items: center; gap: 8px;
+    }
+    .es-selected-user.visible { display: flex; }
+    .es-selected-user .su-remove {
+        margin-left: auto; cursor: pointer; color: #f87171; font-size: 0.9rem;
+        background: none; border: none; padding: 0;
+    }
+    .es-founder-only-label {
+        display: inline-block; font-size: 0.6rem; padding: 1px 6px; border-radius: 4px;
+        background: rgba(248,113,113,0.12); color: #f87171; margin-top: 3px;
+        letter-spacing: 0.3px; text-transform: uppercase; font-weight: 700;
+    }
+    .es-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .es-btn {
+        display: inline-flex; align-items: center; gap: 6px; padding: 11px 24px; border-radius: 10px;
+        font-weight: 600; font-size: 0.85rem; border: none; cursor: pointer; transition: all 0.2s;
+        text-decoration: none;
+    }
+    .es-btn-gold { background: linear-gradient(135deg, var(--gold), #b8860b); color: #000; }
+    .es-btn-gold:hover { filter: brightness(1.1); transform: translateY(-1px); }
+    .es-btn-outline { background: transparent; border: 1px solid var(--border-subtle); color: #ccc; }
+    .es-btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+    .es-btn-danger { background: rgba(248,113,113,0.12); border: 1px solid rgba(248,113,113,0.3); color: #f87171; }
+    .es-preview-frame {
+        width: 100%; min-height: 500px; border: 1px solid var(--border-subtle); border-radius: 10px;
+        background: #fff;
+    }
+    .es-confirm-overlay {
+        display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9999;
+        align-items: center; justify-content: center;
+    }
+    .es-confirm-overlay.show { display: flex; }
+    .es-confirm-box {
+        background: var(--card-bg); border: 1px solid var(--border-subtle); border-radius: 16px;
+        padding: 28px 32px; max-width: 440px; width: 90%; text-align: center;
+    }
+    .es-confirm-box h3 { color: #fff; font-size: 1.1rem; margin: 0 0 8px; }
+    .es-confirm-box p { color: var(--text-muted); font-size: 0.85rem; margin: 0 0 20px; }
+    .es-confirm-box .confirm-count { font-size: 1.8rem; font-weight: 800; color: var(--gold); display: block; margin: 8px 0; }
+    @media(max-width:768px) {
+        .es-audience-grid { grid-template-columns: repeat(2, 1fr); }
+        .es-actions { flex-direction: column; }
+        .es-btn { width: 100%; justify-content: center; }
+    }
+</style>
+
+<div class="es-header">
+    <h1><i class="bi bi-envelope-paper" style="color:var(--gold);"></i> Email Writer Studio</h1>
+    <p>Compose and send beautiful branded emails to your WiamApp community</p>
+</div>
+
+<!-- Stats -->
+<div class="es-stats">
+    <div class="es-stat">
+        <div class="num">{{ total_users }}</div>
+        <div class="lbl">All Users</div>
+    </div>
+    <div class="es-stat">
+        <div class="num">{{ total_creators }}</div>
+        <div class="lbl">Creators</div>
+    </div>
+    <div class="es-stat">
+        <div class="num">{{ total_admins }}</div>
+        <div class="lbl">Admins</div>
+    </div>
+    <div class="es-stat">
+        <div class="num">{{ all_roles|length }}</div>
+        <div class="lbl">Team Roles</div>
+    </div>
+</div>
+
+<!-- Queue Status -->
+{% if queue %}
+<div class="es-card" style="border-color:rgba(212,168,67,0.2);">
+    <h2><i class="bi bi-hourglass-split"></i> Email Queue Status</h2>
+    <div class="es-stats" style="margin-bottom:12px;">
+        <div class="es-stat">
+            <div class="num" style="color:{% if queue.pending > 0 %}#fbbf24{% else %}#4ade80{% endif %};">{{ queue.pending }}</div>
+            <div class="lbl">Pending</div>
+        </div>
+        <div class="es-stat">
+            <div class="num" style="color:#60a5fa;">{{ queue.sending }}</div>
+            <div class="lbl">Sending</div>
+        </div>
+        <div class="es-stat">
+            <div class="num" style="color:#4ade80;">{{ queue.sent_today }}</div>
+            <div class="lbl">Sent Today</div>
+        </div>
+        <div class="es-stat">
+            <div class="num" style="color:{% if queue.failed > 0 %}#f87171{% else %}#4ade80{% endif %};">{{ queue.failed }}</div>
+            <div class="lbl">Failed</div>
+        </div>
+    </div>
+    <div style="font-size:0.75rem;color:#888;">
+        <i class="bi bi-{% if queue.worker_running %}activity{% else %}pause-circle{% endif %}" style="color:{% if queue.worker_running %}#4ade80{% else %}#888{% endif %};"></i>
+        Worker: <strong style="color:{% if queue.worker_running %}#4ade80{% else %}#888{% endif %};">{{ 'Running' if queue.worker_running else 'Idle' }}</strong>
+        {% if queue.pending > 0 %} · ~{{ queue.pending * 4 }}s until all sent (4s between each){% endif %}
+    </div>
+    {% if queue.recent_failures %}
+    <details style="margin-top:12px;">
+        <summary style="cursor:pointer;font-size:0.78rem;color:#f87171;font-weight:600;"><i class="bi bi-exclamation-triangle"></i> Recent Failures ({{ queue.failed }})</summary>
+        <div style="margin-top:8px;max-height:200px;overflow-y:auto;">
+            {% for job in queue.recent_failures %}
+            <div style="padding:8px 12px;background:rgba(248,113,113,0.06);border:1px solid rgba(248,113,113,0.15);border-radius:8px;margin-bottom:6px;font-size:0.75rem;">
+                <strong style="color:#e0e0e0;">{{ job.to_email }}</strong>
+                <span style="color:#888;"> · {{ job.subject[:50] }}{% if job.subject|length > 50 %}...{% endif %}</span><br>
+                <span style="color:#f87171;">{{ job.error or 'Unknown error' }}</span>
+                <span style="color:#555;"> · {{ job.created_at.strftime('%b %d %H:%M') if job.created_at else '' }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </details>
+    {% endif %}
+</div>
+{% endif %}
+
+<form id="emailForm" method="post" action="{{ url_for('founder_dash.email_studio_send') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <!-- Audience Picker -->
+    <div class="es-card">
+        <h2><i class="bi bi-people-fill"></i> Recipients</h2>
+        <div class="es-audience-grid">
+            <label class="es-audience-btn active" onclick="selectAudience(this, 'all')">
+                <input type="radio" name="audience" value="all" checked>
+                <span class="aud-icon"><i class="bi bi-globe2"></i></span>
+                <span class="aud-label">All Users</span>
+                <span class="aud-count">{{ total_users }} recipients</span>
+            </label>
+            <label class="es-audience-btn" onclick="selectAudience(this, 'creators')">
+                <input type="radio" name="audience" value="creators">
+                <span class="aud-icon"><i class="bi bi-pen"></i></span>
+                <span class="aud-label">Creators Only</span>
+                <span class="aud-count">{{ total_creators }} recipients</span>
+            </label>
+            <label class="es-audience-btn" onclick="selectAudience(this, 'admins')">
+                <input type="radio" name="audience" value="admins">
+                <span class="aud-icon"><i class="bi bi-shield-check"></i></span>
+                <span class="aud-label">Admins Only</span>
+                <span class="aud-count">{{ total_admins }} recipients</span>
+            </label>
+            <label class="es-audience-btn" onclick="selectAudience(this, 'team_role')">
+                <input type="radio" name="audience" value="team_role">
+                <span class="aud-icon"><i class="bi bi-person-badge"></i></span>
+                <span class="aud-label">Team Role</span>
+                <span class="aud-count">Select role below</span>
+            </label>
+        </div>
+        {% if current_user.is_founder %}
+        <!-- Founder-only: Single recipient buttons -->
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border-subtle);">
+            <div style="font-size:0.72rem;color:#888;margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:0.4px;"><i class="bi bi-lock-fill" style="color:#f87171;"></i> Founder Only — Send to One Person</div>
+            <div class="es-audience-grid">
+                <label class="es-audience-btn" onclick="selectAudience(this, 'single_user')">
+                    <input type="radio" name="audience" value="single_user">
+                    <span class="aud-icon"><i class="bi bi-person" style="color:#60a5fa;"></i></span>
+                    <span class="aud-label">One User</span>
+                    <span class="es-founder-only-label">Founder</span>
+                </label>
+                <label class="es-audience-btn" onclick="selectAudience(this, 'single_creator')">
+                    <input type="radio" name="audience" value="single_creator">
+                    <span class="aud-icon"><i class="bi bi-pen" style="color:#4ade80;"></i></span>
+                    <span class="aud-label">One Creator</span>
+                    <span class="es-founder-only-label">Founder</span>
+                </label>
+                <label class="es-audience-btn" onclick="selectAudience(this, 'single_team_member')">
+                    <input type="radio" name="audience" value="single_team_member">
+                    <span class="aud-icon"><i class="bi bi-person-badge" style="color:#a78bfa;"></i></span>
+                    <span class="aud-label">One Team Member</span>
+                    <span class="es-founder-only-label">Founder</span>
+                </label>
+            </div>
+        </div>
+        {% endif %}
+        <div id="singleSearch" class="es-single-search">
+            <div class="es-field" style="margin-bottom:0;position:relative;">
+                <label>Search by email, username, or name</label>
+                <input type="text" id="singleSearchInput" placeholder="Type to search..." autocomplete="off">
+                <input type="hidden" name="single_email" id="singleEmailHidden">
+                <div id="searchResults" class="es-search-results"></div>
+            </div>
+            <div id="selectedUser" class="es-selected-user">
+                <i class="bi bi-person-check" style="color:var(--gold);"></i>
+                <span id="selectedUserName">—</span>
+                <span id="selectedUserEmail" style="color:#888;font-size:0.75rem;"></span>
+                <button type="button" class="su-remove" onclick="clearSelectedUser()">&times;</button>
+            </div>
+        </div>
+        <div id="roleSelect" class="es-role-select">
+            <div class="es-field" style="margin-bottom:0;">
+                <label>Select Team Role</label>
+                <select name="role_name" id="roleName">
+                    <option value="">— Choose a role —</option>
+                    {% for r in all_roles %}
+                    <option value="{{ r.name }}">{{ r.name|replace('_',' ')|title }} ({{ role_counts.get(r.name, 0) }} members)</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Compose -->
+    <div class="es-card">
+        <h2><i class="bi bi-pencil-square"></i> Compose Email</h2>
+        <div class="es-field">
+            <label>Subject Line</label>
+            <input type="text" name="subject" id="emailSubject" placeholder="e.g. Exciting Update from WiamApp!" required maxlength="200">
+        </div>
+        <div class="es-field">
+            <label>Email Body</label>
+            <textarea name="body" id="emailBody" placeholder="Write your message here...&#10;&#10;Each line becomes a paragraph in the branded email.&#10;&#10;Use this to announce updates, welcome users, share news, or anything you want your community to know." required></textarea>
+            <div class="hint">Each line will be wrapped in a styled paragraph. Leave empty lines for spacing.</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div class="es-field" style="margin-bottom:0;">
+                <label>Button Text <span style="color:#666;">(optional)</span></label>
+                <input type="text" name="cta_text" id="ctaText" placeholder="e.g. Visit WiamApp">
+            </div>
+            <div class="es-field" style="margin-bottom:0;">
+                <label>Button Link <span style="color:#666;">(optional)</span></label>
+                <input type="text" name="cta_link" id="ctaLink" placeholder="e.g. /browse or https://...">
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="es-card" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <div style="font-size:0.8rem;color:var(--text-muted);">
+            <i class="bi bi-info-circle"></i> Emails use the official WiamApp branded template with logo, gold theme, and footer links.
+        </div>
+        <div class="es-actions">
+            <button type="button" class="es-btn es-btn-outline" onclick="previewEmail()">
+                <i class="bi bi-eye"></i> Preview
+            </button>
+            <button type="button" class="es-btn es-btn-gold" onclick="confirmSend()">
+                <i class="bi bi-send-fill"></i> Queue Email
+            </button>
+        </div>
+    </div>
+</form>
+
+<!-- Preview Modal -->
+<div id="previewModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:9998;padding:20px;overflow:auto;">
+    <div style="max-width:640px;margin:0 auto;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <h3 style="color:#fff;font-size:1rem;margin:0;"><i class="bi bi-eye" style="color:var(--gold);"></i> Email Preview</h3>
+            <button onclick="document.getElementById('previewModal').style.display='none'" style="background:none;border:none;color:#888;font-size:1.3rem;cursor:pointer;">&times;</button>
+        </div>
+        <iframe id="previewFrame" class="es-preview-frame" style="width:100%;min-height:600px;border-radius:12px;"></iframe>
+    </div>
+</div>
+
+<!-- Confirm Send Modal -->
+<div id="confirmModal" class="es-confirm-overlay">
+    <div class="es-confirm-box">
+        <div style="font-size:2.5rem;margin-bottom:8px;">
+            <i class="bi bi-envelope-paper" style="color:var(--gold);"></i>
+        </div>
+        <h3>Confirm Send</h3>
+        <p>
+            You are about to send this email to:
+            <span class="confirm-count" id="confirmCount">0</span>
+            <span style="color:#ccc;">recipients</span>
+        </p>
+        <p style="color:#f87171;font-size:0.78rem;">This action cannot be undone.</p>
+        <div style="display:flex;gap:10px;justify-content:center;margin-top:16px;">
+            <button type="button" class="es-btn es-btn-outline" onclick="closeConfirm()">Cancel</button>
+            <button type="button" class="es-btn es-btn-gold" onclick="doSend()">
+                <i class="bi bi-send-fill"></i> Send Now
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+const SINGLE_TYPES = ['single_user', 'single_creator', 'single_team_member'];
+const SCOPE_MAP = { single_user: 'user', single_creator: 'creator', single_team_member: 'team_member' };
+
+function selectAudience(el, value) {
+    document.querySelectorAll('.es-audience-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    el.querySelector('input[type=radio]').checked = true;
+    document.getElementById('roleSelect').classList.toggle('visible', value === 'team_role');
+    const isSingle = SINGLE_TYPES.includes(value);
+    document.getElementById('singleSearch').classList.toggle('visible', isSingle);
+    if (isSingle) { clearSelectedUser(); document.getElementById('singleSearchInput').focus(); }
+}
+
+function getRecipientCount() {
+    const aud = document.querySelector('input[name="audience"]:checked').value;
+    if (SINGLE_TYPES.includes(aud)) {
+        return document.getElementById('singleEmailHidden').value ? 1 : 0;
+    }
+    const counts = { all: {{ total_users }}, creators: {{ total_creators }}, admins: {{ total_admins }}, team_role: 0 };
+    if (aud === 'team_role') {
+        const sel = document.getElementById('roleName');
+        const opt = sel.options[sel.selectedIndex];
+        if (opt && opt.value) {
+            const m = opt.text.match(/\((\d+)/);
+            return m ? parseInt(m[1]) : 0;
+        }
+        return 0;
+    }
+    return counts[aud] || 0;
+}
+
+// -- Single-user live search --
+let searchTimer = null;
+const searchInput = document.getElementById('singleSearchInput');
+const searchResultsEl = document.getElementById('searchResults');
+if (searchInput) {
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimer);
+        const val = this.value.trim();
+        if (val.length < 2) { searchResultsEl.classList.remove('open'); return; }
+        searchTimer = setTimeout(() => {
+            const aud = document.querySelector('input[name="audience"]:checked').value;
+            const scope = SCOPE_MAP[aud] || 'user';
+            const url = `{{ url_for('founder_dash.email_studio_search_users') }}?q=${encodeURIComponent(val)}&scope=${scope}`;
+            fetch(url, { credentials: 'same-origin' })
+                .then(r => {
+                    if (!r.ok) throw new Error('Search failed: ' + r.status);
+                    return r.json();
+                })
+                .then(data => {
+                    if (!data.length) {
+                        searchResultsEl.innerHTML = '<div style="padding:12px 14px;color:#666;font-size:0.8rem;">No results found</div>';
+                    } else {
+                        searchResultsEl.innerHTML = '';
+                        data.forEach(u => {
+                            const div = document.createElement('div');
+                            div.className = 'es-search-item';
+                            div.dataset.email = u.email;
+                            div.dataset.name = u.display_name;
+                            div.innerHTML = `<span class="si-name">${u.display_name}</span>`
+                                + `<span class="si-badge">${u.role}</span>`
+                                + `<br><span class="si-email">${u.email}</span>`;
+                            div.addEventListener('click', () => pickUser(u.email, u.display_name));
+                            searchResultsEl.appendChild(div);
+                        });
+                    }
+                    searchResultsEl.classList.add('open');
+                })
+                .catch(err => {
+                    console.error('Search error:', err);
+                    searchResultsEl.innerHTML = '<div style="padding:12px 14px;color:#f87171;font-size:0.8rem;">Search error — try again</div>';
+                    searchResultsEl.classList.add('open');
+                });
+        }, 300);
+    });
+    document.addEventListener('click', function(e) {
+        if (!searchResultsEl.contains(e.target) && e.target !== searchInput) {
+            searchResultsEl.classList.remove('open');
+        }
+    });
+}
+
+function pickUser(email, name) {
+    document.getElementById('singleEmailHidden').value = email;
+    document.getElementById('selectedUserName').textContent = name;
+    document.getElementById('selectedUserEmail').textContent = email;
+    document.getElementById('selectedUser').classList.add('visible');
+    searchResultsEl.classList.remove('open');
+    searchInput.value = '';
+}
+
+function clearSelectedUser() {
+    document.getElementById('singleEmailHidden').value = '';
+    document.getElementById('selectedUser').classList.remove('visible');
+    searchInput.value = '';
+}
+
+function previewEmail() {
+    const form = document.getElementById('emailForm');
+    const fd = new FormData(form);
+    fetch('{{ url_for("founder_dash.email_studio_preview") }}', { method: 'POST', body: fd })
+        .then(r => r.text())
+        .then(html => {
+            const frame = document.getElementById('previewFrame');
+            frame.srcdoc = html;
+            document.getElementById('previewModal').style.display = 'block';
+        });
+}
+
+function confirmSend() {
+    const subj = document.getElementById('emailSubject').value.trim();
+    const body = document.getElementById('emailBody').value.trim();
+    if (!subj || !body) { alert('Please fill in the subject and body.'); return; }
+    const aud = document.querySelector('input[name="audience"]:checked').value;
+    if (aud === 'team_role' && !document.getElementById('roleName').value) {
+        alert('Please select a team role.'); return;
+    }
+    if (SINGLE_TYPES.includes(aud) && !document.getElementById('singleEmailHidden').value) {
+        alert('Please search and select a recipient.'); return;
+    }
+    const count = getRecipientCount();
+    document.getElementById('confirmCount').textContent = count;
+    document.getElementById('confirmModal').classList.add('show');
+}
+
+function closeConfirm() { document.getElementById('confirmModal').classList.remove('show'); }
+
+function doSend() {
+    closeConfirm();
+    document.getElementById('emailForm').submit();
+}
+</script>
+{% endblock %}

@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}Gift Stickers — {{ book.title }} — WiamApp{% endblock %}
+
+{% block extra_head %}
+<style>
+    .gift-page { max-width: 500px; margin: 0 auto; padding: var(--space-xl) var(--space-md) var(--space-2xl); }
+    .gift-header { display: flex; align-items: center; gap: var(--space-md); margin-bottom: var(--space-lg); }
+    .gift-header h1 { font-size: 1.1rem; font-weight: 600; margin: 0; }
+    .gift-to { font-size: 0.85rem; color: var(--text-muted); margin-bottom: var(--space-lg); }
+    .gift-to strong { color: var(--gold); }
+    .gift-bal { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; background: rgba(212,168,67,0.1); border: 1px solid rgba(212,168,67,0.2); border-radius: 20px; font-size: 0.82rem; color: var(--gold); font-weight: 600; }
+    .tier-tabs { display: flex; gap: 6px; margin-bottom: var(--space-md); overflow-x: auto; padding-bottom: 4px; }
+    .tier-tab { padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border-subtle); background: rgba(255,255,255,0.03); color: var(--text-muted); font-size: 0.78rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.15s; }
+    .tier-tab.active { background: rgba(212,168,67,0.12); border-color: rgba(212,168,67,0.3); color: var(--gold); }
+    .sticker-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: var(--space-xl); }
+    @media (min-width: 400px) { .sticker-grid { grid-template-columns: repeat(5, 1fr); } }
+    .stk-card { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; transition: transform 0.2s; padding: 8px 4px; border-radius: 12px; }
+    .stk-card:hover { transform: translateY(-4px) scale(1.05); }
+    .stk-card.selected { background: rgba(212,168,67,0.1); }
+    .stk-card.selected .stk-3d { border-color: var(--gold) !important; box-shadow: 0 0 20px rgba(212,168,67,0.3); }
+    .stk-3d { width: 100%; aspect-ratio: 1; border-radius: 12px; border: 2px solid transparent; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.02); transition: all 0.2s; }
+    .stk-emoji { font-size: 1.8rem; }
+    .stk-label { font-size: 0.65rem; color: var(--text-muted); font-weight: 500; text-align: center; }
+    .stk-cost { font-size: 0.65rem; color: var(--gold); display: flex; align-items: center; gap: 2px; }
+    .send-bar { position: fixed; bottom: 0; left: 0; right: 0; padding: 12px 20px; padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); background: var(--bg); border-top: 1px solid var(--border-subtle); display: none; z-index: 100; }
+    .send-bar.active { display: block; }
+    .send-bar-inner { max-width: 500px; margin: 0 auto; display: flex; gap: 8px; align-items: center; }
+    .send-preview { width: 44px; height: 44px; border-radius: 12px; background: rgba(212,168,67,0.1); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; }
+    .send-info { flex: 1; min-width: 0; }
+    .send-name { font-weight: 600; font-size: 0.85rem; }
+    .send-cost { font-size: 0.75rem; color: var(--gold); }
+    .send-btn { padding: 10px 24px; border: none; border-radius: 24px; background: linear-gradient(135deg, #d4a843, #b8860b); color: #000; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="gift-page">
+    <div class="gift-header">
+        <a href="javascript:history.back()" class="btn-ghost"><i class="bi bi-arrow-left"></i></a>
+        <h1><i class="bi bi-gift" style="color:var(--gold);"></i> Send a Gift Sticker</h1>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-lg);">
+        <div class="gift-to">to <strong>{{ creator_profile.pen_name if creator_profile else (creator.display_name if creator else 'Creator') }}</strong> for "{{ book.title }}"</div>
+        <span class="gift-bal"><i class="bi bi-coin"></i> <span id="stickerBal">{{ coin_balance }}</span></span>
+    </div>
+
+    <div class="tier-tabs" id="tierTabs">
+        <button class="tier-tab active" onclick="filterTier('all',this)">All</button>
+        <button class="tier-tab" onclick="filterTier('common',this)">Common <span style="font-size:0.6rem;opacity:0.6;">5c</span></button>
+        <button class="tier-tab" onclick="filterTier('uncommon',this)">Uncommon <span style="font-size:0.6rem;opacity:0.6;">10c</span></button>
+        <button class="tier-tab" onclick="filterTier('rare',this)">Rare <span style="font-size:0.6rem;opacity:0.6;">15c</span></button>
+        <button class="tier-tab" onclick="filterTier('epic',this)">Epic <span style="font-size:0.6rem;opacity:0.6;">20c</span></button>
+    </div>
+
+    <div class="sticker-grid" id="stickerGrid">
+        {% for s in sticker_catalog %}
+        <div class="stk-card" data-tier="{{ s.tier }}" data-key="{{ s.key }}" data-cost="{{ s.cost }}" onclick="selectSticker(this,'{{ s.key }}',{{ s.cost }},'{{ s.emoji }}','{{ s.label }}')">
+            <div class="stk-3d">
+                <span class="stk-emoji">{{ s.emoji }}</span>
+            </div>
+            <span class="stk-label">{{ s.label }}</span>
+            <span class="stk-cost"><i class="bi bi-coin"></i> {{ s.cost }}</span>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="send-bar" id="sendBar">
+    <div class="send-bar-inner">
+        <div class="send-preview" id="selectedPreview"></div>
+        <div class="send-info">
+            <div class="send-name" id="selectedName"></div>
+            <div class="send-cost" id="selectedCost"></div>
+        </div>
+        <button class="send-btn" id="sendBtn" onclick="confirmSend()">
+            <i class="bi bi-send-fill"></i> Send
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+var _stkKey='', _stkCost=0, _stkEmoji='', _stkLabel='';
+
+function filterTier(tier, btn) {
+    document.querySelectorAll('.tier-tab').forEach(function(t){ t.classList.remove('active'); });
+    btn.classList.add('active');
+    document.querySelectorAll('.stk-card').forEach(function(c){
+        c.style.display = (tier === 'all' || c.dataset.tier === tier) ? 'flex' : 'none';
+    });
+}
+
+function selectSticker(el, key, cost, emoji, label) {
+    document.querySelectorAll('.stk-card').forEach(function(c){ c.classList.remove('selected'); });
+    el.classList.add('selected');
+    _stkKey = key; _stkCost = cost; _stkEmoji = emoji; _stkLabel = label;
+    document.getElementById('selectedPreview').textContent = emoji;
+    document.getElementById('selectedName').textContent = label;
+    document.getElementById('selectedCost').innerHTML = '<i class="bi bi-coin"></i> ' + cost + ' coins';
+    document.getElementById('sendBar').classList.add('active');
+}
+
+function confirmSend() {
+    if (!_stkKey) return;
+    var bal = parseInt(document.getElementById('stickerBal').textContent) || 0;
+    if (bal < _stkCost) { alert('Not enough coins! You need ' + _stkCost + ' coins.'); return; }
+    var btn = document.getElementById('sendBtn');
+    btn.disabled = true; btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Sending...';
+    fetch('/gift/sticker/send', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json', 'X-CSRFToken': csrfToken},
+        body: JSON.stringify({sticker_key: _stkKey, content_id: {{ book.id }}, recipient_id: {{ creator.wiam_id if creator else 0 }}})
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+        if (d.ok) {
+            document.getElementById('stickerBal').textContent = bal - _stkCost;
+            btn.innerHTML = '<i class="bi bi-check-lg"></i> Sent!'; btn.style.background = '#22c55e';
+            setTimeout(function(){
+                btn.disabled = false; btn.innerHTML = '<i class="bi bi-send-fill"></i> Send'; btn.style.background = '';
+                document.querySelectorAll('.stk-card').forEach(function(c){ c.classList.remove('selected'); });
+                document.getElementById('sendBar').classList.remove('active');
+                var toast = document.createElement('div');
+                toast.innerHTML = d.emoji + ' <strong>' + d.label + '</strong> sticker sent!';
+                toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);padding:12px 24px;background:linear-gradient(135deg,#d4a843,#b8860b);color:#000;border-radius:24px;font-size:0.85rem;font-weight:600;z-index:10000;box-shadow:0 8px 32px rgba(212,168,67,0.4);';
+                document.body.appendChild(toast);
+                setTimeout(function(){ toast.remove(); }, 3000);
+            }, 1200);
+        } else {
+            alert(d.error || 'Failed to send sticker.');
+            btn.disabled = false; btn.innerHTML = '<i class="bi bi-send-fill"></i> Send';
+        }
+    })
+    .catch(function(){
+        alert('Network error. Please try again.');
+        btn.disabled = false; btn.innerHTML = '<i class="bi bi-send-fill"></i> Send';
+    });
+}
+</script>
+{% endblock %}

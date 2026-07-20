@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Delete Account — WiamApp{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width:520px;padding:40px 16px;">
+    <div style="text-align:center;margin-bottom:28px;">
+        <i class="bi bi-exclamation-triangle-fill" style="font-size:3rem;color:#ef4444;"></i>
+        <h1 style="font-size:1.5rem;margin:12px 0 6px;color:#ef4444;">Delete Your Account</h1>
+        <p style="color:var(--text-muted);font-size:0.9rem;">This action is permanent and cannot be undone.</p>
+    </div>
+
+    <div style="background:var(--bg-card);border:1px solid rgba(239,68,68,0.2);border-radius:14px;padding:24px;">
+        <h3 style="font-size:1rem;color:#ef4444;margin:0 0 12px;"><i class="bi bi-shield-exclamation"></i> What will happen:</h3>
+        <ul style="color:var(--text-secondary);font-size:0.88rem;line-height:1.8;padding-left:20px;margin:0 0 20px;">
+            <li>Your account and all personal data will be permanently removed</li>
+            <li>Your reading history, favorites, and library will be deleted</li>
+            {% if current_user.is_creator %}
+            <li style="color:#ef4444;font-weight:600;">All your published stories will be removed from the platform</li>
+            <li style="color:#ef4444;font-weight:600;">Your creator earnings history will be lost</li>
+            {% endif %}
+            <li>You will be logged out immediately</li>
+            <li>You cannot recover this account after deletion</li>
+        </ul>
+
+        <form method="POST" action="{{ url_for('profile.delete_account') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            {% if current_user.password_hash %}
+            <div style="margin-bottom:16px;">
+                <label style="display:block;font-size:0.85rem;color:var(--text-muted);margin-bottom:6px;">Enter your password</label>
+                <input type="password" name="password" required placeholder="Your password"
+                    style="width:100%;padding:11px 14px;background:var(--bg-elevated);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-size:0.9rem;">
+            </div>
+            {% endif %}
+
+            <div style="margin-bottom:20px;">
+                <label style="display:block;font-size:0.85rem;color:var(--text-muted);margin-bottom:6px;">
+                    Type <strong style="color:#ef4444;">DELETE MY ACCOUNT</strong> to confirm
+                </label>
+                <input type="text" name="confirm" required placeholder="DELETE MY ACCOUNT" autocomplete="off"
+                    style="width:100%;padding:11px 14px;background:var(--bg-elevated);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-size:0.9rem;">
+            </div>
+
+            <div style="display:flex;gap:12px;">
+                <a href="{{ url_for('profile.my_profile') }}" style="flex:1;text-align:center;padding:12px;background:var(--bg-elevated);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);text-decoration:none;font-weight:600;font-size:0.9rem;">
+                    Cancel
+                </a>
+                <button type="submit" style="flex:1;padding:12px;background:#ef4444;border:none;border-radius:10px;color:#fff;font-weight:600;font-size:0.9rem;cursor:pointer;"
+                    onclick="return confirm('Are you absolutely sure? This cannot be undone.');">
+                    Delete My Account
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

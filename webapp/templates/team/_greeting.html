@@ -1,0 +1,39 @@
+{# ── Personalized time-of-day greeting + role badge ── #}
+{# Usage: {% include "team/_greeting.html" %} — requires `role` and `role_title` in context #}
+{% set hour = now().hour %}
+{% if hour < 12 %}
+  {% set tod = 'Good morning' %}
+  {% set tod_icon = 'bi-sunrise' %}
+  {% set tod_color = '#fbbf24' %}
+{% elif hour < 17 %}
+  {% set tod = 'Good afternoon' %}
+  {% set tod_icon = 'bi-sun' %}
+  {% set tod_color = '#fb923c' %}
+{% else %}
+  {% set tod = 'Good evening' %}
+  {% set tod_icon = 'bi-moon-stars' %}
+  {% set tod_color = '#a78bfa' %}
+{% endif %}
+
+{% set first_name = current_user.display_name.split(' ')[0] if current_user.display_name else 'Team' %}
+
+<div style="background:linear-gradient(135deg,rgba(20,20,35,0.9),rgba(15,15,28,0.9));border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:1.5rem 1.75rem;margin-bottom:1.75rem;position:relative;overflow:hidden;">
+    <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,{{ tod_color }},var(--gold,#d4a843),transparent);"></div>
+    <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+        <div style="flex:1;min-width:200px;">
+            <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.35rem;">
+                <i class="bi {{ tod_icon }}" style="color:{{ tod_color }};font-size:1.1rem;"></i>
+                <span style="font-size:1.25rem;font-weight:700;color:var(--text,#e8e6e3);">{{ tod }}, {{ first_name }}</span>
+            </div>
+            <p style="margin:0;color:var(--text-muted,#8e8e94);font-size:0.85rem;">
+                {{ now().strftime('%A, %B %d, %Y') }} &middot; WiamLabs Office
+            </p>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.5rem;">
+            <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:0.75rem;font-weight:600;letter-spacing:0.03em;background:rgba(212,168,67,0.1);color:var(--gold,#d4a843);border:1px solid rgba(212,168,67,0.15);">
+                <i class="bi {{ role_icon|default('bi-person-badge') }}"></i>
+                {{ role_title|default(role|default('Team')|replace('_',' ')|title) }}
+            </span>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamStudio — Episode Upload</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75;
+    --green:#3BB273; --red:#E4573D; --blue:#4C8DFF;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); display:flex; flex-direction:column; }
+  .statusbar{ height:44px; flex-shrink:0; }
+
+  .topbar{ display:flex; align-items:center; gap:12px; padding:2px 20px 14px; flex-shrink:0; }
+  .icon-btn{ width:34px; height:34px; border-radius:50%; background:var(--navy-card); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .topbar h1{ font-size:16px; font-weight:800; color:#fff; margin:0; }
+  .topbar span{ display:block; font-size:10.5px; color:var(--text-faint); font-weight:600; margin-top:1px; }
+
+  .scroll{ flex:1; overflow-y:auto; padding:0 20px 20px; }
+
+  /* fixed spec callout */
+  .spec-callout{ display:flex; gap:10px; background:rgba(212,160,23,0.08); border:1px solid rgba(212,160,23,0.28); border-radius:14px; padding:12px 13px; margin-bottom:18px; }
+  .spec-callout svg{ color:var(--gold); flex-shrink:0; width:16px; height:16px; margin-top:1px; }
+  .spec-callout-text{ font-size:11px; color:#E7D9B5; line-height:1.55; }
+  .spec-callout-text b{ color:var(--gold); }
+
+  /* drop zone */
+  .drop-zone{ border:1.5px dashed var(--navy-line); border-radius:18px; padding:30px 20px; text-align:center; margin-bottom:22px; background:var(--navy-card); }
+  .drop-icon{ width:50px; height:50px; border-radius:50%; background:var(--navy-soft); display:flex; align-items:center; justify-content:center; margin:0 auto 14px; }
+  .drop-zone b{ display:block; font-size:14px; font-weight:700; color:#fff; margin-bottom:4px; }
+  .drop-zone span{ font-size:11px; color:var(--text-dim); display:block; margin-bottom:16px; }
+  .browse-btn{ padding:11px 24px; border-radius:12px; background:var(--gold); color:var(--navy); font-size:12.5px; font-weight:800; border:none; font-family:'Inter',sans-serif; }
+
+  .section-head{ font-size:13px; font-weight:700; color:#fff; margin:0 0 12px; display:flex; align-items:center; justify-content:space-between; }
+  .section-head .count{ font-size:11px; color:var(--text-dim); font-weight:600; }
+
+  .ep-row{ display:flex; gap:12px; background:var(--navy-card); border:1px solid var(--navy-line); border-radius:14px; padding:11px; margin-bottom:10px; align-items:center; }
+  .ep-thumb{ width:46px; height:66px; border-radius:8px; flex-shrink:0; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+  .ep-thumb.t1{ background:linear-gradient(160deg,#241a3a,#0d0d24); }
+  .ep-thumb.t2{ background:linear-gradient(160deg,#1a2a3a,#12122a); }
+  .ep-thumb.t3{ background:var(--navy-soft); }
+  .ep-thumb.t4{ background:linear-gradient(160deg,#3a1a1a,#12122a); }
+  .ep-body{ flex:1; min-width:0; }
+  .ep-title{ font-size:12.5px; font-weight:700; color:#fff; margin:0 0 4px; }
+  .ep-meta{ font-size:10px; color:var(--text-faint); margin:0 0 6px; }
+
+  .status-pill{ display:inline-flex; align-items:center; gap:5px; font-size:9.5px; font-weight:800; padding:3px 8px; border-radius:6px; }
+  .status-pill.ready{ background:rgba(59,178,115,0.16); color:var(--green); }
+  .status-pill.processing{ background:rgba(76,141,255,0.16); color:var(--blue); }
+  .status-pill.uploading{ background:rgba(212,160,23,0.16); color:var(--gold); }
+  .status-pill.rejected{ background:rgba(228,87,61,0.16); color:var(--red); }
+  .status-dot{ width:5px; height:5px; border-radius:50%; background:currentColor; }
+
+  .mini-bar{ height:4px; background:var(--navy-line); border-radius:99px; overflow:hidden; margin-top:6px; width:100%; }
+  .mini-fill{ height:100%; border-radius:99px; }
+  .mini-fill.gold{ background:var(--gold); }
+  .mini-fill.blue{ background:var(--blue); }
+
+  .reject-reason{ font-size:9.5px; color:#E0A79A; margin-top:5px; }
+
+  .ep-action{ flex-shrink:0; }
+  .ep-action svg{ color:var(--text-faint); width:16px; height:16px; }
+
+  .footer{ flex-shrink:0; padding:12px 20px 26px; }
+  .btn-primary{ width:100%; padding:16px; border-radius:16px; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); border:none; color:var(--navy); font-size:15px; font-weight:800; box-shadow:0 14px 30px rgba(212,160,23,0.3); font-family:'Inter',sans-serif; }
+
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"></div>
+  <div class="topbar">
+    <div class="icon-btn"><svg viewBox="0 0 24 24" width="15" height="15" color="#fff"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></div>
+    <div>
+      <h1>Episodes</h1>
+      <span>The Chief's Daughter</span>
+    </div>
+  </div>
+
+  <div class="scroll">
+
+    <div class="spec-callout">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <div class="spec-callout-text"><b>9:16 · 1080×1920 · 4–5 min · MP4</b><br/>Anything outside 3:00–6:00 or the wrong aspect gets auto-rejected.</div>
+    </div>
+
+    <div class="drop-zone">
+      <div class="drop-icon"><svg viewBox="0 0 24 24" width="22" height="22" color="var(--gold)"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+      <b>Drop episode video here</b>
+      <span>or upload from your device</span>
+      <button class="browse-btn">Choose Video</button>
+    </div>
+
+    <div class="section-head"><span>Episode list</span><span class="count">12 of 20 uploaded</span></div>
+
+    <div class="ep-row">
+      <div class="ep-thumb t1"></div>
+      <div class="ep-body">
+        <p class="ep-title">EP 12 — Ready</p>
+        <p class="ep-meta">4m 42s · 1080×1920 · 218 MB</p>
+        <span class="status-pill ready"><span class="status-dot"></span>READY</span>
+      </div>
+      <div class="ep-action"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></div>
+    </div>
+
+    <div class="ep-row">
+      <div class="ep-thumb t2"></div>
+      <div class="ep-body">
+        <p class="ep-title">EP 11 — Processing</p>
+        <p class="ep-meta">Transcoding for playback…</p>
+        <span class="status-pill processing"><span class="status-dot"></span>PROCESSING</span>
+        <div class="mini-bar"><div class="mini-fill blue" style="width:64%;"></div></div>
+      </div>
+      <div class="ep-action"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></div>
+    </div>
+
+    <div class="ep-row">
+      <div class="ep-thumb t3"></div>
+      <div class="ep-body">
+        <p class="ep-title">EP 13 — Uploading</p>
+        <p class="ep-meta">302 MB of 480 MB</p>
+        <span class="status-pill uploading"><span class="status-dot"></span>UPLOADING</span>
+        <div class="mini-bar"><div class="mini-fill gold" style="width:63%;"></div></div>
+      </div>
+      <div class="ep-action"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+    </div>
+
+    <div class="ep-row">
+      <div class="ep-thumb t4"></div>
+      <div class="ep-body">
+        <p class="ep-title">EP 10 — Rejected</p>
+        <p class="ep-meta">Uploaded as 1920×1080</p>
+        <span class="status-pill rejected"><span class="status-dot"></span>WRONG SIZE</span>
+        <p class="reject-reason">Video must be 9:16. Yours was 16:9. Tap to fix.</p>
+      </div>
+      <div class="ep-action"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <button class="btn-primary">Add Episode</button>
+  </div>
+</div>
+
+</body>
+</html>

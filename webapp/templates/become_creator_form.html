@@ -1,0 +1,35 @@
+<form method="POST" style="margin-top: 1rem;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div class="bc-card">
+        <label><i class="bi bi-pen" style="color:var(--gold);"></i> Pen Name <span style="color:#e74c3c;">*</span></label>
+        <input type="text"
+               name="pen_name"
+               placeholder="The name readers will know you by..."
+               required
+               minlength="2"
+               maxlength="60">
+        <small style="font-size:0.7rem;color:var(--text-muted);margin-top:4px;display:block;">
+            This will be your public author name. You can change it later in Studio Settings.
+        </small>
+    </div>
+
+    <div class="bc-card" style="border-color:rgba(212,168,67,0.25);">
+        <label style="display:flex;align-items:flex-start;gap:0.55rem;cursor:pointer;font-weight:500;">
+            <input type="checkbox" name="accepted_terms" value="1" required style="margin-top:0.2rem;flex-shrink:0;">
+            <span style="font-size:0.82rem;color:var(--text-secondary);line-height:1.45;">
+                I agree to the
+                <a href="/terms" target="_blank" style="color:var(--gold);text-decoration:underline;">Creator Terms</a>
+                and I confirm that everything I publish on WiamApp is original or properly licensed.
+            </span>
+        </label>
+    </div>
+
+    <button type="submit" class="bc-submit">
+        <i class="bi bi-stars"></i> Become a Creator
+    </button>
+
+    <p style="font-size:0.7rem;color:var(--text-muted);text-align:center;margin-top:0.9rem;line-height:1.5;">
+        No application form, no waiting room — open WiamStudio the moment you tap above.
+    </p>
+</form>

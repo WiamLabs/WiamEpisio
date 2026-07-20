@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}My Warnings — WiamApp{% endblock %}
+
+{% block content %}
+<div style="max-width:640px;margin:0 auto;padding:1.5rem 1rem 4rem;">
+    <a href="{{ url_for('dashboard.index') }}" style="color:var(--text-muted);font-size:0.82rem;text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-bottom:1rem;">
+        <i class="bi bi-arrow-left"></i> Back to Dashboard
+    </a>
+
+    <h1 style="font-size:1.4rem;margin-bottom:0.25rem;"><i class="bi bi-exclamation-triangle me-2" style="color:#f59e0b;"></i>My Warnings</h1>
+    <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:1.5rem;">Warnings and notices issued to your account. Please review and acknowledge them.</p>
+
+    {% if warnings %}
+    <div style="display:flex;flex-direction:column;gap:0.6rem;">
+        {% for w in warnings %}
+        <div style="background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:12px;padding:1rem 1.1rem;border-left:3px solid {% if w.severity == 'strike' %}#ef4444{% elif w.severity == 'warning' %}#f59e0b{% else %}#38bdf8{% endif %};">
+            <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.4rem;flex-wrap:wrap;">
+                <span style="font-size:0.7rem;padding:2px 8px;border-radius:8px;font-weight:600;
+                    {% if w.severity == 'strike' %}background:rgba(239,68,68,0.12);color:#f87171;
+                    {% elif w.severity == 'warning' %}background:rgba(245,158,11,0.12);color:#f59e0b;
+                    {% else %}background:rgba(56,189,248,0.12);color:#38bdf8;{% endif %}">{{ w.severity|title }}</span>
+                <span style="font-size:0.7rem;padding:2px 8px;border-radius:8px;font-weight:600;background:rgba(255,255,255,0.05);color:var(--text-muted);">{{ w.category.replace('_', ' ')|title }}</span>
+                <span style="color:var(--text-muted);font-size:0.7rem;margin-left:auto;">{{ w.created_at.strftime('%b %d, %Y') if w.created_at else '' }}</span>
+            </div>
+            <p style="font-size:0.88rem;line-height:1.6;margin:0.3rem 0 0.5rem;white-space:pre-wrap;">{{ w.message }}</p>
+
+            {% if w.acknowledged %}
+            <div style="font-size:0.75rem;color:#4ade80;"><i class="bi bi-check-circle-fill me-1"></i>Acknowledged {{ w.acknowledged_at.strftime('%b %d, %Y') if w.acknowledged_at else '' }}</div>
+            {% else %}
+            <form method="post" action="{{ url_for('profile.acknowledge_warning', warning_id=w.id) }}" style="margin-top:0.25rem;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" style="background:rgba(245,158,11,0.12);color:#f59e0b;border:1px solid rgba(245,158,11,0.2);border-radius:8px;padding:0.4rem 1rem;font-size:0.8rem;font-weight:600;cursor:pointer;">
+                    <i class="bi bi-check2 me-1"></i>Acknowledge
+                </button>
+            </form>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:2.5rem;color:var(--text-muted);">
+        <i class="bi bi-check-circle" style="font-size:2.5rem;display:block;margin-bottom:0.5rem;opacity:0.3;color:#4ade80;"></i>
+        <p style="font-size:0.9rem;font-weight:600;">No warnings on your account</p>
+        <p style="font-size:0.8rem;">Keep up the great work!</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

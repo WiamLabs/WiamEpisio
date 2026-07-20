@@ -1,0 +1,266 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Content Seeder — WiamApp{% endblock %}
+{% block sidebar_title %}Control Panel{% endblock %}
+
+{% block sidebar_nav %}
+<a class="nav-link" href="{{ url_for('founder_dash.overview') }}"><i class="bi bi-speedometer2"></i> Overview</a>
+<a class="nav-link" href="{{ url_for('founder_dash.users') }}"><i class="bi bi-people"></i> Users</a>
+<a class="nav-link" href="{{ url_for('founder_dash.content') }}"><i class="bi bi-book"></i> Content</a>
+<a class="nav-link" href="{{ url_for('founder_dash.revenue') }}"><i class="bi bi-cash-stack"></i> Revenue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.financial_dashboard') }}"><i class="bi bi-bank" style="color:var(--gold);"></i> Financial v5</a>
+<a class="nav-link" href="{{ url_for('founder_dash.premium_analytics') }}"><i class="bi bi-gem" style="color:#c084fc;"></i> Premium Analytics</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payouts') }}"><i class="bi bi-send-check"></i> Payouts</a>
+<a class="nav-link" href="{{ url_for('founder_dash.withdrawals') }}"><i class="bi bi-arrow-up-right-circle" style="color:var(--gold);"></i> Withdrawals</a>
+<a class="nav-link" href="{{ url_for('founder_dash.subscribers') }}"><i class="bi bi-gem" style="color:#9b59b6;"></i> Subscribers</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payroll') }}"><i class="bi bi-wallet2" style="color:#2ecc71;"></i> Team Payroll</a>
+<a class="nav-link" href="{{ url_for('founder_dash.creators') }}"><i class="bi bi-person-badge"></i> Creators</a>
+<a class="nav-link" href="{{ url_for('founder_dash.genres') }}"><i class="bi bi-tags"></i> Genres</a>
+<a class="nav-link" href="{{ url_for('founder_dash.announcements') }}"><i class="bi bi-megaphone"></i> Announcements</a>
+<a class="nav-link" href="{{ url_for('founder_dash.collections') }}"><i class="bi bi-grid"></i> Collections</a>
+<a class="nav-link" href="{{ url_for('founder_dash.moderation') }}"><i class="bi bi-shield-exclamation"></i> Moderation</a>
+<a class="nav-link" href="{{ url_for('founder_dash.warnings_list') }}"><i class="bi bi-exclamation-triangle" style="color:#f59e0b;"></i> Warnings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.elite_manage') }}"><span style="color:var(--gold);">?</span> WiamElite</a>
+<a class="nav-link" href="{{ url_for('wiambot.apex_review') }}"><i class="bi bi-trophy-fill" style="color:var(--gold);"></i> Apex Review</a>
+<a class="nav-link" href="{{ url_for('founder_dash.review_queue') }}"><i class="bi bi-robot"></i> Bot Review Queue</a>
+<a class="nav-link active" href="{{ url_for('classics.dashboard') }}"><i class="bi bi-journal-bookmark" style="color:#a78bfa;"></i> Content Seeder</a>
+<a class="nav-link" href="{{ url_for('founder_dash.platform_settings') }}"><i class="bi bi-sliders"></i> Platform Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.forms_dashboard') }}"><i class="bi bi-file-earmark-text"></i> Application Forms</a>
+<a class="nav-link" href="{{ url_for('founder_dash.email_studio') }}"><i class="bi bi-envelope-paper" style="color:var(--gold);"></i> Email Studio</a>
+<a class="nav-link" href="{{ url_for('founder_dash.team_management') }}"><i class="bi bi-people-fill"></i> Team</a>
+<a class="nav-link" href="{{ url_for('founder_dash.account_management') }}"><i class="bi bi-person-x"></i> Account Management</a>
+<a class="nav-link" href="{{ url_for('founder_dash.notification_testing') }}"><i class="bi bi-bell" style="color:#fbbf24;"></i> Notifications</a>
+<a class="nav-link" href="{{ url_for('founder_dash.settings') }}"><i class="bi bi-gear"></i> Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.admins') }}"><i class="bi bi-shield-check"></i> Admins</a>
+{% endblock %}
+
+{% block dash_content %}
+<style>
+    .seeder-card{background:linear-gradient(135deg,rgba(20,20,35,0.9),rgba(15,15,28,0.9));border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:1.5rem;margin-bottom:1.25rem;}
+    .seeder-card h3{margin:0 0 1rem;font-size:1.1rem;font-weight:600;color:var(--text,#e8e6e3);}
+    .seeder-card h3 i{margin-right:0.4rem;opacity:0.7;}
+    .fetch-form{display:flex;gap:0.75rem;flex-wrap:wrap;align-items:flex-end;}
+    .fetch-form label{font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:0.3rem;}
+    .fetch-form input,.fetch-form select{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:0.5rem 0.85rem;color:var(--text);font-size:0.88rem;}
+    .fetch-form input:focus,.fetch-form select:focus{outline:none;border-color:var(--gold,#d4a843);}
+    .btn-fetch{background:linear-gradient(135deg,#a78bfa,#7c3aed);color:#fff;border:none;border-radius:8px;padding:0.55rem 1.5rem;font-weight:600;font-size:0.88rem;cursor:pointer;transition:all 0.2s;}
+    .btn-fetch:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(167,139,250,0.3);}
+    .btn-publish{background:linear-gradient(135deg,#4ade80,#22c55e);color:#000;border:none;border-radius:6px;padding:0.35rem 0.85rem;font-weight:600;font-size:0.78rem;cursor:pointer;}
+    .btn-review{background:rgba(212,168,67,0.15);color:var(--gold);border:1px solid rgba(212,168,67,0.2);border-radius:6px;padding:0.35rem 0.85rem;font-weight:600;font-size:0.78rem;cursor:pointer;text-decoration:none;}
+    .btn-delete{background:rgba(248,113,113,0.15);color:#f87171;border:1px solid rgba(248,113,113,0.2);border-radius:6px;padding:0.35rem 0.85rem;font-weight:600;font-size:0.78rem;cursor:pointer;}
+    .badge-draft{background:rgba(250,204,21,0.15);color:#facc15;padding:0.2rem 0.6rem;border-radius:6px;font-size:0.75rem;font-weight:600;}
+    .badge-published{background:rgba(74,222,128,0.15);color:#4ade80;padding:0.2rem 0.6rem;border-radius:6px;font-size:0.75rem;font-weight:600;}
+    .badge-classic{background:linear-gradient(135deg,rgba(167,139,250,0.2),rgba(124,58,237,0.15));color:#a78bfa;padding:0.2rem 0.6rem;border-radius:6px;font-size:0.72rem;font-weight:700;letter-spacing:0.04em;}
+    .log-badge-fetched{color:#4ade80;} .log-badge-skipped{color:#facc15;} .log-badge-error{color:#f87171;}
+    .empty-state{text-align:center;padding:2rem;color:var(--text-muted);font-size:0.9rem;}
+    .empty-state i{font-size:2rem;display:block;margin-bottom:0.5rem;opacity:0.4;}
+</style>
+
+<div class="dash-header">
+    <h1><i class="bi bi-journal-bookmark" style="color:#a78bfa;"></i> Content Seeder</h1>
+    <p>Fetch &amp; manage public-domain classic novels from Project Gutenberg</p>
+</div>
+
+<!-- Stats -->
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="label"><i class="bi bi-book" style="margin-right:4px;opacity:0.6;"></i> Total Classics</div>
+        <div class="value" style="color:#a78bfa;">{{ stats.total_classics }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label"><i class="bi bi-pencil" style="margin-right:4px;opacity:0.6;"></i> Drafts</div>
+        <div class="value" style="color:#facc15;">{{ stats.draft_count }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label"><i class="bi bi-check-circle" style="margin-right:4px;opacity:0.6;"></i> Published</div>
+        <div class="value" style="color:#4ade80;">{{ stats.published_count }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label"><i class="bi bi-list-ol" style="margin-right:4px;opacity:0.6;"></i> Total Chapters</div>
+        <div class="value">{{ stats.total_chapters }}</div>
+    </div>
+</div>
+
+<!-- Fetch Form -->
+<div class="seeder-card" style="border-left:4px solid #a78bfa;">
+    <h3><i class="bi bi-cloud-download"></i> Fetch Classic Novels</h3>
+    <form method="POST" action="{{ url_for('classics.fetch_books') }}" class="fetch-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div>
+            <label>Number of books</label>
+            <input type="number" name="count" value="5" min="1" max="10" style="width:80px;">
+        </div>
+        <div>
+            <label>Topic / Genre</label>
+            <input type="text" name="topic" value="fiction" list="topic-suggestions" placeholder="e.g. fiction, poetry, history..." style="min-width:180px;">
+            <datalist id="topic-suggestions">
+                <option value="fiction">
+                <option value="adventure">
+                <option value="romance">
+                <option value="mystery">
+                <option value="science fiction">
+                <option value="children">
+                <option value="poetry">
+                <option value="history">
+                <option value="drama">
+                <option value="philosophy">
+                <option value="fantasy">
+                <option value="horror">
+                <option value="biography">
+                <option value="religion">
+                <option value="humor">
+                <option value="education">
+            </datalist>
+        </div>
+        <button type="submit" class="btn-fetch">
+            <i class="bi bi-cloud-download"></i> Fetch from Gutenberg
+        </button>
+    </form>
+    <p style="font-size:0.75rem;color:var(--text-muted);margin:0.75rem 0 0;">
+        Only English novels with 5+ chapters are accepted. Mature/inappropriate content is automatically filtered out.
+        Gutenberg license headers are stripped. Books already fetched are skipped.
+    </p>
+</div>
+
+<!-- Drafts -->
+<div class="seeder-card">
+    <h3><i class="bi bi-pencil-square" style="color:#facc15;"></i> Classic Drafts — Review Before Publishing</h3>
+    {% if drafts %}
+    <div class="dash-table-scroll">
+        <table class="dash-table">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Author</th>
+                    <th>Genre</th>
+                    <th>Chapters</th>
+                    <th>Words</th>
+                    <th>Fetched</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for b in drafts %}
+                <tr>
+                    <td>
+                        <span class="badge-classic">CLASSIC</span>
+                        {{ b.title|truncate(40) }}
+                    </td>
+                    <td style="color:var(--text-muted);">{{ b.author }}</td>
+                    <td><span style="color:#a78bfa;">{{ b.genre }}</span></td>
+                    <td>{{ b.chapter_count }}</td>
+                    <td>{{ '{:,}'.format(b.word_count) }}</td>
+                    <td style="white-space:nowrap;color:var(--text-muted);">{{ b.created_at.strftime('%b %d, %H:%M') }}</td>
+                    <td style="white-space:nowrap;display:flex;gap:0.4rem;">
+                        <a href="{{ url_for('classics.review', book_id=b.id) }}" class="btn-review"><i class="bi bi-eye"></i> Review</a>
+                        <form method="POST" action="{{ url_for('classics.publish', book_id=b.id) }}" style="display:inline;" onsubmit="return confirm('Publish this classic? Chapter 1 releases immediately, then 1 chapter/day.')">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn-publish"><i class="bi bi-check-lg"></i> Publish</button>
+                        </form>
+                        <form method="POST" action="{{ url_for('classics.delete', book_id=b.id) }}" style="display:inline;" onsubmit="return confirm('Permanently delete this classic draft?')">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn-delete"><i class="bi bi-trash"></i></button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="bi bi-inbox"></i>
+        No classic drafts. Use the fetch button above to pull novels from Gutenberg.
+    </div>
+    {% endif %}
+</div>
+
+<!-- Published Classics -->
+<div class="seeder-card">
+    <h3><i class="bi bi-check-circle" style="color:#4ade80;"></i> Published Classics</h3>
+    {% if published %}
+    <div class="dash-table-scroll">
+        <table class="dash-table">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Author</th>
+                    <th>Genre</th>
+                    <th>Chapters Released</th>
+                    <th>Views</th>
+                    <th>Published</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for b in published %}
+                <tr>
+                    <td>
+                        <span class="badge-classic">CLASSIC</span>
+                        <a href="{{ url_for('classics.book_detail', book_id=b.id) }}" style="color:var(--text);text-decoration:none;">{{ b.title|truncate(40) }}</a>
+                    </td>
+                    <td style="color:var(--text-muted);">{{ b.author }}</td>
+                    <td><span style="color:#a78bfa;">{{ b.genre }}</span></td>
+                    <td>{{ b.published_chapter_count }} / {{ b.chapter_count }}</td>
+                    <td>{{ b.views }}</td>
+                    <td style="white-space:nowrap;color:var(--text-muted);">{{ b.published_at.strftime('%b %d') if b.published_at else '—' }}</td>
+                    <td>
+                        <form method="POST" action="{{ url_for('classics.delete', book_id=b.id) }}" style="display:inline;" onsubmit="return confirm('?? This will permanently remove this classic and all its chapters. Continue?')">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn-delete"><i class="bi bi-trash"></i> Remove</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="bi bi-check-circle"></i>
+        No published classics yet. Review and publish drafts above.
+    </div>
+    {% endif %}
+</div>
+
+<!-- Fetch Log -->
+<div class="seeder-card">
+    <h3><i class="bi bi-clock-history" style="color:var(--text-muted);"></i> Recent Fetch Log</h3>
+    {% if recent_log %}
+    <div class="dash-table-scroll">
+        <table class="dash-table">
+            <thead><tr><th>Gutenberg ID</th><th>Title</th><th>Status</th><th>Reason</th><th>Date</th><th>Actions</th></tr></thead>
+            <tbody>
+            {% for l in recent_log %}
+                <tr>
+                    <td>#{{ l.gutenberg_id }}</td>
+                    <td>{{ l.title|truncate(50) }}</td>
+                    <td>
+                        <span class="log-badge-{{ l.status }}">{{ l.status }}</span>
+                    </td>
+                    <td style="color:var(--text-muted);font-size:0.82rem;">{{ l.reason_skipped or '—' }}</td>
+                    <td style="white-space:nowrap;color:var(--text-muted);">{{ l.fetched_at.strftime('%b %d, %H:%M') }}</td>
+                    <td style="white-space:nowrap;display:flex;gap:0.4rem;">
+                        {% if l.status == 'fetched' %}
+                        <form method="POST" action="{{ url_for('classics.return_log', log_id=l.id) }}" style="display:inline;" onsubmit="return confirm('Return this book to draft review?')">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn-review" style="font-size:0.72rem;padding:0.25rem 0.6rem;"><i class="bi bi-arrow-counterclockwise"></i> Return</button>
+                        </form>
+                        {% endif %}
+                        <form method="POST" action="{{ url_for('classics.delete_log', log_id=l.id) }}" style="display:inline;" onsubmit="return confirm('Permanently delete this log entry and any associated book?')">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn-delete" style="font-size:0.72rem;padding:0.25rem 0.6rem;"><i class="bi bi-trash"></i></button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="bi bi-clock-history"></i>
+        No fetch activity yet.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

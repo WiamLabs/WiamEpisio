@@ -1,0 +1,110 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Editor Dashboard — WiamApp{% endblock %}
+{% block sidebar_title %}Editor Panel{% endblock %}
+
+{% block sidebar_nav %}
+<a class="nav-link active" href="{{ url_for('team.dashboard') }}"><i class="bi bi-speedometer2"></i> Overview</a>
+<div class="sidebar-title" style="margin-top:1rem;">Editorial Tools</div>
+<a class="nav-link" href="{{ url_for('editor_studio.dashboard') }}"><i class="bi bi-journal-richtext"></i> Review Queue</a>
+<a class="nav-link" href="{{ url_for('editor_studio.content_browse') }}"><i class="bi bi-search"></i> Browse Content</a>
+<a class="nav-link" href="{{ url_for('editor_studio.my_reviews') }}"><i class="bi bi-clock-history"></i> My Reviews</a>
+<div class="sidebar-title" style="margin-top:1rem;">Moderation</div>
+<a class="nav-link" href="{{ url_for('team.mod_flagged_stories') }}"><i class="bi bi-flag" style="color:#f87171;"></i> Flagged Stories</a>
+<div class="sidebar-title" style="margin-top:1rem;">Account</div>
+<a class="nav-link" href="{{ url_for('profile.account_safety') }}"><i class="bi bi-shield-check"></i> Account Safety</a>
+{% endblock %}
+
+{% block dash_content %}
+{% include "team/_dashboard_switcher.html" ignore missing %}
+{% include "team/_greeting.html" ignore missing %}
+<div class="dash-header">
+    <h1><i class="bi bi-pencil-square" style="color:var(--gold);"></i> Editor Dashboard</h1>
+</div>
+
+<!-- Stats -->
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="label">Review Queue</div>
+        <div class="value gold">{{ stories_pending_review|length }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Published This Week</div>
+        <div class="value" style="color:#4ade80;">{{ recently_published|length }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Total Published</div>
+        <div class="value">{{ total_published }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Total Stories</div>
+        <div class="value">{{ total_stories }}</div>
+    </div>
+</div>
+
+<!-- Review Queue -->
+<div class="dash-card">
+    <h3><i class="bi bi-inbox" style="color:var(--gold);margin-right:6px;"></i> Stories Pending Review</h3>
+    {% if stories_pending_review %}
+    <table class="dash-table">
+        <thead>
+            <tr><th>Story</th><th>Author</th><th>Updated</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+            {% for story in stories_pending_review %}
+            <tr>
+                <td>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        {% if story.cover_url %}
+                        <img src="{{ story.cover_url }}" style="width:32px;height:45px;border-radius:6px;object-fit:cover;flex-shrink:0;">
+                        {% else %}
+                        <div style="width:32px;height:45px;border-radius:6px;background:rgba(212,168,67,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="bi bi-book" style="font-size:0.7rem;color:var(--text-muted);"></i></div>
+                        {% endif %}
+                        <span style="font-weight:600;">{{ story.title|truncate(40) }}</span>
+                    </div>
+                </td>
+                <td style="color:var(--text-muted);">{{ story.author or 'Unknown' }}</td>
+                <td style="color:var(--text-muted);font-size:0.8rem;">{{ story.created_at.strftime('%b %d, %H:%M') if story.created_at else 'N/A' }}</td>
+                <td>
+                    <div style="display:flex;gap:6px;">
+                        <a href="{{ url_for('team.editor_review', story_id=story.id) }}" class="btn-dash btn-dash-primary btn-dash-sm">Review</a>
+                        <form method="POST" action="{{ url_for('team.editor_approve', story_id=story.id) }}" style="display:inline;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn-dash btn-dash-success btn-dash-sm">Approve</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div style="text-align:center;padding:40px;color:var(--text-muted);">
+        <i class="bi bi-check-circle" style="font-size:2rem;opacity:0.3;display:block;margin-bottom:8px;"></i>
+        <p>No stories pending review. All caught up!</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Recently Published -->
+<div class="dash-card">
+    <h3><i class="bi bi-check-circle" style="color:#4ade80;margin-right:6px;"></i> Recently Published</h3>
+    {% if recently_published %}
+    <table class="dash-table">
+        <thead>
+            <tr><th>Story</th><th>Views</th><th>Published</th></tr>
+        </thead>
+        <tbody>
+            {% for story in recently_published[:10] %}
+            <tr>
+                <td style="font-weight:600;">{{ story.title|truncate(45) }}</td>
+                <td style="color:var(--gold);">{{ story.views or 0 }}</td>
+                <td style="color:var(--text-muted);font-size:0.8rem;">{{ story.published_at.strftime('%b %d') if story.published_at else '' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="color:var(--text-muted);text-align:center;padding:20px;">No publications this week.</p>
+    {% endif %}
+</div>
+{% endblock %}

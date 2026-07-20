@@ -1,0 +1,9 @@
+appId: com.wiamapp.mobile
+---
+# Requires logged-in test session
+- launchApp
+- tapOn: "Profile"
+- tapOn: "Help"
+- back
+- tapOn: "Careers"
+- assertVisible: "Careers"

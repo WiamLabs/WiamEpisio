@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}{% if request.args.get('switch') %}Switch Account{% else %}Login{% endif %} — WiamApp{% endblock %}
+{% block meta_description %}Sign in to WiamApp to continue reading your favourite stories, track your library, and support creators you love.{% endblock %}
+
+{% block content %}
+<div style="min-height:80vh;display:flex;align-items:center;justify-content:center;padding:var(--space-xl);">
+    <div class="login-card" style="max-width:400px;width:100%;">
+        <div style="text-align:center;margin-bottom:var(--space-lg);">
+            <img src="{{ url_for('static', filename='img/WiamLogo.png') }}" alt="WiamApp" style="height:80px;width:auto;">
+        </div>
+        <h2 style="text-align:center;">Welcome back</h2>
+        <p style="text-align:center;margin-bottom:var(--space-lg);color:var(--text-muted);">Sign in to continue reading.</p>
+
+        {% if login_blocked %}
+        <div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:12px;padding:16px;margin-bottom:var(--space-lg);text-align:center;">
+            <div style="font-size:1.4rem;margin-bottom:6px;"><i class="bi bi-shield-lock-fill" style="color:#f87171;"></i></div>
+            <div style="font-weight:700;color:#f87171;font-size:0.9rem;margin-bottom:4px;">Login Temporarily Disabled</div>
+            <div style="font-size:0.8rem;color:var(--text-muted);">{{ login_blocked_message or 'Login is temporarily disabled. Please try again later.' }}</div>
+            {% if login_blocked_until %}
+            <div style="font-size:0.75rem;color:var(--text-muted);margin-top:8px;"><i class="bi bi-clock"></i> Opens: {{ login_blocked_until.strftime('%b %d, %Y at %H:%M UTC') }}</div>
+            {% endif %}
+            <div style="font-size:0.72rem;color:var(--text-muted);margin-top:6px;">Team members can still log in with WIAMid.</div>
+        </div>
+        {% endif %}
+
+        <!-- Email/Password Form -->
+        <form method="POST" action="{{ url_for('auth.login') }}" style="margin-bottom:var(--space-lg);">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="auth-field">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" placeholder="you@example.com" required autocomplete="email">
+            </div>
+            <div class="auth-field">
+                <label for="password">Password</label>
+                <div class="pw-wrap">
+                    <input type="password" id="password" name="password" placeholder="Enter password" required minlength="8" autocomplete="current-password">
+                    <button type="button" class="pw-toggle" onclick="var i=document.getElementById('password'),ic=this.querySelector('i');if(i.type==='password'){i.type='text';ic.className='bi bi-eye-slash';}else{i.type='password';ic.className='bi bi-eye';}" tabindex="-1" aria-label="Show password"><i class="bi bi-eye"></i></button>
+                </div>
+            </div>
+            <div style="text-align:right;margin-bottom:var(--space-md);">
+                <a href="{{ url_for('auth.forgot_password') }}" style="color:var(--gold);font-size:0.82rem;">Forgot password?</a>
+            </div>
+            <button type="submit" class="btn btn-gold" style="width:100%;padding:12px;">Sign In</button>
+        </form>
+
+        <div class="auth-divider"><span>or continue with</span></div>
+
+        <!-- Google Sign-In -->
+        {% if google_client_id %}
+        <div id="googleSignInWrap" style="margin-bottom:var(--space-sm);display:flex;justify-content:center;">
+            <div id="g_id_onload" data-client_id="{{ google_client_id }}" data-login_uri="{{ url_for('auth.google_callback', _external=True) }}" data-auto_prompt="false"></div>
+            <div class="g_id_signin" data-type="standard" data-size="large" data-theme="filled_black" data-text="signin_with" data-shape="pill" data-logo_alignment="left" data-width="300"></div>
+        </div>
+        {% endif %}
+
+        <div style="text-align:center;margin-top:var(--space-lg);font-size:0.88rem;">
+            <span style="color:var(--text-muted);">Don't have an account?</span>
+            <a href="{{ url_for('auth.register') }}" style="color:var(--gold);font-weight:600;margin-left:4px;">Sign Up</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    .auth-field { margin-bottom: var(--space-md); }
+    .auth-field label { display:block; font-size:0.82rem; font-weight:500; color:var(--text-secondary); margin-bottom:6px; }
+    .auth-field input { width:100%; padding:11px 14px; border:1px solid var(--border-subtle); border-radius:var(--radius-md); background:var(--bg-card); color:var(--text); font-size:0.92rem; transition:border-color 0.2s; }
+    .auth-field input:focus { outline:none; border-color:var(--gold); box-shadow:0 0 0 3px rgba(212,168,67,0.12); }
+    .auth-field input::placeholder { color:var(--text-muted); }
+    .pw-wrap { position:relative; }
+    .pw-wrap input { padding-right:42px; }
+    .pw-toggle { position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:1rem; padding:4px; line-height:1; }
+    .pw-toggle:hover { color:var(--gold); }
+    .auth-divider { display:flex; align-items:center; gap:12px; margin:var(--space-lg) 0; color:var(--text-muted); font-size:0.8rem; }
+    .auth-divider::before, .auth-divider::after { content:''; flex:1; height:1px; background:var(--border-subtle); }
+</style>
+{% endblock %}

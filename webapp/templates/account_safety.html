@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% block title %}Account Safety — WiamApp{% endblock %}
+
+{% block content %}
+<div style="max-width:640px;margin:0 auto;padding:1.5rem 1rem 4rem;">
+    <a href="{{ url_for('dashboard.index') }}" style="color:var(--text-muted);font-size:0.82rem;text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-bottom:1rem;">
+        <i class="bi bi-arrow-left"></i> Back to Dashboard
+    </a>
+
+    <h1 style="font-size:1.4rem;margin-bottom:0.25rem;"><i class="bi bi-shield-check me-2" style="color:#4ade80;"></i>Account Safety</h1>
+    <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:1.5rem;">Your account status, warnings, and community standing.</p>
+
+    <!-- Status Card -->
+    <div style="background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:14px;padding:1.2rem;margin-bottom:1rem;
+        {% if summary.strikes_365d >= 2 %}border-left:4px solid #ef4444;
+        {% elif summary.strikes_365d >= 1 %}border-left:4px solid #f59e0b;
+        {% else %}border-left:4px solid #4ade80;{% endif %}">
+        <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.8rem;">
+            {% if summary.strikes_365d >= 2 %}
+            <div style="width:40px;height:40px;border-radius:50%;background:rgba(239,68,68,0.12);display:flex;align-items:center;justify-content:center;">
+                <i class="bi bi-exclamation-triangle-fill" style="color:#ef4444;font-size:1.1rem;"></i>
+            </div>
+            <div>
+                <div style="font-weight:700;font-size:0.95rem;color:#ef4444;">Critical — Account at Risk</div>
+                <div style="font-size:0.78rem;color:var(--text-muted);">One more strike may result in suspension</div>
+            </div>
+            {% elif summary.strikes_365d >= 1 %}
+            <div style="width:40px;height:40px;border-radius:50%;background:rgba(245,158,11,0.12);display:flex;align-items:center;justify-content:center;">
+                <i class="bi bi-exclamation-circle-fill" style="color:#f59e0b;font-size:1.1rem;"></i>
+            </div>
+            <div>
+                <div style="font-weight:700;font-size:0.95rem;color:#f59e0b;">Caution — Strike on Record</div>
+                <div style="font-size:0.78rem;color:var(--text-muted);">Please review our community guidelines</div>
+            </div>
+            {% elif summary.warnings_90d > 0 %}
+            <div style="width:40px;height:40px;border-radius:50%;background:rgba(56,189,248,0.12);display:flex;align-items:center;justify-content:center;">
+                <i class="bi bi-info-circle-fill" style="color:#38bdf8;font-size:1.1rem;"></i>
+            </div>
+            <div>
+                <div style="font-weight:700;font-size:0.95rem;color:#38bdf8;">Notice — Recent Warnings</div>
+                <div style="font-size:0.78rem;color:var(--text-muted);">Please review and acknowledge your warnings</div>
+            </div>
+            {% else %}
+            <div style="width:40px;height:40px;border-radius:50%;background:rgba(74,222,128,0.12);display:flex;align-items:center;justify-content:center;">
+                <i class="bi bi-check-circle-fill" style="color:#4ade80;font-size:1.1rem;"></i>
+            </div>
+            <div>
+                <div style="font-weight:700;font-size:0.95rem;color:#4ade80;">Good Standing</div>
+                <div style="font-size:0.78rem;color:var(--text-muted);">Your account is in great shape</div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Stats Row -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.6rem;margin-top:0.6rem;">
+            <div style="text-align:center;padding:0.6rem;background:rgba(255,255,255,0.03);border-radius:10px;">
+                <div style="font-size:1.3rem;font-weight:800;{% if summary.strikes_365d > 0 %}color:#f59e0b{% else %}color:var(--text){% endif %};">{{ summary.strikes_365d }}</div>
+                <div style="font-size:0.68rem;color:var(--text-muted);">Strikes (12mo)</div>
+            </div>
+            <div style="text-align:center;padding:0.6rem;background:rgba(255,255,255,0.03);border-radius:10px;">
+                <div style="font-size:1.3rem;font-weight:800;color:var(--text);">{{ summary.warnings_90d }}</div>
+                <div style="font-size:0.68rem;color:var(--text-muted);">Warnings (90d)</div>
+            </div>
+            <div style="text-align:center;padding:0.6rem;background:rgba(255,255,255,0.03);border-radius:10px;">
+                <div style="font-size:1.3rem;font-weight:800;{% if summary.strikes_remaining <= 1 %}color:#ef4444{% else %}color:#4ade80{% endif %};">{{ summary.strikes_remaining }}</div>
+                <div style="font-size:0.68rem;color:var(--text-muted);">Strikes Left</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Escalation Info -->
+    {% if summary.strikes_365d > 0 %}
+    <div style="background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.15);border-radius:12px;padding:0.9rem 1rem;margin-bottom:1rem;">
+        <div style="font-weight:700;font-size:0.85rem;color:#f59e0b;margin-bottom:0.3rem;"><i class="bi bi-info-circle me-1"></i>How Escalation Works</div>
+        <ul style="margin:0;padding-left:1.2rem;font-size:0.78rem;color:var(--text-muted);line-height:1.8;">
+            <li><strong>Warnings</strong> — Reminders to follow community guidelines</li>
+            <li><strong>Strikes</strong> — Issued for repeated or serious violations</li>
+            <li><strong>{{ summary.strike_threshold }} strikes</strong> within 12 months = automatic account suspension</li>
+            <li>Strikes expire after 12 months of good behavior</li>
+        </ul>
+    </div>
+    {% endif %}
+
+    <!-- Warning History -->
+    <h2 style="font-size:1.05rem;margin:1.5rem 0 0.8rem;font-weight:700;"><i class="bi bi-clock-history me-2" style="color:var(--text-muted);"></i>Warning History</h2>
+
+    {% if warnings %}
+    <div style="display:flex;flex-direction:column;gap:0.6rem;">
+        {% for w in warnings %}
+        <div id="warning-{{ w.id }}" style="background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:12px;padding:1rem 1.1rem;border-left:3px solid {% if w.severity == 'strike' %}#ef4444{% elif w.severity == 'warning' %}#f59e0b{% else %}#38bdf8{% endif %};">
+            <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.4rem;flex-wrap:wrap;">
+                <span style="font-size:0.7rem;padding:2px 8px;border-radius:8px;font-weight:600;
+                    {% if w.severity == 'strike' %}background:rgba(239,68,68,0.12);color:#f87171;
+                    {% elif w.severity == 'warning' %}background:rgba(245,158,11,0.12);color:#f59e0b;
+                    {% else %}background:rgba(56,189,248,0.12);color:#38bdf8;{% endif %}">{{ w.severity|title }}</span>
+                <span style="font-size:0.7rem;padding:2px 8px;border-radius:8px;font-weight:600;background:rgba(255,255,255,0.05);color:var(--text-muted);">{{ w.category.replace('_', ' ')|title }}</span>
+                <span style="color:var(--text-muted);font-size:0.7rem;margin-left:auto;">{{ w.created_at.strftime('%b %d, %Y') if w.created_at else '' }}</span>
+            </div>
+            <p style="font-size:0.88rem;line-height:1.6;margin:0.3rem 0 0.5rem;white-space:pre-wrap;">{{ w.message }}</p>
+
+            {% if w.acknowledged %}
+            <div style="font-size:0.75rem;color:#4ade80;"><i class="bi bi-check-circle-fill me-1"></i>Acknowledged {{ w.acknowledged_at.strftime('%b %d, %Y') if w.acknowledged_at else '' }}</div>
+            {% else %}
+            <form method="post" action="{{ url_for('profile.acknowledge_warning', warning_id=w.id) }}" style="margin-top:0.25rem;" data-no-loader>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="ack-btn" data-wid="{{ w.id }}" style="background:rgba(245,158,11,0.12);color:#f59e0b;border:1px solid rgba(245,158,11,0.2);border-radius:8px;padding:0.4rem 1rem;font-size:0.8rem;font-weight:600;cursor:pointer;">
+                    <i class="bi bi-check2 me-1"></i>Acknowledge
+                </button>
+            </form>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:2.5rem;color:var(--text-muted);">
+        <i class="bi bi-check-circle" style="font-size:2.5rem;display:block;margin-bottom:0.5rem;opacity:0.3;color:#4ade80;"></i>
+        <p style="font-size:0.9rem;font-weight:600;">No warnings on your account</p>
+        <p style="font-size:0.8rem;">Keep up the great work!</p>
+    </div>
+    {% endif %}
+
+    <!-- Community Guidelines Link -->
+    <div style="text-align:center;margin-top:2rem;padding:1rem;background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:12px;">
+        <i class="bi bi-book" style="font-size:1.3rem;color:var(--gold);display:block;margin-bottom:0.4rem;"></i>
+        <div style="font-size:0.85rem;font-weight:600;margin-bottom:0.3rem;">Need help?</div>
+        <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:0.8rem;">Review our community guidelines to understand what's expected.</div>
+        <a href="{{ url_for('profile.community_guidelines') }}" style="display:inline-block;padding:0.45rem 1.2rem;border-radius:8px;background:var(--gold);color:#000;font-weight:600;font-size:0.82rem;text-decoration:none;">View Guidelines</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// AJAX acknowledge for inline buttons
+(function(){
+    var csrf = document.querySelector('meta[name=csrf-token]')?.content || '';
+    document.querySelectorAll('.ack-btn').forEach(function(btn){
+        btn.addEventListener('click', function(e){
+            e.preventDefault();
+            var wid = btn.dataset.wid;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Acknowledging...';
+            fetch('/warnings/' + wid + '/acknowledge', {
+                method: 'POST',
+                headers: {'X-CSRFToken': csrf, 'X-Requested-With': 'XMLHttpRequest'}
+            }).then(function(r){ return r.json(); }).then(function(d){
+                if (d.ok) {
+                    var card = document.getElementById('warning-' + wid);
+                    var form = btn.closest('form');
+                    if (form) {
+                        form.innerHTML = '<div style="font-size:0.75rem;color:#4ade80;"><i class="bi bi-check-circle-fill me-1"></i>Acknowledged just now</div>';
+                    }
+                }
+            }).catch(function(){
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-check2 me-1"></i>Acknowledge';
+            });
+        });
+    });
+})();
+</script>
+{% endblock %}

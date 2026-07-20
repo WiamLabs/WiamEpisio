@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}Browse Stories — WiamApp{% endblock %}
+{% block meta_description %}Browse thousands of stories on WiamApp. Discover new authors, trending books, and your next favourite read — all in one place.{% endblock %}
+
+{% block extra_head %}
+<style>
+    .browse-wrap { max-width: 960px; margin: 0 auto; padding: 1rem 0.75rem 4rem; }
+    .browse-search { position: relative; max-width: 480px; margin-bottom: 1.25rem; }
+    .browse-search i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none; }
+    .browse-search input { width: 100%; padding: 0.55rem 0.75rem 0.55rem 38px; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 10px; color: var(--text); font-size: 0.88rem; }
+    .browse-search input:focus { outline: none; border-color: var(--gold-dim); }
+    .browse-sec { margin-bottom: 1.5rem; }
+    .browse-sec h2 { font-size: 1rem; font-weight: 700; margin: 0 0 0.6rem; display: flex; align-items: center; gap: 0.4rem; }
+    .browse-scroll { display: flex; gap: 0.6rem; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding-bottom: 4px; }
+    .browse-scroll::-webkit-scrollbar { display: none; }
+    .browse-card { flex-shrink: 0; width: 110px; scroll-snap-align: start; text-decoration: none; }
+    .browse-card img { width: 110px; height: 155px; object-fit: cover; border-radius: 8px; display: block; }
+    .browse-card .bc-ph { width: 110px; height: 155px; border-radius: 8px; background: var(--wine-dark); display: flex; align-items: center; justify-content: center; color: var(--gold-dim); font-size: 1.5rem; }
+    .browse-card .bc-title { font-size: 0.72rem; font-weight: 500; color: var(--text); margin-top: 0.3rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .genre-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.5rem; }
+    .genre-chip {
+        display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 0.75rem;
+        background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 10px;
+        text-decoration: none; color: var(--text); font-size: 0.82rem; font-weight: 500;
+        transition: all 0.15s;
+    }
+    .genre-chip:hover { border-color: var(--gold); color: var(--gold); }
+    .genre-chip i { font-size: 1rem; color: var(--gold-dim); }
+    @media(max-width:480px) { .genre-grid { grid-template-columns: repeat(2, 1fr); } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="browse-wrap">
+    <h1 class="greeting" style="margin-bottom:0.2rem;">Browse</h1>
+    <p class="greeting-sub" style="margin-bottom:1rem;">Explore stories by genre</p>
+
+    <form method="get" action="{{ url_for('browse.search') }}" class="browse-search">
+        <i class="bi bi-search"></i>
+        <input type="text" name="q" placeholder="Search stories, authors, genres...">
+    </form>
+
+    {% if trending %}
+    <div class="browse-sec">
+        <h2><i class="bi bi-fire" style="color:#f97316;font-size:0.9rem;"></i> Trending Now</h2>
+        <div class="browse-scroll">
+            {% for book in trending %}
+            <a href="{{ url_for('book.detail', book_id=book.id) }}" class="browse-card">
+                {% if book.cover_file_id %}
+                <img src="{{ book.cover_url }}" alt="{{ book.title }}" loading="lazy">
+                {% else %}
+                <div class="bc-ph"><i class="bi bi-book"></i></div>
+                {% endif %}
+                <div class="bc-title">{{ book.title }}</div>
+                {% if book.source == 'gutenberg' %}<div style="font-size:0.6rem;color:#a78bfa;font-weight:500;margin-top:2px;">Classic Edition</div>{% endif %}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if recent %}
+    <div class="browse-sec">
+        <h2><i class="bi bi-clock" style="color:#38bdf8;font-size:0.9rem;"></i> Recently Added</h2>
+        <div class="browse-scroll">
+            {% for book in recent %}
+            <a href="{{ url_for('book.detail', book_id=book.id) }}" class="browse-card">
+                {% if book.cover_file_id %}
+                <img src="{{ book.cover_url }}" alt="{{ book.title }}" loading="lazy">
+                {% else %}
+                <div class="bc-ph"><i class="bi bi-book"></i></div>
+                {% endif %}
+                <div class="bc-title">{{ book.title }}</div>
+                {% if book.source == 'gutenberg' %}<div style="font-size:0.6rem;color:#a78bfa;font-weight:500;margin-top:2px;">Classic Edition</div>{% endif %}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Ad placement (between content sections — non-intrusive) -->
+    {% include 'includes/google_ads.html' with context %}
+
+    <div class="browse-sec">
+        <h2><i class="bi bi-bookmark" style="color:var(--gold);font-size:0.9rem;"></i> Genres</h2>
+        {% if genres %}
+        {% set icon_map = {
+            'Romance': 'bi-heart', 'Fiction': 'bi-pencil', 'Fantasy': 'bi-stars',
+            'Mystery': 'bi-search', 'Thriller': 'bi-lightning', 'Horror': 'bi-moon',
+            'Science Fiction': 'bi-rocket', 'Sci-Fi': 'bi-rocket', 'Poetry': 'bi-feather',
+            'Drama': 'bi-mask', 'Comedy': 'bi-emoji-laughing', 'Adventure': 'bi-compass',
+            'Biography': 'bi-person-lines-fill', 'History': 'bi-hourglass',
+            'Self-Help': 'bi-lightbulb', 'Religion': 'bi-book', 'Education': 'bi-mortarboard',
+            'Business': 'bi-briefcase', 'Children': 'bi-balloon', 'Non-Fiction': 'bi-journal-text',
+            'Action': 'bi-fire', 'Crime': 'bi-shield-exclamation',
+        } %}
+        <div class="genre-grid">
+            {% for g in genres %}
+            <a href="{{ url_for('browse.genre_books', genre_name=g.name) }}" class="genre-chip">
+                <i class="bi {{ icon_map.get(g.name, 'bi-bookmark') }}"></i> {{ g.name }}
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div style="text-align:center;padding:2rem;color:var(--text-muted);font-size:0.85rem;">
+            <i class="bi bi-compass" style="font-size:1.5rem;opacity:0.3;display:block;margin-bottom:0.4rem;"></i>
+            Genres will appear when creators publish stories.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

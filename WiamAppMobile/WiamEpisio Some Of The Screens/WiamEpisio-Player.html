@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamEpisio — Player (YouTube-style)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{ --navy:#08081A; --gold:#D4A017; --gold-dark:#A07810; --text-dim:#C9C9DE; }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:#000; border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); display:flex; flex-direction:column; }
+
+  .statusbar{ height:44px; flex-shrink:0; position:relative; z-index:5; }
+
+  /* Video occupies its own contained area, like YouTube's player frame — not edge-to-edge TikTok style */
+  .video-frame{ position:relative; width:100%; aspect-ratio:9/16; max-height:58%; background:linear-gradient(160deg,#1a1030,#0d0d24,#000); overflow:hidden; flex-shrink:0; }
+  .pinch-hint{ position:absolute; top:45%; left:50%; transform:translate(-50%,-50%); display:flex; flex-direction:column; align-items:center; gap:6px; opacity:0.35; }
+  .pinch-hint svg{ color:#fff; width:30px; height:30px; }
+  .pinch-hint span{ font-size:10px; color:#fff; }
+
+  .video-top{ position:absolute; top:10px; left:12px; right:12px; display:flex; align-items:center; justify-content:space-between; z-index:4; }
+  .vt-btn{ width:32px; height:32px; border-radius:50%; background:rgba(0,0,0,0.4); display:flex; align-items:center; justify-content:center; }
+
+  .center-play{ position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:54px; height:54px; border-radius:50%; background:rgba(0,0,0,0.45); display:flex; align-items:center; justify-content:center; z-index:4; }
+
+  /* YouTube-style bottom control bar with scrub timeline */
+  .video-controls{ position:absolute; bottom:0; left:0; right:0; padding:8px 12px 10px; background:linear-gradient(0deg, rgba(0,0,0,0.75), transparent); z-index:4; }
+  .scrub-row{ display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+  .time-label{ font-size:10px; color:#fff; font-weight:500; min-width:32px; }
+  .scrub-track{ flex:1; height:3px; border-radius:999px; background:rgba(255,255,255,0.3); position:relative; }
+  .scrub-fill{ position:absolute; left:0; top:0; bottom:0; width:38%; background:var(--gold); border-radius:999px; }
+  .scrub-handle{ position:absolute; left:38%; top:50%; transform:translate(-50%,-50%); width:11px; height:11px; border-radius:50%; background:var(--gold); box-shadow:0 0 0 3px rgba(212,160,23,0.25); }
+  .controls-row{ display:flex; align-items:center; justify-content:space-between; }
+  .cr-left{ display:flex; align-items:center; gap:14px; }
+  .cr-btn{ color:#fff; }
+  .ep-label-mini{ font-size:11px; color:#fff; font-weight:600; }
+  .fullscreen-btn{ display:flex; align-items:center; gap:5px; color:#fff; }
+
+  /* Below-video info panel, YouTube-style — not overlaid on video */
+  .info-panel{ flex:1; overflow-y:auto; padding:16px 18px; }
+  .series-title{ font-size:15.5px; font-weight:700; color:#fff; margin:0 0 4px; }
+  .ep-meta-row{ font-size:11.5px; color:#8B8BA3; margin:0 0 14px; line-height:1.5; }
+
+  .action-strip{ display:flex; gap:22px; padding:12px 0; border-top:1px solid #1a1a3a; border-bottom:1px solid #1a1a3a; margin-bottom:16px; }
+  .action-item{ display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .action-item svg{ color:#C9C9DE; width:20px; height:20px; }
+  .action-item span{ font-size:10px; color:#8B8BA3; }
+
+  .ep-strip-label{ font-size:13px; font-weight:700; color:#fff; margin:0 0 10px; }
+  .ep-strip{ display:flex; gap:8px; overflow-x:auto; }
+  .ep-strip-item{ flex-shrink:0; width:52px; height:52px; border-radius:10px; background:#12122A; border:1px solid #1E1E42; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:#fff; }
+  .ep-strip-item.current{ border-color:var(--gold); color:var(--gold); background:rgba(212,160,23,0.1); }
+
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"></div>
+
+  <div class="video-frame">
+    <div class="pinch-hint">
+      <svg viewBox="0 0 24 24"><path d="M8 3v4a1 1 0 0 1-1 1H3"/><path d="M21 8h-4a1 1 0 0 1-1-1V3"/><path d="M3 16h4a1 1 0 0 1 1 1v4"/><path d="M16 21v-4a1 1 0 0 1 1-1h4"/></svg>
+      <span>Pinch to zoom</span>
+    </div>
+
+    <div class="video-top">
+      <div class="vt-btn"><svg viewBox="0 0 24 24" width="15" height="15" color="#fff"><polyline points="15 18 9 12 15 6"/></svg></div>
+      <div class="vt-btn"><svg viewBox="0 0 24 24" width="14" height="14" color="#fff"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></div>
+    </div>
+
+    <div class="center-play"><svg viewBox="0 0 24 24" width="22" height="22" fill="#fff" stroke="none"><polygon points="6 3 20 12 6 21 6 3"/></svg></div>
+
+    <div class="video-controls">
+      <div class="scrub-row">
+        <span class="time-label">3:42</span>
+        <div class="scrub-track"><div class="scrub-fill"></div><div class="scrub-handle"></div></div>
+        <span class="time-label">9:50</span>
+      </div>
+      <div class="controls-row">
+        <div class="cr-left">
+          <svg class="cr-btn" viewBox="0 0 24 24" width="18" height="18"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg>
+          <svg class="cr-btn" viewBox="0 0 24 24" width="18" height="18"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+          <span class="ep-label-mini">EP 3 of 48</span>
+        </div>
+        <div class="fullscreen-btn">
+          <svg viewBox="0 0 24 24" width="17" height="17"><path d="M3 3l6 6M3 3v5M3 3h5"/><path d="M21 3l-6 6M21 3v5M21 3h-5"/><path d="M3 21l6-6M3 21v-5M3 21h5"/><path d="M21 21l-6-6M21 21v-5M21 21h-5"/></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="info-panel">
+    <p class="series-title">The King's Forgotten Son</p>
+    <p class="ep-meta-row">EP.3 · Kwame discovers the truth about his birth — but someone in the palace already knows he's alive.</p>
+
+    <div class="action-strip">
+      <div class="action-item"><svg viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.6z"/></svg><span>24.1K</span></div>
+      <div class="action-item"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-8.9 8.4 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7A8.5 8.5 0 0 1 3.5 11 8.4 8.4 0 0 1 12 3a8.4 8.4 0 0 1 9 8.5z"/></svg><span>892</span></div>
+      <div class="action-item"><svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span>Save</span></div>
+      <div class="action-item"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></svg><span>Share</span></div>
+      <div class="action-item"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>Download</span></div>
+    </div>
+
+    <p class="ep-strip-label">Episodes</p>
+    <div class="ep-strip">
+      <div class="ep-strip-item">1</div>
+      <div class="ep-strip-item">2</div>
+      <div class="ep-strip-item current">3</div>
+      <div class="ep-strip-item">4</div>
+      <div class="ep-strip-item">5</div>
+      <div class="ep-strip-item">6</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

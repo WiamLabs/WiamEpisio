@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Gift Stickers — WiamApp{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width:700px;padding:var(--space-2xl) var(--space-md);">
+    <a href="{{ url_for('home.home') }}" class="btn-ghost" style="margin-bottom:var(--space-lg);display:inline-block;">
+        <i class="bi bi-arrow-left me-1"></i> Back
+    </a>
+
+    <h1 class="font-display" style="font-size:1.6rem;margin-bottom:var(--space-xl);">
+        <i class="bi bi-gift me-2" style="color:var(--gold);"></i>Gift Stickers
+    </h1>
+
+    <!-- Received -->
+    <h3 style="font-size:1rem;margin-bottom:var(--space-md);color:var(--text-secondary);">
+        <i class="bi bi-arrow-down-circle me-1" style="color:#22c55e;"></i> Received ({{ received|length }})
+    </h3>
+    {% if received %}
+    <div style="display:flex;flex-direction:column;gap:var(--space-sm);margin-bottom:var(--space-2xl);">
+        {% for gift in received %}
+        {% set s = sticker_map.get(gift.sticker_key, {}) %}
+        <div style="background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:var(--space-md);display:flex;align-items:center;gap:var(--space-md);">
+            <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(145deg,{{ s.get('g1','#666') }}22,{{ s.get('g2','#444') }}11);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;box-shadow:0 4px 12px rgba(0,0,0,0.2);">
+                {{ s.get('emoji', '🎁') }}
+            </div>
+            <div style="flex:1;min-width:0;">
+                <div style="font-weight:600;font-size:0.88rem;">{{ s.get('label', gift.sticker_key) }}</div>
+                <div style="font-size:0.78rem;color:var(--text-muted);">
+                    From {{ gift.sender.display_name if gift.sender else 'Someone' }}
+                    · {{ gift.created_at.strftime('%b %d, %Y') if gift.created_at else '' }}
+                </div>
+                {% if gift.message %}
+                <div style="font-size:0.8rem;color:var(--text-secondary);font-style:italic;margin-top:2px;">"{{ gift.message }}"</div>
+                {% endif %}
+            </div>
+            <span style="font-size:0.75rem;color:var(--gold);font-weight:600;">+{{ gift.coin_cost // 2 }} <i class="bi bi-coin"></i></span>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p style="color:var(--text-muted);margin-bottom:var(--space-2xl);font-size:0.9rem;">No stickers received yet. When someone sends you a gift sticker, it will appear here!</p>
+    {% endif %}
+
+    <!-- Sent -->
+    <h3 style="font-size:1rem;margin-bottom:var(--space-md);color:var(--text-secondary);">
+        <i class="bi bi-arrow-up-circle me-1" style="color:var(--gold);"></i> Sent ({{ sent|length }})
+    </h3>
+    {% if sent %}
+    <div style="display:flex;flex-direction:column;gap:var(--space-sm);">
+        {% for gift in sent %}
+        {% set s = sticker_map.get(gift.sticker_key, {}) %}
+        <div style="background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:var(--space-md);display:flex;align-items:center;gap:var(--space-md);">
+            <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(145deg,{{ s.get('g1','#666') }}22,{{ s.get('g2','#444') }}11);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;box-shadow:0 4px 12px rgba(0,0,0,0.2);">
+                {{ s.get('emoji', '🎁') }}
+            </div>
+            <div style="flex:1;min-width:0;">
+                <div style="font-weight:600;font-size:0.88rem;">{{ s.get('label', gift.sticker_key) }}</div>
+                <div style="font-size:0.78rem;color:var(--text-muted);">
+                    To {{ gift.recipient.display_name if gift.recipient else 'Someone' }}
+                    · {{ gift.created_at.strftime('%b %d, %Y') if gift.created_at else '' }}
+                </div>
+            </div>
+            <span style="font-size:0.75rem;color:var(--text-muted);font-weight:600;">-{{ gift.coin_cost }} <i class="bi bi-coin"></i></span>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p style="color:var(--text-muted);font-size:0.9rem;">You haven't sent any stickers yet. Send a gift sticker to your favorite creator from any story page!</p>
+    {% endif %}
+</div>
+{% endblock %}

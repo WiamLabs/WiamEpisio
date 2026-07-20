@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+{% block title %}Paragraph {{ para_idx + 1 }} Discussion — {{ book.title }} Ch.{{ chapter.chapter_number }}{% endblock %}
+
+{% block extra_head %}
+<style>
+    .pc-page { max-width: 560px; margin: 0 auto; padding: 1rem 1rem 0; padding-bottom: 130px; }
+    .pc-header {
+        position: sticky; top: 0; z-index: 10;
+        background: var(--bg); padding: 0.75rem 0; margin-bottom: 1rem;
+        border-bottom: 1px solid var(--border-subtle);
+    }
+    .pc-back { color: var(--text-muted); text-decoration: none; font-size: 0.82rem; display: inline-flex; align-items: center; gap: 4px; }
+    .pc-back:hover { color: var(--gold); }
+    .pc-title { font-size: 1.1rem; font-weight: 700; color: var(--text); margin: 0.3rem 0 0; }
+    .pc-subtitle { font-size: 0.78rem; color: var(--text-muted); }
+
+    .pc-form {
+        position: fixed; bottom: 60px; left: 0; right: 0; z-index: 20;
+        max-width: 560px; margin: 0 auto; padding: 0.6rem 1rem;
+        background: var(--bg); border-top: 1px solid var(--border-subtle);
+    }
+    .pc-form-inner { display: flex; gap: 0.5rem; align-items: flex-end; }
+    .pc-input {
+        flex: 1; padding: 0.6rem 0.8rem; border: 1px solid var(--border-subtle);
+        border-radius: 20px; background: var(--bg-card); color: var(--text);
+        font-size: 0.88rem; resize: none; min-height: 40px; max-height: 80px;
+    }
+    .pc-input:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(212,168,67,0.12); }
+    .pc-submit {
+        padding: 0.55rem 1rem; border: none; border-radius: 20px;
+        background: var(--gold); color: #000; font-weight: 600; font-size: 0.82rem; cursor: pointer;
+        flex-shrink: 0;
+    }
+    .pc-submit:hover { opacity: 0.9; }
+
+    .pc-comment {
+        padding: 0.75rem 0; border-bottom: 1px solid rgba(128,128,128,0.1);
+    }
+    .pc-comment:last-child { border-bottom: none; }
+    .pc-meta { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+    .pc-avatar {
+        width: 28px; height: 28px; border-radius: 50%; background: var(--gold);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 0.7rem; font-weight: 700; color: #000; flex-shrink: 0;
+    }
+    .pc-avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+    .pc-name { font-weight: 600; font-size: 0.82rem; color: var(--text); }
+    .pc-time { font-size: 0.7rem; color: var(--text-muted); }
+    .pc-text { font-size: 0.88rem; color: var(--text); line-height: 1.5; margin: 0 0 0.3rem 34px; }
+    .pc-actions { display: flex; gap: 12px; margin-left: 34px; }
+    .pc-action {
+        background: none; border: none; color: var(--text-muted); font-size: 0.75rem;
+        cursor: pointer; display: inline-flex; align-items: center; gap: 3px; padding: 0;
+    }
+    .pc-action:hover { color: var(--gold); }
+    .pc-action.liked { color: #f472b6; }
+    .pc-reply { margin-left: 34px; padding-left: 12px; border-left: 2px solid rgba(128,128,128,0.15); margin-top: 0.5rem; }
+    .pc-reply .pc-text { margin-left: 34px; }
+    .pc-reply .pc-actions { margin-left: 34px; }
+    .pc-empty { text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.88rem; }
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="pc-page">
+    <div class="pc-header" style="position:relative;">
+        <a href="{{ url_for('book.read_book', book_id=book.id, ch=chapter.chapter_number) }}" class="pc-back" onclick="event.preventDefault(); window.location.replace(this.href);">
+            <i class="bi bi-arrow-left"></i> Back to reading
+        </a>
+        <div class="pc-title"><i class="bi bi-chat-left-text me-1"></i> Paragraph {{ para_idx + 1 }} Discussion</div>
+        <div class="pc-subtitle">{{ book.title }} — Chapter {{ chapter.chapter_number }}: {{ chapter.chapter_title }}</div>
+    </div>
+
+    <!-- Comments list -->
+    <div id="pcList">
+        {% if comments %}
+        {% for c in comments %}
+        <div class="pc-comment" id="pc-{{ c.id }}">
+            <div class="pc-meta">
+                {% set u = users_map.get(c.user_id) %}
+                <div class="pc-avatar">
+                    {% if u and u.avatar_url %}<img src="{{ u.avatar_url }}">{% else %}{{ (u.first_name[0] if u and u.first_name else '?')|upper }}{% endif %}
+                </div>
+                <span class="pc-name">{{ u.display_name if u else 'User' }}</span>
+                <span class="pc-time">{{ c.created_at.strftime('%b %d, %H:%M') if c.created_at else '' }}</span>
+            </div>
+            <div class="pc-text">{{ c.text }}</div>
+            <div class="pc-actions">
+                <button class="pc-action {{ 'liked' if c.id in liked_ids else '' }}" onclick="likeComment({{ c.id }}, this)">
+                    <i class="bi {{ 'bi-heart-fill' if c.id in liked_ids else 'bi-heart' }}"></i> {{ c.like_count or 0 }}
+                </button>
+                <button class="pc-action" onclick="replyTo({{ c.id }})"><i class="bi bi-reply"></i> Reply</button>
+                {% if current_user.wiam_id == c.user_id or current_user.is_admin %}
+                <button class="pc-action" onclick="deleteComment({{ c.id }})" style="color:#f87171"><i class="bi bi-trash3"></i></button>
+                {% endif %}
+            </div>
+
+            {% if c.replies %}
+            {% for r in c.replies %}
+            {% if not r.is_deleted %}
+            <div class="pc-reply">
+                <div class="pc-meta">
+                    {% set ru = users_map.get(r.user_id) %}
+                    <div class="pc-avatar" style="width:24px;height:24px;font-size:0.6rem;">
+                        {% if ru and ru.avatar_url %}<img src="{{ ru.avatar_url }}">{% else %}{{ (ru.first_name[0] if ru and ru.first_name else '?')|upper }}{% endif %}
+                    </div>
+                    <span class="pc-name">{{ ru.display_name if ru else 'User' }}</span>
+                    <span class="pc-time">{{ r.created_at.strftime('%b %d, %H:%M') if r.created_at else '' }}</span>
+                </div>
+                <div class="pc-text">{{ r.text }}</div>
+                <div class="pc-actions">
+                    <button class="pc-action {{ 'liked' if r.id in liked_ids else '' }}" onclick="likeComment({{ r.id }}, this)">
+                        <i class="bi {{ 'bi-heart-fill' if r.id in liked_ids else 'bi-heart' }}"></i> {{ r.like_count or 0 }}
+                    </button>
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+            {% endif %}
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="pc-empty">
+            <i class="bi bi-chat-left" style="font-size:1.5rem;display:block;margin-bottom:0.5rem;opacity:0.4;"></i>
+            No comments yet. Be the first to share your thoughts!
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Fixed input at bottom (above footer) -->
+<div class="pc-form">
+    <div class="pc-form-inner">
+        <input type="hidden" id="pcReplyTo" value="">
+        <textarea id="pcInput" class="pc-input" placeholder="Share your thoughts..." maxlength="1000" rows="1"></textarea>
+        <button class="pc-submit" onclick="postComment()"><i class="bi bi-send"></i></button>
+    </div>
+</div>
+
+<script>
+var CSRF = '{{ csrf_token() }}';
+var BOOK_ID = {{ book.id }};
+var CH_NUM = {{ chapter.chapter_number }};
+var PARA_IDX = {{ para_idx }};
+
+function postComment() {
+    var inp = document.getElementById('pcInput');
+    var text = inp.value.trim();
+    if (!text) return;
+    var replyTo = document.getElementById('pcReplyTo').value || null;
+    fetch('/api/reader/comment', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRF},
+        body: JSON.stringify({
+            content_id: BOOK_ID, chapter_number: CH_NUM,
+            paragraph_index: PARA_IDX, text: text,
+            parent_id: replyTo ? parseInt(replyTo) : null
+        })
+    }).then(function(r) { return r.json(); }).then(function(d) {
+        if (d.ok) { location.reload(); }
+        else { alert(d.error || 'Error posting comment'); }
+    });
+}
+
+function replyTo(commentId) {
+    document.getElementById('pcReplyTo').value = commentId;
+    var inp = document.getElementById('pcInput');
+    inp.placeholder = 'Replying...';
+    inp.focus();
+}
+
+function likeComment(cid, btn) {
+    fetch('/api/reader/comment/' + cid + '/like', {
+        method: 'POST', headers: {'Content-Type': 'application/json'}
+    }).then(function(r) { return r.json(); }).then(function(d) {
+        btn.className = 'pc-action ' + (d.liked ? 'liked' : '');
+        btn.innerHTML = '<i class="bi ' + (d.liked ? 'bi-heart-fill' : 'bi-heart') + '"></i> ' + d.count;
+    });
+}
+
+function deleteComment(cid) {
+    if (!confirm('Delete this comment?')) return;
+    fetch('/api/reader/comment/' + cid + '/delete', {
+        method: 'POST', headers: {'Content-Type': 'application/json'}
+    }).then(function(r) { return r.json(); }).then(function(d) {
+        if (d.ok) { var el = document.getElementById('pc-' + cid); if (el) el.remove(); }
+    });
+}
+
+// Apply reader theme from server prefs
+(function() {
+    var theme = '{{ reader_theme }}';
+    if (theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+    }
+})();
+</script>
+{% endblock %}

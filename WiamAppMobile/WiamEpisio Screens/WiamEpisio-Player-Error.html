@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamEpisio — Player Error</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{ --navy:#08081A; --gold:#D4A017; --gold-dark:#A07810; --text-dim:#C9C9DE; --navy-card:#12122A; --navy-line:#1E1E42; }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:#000; border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); display:flex; flex-direction:column; }
+  .statusbar{ height:44px; flex-shrink:0; position:relative; z-index:5; }
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+
+  .video-frame{ position:relative; width:100%; aspect-ratio:9/16; max-height:58%; background:#000; overflow:hidden; flex-shrink:0; }
+  .video-top{ position:absolute; top:10px; left:12px; right:12px; display:flex; align-items:center; justify-content:space-between; z-index:4; }
+  .vt-btn{ width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:center; }
+
+  .error-center{ position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; width:100%; padding:0 30px; }
+  .error-icon{ width:52px; height:52px; border-radius:50%; background:rgba(228,87,61,0.15); border:1px solid rgba(228,87,61,0.4); display:flex; align-items:center; justify-content:center; margin:0 auto 16px; }
+  .error-icon svg{ color:#E4573D; width:24px; height:24px; }
+  .error-title{ font-size:14px; font-weight:700; color:#fff; margin:0 0 6px; }
+  .error-sub{ font-size:11.5px; color:#8B8BA3; line-height:1.5; margin:0 0 18px; }
+  .retry-btn{ padding:11px 26px; border-radius:12px; background:var(--gold); color:var(--navy); font-size:12.5px; font-weight:800; border:none; display:inline-flex; align-items:center; gap:7px; font-family:'Inter',sans-serif; }
+
+  .info-panel{ flex:1; overflow-y:auto; padding:16px 18px; }
+  .series-title{ font-size:15.5px; font-weight:700; color:#fff; margin:0 0 4px; }
+  .ep-meta-row{ font-size:11.5px; color:#8B8BA3; margin:0 0 16px; line-height:1.5; }
+
+  .tip-card{ display:flex; gap:10px; background:var(--navy-card); border:1px solid var(--navy-line); border-radius:14px; padding:13px 14px; margin-bottom:16px; }
+  .tip-card svg{ color:var(--gold); width:16px; height:16px; flex-shrink:0; margin-top:1px; }
+  .tip-card span{ font-size:11px; color:#C9C9DE; line-height:1.6; }
+
+  .buffer-demo{ background:var(--navy-card); border:1px solid var(--navy-line); border-radius:14px; padding:14px; display:flex; align-items:center; gap:12px; }
+  .spinner{ width:26px; height:26px; border-radius:50%; border:3px solid rgba(212,160,23,0.25); border-top-color:var(--gold); flex-shrink:0; }
+  .buffer-demo-text b{ display:block; font-size:11.5px; font-weight:700; color:#fff; margin-bottom:2px; }
+  .buffer-demo-text span{ font-size:10px; color:#8B8BA3; }
+
+  .label-tag{ font-size:10px; font-weight:800; color:#5A5A75; letter-spacing:0.4px; text-transform:uppercase; margin:0 0 8px; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"></div>
+
+  <div class="video-frame">
+    <div class="video-top">
+      <div class="vt-btn"><svg viewBox="0 0 24 24" width="15" height="15" color="#fff"><polyline points="15 18 9 12 15 6"/></svg></div>
+      <div class="vt-btn"><svg viewBox="0 0 24 24" width="14" height="14" color="#fff"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></div>
+    </div>
+    <div class="error-center">
+      <div class="error-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+      <p class="error-title">Playback failed</p>
+      <p class="error-sub">Something interrupted this episode.<br/>Check your connection and try again.</p>
+      <button class="retry-btn"><svg viewBox="0 0 24 24" width="14" height="14" stroke="#08081A"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Retry</button>
+    </div>
+  </div>
+
+  <div class="info-panel">
+    <p class="series-title">The King's Forgotten Son</p>
+    <p class="ep-meta-row">EP.3 · Kwame discovers the truth about his birth — but someone in the palace already knows he's alive.</p>
+
+    <div class="tip-card">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span>Playback errors are usually a weak connection. Try switching to a lower quality in Settings → Default video quality.</span>
+    </div>
+
+    <p class="label-tag">Buffering state (variant)</p>
+    <div class="buffer-demo">
+      <div class="spinner"></div>
+      <div class="buffer-demo-text"><b>Buffering…</b><span>Loading next segment</span></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

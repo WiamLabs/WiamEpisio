@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}Programs — WiamApp{% endblock %}
+{% block content %}
+<div style="max-width:900px;margin:0 auto;padding:var(--space-xl) var(--space-md);">
+
+    <!-- Hero -->
+    <div style="text-align:center;margin-bottom:var(--space-2xl);padding:var(--space-2xl) var(--space-lg);background:linear-gradient(135deg,rgba(114,47,55,0.15),rgba(212,168,67,0.1));border-radius:var(--radius-lg);border:1px solid rgba(212,168,67,0.2);">
+        <h1 style="font-size:2rem;font-family:var(--font-display);color:var(--text);margin-bottom:var(--space-sm);">
+            <i class="bi bi-stars" style="color:var(--gold);"></i> WiamApp Programs
+        </h1>
+        <p style="color:var(--text-secondary);font-size:0.95rem;max-width:500px;margin:0 auto;">
+            Exciting ways to read, write, and grow together. Earn rewards, discover talent, and challenge yourself.
+        </p>
+    </div>
+
+    <!-- Program Cards Grid -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:var(--space-lg);margin-bottom:var(--space-2xl);">
+
+        <!-- WiamRising -->
+        <a href="{{ url_for('programs.rising') }}" style="text-decoration:none;padding:var(--space-xl);background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);transition:all 0.2s;display:block;">
+            <div style="font-size:2rem;margin-bottom:var(--space-sm);">🚀</div>
+            <h3 style="font-size:1.1rem;font-family:var(--font-display);color:var(--text);margin-bottom:var(--space-xs);">WiamRising</h3>
+            <p style="color:var(--text-secondary);font-size:0.8rem;line-height:1.5;">
+                Discover fresh talent! New creators who joined in the last 60 days. Support them early.
+            </p>
+            {% if rising_creators %}
+            <div style="display:flex;margin-top:var(--space-md);gap:4px;">
+                {% for c in rising_creators[:5] %}
+                <div style="width:28px;height:28px;border-radius:50%;background:var(--wine);color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:700;border:2px solid var(--bg-card);">
+                    {{ c.display_name[:1] if c.display_name else '?' }}
+                </div>
+                {% endfor %}
+                {% if rising_creators|length > 5 %}
+                <div style="width:28px;height:28px;border-radius:50%;background:var(--bg-elevated);color:var(--text-muted);display:flex;align-items:center;justify-content:center;font-size:0.55rem;font-weight:600;">
+                    +{{ rising_creators|length - 5 }}
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </a>
+
+        <!-- Story Challenges -->
+        <a href="{{ url_for('programs.challenges') }}" style="text-decoration:none;padding:var(--space-xl);background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);transition:all 0.2s;display:block;">
+            <div style="font-size:2rem;margin-bottom:var(--space-sm);">🏆</div>
+            <h3 style="font-size:1.1rem;font-family:var(--font-display);color:var(--text);margin-bottom:var(--space-xs);">Story Challenges</h3>
+            <p style="color:var(--text-secondary);font-size:0.8rem;line-height:1.5;">
+                Weekly and monthly writing challenges. Compete with other creators and win coin rewards!
+            </p>
+            {% if active_challenges %}
+            <div style="margin-top:var(--space-md);font-size:0.75rem;font-weight:600;color:#2ecc71;">
+                {{ active_challenges|length }} active challenge{{ 's' if active_challenges|length != 1 else '' }}
+            </div>
+            {% endif %}
+        </a>
+
+        <!-- Gift Subscriptions -->
+        <a href="{% if current_user.is_authenticated %}{{ url_for('programs.gift_sub') }}{% else %}{{ url_for('auth.login') }}{% endif %}" style="text-decoration:none;padding:var(--space-xl);background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);transition:all 0.2s;display:block;">
+            <div style="font-size:2rem;margin-bottom:var(--space-sm);">🎁</div>
+            <h3 style="font-size:1.1rem;font-family:var(--font-display);color:var(--text);margin-bottom:var(--space-xs);">Gift Premium</h3>
+            <p style="color:var(--text-secondary);font-size:0.8rem;line-height:1.5;">
+                Gift a WiamPremium subscription to a friend. Spread the love of reading!
+            </p>
+        </a>
+
+        <!-- Creator Milestones -->
+        <a href="{% if current_user.is_authenticated %}{{ url_for('programs.milestones') }}{% else %}{{ url_for('auth.login') }}{% endif %}" style="text-decoration:none;padding:var(--space-xl);background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);transition:all 0.2s;display:block;">
+            <div style="font-size:2rem;margin-bottom:var(--space-sm);">🏅</div>
+            <h3 style="font-size:1.1rem;font-family:var(--font-display);color:var(--text);margin-bottom:var(--space-xs);">Creator Milestones</h3>
+            <p style="color:var(--text-secondary);font-size:0.8rem;line-height:1.5;">
+                Unlock achievement badges as you grow. Track your journey from first story to Elite.
+            </p>
+        </a>
+
+        <!-- WiamAmbassador -->
+        <a href="{% if current_user.is_authenticated %}{{ url_for('programs.ambassador') }}{% else %}{{ url_for('auth.login') }}{% endif %}" style="text-decoration:none;padding:var(--space-xl);background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);transition:all 0.2s;display:block;">
+            <div style="font-size:2rem;margin-bottom:var(--space-sm);">🤝</div>
+            <h3 style="font-size:1.1rem;font-family:var(--font-display);color:var(--text);margin-bottom:var(--space-xs);">WiamAmbassador</h3>
+            <p style="color:var(--text-secondary);font-size:0.8rem;line-height:1.5;">
+                Invite friends and earn coins! Get rewarded when they sign up and start reading.
+            </p>
+        </a>
+
+        <!-- Magic Box -->
+        <a href="{% if current_user.is_authenticated %}{{ url_for('programs.magic_box') }}{% else %}{{ url_for('auth.login') }}{% endif %}" style="text-decoration:none;padding:var(--space-xl);background:var(--bg-card);border:1px solid rgba(212,168,67,0.2);border-radius:var(--radius-lg);transition:all 0.2s;display:block;">
+            <div style="font-size:2rem;margin-bottom:var(--space-sm);">📦</div>
+            <h3 style="font-size:1.1rem;font-family:var(--font-display);color:var(--text);margin-bottom:var(--space-xs);">Magic Box</h3>
+            <p style="color:var(--text-secondary);font-size:0.8rem;line-height:1.5;">
+                Complete weekly goals to earn loot crates. Higher tiers = better mystery rewards!
+            </p>
+            <div style="margin-top:var(--space-md);display:flex;gap:6px;">
+                <span style="font-size:0.6rem;padding:2px 8px;border-radius:8px;background:#cd7f32;color:#fff;font-weight:700;">BRONZE</span>
+                <span style="font-size:0.6rem;padding:2px 8px;border-radius:8px;background:#c0c0c0;color:#333;font-weight:700;">SILVER</span>
+                <span style="font-size:0.6rem;padding:2px 8px;border-radius:8px;background:#d4a843;color:#1a1a2e;font-weight:700;">GOLD</span>
+                <span style="font-size:0.6rem;padding:2px 8px;border-radius:8px;background:linear-gradient(135deg,#b9f2ff,#7dd3fc);color:#1a1a2e;font-weight:700;">DIAMOND</span>
+            </div>
+        </a>
+
+        <!-- Reading Streaks -->
+        <a href="{% if current_user.is_authenticated %}{{ url_for('profile.reading_streaks') }}{% else %}{{ url_for('auth.login') }}{% endif %}" style="text-decoration:none;padding:var(--space-xl);background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);transition:all 0.2s;display:block;">
+            <div style="font-size:2rem;margin-bottom:var(--space-sm);">🔥</div>
+            <h3 style="font-size:1.1rem;font-family:var(--font-display);color:var(--text);margin-bottom:var(--space-xs);">Reading Streaks</h3>
+            <p style="color:var(--text-secondary);font-size:0.8rem;line-height:1.5;">
+                Read every day to build your streak. Earn badges and bragging rights!
+            </p>
+        </a>
+
+    </div>
+</div>
+{% endblock %}

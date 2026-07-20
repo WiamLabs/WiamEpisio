@@ -1,0 +1,248 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Financial Dashboard — Control Panel{% endblock %}
+{% block sidebar_title %}Control Panel{% endblock %}
+
+{% block sidebar_nav %}
+<a class="nav-link" href="{{ url_for('founder_dash.overview') }}"><i class="bi bi-speedometer2"></i> Overview</a>
+<a class="nav-link" href="{{ url_for('founder_dash.users') }}"><i class="bi bi-people"></i> Users</a>
+<a class="nav-link" href="{{ url_for('founder_dash.content') }}"><i class="bi bi-book"></i> Content</a>
+<a class="nav-link" href="{{ url_for('founder_dash.revenue') }}"><i class="bi bi-cash-stack"></i> Revenue</a>
+<a class="nav-link active" href="{{ url_for('founder_dash.financial_dashboard') }}"><i class="bi bi-bank" style="color:var(--gold);"></i> Financial v5</a>
+<a class="nav-link" href="{{ url_for('founder_dash.premium_analytics') }}"><i class="bi bi-gem" style="color:#c084fc;"></i> Premium Analytics</a>
+<a class="nav-link" href="{{ url_for('founder_dash.subscribers') }}"><i class="bi bi-gem" style="color:#9b59b6;"></i> Subscribers</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payroll') }}"><i class="bi bi-wallet2" style="color:#2ecc71;"></i> Team Payroll</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payouts') }}"><i class="bi bi-send-check"></i> Payouts</a>
+<a class="nav-link" href="{{ url_for('founder_dash.withdrawals') }}"><i class="bi bi-arrow-up-right-circle" style="color:var(--gold);"></i> Withdrawals</a>
+<a class="nav-link" href="{{ url_for('founder_dash.creators') }}"><i class="bi bi-person-badge"></i> Creators</a>
+<a class="nav-link" href="{{ url_for('founder_dash.genres') }}"><i class="bi bi-tags"></i> Genres</a>
+<a class="nav-link" href="{{ url_for('founder_dash.announcements') }}"><i class="bi bi-megaphone"></i> Announcements</a>
+<a class="nav-link" href="{{ url_for('founder_dash.collections') }}"><i class="bi bi-grid"></i> Collections</a>
+<a class="nav-link" href="{{ url_for('founder_dash.moderation') }}"><i class="bi bi-shield-exclamation"></i> Moderation</a>
+<a class="nav-link" href="{{ url_for('founder_dash.warnings_list') }}"><i class="bi bi-exclamation-triangle" style="color:#f59e0b;"></i> Warnings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.elite_manage') }}"><span style="color:var(--gold);">★</span> WiamElite</a>
+<a class="nav-link" href="{{ url_for('founder_dash.platform_settings') }}"><i class="bi bi-sliders"></i> Platform Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.settings') }}"><i class="bi bi-gear"></i> Settings</a>
+{% endblock %}
+
+{% block dash_content %}
+<div class="dash-header">
+    <h1><i class="bi bi-bank" style="color:var(--gold);"></i> Financial Dashboard v5</h1>
+    <p>Enterprise-grade double-entry ledger, system wallets, fraud detection, and founder controls.</p>
+</div>
+
+<!-- System Wallets -->
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:var(--space-md);margin-bottom:var(--space-xl);">
+    {% set w = health.wallets %}
+    <div style="background:var(--bg-card);border:1px solid rgba(46,204,113,0.2);border-radius:var(--radius-md);padding:var(--space-lg);text-align:center;">
+        <i class="bi bi-cash-coin" style="font-size:2rem;color:#2ecc71;"></i>
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-top:8px;">PLATFORM CASH</div>
+        <div style="font-size:1.6rem;font-weight:800;color:#2ecc71;">GH₵{{ "%.2f"|format(w.platform_cash.ghs) }}</div>
+        <div style="font-size:0.8rem;color:var(--text-muted);">Real money from Paystack</div>
+    </div>
+    <div style="background:var(--bg-card);border:1px solid rgba(212,168,67,0.2);border-radius:var(--radius-md);padding:var(--space-lg);text-align:center;">
+        <i class="bi bi-coin" style="font-size:2rem;color:var(--gold);"></i>
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-top:8px;">PLATFORM REVENUE</div>
+        <div style="font-size:1.6rem;font-weight:800;color:var(--gold);">{{ "{:,}".format(w.platform_revenue.coins) }} coins</div>
+        <div style="font-size:0.8rem;color:var(--text-muted);">Earned from user purchases</div>
+    </div>
+    <div style="background:var(--bg-card);border:1px solid rgba(239,68,68,0.2);border-radius:var(--radius-md);padding:var(--space-lg);text-align:center;">
+        <i class="bi bi-exclamation-triangle" style="font-size:2rem;color:#ef4444;"></i>
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-top:8px;">PLATFORM LOSS</div>
+        <div style="font-size:1.6rem;font-weight:800;color:#ef4444;">{{ "{:,}".format(w.platform_loss.coins) }} coins</div>
+        <div style="font-size:0.8rem;color:var(--text-muted);">Refunds absorbed</div>
+    </div>
+    <div style="background:var(--bg-card);border:1px solid rgba(96,165,250,0.2);border-radius:var(--radius-md);padding:var(--space-lg);text-align:center;">
+        <i class="bi bi-journal-check" style="font-size:2rem;color:#60a5fa;"></i>
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-top:8px;">LEDGER ENTRIES</div>
+        <div style="font-size:1.6rem;font-weight:800;color:#60a5fa;">{{ "{:,}".format(health.total_ledger_entries) }}</div>
+        <div style="font-size:0.8rem;color:var(--text-muted);">{{ health.total_refunds }} refunds ({{ health.pending_refunds }} pending)</div>
+    </div>
+</div>
+
+<!-- Fraud Alerts -->
+{% if health.unresolved_alerts %}
+<div style="background:var(--bg-card);border:1px solid rgba(239,68,68,0.25);border-radius:var(--radius-md);padding:var(--space-lg);margin-bottom:var(--space-xl);">
+    <h2 style="font-size:1.1rem;font-weight:700;color:#ef4444;margin-bottom:var(--space-md);"><i class="bi bi-shield-exclamation"></i> Unresolved Fraud Alerts ({{ health.unresolved_alerts|length }})</h2>
+    <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
+            <thead><tr style="border-bottom:1px solid rgba(255,255,255,0.08);">
+                <th style="text-align:left;padding:8px;color:var(--text-muted);">User</th>
+                <th style="text-align:left;padding:8px;color:var(--text-muted);">Type</th>
+                <th style="text-align:left;padding:8px;color:var(--text-muted);">Severity</th>
+                <th style="text-align:left;padding:8px;color:var(--text-muted);">Description</th>
+                <th style="text-align:left;padding:8px;color:var(--text-muted);">Time</th>
+                <th style="text-align:center;padding:8px;color:var(--text-muted);">Action</th>
+            </tr></thead>
+            <tbody>
+            {% for a in health.unresolved_alerts %}
+            <tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
+                <td style="padding:8px;color:var(--text);">{{ a.user_id }}</td>
+                <td style="padding:8px;"><span style="background:rgba(239,68,68,0.12);color:#ef4444;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:600;">{{ a.type }}</span></td>
+                <td style="padding:8px;">
+                    {% if a.severity == 'critical' %}<span style="color:#ef4444;font-weight:700;">CRITICAL</span>
+                    {% elif a.severity == 'high' %}<span style="color:#f59e0b;font-weight:700;">HIGH</span>
+                    {% else %}<span style="color:var(--text-muted);">{{ a.severity }}</span>{% endif %}
+                </td>
+                <td style="padding:8px;color:var(--text-muted);max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ a.description }}</td>
+                <td style="padding:8px;color:var(--text-muted);font-size:0.8rem;">{{ a.created_at[:16] if a.created_at else '' }}</td>
+                <td style="padding:8px;text-align:center;">
+                    <form method="POST" action="{{ url_for('founder_dash.resolve_fraud_alert', alert_id=a.id) }}" style="display:inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" style="background:rgba(46,204,113,0.15);color:#2ecc71;border:none;padding:4px 12px;border-radius:4px;font-size:0.78rem;cursor:pointer;font-weight:600;">Resolve</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- Pending Refunds -->
+{% if pending_refunds %}
+<div style="background:var(--bg-card);border:1px solid rgba(245,158,11,0.25);border-radius:var(--radius-md);padding:var(--space-lg);margin-bottom:var(--space-xl);">
+    <h2 style="font-size:1.1rem;font-weight:700;color:#f59e0b;margin-bottom:var(--space-md);"><i class="bi bi-arrow-return-left"></i> Pending Refunds ({{ pending_refunds|length }})</h2>
+    {% for r in pending_refunds %}
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.04);">
+        <div>
+            <span style="font-weight:600;color:var(--text);">User {{ r.user_id }}</span>
+            <span style="color:var(--text-muted);font-size:0.85rem;margin-left:8px;">{{ r.amount_coins }} coins</span>
+            <span style="color:var(--text-muted);font-size:0.8rem;margin-left:8px;">— {{ r.reason or 'No reason' }}</span>
+        </div>
+        <div style="display:flex;gap:6px;">
+            <form method="POST" action="{{ url_for('founder_dash.resolve_refund', refund_id=r.id) }}" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="approve">
+                <button type="submit" style="background:rgba(46,204,113,0.15);color:#2ecc71;border:none;padding:4px 12px;border-radius:4px;font-size:0.78rem;cursor:pointer;font-weight:600;">Approve</button>
+            </form>
+            <form method="POST" action="{{ url_for('founder_dash.resolve_refund', refund_id=r.id) }}" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="reject">
+                <button type="submit" style="background:rgba(239,68,68,0.15);color:#ef4444;border:none;padding:4px 12px;border-radius:4px;font-size:0.78rem;cursor:pointer;font-weight:600;">Reject</button>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Frozen Accounts & High Risk -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-lg);margin-bottom:var(--space-xl);">
+    <!-- Frozen -->
+    <div style="background:var(--bg-card);border:1px solid rgba(239,68,68,0.15);border-radius:var(--radius-md);padding:var(--space-lg);">
+        <h2 style="font-size:1rem;font-weight:700;color:#ef4444;margin-bottom:var(--space-md);"><i class="bi bi-lock"></i> Frozen Accounts ({{ frozen_users|length }})</h2>
+        {% if frozen_users %}
+        {% for u in frozen_users %}
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);">
+            <span style="color:var(--text);font-size:0.88rem;">{{ u.display_name }} <span style="color:var(--text-muted);font-size:0.75rem;">(#{{ u.id }})</span></span>
+            <form method="POST" action="{{ url_for('founder_dash.freeze_account', user_id=u.id) }}" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="unfreeze">
+                <button type="submit" style="background:rgba(46,204,113,0.12);color:#2ecc71;border:none;padding:3px 10px;border-radius:4px;font-size:0.75rem;cursor:pointer;">Unfreeze</button>
+            </form>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p style="color:var(--text-muted);font-size:0.85rem;">No frozen accounts.</p>
+        {% endif %}
+    </div>
+
+    <!-- High Risk -->
+    <div style="background:var(--bg-card);border:1px solid rgba(245,158,11,0.15);border-radius:var(--radius-md);padding:var(--space-lg);">
+        <h2 style="font-size:1rem;font-weight:700;color:#f59e0b;margin-bottom:var(--space-md);"><i class="bi bi-shield-exclamation"></i> High Risk Users</h2>
+        {% if high_risk %}
+        {% for u in high_risk %}
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);">
+            <div>
+                <span style="color:var(--text);font-size:0.88rem;">{{ u.display_name }}</span>
+                <span style="color:#ef4444;font-size:0.75rem;font-weight:700;margin-left:6px;">Risk: {{ u.risk_score }}</span>
+                <span style="color:var(--text-muted);font-size:0.75rem;margin-left:6px;">Refunds: {{ u.refund_count or 0 }}</span>
+            </div>
+            {% if not u.account_frozen %}
+            <form method="POST" action="{{ url_for('founder_dash.freeze_account', user_id=u.id) }}" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="freeze">
+                <button type="submit" style="background:rgba(239,68,68,0.12);color:#ef4444;border:none;padding:3px 10px;border-radius:4px;font-size:0.75rem;cursor:pointer;">Freeze</button>
+            </form>
+            {% else %}
+            <span style="color:#ef4444;font-size:0.75rem;font-weight:600;">FROZEN</span>
+            {% endif %}
+        </div>
+        {% endfor %}
+        {% else %}
+        <p style="color:var(--text-muted);font-size:0.85rem;">No high-risk users.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Founder Controls: Adjust Balance -->
+<div style="background:var(--bg-card);border:1px solid rgba(212,168,67,0.15);border-radius:var(--radius-md);padding:var(--space-lg);margin-bottom:var(--space-xl);">
+    <h2 style="font-size:1rem;font-weight:700;color:var(--gold);margin-bottom:var(--space-md);"><i class="bi bi-sliders"></i> Adjust User Balance</h2>
+    <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:var(--space-md);">All adjustments go through the double-entry ledger and are fully auditable.</p>
+    <form method="POST" action="" id="adjustForm" style="display:flex;gap:var(--space-sm);flex-wrap:wrap;align-items:flex-end;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div>
+            <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:4px;">User ID</label>
+            <input name="user_id" id="adj_uid" type="number" placeholder="User ID" required style="background:var(--bg-input);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:8px 12px;color:var(--text);width:100px;">
+        </div>
+        <div>
+            <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:4px;">Coins (+/-)</label>
+            <input name="coins" type="number" placeholder="+100 or -50" required style="background:var(--bg-input);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:8px 12px;color:var(--text);width:120px;">
+        </div>
+        <div style="flex:1;min-width:150px;">
+            <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:4px;">Reason</label>
+            <input name="reason" type="text" placeholder="Reason for adjustment" required style="background:var(--bg-input);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:8px 12px;color:var(--text);width:100%;">
+        </div>
+        <button type="submit" style="background:var(--gold);color:#000;border:none;padding:8px 20px;border-radius:6px;font-weight:700;cursor:pointer;">Adjust</button>
+    </form>
+    <script>
+        document.getElementById('adjustForm').addEventListener('submit', function(e) {
+            var uid = document.getElementById('adj_uid').value;
+            this.action = '/founder/financial/adjust/' + uid;
+        });
+    </script>
+</div>
+
+<!-- Recent Ledger Entries -->
+<div style="background:var(--bg-card);border:1px solid rgba(255,255,255,0.06);border-radius:var(--radius-md);padding:var(--space-lg);">
+    <h2 style="font-size:1rem;font-weight:700;color:var(--text);margin-bottom:var(--space-md);"><i class="bi bi-journal-text"></i> Recent Ledger Entries</h2>
+    <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:0.82rem;">
+            <thead><tr style="border-bottom:1px solid rgba(255,255,255,0.08);">
+                <th style="text-align:left;padding:8px;color:var(--text-muted);">ID</th>
+                <th style="text-align:left;padding:8px;color:var(--text-muted);">Group</th>
+                <th style="text-align:left;padding:8px;color:var(--text-muted);">Account</th>
+                <th style="text-align:left;padding:8px;color:var(--text-muted);">Type</th>
+                <th style="text-align:right;padding:8px;color:var(--text-muted);">Amount</th>
+                <th style="text-align:left;padding:8px;color:var(--text-muted);">Event</th>
+                <th style="text-align:left;padding:8px;color:var(--text-muted);">Description</th>
+                <th style="text-align:left;padding:8px;color:var(--text-muted);">Time</th>
+            </tr></thead>
+            <tbody>
+            {% for e in recent_entries %}
+            <tr style="border-bottom:1px solid rgba(255,255,255,0.03);">
+                <td style="padding:6px 8px;color:var(--text-muted);">{{ e.id }}</td>
+                <td style="padding:6px 8px;color:var(--text-muted);font-family:monospace;font-size:0.72rem;">{{ e.tx_group[:8] }}...</td>
+                <td style="padding:6px 8px;color:var(--text);">{{ e.account_type }}{% if e.account_id %}:{{ e.account_id }}{% endif %}</td>
+                <td style="padding:6px 8px;">
+                    {% if e.entry_type == 'credit' %}
+                    <span style="color:#2ecc71;font-weight:600;">CREDIT</span>
+                    {% else %}
+                    <span style="color:#ef4444;font-weight:600;">DEBIT</span>
+                    {% endif %}
+                </td>
+                <td style="padding:6px 8px;text-align:right;font-weight:600;color:var(--text);">{{ "{:,}".format(e.amount) }} {{ e.currency }}</td>
+                <td style="padding:6px 8px;"><span style="background:rgba(96,165,250,0.1);color:#60a5fa;padding:1px 6px;border-radius:3px;font-size:0.72rem;">{{ e.event_type }}</span></td>
+                <td style="padding:6px 8px;color:var(--text-muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ e.description }}</td>
+                <td style="padding:6px 8px;color:var(--text-muted);font-size:0.75rem;">{{ e.created_at.strftime('%b %d %H:%M') if e.created_at else '' }}</td>
+            </tr>
+            {% endfor %}
+            {% if not recent_entries %}
+            <tr><td colspan="8" style="padding:20px;text-align:center;color:var(--text-muted);">No ledger entries yet. Entries will appear here once financial transactions occur.</td></tr>
+            {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

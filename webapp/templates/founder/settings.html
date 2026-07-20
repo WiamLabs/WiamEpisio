@@ -1,0 +1,467 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Settings — Control Panel{% endblock %}
+{% block sidebar_title %}Control Panel{% endblock %}
+
+{% block sidebar_nav %}
+<a class="nav-link" href="{{ url_for('founder_dash.overview') }}"><i class="bi bi-speedometer2"></i> Overview</a>
+<a class="nav-link" href="{{ url_for('founder_dash.users') }}"><i class="bi bi-people"></i> Users</a>
+<a class="nav-link" href="{{ url_for('founder_dash.content') }}"><i class="bi bi-book"></i> Content</a>
+<a class="nav-link" href="{{ url_for('founder_dash.revenue') }}"><i class="bi bi-cash-stack"></i> Revenue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.financial_dashboard') }}"><i class="bi bi-bank" style="color:var(--gold);"></i> Financial v5</a>
+<a class="nav-link" href="{{ url_for('founder_dash.premium_analytics') }}"><i class="bi bi-gem" style="color:#c084fc;"></i> Premium Analytics</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payouts') }}"><i class="bi bi-send-check"></i> Payouts</a>
+<a class="nav-link" href="{{ url_for('founder_dash.withdrawals') }}"><i class="bi bi-arrow-up-right-circle" style="color:var(--gold);"></i> Withdrawals</a>
+<a class="nav-link" href="{{ url_for('founder_dash.subscribers') }}"><i class="bi bi-gem" style="color:#9b59b6;"></i> Subscribers</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payroll') }}"><i class="bi bi-wallet2" style="color:#2ecc71;"></i> Team Payroll</a>
+<a class="nav-link" href="{{ url_for('founder_dash.creators') }}"><i class="bi bi-person-badge"></i> Creators</a>
+<a class="nav-link" href="{{ url_for('founder_dash.genres') }}"><i class="bi bi-tags"></i> Genres</a>
+<a class="nav-link" href="{{ url_for('founder_dash.announcements') }}"><i class="bi bi-megaphone"></i> Announcements</a>
+<a class="nav-link" href="{{ url_for('founder_dash.collections') }}"><i class="bi bi-grid"></i> Collections</a>
+<a class="nav-link" href="{{ url_for('founder_dash.moderation') }}"><i class="bi bi-shield-exclamation"></i> Moderation</a>
+<a class="nav-link" href="{{ url_for('founder_dash.warnings_list') }}"><i class="bi bi-exclamation-triangle" style="color:#f59e0b;"></i> Warnings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.elite_manage') }}"><span style="color:var(--gold);">?</span> WiamElite</a>
+<a class="nav-link" href="{{ url_for('wiambot.apex_review') }}"><i class="bi bi-trophy-fill" style="color:var(--gold);"></i> Apex Review</a>
+<a class="nav-link" href="{{ url_for('founder_dash.review_queue') }}"><i class="bi bi-robot"></i> Bot Review Queue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.platform_settings') }}"><i class="bi bi-sliders"></i> Platform Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.forms_dashboard') }}"><i class="bi bi-file-earmark-text"></i> Application Forms</a>
+<a class="nav-link" href="{{ url_for('founder_dash.email_studio') }}"><i class="bi bi-envelope-paper" style="color:var(--gold);"></i> Email Studio</a>
+<a class="nav-link" href="{{ url_for('founder_dash.team_management') }}"><i class="bi bi-people-fill"></i> Team</a>
+<a class="nav-link" href="{{ url_for('founder_dash.account_management') }}"><i class="bi bi-person-x"></i> Account Management</a>
+<a class="nav-link" href="{{ url_for('founder_dash.notification_testing') }}"><i class="bi bi-bell" style="color:#fbbf24;"></i> Notifications</a>
+<a class="nav-link" href="{{ url_for('classics.dashboard') }}"><i class="bi bi-journal-bookmark" style="color:#a78bfa;"></i> Content Seeder</a>
+<a class="nav-link active" href="{{ url_for('founder_dash.settings') }}"><i class="bi bi-gear"></i> Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.admins') }}"><i class="bi bi-shield-check"></i> Admins</a>
+{% endblock %}
+
+{% block dash_content %}
+<div class="dash-header">
+    <h1><i class="bi bi-gear me-2"></i>Platform Settings</h1>
+    <p>Paystack connection, revenue splits, coin packages, and home page controls</p>
+</div>
+
+<!-- ------- FEATURE LOCK / UNLOCK ------- -->
+<div class="dash-card" style="margin-bottom:1.5rem;border-left:4px solid #9b59b6;">
+    <h3><i class="bi bi-lock me-2" style="color:#9b59b6;"></i>Feature Lock / Unlock</h3>
+    <p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:1rem;">Lock features to hide them from all users (founders always bypass). Unlocked = live for everyone.</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;">
+        {% set locks = [
+            ('feature_elite', 'WiamElite', '✦', '#d4a843'),
+            ('feature_bulletin', 'WiamBulletin', '📢', '#60a5fa'),
+            ('feature_apex', 'WiamApex', '🏆', '#f59e0b'),
+            ('feature_programs', 'Programs', '🌟', '#9b59b6'),
+            ('feature_premium', 'WiamPremium', '💎', '#a855f7'),
+        ] %}
+        {% for key, label, icon, color in locks %}
+        <div style="padding:14px;background:var(--bg-elevated);border:1px solid var(--border-subtle);border-radius:10px;display:flex;align-items:center;gap:12px;">
+            <span style="font-size:1.4rem;">{{ icon }}</span>
+            <div style="flex:1;">
+                <div style="font-size:0.85rem;font-weight:700;color:var(--text);">{{ label }}</div>
+                <div style="font-size:0.7rem;font-weight:600;color:{{ '#22c55e' if feature_flags.get(key, true) else '#f87171' }};">
+                    {{ '?? Unlocked' if feature_flags.get(key, true) else '?? Locked' }}
+                </div>
+            </div>
+            <form action="{{ url_for('founder_dash.toggle_feature_lock') }}" method="post" style="margin:0;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="key" value="{{ key }}">
+                {% if feature_flags.get(key, true) %}
+                <button type="submit" style="padding:6px 14px;border:1px solid #f87171;background:rgba(248,113,113,0.1);color:#f87171;border-radius:8px;font-size:0.72rem;font-weight:700;cursor:pointer;" onclick="return confirm('Lock {{ label }}? Users will see a locked page.')">?? Lock</button>
+                {% else %}
+                <button type="submit" style="padding:6px 14px;border:1px solid #22c55e;background:rgba(34,197,94,0.1);color:#22c55e;border-radius:8px;font-size:0.72rem;font-weight:700;cursor:pointer;" onclick="return confirm('Unlock {{ label }}? All users will have access.')">?? Unlock</button>
+                {% endif %}
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- ------- PAYSTACK CONNECTION STATUS ------- -->
+<div class="dash-card" style="margin-bottom:1.5rem;border-left:4px solid {{ '#22c55e' if paystack_ok else '#f87171' }};">
+    <h3><i class="bi bi-credit-card me-2"></i>Paystack Connection</h3>
+    <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+        <div style="flex:1;min-width:200px;">
+            <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.4rem;">
+                <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:{{ '#22c55e' if paystack_ok else '#f87171' }};"></span>
+                <span style="font-size:0.9rem;font-weight:600;color:var(--text);">{{ 'Connected' if paystack_ok else 'Not Connected' }}</span>
+            </div>
+            <div style="font-size:0.8rem;color:var(--text-muted);">{{ paystack_msg }}</div>
+        </div>
+        <div style="text-align:right;">
+            <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:0.2rem;">Elite Plan Code</div>
+            {% if has_plan_code %}
+            <span style="font-size:0.8rem;font-weight:600;color:#22c55e;">{{ plan_code[:12] }}...</span>
+            {% else %}
+            <span style="font-size:0.8rem;font-weight:600;color:#f87171;">Not set</span>
+            <div style="font-size:0.68rem;color:var(--text-muted);margin-top:2px;">Set PAYSTACK_ELITE_PLAN_CODE in environment variables</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- ------- EMAIL (SMTP) TEST ------- -->
+<div class="dash-card" style="margin-bottom:1.5rem;border-left:4px solid {% if smtp_ok %}#22c55e{% else %}#ef4444{% endif %};">
+    <h3><i class="bi bi-envelope-check me-2"></i>Email (SMTP) Test</h3>
+    <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:0.8rem;">Send a test email to verify your SMTP configuration is working.</p>
+    <div style="padding:0.6rem 1rem;border-radius:8px;margin-bottom:0.8rem;font-size:0.82rem;
+        {% if smtp_ok %}background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.2);{% else %}background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);{% endif %}">
+        {% if smtp_ok %}
+        <span style="color:#22c55e;font-weight:600;">? Configured</span>
+        <span style="color:var(--text-muted);margin-left:0.5rem;">{{ smtp_msg }}</span>
+        {% else %}
+        <span style="color:#ef4444;font-weight:600;">? Not Configured</span>
+        <span style="color:var(--text-muted);margin-left:0.5rem;">Missing: {{ smtp_missing|join(', ') }}</span>
+        <div style="margin-top:0.4rem;font-size:0.78rem;color:var(--text-muted);">
+            Set these in your <b>Render Environment Variables</b>:<br>
+            <code>SMTP_HOST</code> (e.g. smtp.gmail.com), <code>SMTP_USER</code> (your email), <code>SMTP_PASS</code> (app password)
+        </div>
+        {% endif %}
+    </div>
+    <form method="POST" action="{{ url_for('founder_dash.test_email') }}" style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="email" name="email" placeholder="your-email@gmail.com" required
+               style="flex:1;min-width:200px;padding:0.5rem 0.8rem;border-radius:8px;border:1px solid var(--border-subtle);background:var(--bg-card);color:var(--text);font-size:0.85rem;">
+        <button type="submit" class="btn btn-sm" style="background:linear-gradient(135deg,#60a5fa,#3b82f6);color:#fff;border:none;padding:0.5rem 1.2rem;border-radius:8px;font-weight:600;font-size:0.85rem;">
+            <i class="bi bi-send me-1"></i>Send Test
+        </button>
+    </form>
+</div>
+
+<!-- ------- REVENUE SPLITS & PAYOUT CONFIG ------- -->
+<h2 style="font-size:1.15rem;font-weight:700;color:var(--text);margin-bottom:0.75rem;">
+    <i class="bi bi-pie-chart me-2" style="color:var(--gold)"></i>Revenue & Payout Configuration
+</h2>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;margin-bottom:2rem;">
+
+    <!-- Creator Revenue Split -->
+    <div class="dash-card">
+        <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.3rem;">Creator Revenue Split</div>
+        <div style="font-size:1.5rem;font-weight:700;color:var(--gold);margin-bottom:0.3rem;">{{ (cfg.creator_revenue_pct * 100)|int }}%</div>
+        <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:0.75rem;">% of coin spending that goes to the creator (rest stays with WiamApp)</div>
+        <form method="post" action="{{ url_for('founder_dash.update_platform_config') }}" class="d-flex gap-2 align-items-end">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="field" value="creator_revenue_pct">
+            <div style="flex:1">
+                <input type="number" name="value" min="10" max="90" value="{{ (cfg.creator_revenue_pct * 100)|int }}"
+                       style="width:100%;background:var(--bg);border:1px solid var(--border-subtle);color:var(--text);padding:0.4rem 0.6rem;border-radius:6px;font-size:0.85rem;">
+            </div>
+            <button type="submit" class="btn-dash btn-dash-primary" style="white-space:nowrap;">Set %</button>
+        </form>
+    </div>
+
+    <!-- Elite Subscription Price -->
+    <div class="dash-card">
+        <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.3rem;">Elite Subscription Price</div>
+        <div style="font-size:1.5rem;font-weight:700;color:var(--gold);margin-bottom:0.3rem;">GH&#8373;{{ '%.0f'|format(cfg.elite_price_ghs) }}/mo</div>
+        <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:0.75rem;">Monthly price for WiamElite access</div>
+        <form method="post" action="{{ url_for('founder_dash.update_platform_config') }}" class="d-flex gap-2 align-items-end">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="field" value="elite_price_ghs">
+            <div style="flex:1">
+                <input type="number" name="value" min="1" max="500" step="0.5" value="{{ '%.1f'|format(cfg.elite_price_ghs) }}"
+                       style="width:100%;background:var(--bg);border:1px solid var(--border-subtle);color:var(--text);padding:0.4rem 0.6rem;border-radius:6px;font-size:0.85rem;">
+            </div>
+            <button type="submit" class="btn-dash btn-dash-primary" style="white-space:nowrap;">Set GH&#8373;</button>
+        </form>
+    </div>
+
+    <!-- Premium Subscription Price -->
+    <div class="dash-card">
+        <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.3rem;">Premium Subscription Price</div>
+        <div style="font-size:1.5rem;font-weight:700;color:#9b59b6;margin-bottom:0.3rem;">GH&#8373;{{ '%.0f'|format(cfg.premium_price_ghs|default(20)) }}/mo</div>
+        <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:0.75rem;">Monthly price for WiamPremium access</div>
+        <form method="post" action="{{ url_for('founder_dash.update_platform_config') }}" class="d-flex gap-2 align-items-end">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="field" value="premium_price_ghs">
+            <div style="flex:1">
+                <input type="number" name="value" min="1" max="500" step="0.5" value="{{ '%.1f'|format(cfg.premium_price_ghs|default(20)) }}"
+                       style="width:100%;background:var(--bg);border:1px solid var(--border-subtle);color:var(--text);padding:0.4rem 0.6rem;border-radius:6px;font-size:0.85rem;">
+            </div>
+            <button type="submit" class="btn-dash btn-dash-primary" style="white-space:nowrap;">Set GH&#8373;</button>
+        </form>
+    </div>
+
+    <!-- Elite Creator Share -->
+    <div class="dash-card">
+        <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.3rem;">Elite Creator Share</div>
+        <div style="font-size:1.5rem;font-weight:700;color:var(--gold);margin-bottom:0.3rem;">{{ (cfg.elite_creator_pct * 100)|int }}%</div>
+        <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:0.75rem;">% of subscription pool distributed to Elite creators</div>
+        <form method="post" action="{{ url_for('founder_dash.update_platform_config') }}" class="d-flex gap-2 align-items-end">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="field" value="elite_creator_pct">
+            <div style="flex:1">
+                <input type="number" name="value" min="10" max="90" value="{{ (cfg.elite_creator_pct * 100)|int }}"
+                       style="width:100%;background:var(--bg);border:1px solid var(--border-subtle);color:var(--text);padding:0.4rem 0.6rem;border-radius:6px;font-size:0.85rem;">
+            </div>
+            <button type="submit" class="btn-dash btn-dash-primary" style="white-space:nowrap;">Set %</button>
+        </form>
+    </div>
+
+    <!-- Minimum Payout -->
+    <div class="dash-card">
+        <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.3rem;">Minimum Payout</div>
+        <div style="font-size:1.5rem;font-weight:700;color:var(--gold);margin-bottom:0.3rem;">GH&#8373;{{ '%.0f'|format(cfg.min_payout_ghs) }}</div>
+        <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:0.75rem;">Below this amount, earnings roll over to next month</div>
+        <form method="post" action="{{ url_for('founder_dash.update_platform_config') }}" class="d-flex gap-2 align-items-end">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="field" value="min_payout_ghs">
+            <div style="flex:1">
+                <input type="number" name="value" min="1" max="100" step="1" value="{{ '%.0f'|format(cfg.min_payout_ghs) }}"
+                       style="width:100%;background:var(--bg);border:1px solid var(--border-subtle);color:var(--text);padding:0.4rem 0.6rem;border-radius:6px;font-size:0.85rem;">
+            </div>
+            <button type="submit" class="btn-dash btn-dash-primary" style="white-space:nowrap;">Set GH&#8373;</button>
+        </form>
+    </div>
+</div>
+
+{% if cfg.updated_at %}
+<div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:2rem;">
+    <i class="bi bi-clock me-1"></i> Config last updated: {{ cfg.updated_at.strftime('%Y-%m-%d %H:%M UTC') }}
+</div>
+{% endif %}
+
+<!-- ------- FEATURE FLAGS (MONETIZATION) ------- -->
+<h2 style="font-size:1.15rem;font-weight:700;color:var(--text);margin-bottom:0.25rem;">
+    <i class="bi bi-toggles me-2" style="color:var(--gold)"></i>Monetization Feature Flags
+</h2>
+<p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1rem;">
+    Control which monetization features are active. All OFF by default until you're ready to go live.
+</p>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1rem;margin-bottom:2rem;">
+    {% set flags = [
+        ('ff_premium_enabled', 'Premium Paywall', 'Master switch — require subscription to access gated content', cfg.ff_premium_enabled),
+        ('ff_elite_paywall_enabled', 'Elite Paywall', 'Require premium to read WiamElite content', cfg.ff_elite_paywall_enabled),
+        ('ff_apex_paywall_enabled', 'Apex Paywall', 'Require premium to read WiamApex content', cfg.ff_apex_paywall_enabled),
+        ('ff_monthly_unlocks_enabled', 'Monthly Credits', 'Grant premium users monthly chapter unlock credits', cfg.ff_monthly_unlocks_enabled),
+        ('ff_ad_free_premium_enabled', 'Ad-Free Premium', 'Premium users see no ads (when ads exist)', cfg.ff_ad_free_premium_enabled),
+        ('ff_premium_badge_enabled', 'Premium Badge', 'Show premium badge on subscriber profiles', cfg.ff_premium_badge_enabled),
+    ] %}
+    {% for flag_key, flag_label, flag_desc, flag_val in flags %}
+    <div class="dash-card" style="display:flex;align-items:center;justify-content:space-between;gap:1rem;">
+        <div style="flex:1;">
+            <div style="font-weight:600;color:var(--text);font-size:0.9rem;">{{ flag_label }}</div>
+            <div style="font-size:0.72rem;color:var(--text-muted);">{{ flag_desc }}</div>
+        </div>
+        <form method="post" action="{{ url_for('founder_dash.toggle_feature_flag') }}" style="margin:0;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="flag" value="{{ flag_key }}">
+            <button type="submit" style="
+                background:{{ '#22c55e' if flag_val else '#374151' }};
+                color:#fff; border:none; padding:0.35rem 1rem;
+                border-radius:20px; font-size:0.78rem; font-weight:600;
+                cursor:pointer; min-width:52px; transition:all 0.15s;
+            ">{{ 'ON' if flag_val else 'OFF' }}</button>
+        </form>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Premium Credits Config -->
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;margin-bottom:2rem;">
+    <div class="dash-card">
+        <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.3rem;">Monthly Unlock Credits</div>
+        <div style="font-size:1.5rem;font-weight:700;color:var(--gold);margin-bottom:0.3rem;">{{ cfg.premium_monthly_unlock_credits }}</div>
+        <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:0.75rem;">Credits granted to premium users each billing cycle</div>
+        <form method="post" action="{{ url_for('founder_dash.update_platform_config') }}" class="d-flex gap-2 align-items-end">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="field" value="premium_monthly_unlock_credits">
+            <div style="flex:1">
+                <input type="number" name="value" min="1" max="100" value="{{ cfg.premium_monthly_unlock_credits }}"
+                       style="width:100%;background:var(--bg);border:1px solid var(--border-subtle);color:var(--text);padding:0.4rem 0.6rem;border-radius:6px;font-size:0.85rem;">
+            </div>
+            <button type="submit" class="btn-dash btn-dash-primary" style="white-space:nowrap;">Set</button>
+        </form>
+    </div>
+</div>
+
+<!-- ------- PREMIUM MANAGEMENT ------- -->
+<h2 style="font-size:1.15rem;font-weight:700;color:var(--text);margin-bottom:0.25rem;">
+    <i class="bi bi-gem me-2" style="color:var(--gold)"></i>Premium Management
+</h2>
+<p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1rem;">
+    Manually grant or revoke premium status and credits for specific users.
+</p>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;margin-bottom:2rem;">
+    <!-- Grant Premium -->
+    <div class="dash-card">
+        <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.5rem;">Grant Premium</div>
+        <form method="post" action="{{ url_for('founder_dash.premium_grant') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="text" name="identifier" placeholder="User email or username" required
+                   style="width:100%;background:var(--bg);border:1px solid var(--border-subtle);color:var(--text);padding:0.4rem 0.6rem;border-radius:6px;font-size:0.85rem;margin-bottom:0.5rem;">
+            <button type="submit" class="btn-dash btn-dash-primary" style="width:100%;"><i class="bi bi-gem me-1"></i>Activate Premium</button>
+        </form>
+    </div>
+
+    <!-- Revoke Premium -->
+    <div class="dash-card">
+        <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.5rem;">Revoke Premium</div>
+        <form method="post" action="{{ url_for('founder_dash.premium_revoke') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="text" name="identifier" placeholder="User email or username" required
+                   style="width:100%;background:var(--bg);border:1px solid var(--border-subtle);color:var(--text);padding:0.4rem 0.6rem;border-radius:6px;font-size:0.85rem;margin-bottom:0.5rem;">
+            <button type="submit" class="btn-dash" style="width:100%;background:#ef4444;color:#fff;border:none;padding:0.4rem;border-radius:6px;font-size:0.85rem;font-weight:600;cursor:pointer;"><i class="bi bi-x-circle me-1"></i>Revoke Premium</button>
+        </form>
+    </div>
+
+    <!-- Grant Credits -->
+    <div class="dash-card">
+        <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.5rem;">Grant Credits</div>
+        <form method="post" action="{{ url_for('founder_dash.grant_credits') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="text" name="identifier" placeholder="User email or username" required
+                   style="width:100%;background:var(--bg);border:1px solid var(--border-subtle);color:var(--text);padding:0.4rem 0.6rem;border-radius:6px;font-size:0.85rem;margin-bottom:0.5rem;">
+            <input type="number" name="amount" min="1" max="100" value="10" required
+                   style="width:100%;background:var(--bg);border:1px solid var(--border-subtle);color:var(--text);padding:0.4rem 0.6rem;border-radius:6px;font-size:0.85rem;margin-bottom:0.5rem;">
+            <button type="submit" class="btn-dash btn-dash-primary" style="width:100%;"><i class="bi bi-plus-circle me-1"></i>Grant Credits</button>
+        </form>
+    </div>
+</div>
+
+<!-- ------- FOUNDER ACCOUNT TOOLS ------- -->
+<h2 style="font-size:1.15rem;font-weight:700;color:var(--text);margin-bottom:0.75rem;">
+    <i class="bi bi-shield-lock me-2" style="color:var(--gold)"></i>Founder Account Tools
+</h2>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem;margin-bottom:2rem;">
+    <div class="dash-card">
+        <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.5rem;">Make User a Founder</div>
+        <form method="post" action="{{ url_for('founder_dash.manage_founder_account') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="action" value="make_founder">
+            <input type="email" name="email" placeholder="Email address" required
+                   style="width:100%;background:var(--bg);border:1px solid var(--border-subtle);color:var(--text);padding:0.4rem 0.6rem;border-radius:6px;font-size:0.85rem;margin-bottom:0.5rem;">
+            <input type="text" name="password" placeholder="Password (optional for existing)"
+                   style="width:100%;background:var(--bg);border:1px solid var(--border-subtle);color:var(--text);padding:0.4rem 0.6rem;border-radius:6px;font-size:0.85rem;margin-bottom:0.5rem;">
+            <button type="submit" class="btn-dash" style="width:100%;background:var(--gold);color:#000;border:none;padding:0.4rem;border-radius:6px;font-size:0.85rem;font-weight:600;cursor:pointer;"><i class="bi bi-shield-check me-1"></i>Make Founder</button>
+        </form>
+    </div>
+    <div class="dash-card">
+        <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.5rem;">Reset User Password</div>
+        <form method="post" action="{{ url_for('founder_dash.manage_founder_account') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="action" value="reset_password">
+            <input type="email" name="email" placeholder="User email" required
+                   style="width:100%;background:var(--bg);border:1px solid var(--border-subtle);color:var(--text);padding:0.4rem 0.6rem;border-radius:6px;font-size:0.85rem;margin-bottom:0.5rem;">
+            <input type="text" name="password" placeholder="New password" required
+                   style="width:100%;background:var(--bg);border:1px solid var(--border-subtle);color:var(--text);padding:0.4rem 0.6rem;border-radius:6px;font-size:0.85rem;margin-bottom:0.5rem;">
+            <button type="submit" class="btn-dash" style="width:100%;background:#3b82f6;color:#fff;border:none;padding:0.4rem;border-radius:6px;font-size:0.85rem;font-weight:600;cursor:pointer;"><i class="bi bi-key me-1"></i>Reset Password</button>
+        </form>
+    </div>
+</div>
+
+<!-- ------- COIN PACKAGES ------- -->
+<h2 style="font-size:1.15rem;font-weight:700;color:var(--text);margin-bottom:0.75rem;">
+    <i class="bi bi-coin me-2" style="color:var(--gold)"></i>Coin Packages
+</h2>
+
+{% if packages %}
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem;margin-bottom:2rem;">
+    {% for pkg in packages %}
+    <div class="dash-card" style="opacity:{{ '1' if pkg.is_active else '0.5' }};position:relative;">
+        {% if not pkg.is_active %}
+        <span style="position:absolute;top:8px;right:8px;font-size:0.65rem;background:#f87171;color:#fff;padding:2px 8px;border-radius:10px;font-weight:600;">INACTIVE</span>
+        {% endif %}
+        <div style="font-size:0.85rem;font-weight:700;color:var(--text);margin-bottom:0.3rem;">{{ pkg.label or 'Package' }}</div>
+        <div style="display:flex;gap:1rem;margin-bottom:0.5rem;">
+            <div>
+                <div style="font-size:0.68rem;color:var(--text-muted);">Coins</div>
+                <div style="font-size:1.1rem;font-weight:700;color:var(--gold);">{{ pkg.coins }}{% if pkg.bonus_coins %} <span style="font-size:0.75rem;color:#22c55e;">+{{ pkg.bonus_coins }}</span>{% endif %}</div>
+            </div>
+            <div>
+                <div style="font-size:0.68rem;color:var(--text-muted);">Price</div>
+                <div style="font-size:1.1rem;font-weight:700;color:var(--text);">GH&#8373;{{ '%.2f'|format(pkg.price_ghs) }}</div>
+            </div>
+        </div>
+        <form method="post" action="{{ url_for('founder_dash.update_coin_package') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="package_id" value="{{ pkg.id }}">
+            <input type="hidden" name="action" value="toggle">
+            <button type="submit" style="
+                background:{{ '#374151' if pkg.is_active else '#22c55e' }};
+                color:#fff; border:none; padding:0.3rem 0.85rem;
+                border-radius:20px; font-size:0.75rem; font-weight:600;
+                cursor:pointer; width:100%;
+            ">{{ 'Deactivate' if pkg.is_active else 'Activate' }}</button>
+        </form>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="dash-card" style="text-align:center;color:var(--text-muted);padding:2rem;margin-bottom:2rem;">
+    No coin packages configured yet.
+</div>
+{% endif %}
+
+<!-- ------- HOME PAGE SECTIONS ------- -->
+<h2 style="font-size:1.15rem;font-weight:700;color:var(--text);margin-bottom:0.25rem;">
+    <i class="bi bi-layout-text-sidebar-reverse me-2" style="color:var(--gold)"></i>Home Page Sections
+</h2>
+<p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1rem;">
+    Control which curated sections appear on the home page.
+</p>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1rem;">
+    {% for sec in sections %}
+    <div class="dash-card" style="position:relative;">
+        <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.75rem;">
+            {% if sec.section_key == 'wiam_top_picks' %}
+            <i class="bi bi-stars" style="font-size:1.3rem;color:var(--gold)"></i>
+            {% elif sec.section_key == 'collections' %}
+            <i class="bi bi-grid" style="font-size:1.3rem;color:var(--gold)"></i>
+            {% elif sec.section_key == 'featured' %}
+            <i class="bi bi-trophy" style="font-size:1.3rem;color:var(--gold)"></i>
+            {% elif sec.section_key == 'premium_exclusives' %}
+            <i class="bi bi-gem" style="font-size:1.3rem;color:var(--gold)"></i>
+            {% endif %}
+            <div>
+                <div style="font-weight:600;color:var(--text);font-size:0.95rem;">{{ sec.label }}</div>
+                <div style="font-size:0.72rem;color:var(--text-muted);">{{ sec.section_key }}</div>
+            </div>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:0.6rem 0;border-top:1px solid var(--border-subtle);">
+            <div>
+                <div style="font-size:0.85rem;font-weight:500;color:var(--text);">Section Active</div>
+                <div style="font-size:0.72rem;color:var(--text-muted);">Show on home page</div>
+            </div>
+            <form method="post" action="{{ url_for('founder_dash.toggle_section') }}" style="margin:0;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="section_key" value="{{ sec.section_key }}">
+                <input type="hidden" name="field" value="is_active">
+                <button type="submit" style="
+                    background:{{ '#22c55e' if sec.is_active else '#374151' }};
+                    color:#fff; border:none; padding:0.3rem 0.85rem;
+                    border-radius:20px; font-size:0.78rem; font-weight:600;
+                    cursor:pointer; min-width:52px; transition:all 0.15s;
+                ">{{ 'ON' if sec.is_active else 'OFF' }}</button>
+            </form>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:0.6rem 0;border-top:1px solid var(--border-subtle);">
+            <div>
+                <div style="font-size:0.85rem;font-weight:500;color:var(--text);">Allow Admins</div>
+                <div style="font-size:0.72rem;color:var(--text-muted);">Let admins manage this</div>
+            </div>
+            <form method="post" action="{{ url_for('founder_dash.toggle_section') }}" style="margin:0;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="section_key" value="{{ sec.section_key }}">
+                <input type="hidden" name="field" value="admin_can_manage">
+                <button type="submit" style="
+                    background:{{ '#3b82f6' if sec.admin_can_manage else '#374151' }};
+                    color:#fff; border:none; padding:0.3rem 0.85rem;
+                    border-radius:20px; font-size:0.78rem; font-weight:600;
+                    cursor:pointer; min-width:52px; transition:all 0.15s;
+                ">{{ 'ON' if sec.admin_can_manage else 'OFF' }}</button>
+            </form>
+        </div>
+
+        {% if sec.updated_at %}
+        <div style="font-size:0.68rem;color:var(--text-muted);margin-top:0.5rem;text-align:right;">
+            Updated: {{ sec.updated_at.strftime('%b %d, %H:%M') }}
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

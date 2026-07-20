@@ -1,0 +1,185 @@
+{% extends "dashboard_base.html" %}
+{% block title %}AI & Protection Status — Founder Dashboard{% endblock %}
+{% block sidebar_title %}Control Panel{% endblock %}
+
+{% block sidebar_nav %}
+<a class="nav-link" href="{{ url_for('founder_dash.overview') }}"><i class="bi bi-speedometer2"></i> Overview</a>
+<a class="nav-link" href="{{ url_for('founder_dash.users') }}"><i class="bi bi-people"></i> Users</a>
+<a class="nav-link" href="{{ url_for('founder_dash.content') }}"><i class="bi bi-book"></i> Content</a>
+<a class="nav-link" href="{{ url_for('founder_dash.revenue') }}"><i class="bi bi-cash-stack"></i> Revenue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.financial_dashboard') }}"><i class="bi bi-bank" style="color:var(--gold);"></i> Financial v5</a>
+<a class="nav-link" href="{{ url_for('founder_dash.premium_analytics') }}"><i class="bi bi-gem" style="color:#c084fc;"></i> Premium Analytics</a>
+<a class="nav-link" href="{{ url_for('founder_dash.moderation') }}"><i class="bi bi-shield-exclamation"></i> Moderation</a>
+<a class="nav-link" href="{{ url_for('founder_dash.warnings_list') }}"><i class="bi bi-exclamation-triangle" style="color:#f59e0b;"></i> Warnings</a>
+<a class="nav-link active" href="{{ url_for('founder_dash.ai_status') }}"><i class="bi bi-cpu" style="color:#38bdf8;"></i> AI & Protection</a>
+<a class="nav-link" href="{{ url_for('founder_dash.review_queue') }}"><i class="bi bi-robot"></i> Bot Review Queue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.elite_manage') }}"><span style="color:var(--gold);">?</span> WiamElite</a>
+<a class="nav-link" href="{{ url_for('wiambot.apex_review') }}"><i class="bi bi-trophy-fill" style="color:var(--gold);"></i> Apex Review</a>
+<a class="nav-link" href="{{ url_for('founder_dash.platform_settings') }}"><i class="bi bi-sliders"></i> Platform Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.settings') }}"><i class="bi bi-gear"></i> Settings</a>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    {% include 'founder/_dashboard_switcher.html' %}
+
+    <h2 style="margin-bottom:6px;"><i class="bi bi-cpu"></i> AI & Protection Status</h2>
+    <p class="text-muted" style="margin-bottom:24px;font-size:0.88rem;">Real-time overview of AI providers, content protection, and scheduled jobs.</p>
+
+    <!-- -- AI PROVIDERS ----------------------------------- -->
+    <div class="card mb-4">
+        <div class="card-header"><h5><i class="bi bi-lightning-charge"></i> AI Providers</h5></div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-dark table-hover mb-0">
+                    <thead><tr><th>Provider</th><th>Status</th><th>Today's Usage</th><th>Daily Limit</th><th>Usage %</th></tr></thead>
+                    <tbody>
+                    {% set providers = [
+                        ('Groq', 'groq', 'Chat & fallback'),
+                        ('Gemini', 'gemini', 'Curation, Reviews, T&C'),
+                        ('Cerebras', 'cerebras', 'Backup / overflow'),
+                        ('Mistral', 'mistral', 'Content guard'),
+                        ('Cohere', 'cohere', 'Deep backup'),
+                    ] %}
+                    {% for label, key, role in providers %}
+                    {% set online = ai_providers.get(key, false) %}
+                    {% set used = ai_usage.get(key, 0) %}
+                    {% set limit = ai_limits.get(key, 1) %}
+                    {% set pct = ((used / limit) * 100) | int if limit else 0 %}
+                    <tr>
+                        <td><strong>{{ label }}</strong> <span class="text-muted" style="font-size:0.75rem;">{{ role }}</span></td>
+                        <td>
+                            {% if online %}
+                            <span class="badge" style="background:#166534;color:#4ade80;">? Online</span>
+                            {% else %}
+                            <span class="badge" style="background:#7f1d1d;color:#fca5a5;">? Offline</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ used }}</td>
+                        <td>{{ "{:,}".format(limit) }}</td>
+                        <td>
+                            <div style="background:#1e1e2e;border-radius:6px;height:8px;width:100px;display:inline-block;vertical-align:middle;">
+                                <div style="background:{{ '#ef4444' if pct > 80 else '#f59e0b' if pct > 50 else '#4ade80' }};height:100%;border-radius:6px;width:{{ [pct, 100]|min }}%;"></div>
+                            </div>
+                            <span style="font-size:0.75rem;margin-left:4px;">{{ pct }}%</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- -- PROTECTION SYSTEM ------------------------------ -->
+    <div class="row mb-4">
+        <div class="col-md-3 col-6 mb-3">
+            <div class="card text-center" style="border-left:3px solid #f59e0b;">
+                <div class="card-body py-3">
+                    <div style="font-size:1.8rem;font-weight:700;color:#f59e0b;">{{ warnings_24h }}</div>
+                    <div class="text-muted" style="font-size:0.78rem;">Warnings (24h)</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6 mb-3">
+            <div class="card text-center" style="border-left:3px solid #38bdf8;">
+                <div class="card-body py-3">
+                    <div style="font-size:1.8rem;font-weight:700;color:#38bdf8;">{{ warnings_7d }}</div>
+                    <div class="text-muted" style="font-size:0.78rem;">Warnings (7d)</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6 mb-3">
+            <div class="card text-center" style="border-left:3px solid #ef4444;">
+                <div class="card-body py-3">
+                    <div style="font-size:1.8rem;font-weight:700;color:#ef4444;">{{ strikes_30d }}</div>
+                    <div class="text-muted" style="font-size:0.78rem;">Strikes (30d)</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6 mb-3">
+            <div class="card text-center" style="border-left:3px solid #a78bfa;">
+                <div class="card-body py-3">
+                    <div style="font-size:1.8rem;font-weight:700;color:#a78bfa;">{{ banned_users }}</div>
+                    <div class="text-muted" style="font-size:0.78rem;">Banned Users</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <!-- Content Safety -->
+        <div class="col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-header"><h5><i class="bi bi-shield-check"></i> Content Safety</h5></div>
+                <div class="card-body">
+                    <table class="table table-dark table-sm mb-0">
+                        <tr><td>AI-Verified Stories</td><td class="text-end"><strong style="color:#4ade80;">{{ verified_books }}</strong> / {{ total_books }}</td></tr>
+                        <tr><td>T&C Violations (30d)</td><td class="text-end"><strong style="color:#ef4444;">{{ tc_violations_30d }}</strong></td></tr>
+                        <tr><td>Warnings (30d)</td><td class="text-end"><strong style="color:#f59e0b;">{{ warnings_30d }}</strong></td></tr>
+                        <tr><td>Unacknowledged Warnings</td><td class="text-end"><strong style="color:#fb923c;">{{ unacked }}</strong></td></tr>
+                        <tr>
+                            <td>Verification Rate</td>
+                            <td class="text-end">
+                                {% if total_books > 0 %}
+                                <strong style="color:#d4a843;">{{ ((verified_books / total_books) * 100) | round(1) }}%</strong>
+                                {% else %}
+                                <span class="text-muted">N/A</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scheduled Jobs -->
+        <div class="col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-header"><h5><i class="bi bi-clock-history"></i> Scheduler</h5></div>
+                <div class="card-body">
+                    <table class="table table-dark table-sm mb-0">
+                        <tr><td><i class="bi bi-check-circle text-success"></i> Eligibility Check</td><td class="text-end text-muted">Daily @ 02:00 UTC</td></tr>
+                        <tr><td><i class="bi bi-check-circle text-success"></i> Monthly Payouts</td><td class="text-end text-muted">1st @ 03:00 UTC</td></tr>
+                        <tr><td><i class="bi bi-check-circle text-success"></i> WiamElite Algorithm</td><td class="text-end text-muted">Daily @ 04:00 UTC</td></tr>
+                        <tr><td><i class="bi bi-check-circle text-success"></i> AI Home Curation</td><td class="text-end text-muted">Daily @ 05:00 UTC</td></tr>
+                        <tr><td><i class="bi bi-check-circle text-success"></i> Apex Board AI</td><td class="text-end text-muted">Daily @ 06:00 UTC</td></tr>
+                        <tr><td><i class="bi bi-check-circle text-success"></i> Trust Score Refresh</td><td class="text-end text-muted">Daily @ 07:00 UTC</td></tr>
+                    </table>
+                    {% if curation_status %}
+                    <div class="mt-2" style="font-size:0.78rem;color:#999;">
+                        <i class="bi bi-info-circle"></i> Last AI curation: <strong>{{ curation_status }}</strong>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- -- RATE GUARD SETTINGS ---------------------------- -->
+    {% if rate_settings %}
+    <div class="card mb-4">
+        <div class="card-header"><h5><i class="bi bi-speedometer2"></i> Rate Guard Settings</h5></div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-dark table-hover mb-0">
+                    <thead><tr><th>Setting</th><th>Value</th></tr></thead>
+                    <tbody>
+                    {% for key, val in rate_settings.items() | sort %}
+                    <tr>
+                        <td><code>{{ key }}</code></td>
+                        <td>{{ val }}</td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer text-muted" style="font-size:0.78rem;">
+            Edit these in <a href="{{ url_for('founder_dash.platform_settings') }}" style="color:#d4a843;">Platform Settings</a>.
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+{% block title %}My Library — WiamApp{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: var(--space-xl); padding-bottom: var(--space-xl);">
+    <div style="margin-bottom: var(--space-lg);">
+        <h1 class="greeting"><i class="bi bi-collection" style="color: var(--gold);"></i> My Library</h1>
+        <p class="greeting-sub" style="margin-bottom: 0;">Your personal bookshelf</p>
+    </div>
+
+    <!-- ── Tab navigation ── -->
+    <div style="display: flex; gap: 4px; margin-bottom: var(--space-lg); border-bottom: 1px solid var(--border-subtle); overflow-x: auto; -webkit-overflow-scrolling: touch;">
+        <button class="lib-tab active" data-tab="saved" onclick="switchTab('saved')">
+            <i class="bi bi-bookmark-fill"></i> Saved <span class="tab-count">{{ saved_books|length }}</span>
+        </button>
+        <button class="lib-tab" data-tab="reading" onclick="switchTab('reading')">
+            <i class="bi bi-book-half"></i> Continue Reading <span class="tab-count">{{ continue_books|length }}</span>
+        </button>
+        <button class="lib-tab" data-tab="history" onclick="switchTab('history')">
+            <i class="bi bi-clock-history"></i> History <span class="tab-count">{{ history_books|length }}</span>
+        </button>
+        <button class="lib-tab" data-tab="unlocked" onclick="switchTab('unlocked')">
+            <i class="bi bi-unlock-fill"></i> Unlocked <span class="tab-count">{{ unlocked_books|length }}</span>
+        </button>
+    </div>
+
+    <!-- ═══ SAVED BOOKS section ═══ -->
+    <div class="lib-section" id="tab-saved">
+        {% if saved_books %}
+        <div class="row g-3">
+            {% for book in saved_books %}
+            {% set prog = progress_map.get(book.id) %}
+            <div class="col-6 col-md-4 col-lg-3">
+                <div class="book-card" style="position: relative;">
+                    <button class="lib-remove-btn" title="Remove from Library"
+                            onclick="toggleLibrary({{ book.id }}, this)"
+                            style="position:absolute;top:6px;right:6px;z-index:5;background:rgba(0,0,0,.6);border:none;color:#fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+                        <i class="bi bi-bookmark-fill" style="font-size:.8rem;color:var(--gold);"></i>
+                    </button>
+                    <a href="{{ url_for('book.detail', book_id=book.id) }}" style="text-decoration: none;">
+                        {% if book.cover_file_id %}
+                        <img src="{{ book.cover_url }}" class="card-cover" alt="{{ book.title }}" loading="lazy">
+                        {% else %}
+                        <div class="cover-placeholder"><i class="bi bi-book"></i></div>
+                        {% endif %}
+                    </a>
+                    <div class="card-body">
+                        <a href="{{ url_for('book.detail', book_id=book.id) }}" style="text-decoration: none;">
+                            <div class="card-title">{{ book.title }}</div>
+                            <div class="card-author">{{ book.author or 'Unknown' }}</div>
+                        </a>
+                        {% if prog %}
+                        <div style="margin-top: 6px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted); margin-bottom: 3px;">
+                                <span>Ch. {{ prog.current_chapter }}/{{ prog.total_chapters }}</span>
+                                <span>{{ ((prog.current_chapter / prog.total_chapters) * 100) | int }}%</span>
+                            </div>
+                            <div style="height: 3px; background: var(--border-subtle); border-radius: 2px; overflow: hidden;">
+                                <div style="height: 100%; background: var(--gold); border-radius: 2px; width: {{ ((prog.current_chapter / prog.total_chapters) * 100) | int }}%;"></div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        <a href="{{ url_for('book.read_book', book_id=book.id) }}{% if prog %}?ch={{ prog.current_chapter }}{% endif %}"
+                           class="btn btn-gold" style="width: 100%; margin-top: 8px; padding: 6px 0; font-size: 0.8rem;">
+                            <i class="bi bi-book me-1"></i> {{ 'Continue' if prog else 'Read' }}
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="icon"><i class="bi bi-bookmark"></i></div>
+            <h3>No saved books yet</h3>
+            <p>When you find a story you love, tap <strong>"Add to Library"</strong> on the book page to save it here.</p>
+            <a href="{{ url_for('browse.browse_home') }}" class="btn btn-outline-gold mt-3">Discover Stories</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- ═══ CONTINUE READING section ═══ -->
+    <div class="lib-section" id="tab-reading" style="display:none;">
+        {% if continue_books %}
+        <div class="row g-3">
+            {% for item in continue_books %}
+            {% set book = item.book %}
+            {% set prog = item.progress %}
+            <div class="col-6 col-md-4 col-lg-3">
+                <div class="book-card" style="position: relative;">
+                    <a href="{{ url_for('book.detail', book_id=book.id) }}" style="text-decoration: none;">
+                        {% if book.cover_file_id %}
+                        <img src="{{ book.cover_url }}" class="card-cover" alt="{{ book.title }}" loading="lazy">
+                        {% else %}
+                        <div class="cover-placeholder"><i class="bi bi-book"></i></div>
+                        {% endif %}
+                    </a>
+                    <div class="card-body">
+                        <a href="{{ url_for('book.detail', book_id=book.id) }}" style="text-decoration: none;">
+                            <div class="card-title">{{ book.title }}</div>
+                            <div class="card-author">{{ book.author or 'Unknown' }}</div>
+                        </a>
+                        <div style="margin-top: 6px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted); margin-bottom: 3px;">
+                                <span>Ch. {{ prog.current_chapter }}/{{ prog.total_chapters }}</span>
+                                <span>{{ ((prog.current_chapter / prog.total_chapters) * 100) | int }}%</span>
+                            </div>
+                            <div style="height: 3px; background: var(--border-subtle); border-radius: 2px; overflow: hidden;">
+                                <div style="height: 100%; background: var(--gold); border-radius: 2px; width: {{ ((prog.current_chapter / prog.total_chapters) * 100) | int }}%;"></div>
+                            </div>
+                        </div>
+                        <a href="{{ url_for('book.read_book', book_id=book.id) }}?ch={{ prog.current_chapter }}"
+                           class="btn btn-gold" style="width: 100%; margin-top: 8px; padding: 6px 0; font-size: 0.8rem;">
+                            <i class="bi bi-book me-1"></i> Continue Ch. {{ prog.current_chapter }}
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="icon"><i class="bi bi-book-half"></i></div>
+            <h3>Nothing in progress</h3>
+            <p>Start reading a story and your progress will be tracked here.</p>
+            <a href="{{ url_for('browse.browse_home') }}" class="btn btn-outline-gold mt-3">Browse Stories</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- ═══ READING HISTORY section ═══ -->
+    <div class="lib-section" id="tab-history" style="display:none;">
+        {% if history_books %}
+        <div class="row g-3">
+            {% for item in history_books %}
+            {% set book = item.book %}
+            {% set prog = item.progress %}
+            <div class="col-6 col-md-4 col-lg-3">
+                <div class="book-card" style="position: relative;">
+                    <span style="position:absolute;top:6px;left:6px;z-index:5;background:rgba(0,0,0,.6);color:var(--text-muted);border-radius:4px;padding:2px 6px;font-size:.6rem;">
+                        {{ prog.last_read_at.strftime('%b %d') if prog.last_read_at else '' }}
+                    </span>
+                    <a href="{{ url_for('book.detail', book_id=book.id) }}" style="text-decoration: none;">
+                        {% if book.cover_file_id %}
+                        <img src="{{ book.cover_url }}" class="card-cover" alt="{{ book.title }}" loading="lazy">
+                        {% else %}
+                        <div class="cover-placeholder"><i class="bi bi-book"></i></div>
+                        {% endif %}
+                    </a>
+                    <div class="card-body">
+                        <a href="{{ url_for('book.detail', book_id=book.id) }}" style="text-decoration: none;">
+                            <div class="card-title">{{ book.title }}</div>
+                            <div class="card-author">{{ book.author or 'Unknown' }}</div>
+                        </a>
+                        {% if prog %}
+                        <div style="margin-top: 6px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted); margin-bottom: 3px;">
+                                <span>Ch. {{ prog.current_chapter }}/{{ prog.total_chapters }}</span>
+                                <span>{{ ((prog.current_chapter / prog.total_chapters) * 100) | int }}%</span>
+                            </div>
+                            <div style="height: 3px; background: var(--border-subtle); border-radius: 2px; overflow: hidden;">
+                                <div style="height: 100%; background: var(--gold); border-radius: 2px; width: {{ ((prog.current_chapter / prog.total_chapters) * 100) | int }}%;"></div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        <a href="{{ url_for('book.read_book', book_id=book.id) }}{% if prog %}?ch={{ prog.current_chapter }}{% endif %}"
+                           class="btn btn-gold" style="width: 100%; margin-top: 8px; padding: 6px 0; font-size: 0.8rem;">
+                            <i class="bi bi-book me-1"></i> {{ 'Continue' if prog else 'Read' }}
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="icon"><i class="bi bi-clock-history"></i></div>
+            <h3>No reading history yet</h3>
+            <p>Books you open and read will appear here so you can easily find them again.</p>
+            <a href="{{ url_for('browse.browse_home') }}" class="btn btn-outline-gold mt-3">Discover Stories</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- ═══ UNLOCKED BOOKS section ═══ -->
+    <div class="lib-section" id="tab-unlocked" style="display:none;">
+        {% if unlocked_books %}
+        <div class="row g-3">
+            {% for book in unlocked_books %}
+            {% set prog = progress_map.get(book.id) %}
+            <div class="col-6 col-md-4 col-lg-3">
+                <div class="book-card" style="position: relative;">
+                    <span style="position:absolute;top:6px;left:6px;z-index:5;background:var(--gold);color:#000;border-radius:4px;padding:2px 6px;font-size:.65rem;font-weight:600;">
+                        <i class="bi bi-unlock-fill"></i> Unlocked
+                    </span>
+                    <a href="{{ url_for('book.detail', book_id=book.id) }}" style="text-decoration: none;">
+                        {% if book.cover_file_id %}
+                        <img src="{{ book.cover_url }}" class="card-cover" alt="{{ book.title }}" loading="lazy">
+                        {% else %}
+                        <div class="cover-placeholder"><i class="bi bi-book"></i></div>
+                        {% endif %}
+                    </a>
+                    <div class="card-body">
+                        <a href="{{ url_for('book.detail', book_id=book.id) }}" style="text-decoration: none;">
+                            <div class="card-title">{{ book.title }}</div>
+                            <div class="card-author">{{ book.author or 'Unknown' }}</div>
+                        </a>
+                        {% if prog %}
+                        <div style="margin-top: 6px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted); margin-bottom: 3px;">
+                                <span>Ch. {{ prog.current_chapter }}/{{ prog.total_chapters }}</span>
+                                <span>{{ ((prog.current_chapter / prog.total_chapters) * 100) | int }}%</span>
+                            </div>
+                            <div style="height: 3px; background: var(--border-subtle); border-radius: 2px; overflow: hidden;">
+                                <div style="height: 100%; background: var(--gold); border-radius: 2px; width: {{ ((prog.current_chapter / prog.total_chapters) * 100) | int }}%;"></div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        <a href="{{ url_for('book.read_book', book_id=book.id) }}{% if prog %}?ch={{ prog.current_chapter }}{% endif %}"
+                           class="btn btn-gold" style="width: 100%; margin-top: 8px; padding: 6px 0; font-size: 0.8rem;">
+                            <i class="bi bi-book me-1"></i> {{ 'Continue' if prog else 'Read' }}
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="icon"><i class="bi bi-unlock"></i></div>
+            <h3>No unlocked chapters yet</h3>
+            <p>Books with chapters you've unlocked using coins will show here.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.lib-tab {
+    background: none; border: none; color: var(--text-muted); padding: 10px 14px;
+    font-size: 0.85rem; font-weight: 500; cursor: pointer; white-space: nowrap;
+    border-bottom: 2px solid transparent; transition: all .2s;
+}
+.lib-tab:hover { color: var(--text-primary); }
+.lib-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+.tab-count {
+    background: var(--border-subtle); color: var(--text-muted); border-radius: 10px;
+    padding: 1px 7px; font-size: 0.7rem; margin-left: 4px;
+}
+.lib-tab.active .tab-count { background: var(--gold); color: #000; }
+</style>
+
+<script>
+function switchTab(tab) {
+    document.querySelectorAll('.lib-section').forEach(s => s.style.display = 'none');
+    document.querySelectorAll('.lib-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab-' + tab).style.display = '';
+    document.querySelector('[data-tab="' + tab + '"]').classList.add('active');
+}
+
+function toggleLibrary(contentId, btn) {
+    fetch('/library/toggle', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest'},
+        body: JSON.stringify({content_id: contentId})
+    }).then(r => r.json()).then(data => {
+        if (!data.in_library) {
+            var card = btn.closest('.col-6, .col-md-4, .col-lg-3');
+            if (card) card.remove();
+            var countEl = document.querySelector('[data-tab="saved"] .tab-count');
+            if (countEl) countEl.textContent = Math.max(0, parseInt(countEl.textContent) - 1);
+        }
+    }).catch(() => {});
+}
+</script>
+{% endblock %}

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamEpisio — Purchase Complete</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75; --red:#E4573D;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); }
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+
+  .statusbar{ height:44px; }
+  .glow-bg{ position:absolute; top:60px; left:50%; transform:translateX(-50%); width:420px; height:420px; background:radial-gradient(circle, rgba(212,160,23,0.20), transparent 65%); }
+
+  .wrap{ position:relative; z-index:2; height:calc(100% - 44px); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:0 30px 40px; text-align:center; }
+
+  .badge-ring{ width:94px; height:94px; margin-bottom:22px; border-radius:50%; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); display:flex; align-items:center; justify-content:center; box-shadow:0 16px 40px rgba(212,160,23,0.4); }
+
+  h1{ font-size:22px; font-weight:800; color:#fff; margin:0 0 8px; letter-spacing:-0.3px; }
+  .sub{ font-size:13px; color:var(--text-dim); line-height:1.6; margin:0 0 24px; max-width:280px; }
+  .sub b{ color:#fff; font-weight:700; }
+
+  .coin-tally{ display:flex; align-items:center; gap:8px; background:var(--navy-card); border:1px solid var(--navy-line); border-radius:14px; padding:14px 20px; margin-bottom:22px; }
+  .coin-tally svg{ color:var(--gold); width:20px; height:20px; }
+  .coin-tally b{ font-size:20px; font-weight:800; color:#fff; }
+  .coin-tally span{ font-size:11px; color:var(--text-faint); }
+
+  .receipt-card{ width:100%; background:var(--navy-card); border:1px solid var(--navy-line); border-radius:16px; padding:14px 16px; margin-bottom:24px; text-align:left; }
+  .receipt-row{ display:flex; justify-content:space-between; padding:6px 0; font-size:11.5px; }
+  .receipt-row .k{ color:var(--text-dim); }
+  .receipt-row .v{ color:#fff; font-weight:700; }
+
+  .btn-primary{ width:100%; padding:16px; border-radius:16px; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); border:none; color:var(--navy); font-size:15px; font-weight:800; box-shadow:0 14px 30px rgba(212,160,23,0.3); margin-bottom:14px; font-family:'Inter',sans-serif; }
+  .ghost-link{ font-size:12.5px; color:var(--text-dim); font-weight:600; }
+
+  /* Failed variant strip */
+  .fail-variant{ position:absolute; bottom:14px; left:20px; right:20px; background:var(--navy-card); border:1px solid rgba(228,87,61,0.3); border-radius:14px; padding:12px 14px; display:flex; align-items:center; gap:10px; z-index:5; }
+  .fail-icon{ width:30px; height:30px; border-radius:50%; background:rgba(228,87,61,0.15); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .fail-icon svg{ color:var(--red); width:15px; height:15px; }
+  .fail-variant b{ display:block; font-size:11px; font-weight:700; color:#fff; }
+  .fail-variant span{ font-size:9.5px; color:var(--text-faint); }
+  .fail-tag{ font-size:9px; font-weight:800; color:var(--text-faint); letter-spacing:0.3px; text-transform:uppercase; margin-left:auto; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"></div>
+  <div class="glow-bg"></div>
+
+  <div class="wrap">
+    <div class="badge-ring"><svg viewBox="0 0 24 24" width="38" height="38" stroke="#08081A" stroke-width="2.6"><polyline points="20 6 9 17 4 12"/></svg></div>
+
+    <h1>Purchase successful</h1>
+    <p class="sub">Your coins have been added to your wallet. Enjoy the show!</p>
+
+    <div class="coin-tally">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 4.9 0c0 1.5-2.4 2-2.4 3.5"/><line x1="12" y1="16" x2="12" y2="16.01"/></svg>
+      <b>+715</b>
+      <span>coins added</span>
+    </div>
+
+    <div class="receipt-card">
+      <div class="receipt-row"><span class="k">Coin Pack</span><span class="v">650 + 65 bonus</span></div>
+      <div class="receipt-row"><span class="k">Amount Paid</span><span class="v">₵50.00</span></div>
+      <div class="receipt-row"><span class="k">Payment Method</span><span class="v">MTN Mobile Money</span></div>
+      <div class="receipt-row"><span class="k">Transaction ID</span><span class="v">WE-8827-4410</span></div>
+    </div>
+
+    <button class="btn-primary">Continue Watching</button>
+    <span class="ghost-link">View receipt</span>
+  </div>
+
+  <div class="fail-variant">
+    <div class="fail-icon"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+    <div><b>Payment failed</b><span>Insufficient funds — try another method</span></div>
+    <span class="fail-tag">Failed variant</span>
+  </div>
+</div>
+
+</body>
+</html>

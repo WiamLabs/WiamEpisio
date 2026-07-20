@@ -1,0 +1,548 @@
+{% extends "base.html" %}
+{% block title %}{% if is_official|default(false) %}Wiam Official Bulletin{% else %}{{ profile.pen_name if profile else creator.display_name }}'s Bulletin{% endif %} — WiamApp{% endblock %}
+
+{% block extra_head %}
+<style>
+    .bc-page {
+        max-width: 600px; margin: 0 auto; display: flex; flex-direction: column;
+        min-height: calc(100vh - 56px); position: relative;
+    }
+
+    /* ── Channel header (WhatsApp style) ── */
+    .bc-header {
+        display: flex; align-items: center; gap: 0.7rem;
+        padding: 0.7rem 1rem; position: sticky; top: 56px; z-index: 20;
+        background: var(--bg); border-bottom: 1px solid var(--border-subtle);
+    }
+    .bc-header-back { color: var(--text-muted); font-size: 1.3rem; text-decoration: none; flex-shrink: 0; }
+    .bc-header-back:hover { color: var(--gold); }
+    .bc-header-avatar {
+        width: 40px; height: 40px; border-radius: 50%; object-fit: cover;
+        border: 2px solid var(--gold-dim); flex-shrink: 0;
+    }
+    .bc-header-avatar-ph {
+        width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+        background: linear-gradient(135deg, var(--wine), var(--wine-dark));
+        border: 2px solid var(--gold-dim);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1rem; color: var(--gold); font-weight: 700;
+    }
+    .bc-header-info { flex: 1; min-width: 0; }
+    .bc-header-name {
+        font-weight: 700; font-size: 1rem; color: var(--text);
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .bc-header-sub {
+        font-size: 0.75rem; color: var(--text-muted); height: 1.1em; overflow: hidden;
+    }
+    .bc-header-sub .sub-text { display: inline-block; transition: opacity 0.4s ease; }
+    .bc-header-dots { color: var(--text-muted); font-size: 1.2rem; background: none; border: none; cursor: pointer; flex-shrink: 0; }
+    .bc-header-dots:hover { color: var(--gold); }
+
+    /* ── Chat body with wallpaper ── */
+    .bc-body {
+        flex: 1; overflow-y: auto; padding: 1rem;
+        background: var(--bg);
+        background-image: radial-gradient(circle at 20% 80%, rgba(139,0,0,0.04) 0%, transparent 50%),
+                          radial-gradient(circle at 80% 20%, rgba(212,168,67,0.03) 0%, transparent 50%);
+    }
+
+    /* ── System message (channel created) ── */
+    .bc-sys-msg {
+        text-align: center; margin: 0.8rem 0; font-size: 0.78rem; color: var(--text-muted);
+    }
+    .bc-sys-bubble {
+        display: inline-block; background: rgba(255,255,255,0.06);
+        border-radius: 8px; padding: 6px 14px; max-width: 80%;
+    }
+
+    /* ── Date separator ── */
+    .bc-date-sep {
+        text-align: center; margin: 1rem 0 0.5rem;
+        font-size: 0.72rem; color: var(--text-muted); font-weight: 600;
+    }
+    .bc-date-sep span {
+        background: rgba(255,255,255,0.06); padding: 3px 12px; border-radius: 8px;
+    }
+
+    /* ── Chat bubble (creator post) ── */
+    .bc-bubble {
+        background: var(--bg-card); border: 1px solid var(--border-subtle);
+        border-radius: 0 12px 12px 12px; padding: 0.7rem 0.9rem;
+        margin-bottom: 0.6rem; max-width: 88%; position: relative;
+        word-break: break-word;
+    }
+    .bc-bubble.pinned { border-color: rgba(212,168,67,0.35); background: rgba(212,168,67,0.04); }
+    .bc-bubble-pin {
+        font-size: 0.65rem; color: var(--gold); margin-bottom: 4px;
+    }
+    .bc-bubble-text {
+        font-size: 0.92rem; line-height: 1.6; white-space: pre-wrap;
+    }
+    .bc-bubble-time {
+        font-size: 0.68rem; color: var(--text-muted); text-align: right; margin-top: 4px;
+    }
+
+    /* Book share inside bubble */
+    .bc-book-card {
+        background: var(--bg-elevated); border: 1px solid var(--border-subtle);
+        border-radius: 10px; overflow: hidden; margin: 0.4rem 0;
+        display: flex; gap: 0; text-decoration: none; color: inherit; transition: all 0.15s;
+    }
+    .bc-book-card:hover { border-color: var(--gold); }
+    .bc-book-cover {
+        width: 70px; min-height: 95px; object-fit: cover; flex-shrink: 0;
+        background: var(--wine-dark);
+    }
+    .bc-book-info { padding: 0.5rem 0.7rem; flex: 1; display: flex; flex-direction: column; justify-content: center; }
+    .bc-book-title { font-weight: 700; font-size: 0.88rem; margin-bottom: 2px; }
+    .bc-book-meta { font-size: 0.72rem; color: var(--text-muted); }
+
+    /* ── Reactions row under bubble ── */
+    .bc-reactions {
+        display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; align-items: center;
+    }
+    .bc-react-chip {
+        display: inline-flex; align-items: center; gap: 3px;
+        background: var(--bg-elevated); border: 1px solid var(--border-subtle);
+        border-radius: 16px; padding: 2px 8px; font-size: 0.78rem;
+        cursor: pointer; transition: all 0.12s; user-select: none;
+    }
+    .bc-react-chip:hover { border-color: var(--gold); }
+    .bc-react-chip.active { border-color: var(--gold); background: rgba(212,168,67,0.1); }
+    .bc-react-chip .rc { font-size: 0.68rem; color: var(--text-muted); font-weight: 600; }
+    .bc-add-react {
+        width: 28px; height: 28px; border-radius: 50%;
+        background: var(--bg-elevated); border: 1px solid var(--border-subtle);
+        display: inline-flex; align-items: center; justify-content: center;
+        cursor: pointer; font-size: 0.82rem; transition: all 0.12s;
+    }
+    .bc-add-react:hover { border-color: var(--gold); }
+
+    /* Emoji picker */
+    .bc-emoji-picker {
+        display: none; position: absolute; bottom: 100%; left: 0;
+        background: var(--bg-card); border: 1px solid var(--border-subtle);
+        border-radius: 10px; padding: 6px; box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+        z-index: 50; margin-bottom: 4px;
+    }
+    .bc-emoji-picker.show { display: flex; flex-wrap: wrap; gap: 2px; max-width: 260px; }
+    .bc-emoji-pick {
+        width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;
+        font-size: 1.2rem; border-radius: 6px; cursor: pointer; border: none; background: transparent;
+    }
+    .bc-emoji-pick:hover { background: rgba(212,168,67,0.1); transform: scale(1.1); }
+
+    /* ── Creator actions (pin/delete) ── */
+    .bc-actions {
+        display: flex; gap: 0.3rem; margin-top: 4px;
+    }
+    .bc-act-btn {
+        background: none; border: none; color: var(--text-muted); font-size: 0.72rem;
+        padding: 2px 6px; border-radius: 4px; cursor: pointer;
+    }
+    .bc-act-btn:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+    .bc-act-btn.danger:hover { color: #f87171; }
+
+    /* ── Follow prompt overlay (for non-followers) ── */
+    .bc-follow-prompt {
+        position: sticky; bottom: 0; left: 0; right: 0;
+        background: var(--bg); border-top: 1px solid var(--border-subtle);
+        padding: 1rem; text-align: center; z-index: 30;
+    }
+    .bc-follow-btn {
+        display: block; width: 100%; max-width: 400px; margin: 0 auto;
+        background: #25D366; color: #fff; border: none;
+        padding: 14px 24px; border-radius: 12px; font-size: 1rem;
+        font-weight: 700; cursor: pointer; transition: all 0.15s;
+    }
+    .bc-follow-btn:hover { filter: brightness(1.1); transform: scale(1.01); }
+    .bc-follow-btn.following {
+        background: transparent; border: 2px solid var(--gold); color: var(--gold);
+    }
+    .bc-follow-note {
+        font-size: 0.72rem; color: var(--text-muted); margin-top: 6px;
+    }
+
+    /* ── Composer (creator only) ── */
+    .bc-composer {
+        position: sticky; bottom: 0; background: var(--bg);
+        border-top: 1px solid var(--border-subtle); padding: 0.6rem 1rem; z-index: 30;
+    }
+    .bc-composer-row { display: flex; align-items: flex-end; gap: 0.5rem; }
+    .bc-composer-input {
+        flex: 1; background: var(--bg-elevated); border: 1px solid var(--border-subtle);
+        border-radius: 20px; padding: 10px 16px; color: var(--text); font-size: 0.9rem;
+        resize: none; min-height: 40px; max-height: 120px; font-family: inherit; line-height: 1.4;
+    }
+    .bc-composer-input::placeholder { color: var(--text-muted); }
+    .bc-composer-input:focus { outline: none; border-color: var(--gold); }
+    .bc-composer-send {
+        width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0;
+        background: var(--gold); color: #000; border: none; cursor: pointer;
+        display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
+        transition: all 0.15s;
+    }
+    .bc-composer-send:hover { filter: brightness(1.1); }
+    .bc-composer-tools {
+        display: flex; gap: 0.5rem; padding-top: 0.4rem;
+    }
+    .bc-tool-btn {
+        background: none; border: 1px solid var(--border-subtle); color: var(--text-muted);
+        padding: 4px 10px; border-radius: 16px; font-size: 0.78rem; cursor: pointer;
+    }
+    .bc-tool-btn:hover { border-color: var(--gold); color: var(--gold); }
+    .bc-tool-btn.active { border-color: var(--gold); color: var(--gold); background: rgba(212,168,67,0.08); }
+    .bc-book-sel {
+        display: none; padding: 0.4rem 0;
+    }
+    .bc-book-sel.show { display: block; }
+    .bc-book-sel select {
+        width: 100%; background: var(--bg-elevated); border: 1px solid var(--border-subtle);
+        color: var(--text); padding: 8px 12px; border-radius: 8px; font-size: 0.85rem;
+    }
+
+    /* Pagination */
+    .bc-pagination { text-align: center; padding: 0.8rem 0; }
+    .bc-pagination a {
+        color: var(--gold); text-decoration: none; padding: 6px 14px;
+        border: 1px solid var(--border-subtle); border-radius: 16px; font-size: 0.82rem;
+    }
+    .bc-pagination a:hover { background: rgba(212,168,67,0.1); border-color: var(--gold); }
+
+    /* Empty */
+    .bc-empty { text-align: center; padding: 3rem 1.5rem; color: var(--text-muted); }
+    .bc-empty i { font-size: 2.5rem; display: block; margin-bottom: 0.8rem; opacity: 0.3; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="bc-page">
+    <!-- Channel Header -->
+    <div class="bc-header">
+        <a href="{{ url_for('bulletin.bulletin_list') }}" class="bc-header-back">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        {% if is_official|default(false) %}
+        <div class="bc-header-avatar-ph" style="background:linear-gradient(135deg,var(--gold),#b8860b);color:#000;font-size:1.2rem;">📢</div>
+        {% elif profile and profile.avatar_url %}
+        <img src="{{ profile.avatar_url }}" class="bc-header-avatar" alt="">
+        {% else %}
+        <div class="bc-header-avatar-ph">{{ (profile.pen_name if profile else creator.display_name)[0]|upper }}</div>
+        {% endif %}
+        <div class="bc-header-info">
+            <div class="bc-header-name">{% if is_official|default(false) %}Wiam Official Bulletin{% else %}{{ profile.pen_name if profile else creator.display_name }}{% endif %}</div>
+            <div class="bc-header-sub">
+                <span class="sub-text" id="headerSubText">Bulletin</span>
+            </div>
+        </div>
+        <button class="bc-header-dots" title="More"><i class="bi bi-three-dots-vertical"></i></button>
+    </div>
+
+    <!-- Chat Body -->
+    <div class="bc-body" id="chatBody">
+        <!-- System message: channel created -->
+        <div class="bc-sys-msg">
+            <div class="bc-sys-bubble">
+                <i class="bi bi-megaphone me-1"></i>
+                {% if is_official|default(false) %}Welcome to the <strong>Wiam Official Bulletin</strong> — announcements & updates from the WiamApp team{% else %}This Bulletin was created by <strong>{{ profile.pen_name if profile else creator.display_name }}</strong>{% endif %}
+            </div>
+        </div>
+
+        {% if not is_bulletin_follower and not is_own %}
+        <!-- Follow prompt in center for non-followers -->
+        <div class="bc-sys-msg" style="margin-top:2rem;">
+            <div class="bc-sys-bubble">
+                Follow this creator's Bulletin to get their latest updates
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Pinned Posts -->
+        {% for post in pinned_posts %}
+        {% set cp = profile %}
+        <div class="bc-bubble pinned" id="post-{{ post.id }}">
+            <div class="bc-bubble-pin"><i class="bi bi-pin-fill me-1"></i>Pinned</div>
+            {% if post.type == 'book_share' and post.shared_book %}
+            <a href="{{ url_for('book.detail', book_id=post.shared_book.id) }}" class="bc-book-card">
+                {% if post.shared_book.cover_url %}
+                <img src="{{ post.shared_book.cover_url }}" class="bc-book-cover" alt="">
+                {% else %}
+                <div class="bc-book-cover" style="display:flex;align-items:center;justify-content:center;font-size:0.7rem;color:var(--text-muted);padding:8px;">{{ post.shared_book.title[:20] }}</div>
+                {% endif %}
+                <div class="bc-book-info">
+                    <div class="bc-book-title">{{ post.shared_book.title }}</div>
+                    <div class="bc-book-meta">{{ post.shared_book.genre or '' }} &middot; {{ post.shared_book.views or 0 }} reads</div>
+                </div>
+            </a>
+            {% endif %}
+            {% if post.text_content %}
+            <div class="bc-bubble-text">{{ post.text_content }}</div>
+            {% endif %}
+            <div class="bc-bubble-time">{{ post.created_at.strftime('%I:%M %p') }}</div>
+            <!-- Reactions -->
+            {% set my_reacts = user_reactions.get(post.id, []) %}
+            <div class="bc-reactions" id="reactions-{{ post.id }}">
+                {% for emoji, count in post.reactions_summary.items() %}
+                <button class="bc-react-chip{% if emoji in my_reacts %} active{% endif %}" onclick="reactToPost({{ post.id }},'{{ emoji }}')">
+                    <span>{{ emoji }}</span><span class="rc">{{ count }}</span>
+                </button>
+                {% endfor %}
+                <div style="position:relative;display:inline-block">
+                    <button class="bc-add-react" onclick="toggleEmojiPicker({{ post.id }})" title="React"><i class="bi bi-emoji-smile"></i></button>
+                    <div class="bc-emoji-picker" id="emoji-picker-{{ post.id }}">
+                        {% for em in ['❤️','🔥','👏','😍','😂','😢','😮','💯','🎉','📖','✨','💪','🙏','👀','💕','🫶'] %}
+                        <button class="bc-emoji-pick" onclick="reactToPost({{ post.id }},'{{ em }}')">{{ em }}</button>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% if is_own %}
+            <div class="bc-actions">
+                <form method="post" action="{{ url_for('bulletin.toggle_pin', post_id=post.id) }}" style="display:inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="bc-act-btn" type="submit"><i class="bi bi-pin me-1"></i>Unpin</button>
+                </form>
+                <form method="post" action="{{ url_for('bulletin.delete_post', post_id=post.id) }}" style="display:inline" onsubmit="return confirm('Delete this post?')">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="bc-act-btn danger" type="submit"><i class="bi bi-trash me-1"></i>Delete</button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+
+        <!-- Regular Posts -->
+        {% set prev_date = [None] %}
+        {% if posts.items %}
+            {% for post in posts.items %}
+            {% set post_date = post.created_at.strftime('%b %d, %Y') %}
+            {% if post_date != prev_date[0] %}
+            <div class="bc-date-sep"><span>{{ post_date }}</span></div>
+            {% if prev_date.append(post_date) %}{% endif %}
+            {% endif %}
+
+            <div class="bc-bubble" id="post-{{ post.id }}">
+                {% if post.type == 'book_share' and post.shared_book %}
+                <a href="{{ url_for('book.detail', book_id=post.shared_book.id) }}" class="bc-book-card">
+                    {% if post.shared_book.cover_url %}
+                    <img src="{{ post.shared_book.cover_url }}" class="bc-book-cover" alt="">
+                    {% else %}
+                    <div class="bc-book-cover" style="display:flex;align-items:center;justify-content:center;font-size:0.7rem;color:var(--text-muted);padding:8px;">{{ post.shared_book.title[:20] }}</div>
+                    {% endif %}
+                    <div class="bc-book-info">
+                        <div class="bc-book-title">{{ post.shared_book.title }}</div>
+                        <div class="bc-book-meta">{{ post.shared_book.genre or '' }} &middot; {{ post.shared_book.views or 0 }} reads</div>
+                    </div>
+                </a>
+                {% endif %}
+                {% if post.text_content %}
+                <div class="bc-bubble-text">{{ post.text_content }}</div>
+                {% endif %}
+                <div class="bc-bubble-time">{{ post.created_at.strftime('%I:%M %p') }}</div>
+                {% set my_reacts = user_reactions.get(post.id, []) %}
+                <div class="bc-reactions" id="reactions-{{ post.id }}">
+                    {% for emoji, count in post.reactions_summary.items() %}
+                    <button class="bc-react-chip{% if emoji in my_reacts %} active{% endif %}" onclick="reactToPost({{ post.id }},'{{ emoji }}')">
+                        <span>{{ emoji }}</span><span class="rc">{{ count }}</span>
+                    </button>
+                    {% endfor %}
+                    <div style="position:relative;display:inline-block">
+                        <button class="bc-add-react" onclick="toggleEmojiPicker({{ post.id }})" title="React"><i class="bi bi-emoji-smile"></i></button>
+                        <div class="bc-emoji-picker" id="emoji-picker-{{ post.id }}">
+                            {% for em in ['❤️','🔥','👏','😍','😂','😢','😮','💯','🎉','📖','✨','💪','🙏','👀','💕','🫶'] %}
+                            <button class="bc-emoji-pick" onclick="reactToPost({{ post.id }},'{{ em }}')">{{ em }}</button>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% if is_own %}
+                <div class="bc-actions">
+                    <form method="post" action="{{ url_for('bulletin.toggle_pin', post_id=post.id) }}" style="display:inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="bc-act-btn" type="submit"><i class="bi bi-pin me-1"></i>Pin</button>
+                    </form>
+                    <form method="post" action="{{ url_for('bulletin.delete_post', post_id=post.id) }}" style="display:inline" onsubmit="return confirm('Delete this post?')">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="bc-act-btn danger" type="submit"><i class="bi bi-trash me-1"></i>Delete</button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            {% if posts.has_prev or posts.has_next %}
+            <div class="bc-pagination">
+                {% if posts.has_next %}
+                <a href="{% if is_official|default(false) %}{{ url_for('bulletin.official_feed', page=posts.next_num) }}{% else %}{{ url_for('bulletin.feed', creator_id=creator.wiam_id, page=posts.next_num) }}{% endif %}">
+                    <i class="bi bi-chevron-up me-1"></i> Older
+                </a>
+                {% endif %}
+                {% if posts.has_prev %}
+                <a href="{% if is_official|default(false) %}{{ url_for('bulletin.official_feed', page=posts.prev_num) }}{% else %}{{ url_for('bulletin.feed', creator_id=creator.wiam_id, page=posts.prev_num) }}{% endif %}">
+                    Newer <i class="bi bi-chevron-down ms-1"></i>
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+        {% elif not pinned_posts %}
+            <div class="bc-empty">
+                <i class="bi bi-megaphone"></i>
+                {% if is_own %}
+                <h5>Your Bulletin is empty</h5>
+                <p>Start posting updates for your followers!</p>
+                {% else %}
+                <h5>No posts yet</h5>
+                <p>{{ profile.pen_name if profile else 'This creator' }} hasn't posted to their Bulletin yet.</p>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Bottom: Follow Prompt (non-follower) or Composer (creator) -->
+    {% if is_own %}
+    <div class="bc-composer">
+        <form method="post" action="{% if is_official|default(false) %}{{ url_for('bulletin.create_official_post') }}{% else %}{{ url_for('bulletin.create_post', creator_id=creator.wiam_id) }}{% endif %}" id="composerForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="type" value="text" id="postType">
+            <input type="hidden" name="content_id" value="" id="postContentId">
+            <div class="bc-book-sel" id="bookSelector">
+                <select id="bookSelect" onchange="document.getElementById('postContentId').value=this.value">
+                    <option value="">— Select a story to share —</option>
+                    {% for b in creator_books %}
+                    <option value="{{ b.id }}">{{ b.title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="bc-composer-row">
+                <textarea class="bc-composer-input" name="text" id="composerText"
+                          placeholder="Write a message..." maxlength="2000" rows="1"></textarea>
+                <button type="submit" class="bc-composer-send" title="Post"><i class="bi bi-send-fill"></i></button>
+            </div>
+            <div class="bc-composer-tools">
+                <button type="button" class="bc-tool-btn" id="bookShareToggle" onclick="toggleBookShare()">
+                    <i class="bi bi-book me-1"></i>Share Story
+                </button>
+            </div>
+        </form>
+    </div>
+    {% elif not is_bulletin_follower %}
+    <div class="bc-follow-prompt">
+        <button class="bc-follow-btn" id="followBtnBottom" onclick="toggleBulletinFollow({{ creator.wiam_id if creator else 0 }})">
+            Follow this Creator's Bulletin
+        </button>
+        <div class="bc-follow-note">You'll see their updates in your Bulletin list</div>
+    </div>
+    {% else %}
+    <div class="bc-follow-prompt" style="padding:0.6rem 1rem;">
+        <button class="bc-follow-btn following" id="followBtnBottom" onclick="toggleBulletinFollow({{ creator.wiam_id if creator else 0 }})" style="font-size:0.85rem;padding:10px;">
+            <i class="bi bi-check-lg me-1"></i>Following Bulletin
+        </button>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+var CSRF = '{{ csrf_token() }}';
+var REACT_URL_BASE = '{{ url_for("bulletin.react", post_id=0) }}'.replace('/0', '');
+var QUICK_EMOJIS = ['❤️','🔥','👏','😍','😂','😢','😮','💯','🎉','📖','✨','💪','🙏','👀','💕','🫶'];
+
+// Header subtitle animation: "Bulletin" -> "X followers" after 4 seconds
+(function() {
+    var sub = document.getElementById('headerSubText');
+    if (!sub) return;
+    setTimeout(function() {
+        sub.style.opacity = '0';
+        setTimeout(function() {
+            sub.textContent = '{{ follower_count }} followers';
+            sub.style.opacity = '1';
+        }, 400);
+    }, 4000);
+})();
+
+function toggleBookShare() {
+    var btn = document.getElementById('bookShareToggle');
+    var sel = document.getElementById('bookSelector');
+    var typeInput = document.getElementById('postType');
+    btn.classList.toggle('active');
+    sel.classList.toggle('show');
+    typeInput.value = btn.classList.contains('active') ? 'book_share' : 'text';
+    if (!btn.classList.contains('active')) {
+        document.getElementById('postContentId').value = '';
+        document.getElementById('bookSelect').value = '';
+    }
+}
+
+function toggleEmojiPicker(postId) {
+    var el = document.getElementById('emoji-picker-' + postId);
+    document.querySelectorAll('.bc-emoji-picker.show').forEach(function(p) {
+        if (p.id !== el.id) p.classList.remove('show');
+    });
+    el.classList.toggle('show');
+}
+
+function reactToPost(postId, emoji) {
+    fetch(REACT_URL_BASE + '/' + postId, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+        body: JSON.stringify({ emoji: emoji })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        var picker = document.getElementById('emoji-picker-' + postId);
+        if (picker) picker.classList.remove('show');
+        var container = document.getElementById('reactions-' + postId);
+        if (!container) return;
+        var html = '';
+        var reactions = data.reactions || {};
+        for (var e in reactions) {
+            html += '<button class="bc-react-chip" onclick="reactToPost(' + postId + ',\'' + e + '\')">' +
+                    '<span>' + e + '</span><span class="rc">' + reactions[e] + '</span></button>';
+        }
+        html += '<div style="position:relative;display:inline-block">' +
+                '<button class="bc-add-react" onclick="toggleEmojiPicker(' + postId + ')" title="React">' +
+                '<i class="bi bi-emoji-smile"></i></button>' +
+                '<div class="bc-emoji-picker" id="emoji-picker-' + postId + '">';
+        QUICK_EMOJIS.forEach(function(em) {
+            html += '<button class="bc-emoji-pick" onclick="reactToPost(' + postId + ',\'' + em + '\')">' + em + '</button>';
+        });
+        html += '</div></div>';
+        container.innerHTML = html;
+    });
+}
+
+function toggleBulletinFollow(creatorId) {
+    fetch('/bulletin/' + creatorId + '/follow', {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': CSRF }
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+        var btn = document.getElementById('followBtnBottom');
+        if (!btn) return;
+        if (d.following) {
+            btn.className = 'bc-follow-btn following';
+            btn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Following Bulletin';
+            btn.style.fontSize = '0.85rem';
+            btn.style.padding = '10px';
+        } else {
+            btn.className = 'bc-follow-btn';
+            btn.textContent = "Follow this Creator's Bulletin";
+            btn.style.fontSize = '';
+            btn.style.padding = '';
+        }
+        // Update header follower count
+        var sub = document.getElementById('headerSubText');
+        if (sub) sub.textContent = d.count + ' followers';
+    });
+}
+
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.bc-add-react') && !e.target.closest('.bc-emoji-picker')) {
+        document.querySelectorAll('.bc-emoji-picker.show').forEach(function(p) { p.classList.remove('show'); });
+    }
+});
+</script>
+{% endblock %}

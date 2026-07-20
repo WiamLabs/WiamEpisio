@@ -1,0 +1,1968 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — WiamApp{% endblock %}
+
+{% block extra_head %}
+<style>
+/* ═══════════════════════════════════════════════════════════════════════
+   UNIFIED DASHBOARD — Premium Design
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Layout */
+.ud { display: flex; min-height: calc(100vh - 56px); background: var(--bg-primary); }
+.ud-sidebar {
+    width: 260px; flex-shrink: 0; background: rgba(18,18,22,0.95);
+    border-right: 1px solid rgba(255,255,255,0.04);
+    padding: 0; overflow-y: auto; position: sticky; top: 56px;
+    height: calc(100vh - 56px);
+}
+.ud-main {
+    flex: 1; min-width: 0; padding: 28px 36px 60px;
+    max-width: 960px;
+}
+
+/* ── Sidebar Profile Card ────────────────────────────────────────── */
+.ud-profile-card {
+    padding: 28px 20px 20px; text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    background: linear-gradient(180deg, rgba(212,168,67,0.06) 0%, transparent 100%);
+}
+.ud-avatar-wrap {
+    position: relative; width: 88px; height: 88px; margin: 0 auto 12px;
+    cursor: pointer;
+}
+.ud-avatar {
+    width: 88px; height: 88px; border-radius: 50%; object-fit: cover;
+    border: 3px solid rgba(212,168,67,0.5);
+    transition: border-color 0.3s, transform 0.3s;
+    background: rgba(212,168,67,0.15);
+}
+.ud-avatar-wrap:hover .ud-avatar { border-color: var(--gold); transform: scale(1.04); }
+.ud-avatar-overlay {
+    position: absolute; inset: 0; border-radius: 50%;
+    background: rgba(0,0,0,0.55); display: flex;
+    align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 0.25s;
+    font-size: 0.7rem; color: #fff; gap: 4px;
+}
+.ud-avatar-wrap:hover .ud-avatar-overlay { opacity: 1; }
+.ud-avatar-initials {
+    width: 88px; height: 88px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.8rem; font-weight: 700; color: #000;
+    background: linear-gradient(135deg, var(--gold), #f0d78c);
+    border: 3px solid rgba(212,168,67,0.5);
+}
+.ud-profile-name {
+    font-size: 1.05rem; font-weight: 700; color: var(--text-primary);
+    margin-bottom: 2px; line-height: 1.3;
+}
+.ud-profile-email {
+    font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ud-role-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px; border-radius: 20px;
+    font-size: 0.65rem; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.ud-role-reader { background: rgba(52,152,219,0.15); color: #5dade2; }
+.ud-role-creator { background: rgba(212,168,67,0.15); color: var(--gold); }
+.ud-role-founder { background: rgba(231,76,60,0.15); color: #e74c3c; }
+
+/* ── Sidebar Navigation ──────────────────────────────────────────── */
+.ud-nav { padding: 12px 0; }
+.ud-nav-section {
+    padding: 0 16px; margin-bottom: 4px;
+}
+.ud-nav-label {
+    font-size: 0.6rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--text-muted); opacity: 0.6;
+    padding: 12px 12px 6px; margin: 0;
+}
+.ud-nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; border-radius: 10px;
+    color: var(--text-secondary); font-size: 0.82rem; font-weight: 500;
+    text-decoration: none; transition: all 0.2s;
+    margin-bottom: 2px; cursor: pointer;
+}
+.ud-nav-item i { font-size: 1rem; width: 20px; text-align: center; opacity: 0.7; }
+.ud-nav-item:hover { background: rgba(255,255,255,0.04); color: var(--text-primary); }
+.ud-nav-item:hover i { opacity: 1; }
+.ud-nav-item.active {
+    background: rgba(212,168,67,0.1); color: var(--gold);
+}
+.ud-nav-item.active i { opacity: 1; color: var(--gold); }
+.ud-nav-badge {
+    margin-left: auto; background: var(--gold); color: #000;
+    font-size: 0.6rem; font-weight: 700; padding: 1px 6px;
+    border-radius: 10px; min-width: 18px; text-align: center;
+}
+
+/* ── Content Sections ────────────────────────────────────────────── */
+.ud-section { display: none; animation: udFadeIn 0.35s ease; }
+.ud-section.active { display: block; }
+@keyframes udFadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+.ud-section-title {
+    font-size: 1.3rem; font-weight: 700; color: var(--text-primary);
+    margin-bottom: 6px; display: flex; align-items: center; gap: 10px;
+}
+.ud-section-title i { color: var(--gold); font-size: 1.1rem; }
+.ud-section-subtitle {
+    font-size: 0.8rem; color: var(--text-muted); margin-bottom: 24px;
+}
+
+/* ── Stat Cards ──────────────────────────────────────────────────── */
+.ud-stats {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 14px; margin-bottom: 28px;
+}
+.ud-stat-card {
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 14px; padding: 18px 16px; text-align: center;
+    transition: transform 0.2s, border-color 0.2s;
+}
+.ud-stat-card:hover { transform: translateY(-2px); border-color: rgba(212,168,67,0.2); }
+.ud-stat-value {
+    font-size: 1.6rem; font-weight: 800; color: var(--text-primary);
+    line-height: 1; margin-bottom: 4px;
+}
+.ud-stat-value.gold { color: var(--gold); }
+.ud-stat-label {
+    font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase;
+    letter-spacing: 0.04em; font-weight: 600;
+}
+
+/* ── Cards / Panels ──────────────────────────────────────────────── */
+.ud-card {
+    background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 16px; padding: 24px; margin-bottom: 20px;
+}
+.ud-card-title {
+    font-size: 0.9rem; font-weight: 700; color: var(--text-primary);
+    margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+}
+.ud-card-title i { color: var(--gold); }
+
+/* ── Form Styling ────────────────────────────────────────────────── */
+.ud-form-group { margin-bottom: 16px; }
+.ud-form-label {
+    display: block; font-size: 0.75rem; font-weight: 600;
+    color: var(--text-secondary); margin-bottom: 6px;
+}
+.ud-form-input {
+    width: 100%; padding: 10px 14px; border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.04); color: var(--text-primary);
+    font-size: 0.85rem; transition: border-color 0.2s;
+    outline: none;
+}
+.ud-form-input:focus { border-color: var(--gold); }
+.ud-form-textarea { min-height: 80px; resize: vertical; font-family: inherit; }
+select.ud-form-input { cursor: pointer; }
+.ud-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+/* ── Buttons ─────────────────────────────────────────────────────── */
+.ud-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 10px 20px; border-radius: 10px;
+    font-size: 0.8rem; font-weight: 600; border: none;
+    cursor: pointer; transition: all 0.2s; text-decoration: none;
+}
+.ud-btn-gold {
+    background: linear-gradient(135deg, var(--gold), #f0d78c);
+    color: #000;
+}
+.ud-btn-gold:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(212,168,67,0.3); }
+.ud-btn-outline {
+    background: transparent; border: 1px solid rgba(255,255,255,0.1);
+    color: var(--text-secondary);
+}
+.ud-btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+.ud-btn-danger {
+    background: rgba(231,76,60,0.12); color: #e74c3c;
+    border: 1px solid rgba(231,76,60,0.2);
+}
+.ud-btn-danger:hover { background: rgba(231,76,60,0.2); }
+.ud-btn-sm { padding: 6px 14px; font-size: 0.72rem; }
+
+/* ── Toggle Switches ─────────────────────────────────────────────── */
+.ud-toggle-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.ud-toggle-row:last-child { border-bottom: none; }
+.ud-toggle-info { flex: 1; }
+.ud-toggle-title { font-size: 0.82rem; font-weight: 600; color: var(--text-primary); }
+.ud-toggle-desc { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
+.ud-switch {
+    position: relative; width: 42px; height: 24px; flex-shrink: 0; margin-left: 12px;
+}
+.ud-switch input { opacity: 0; width: 0; height: 0; }
+.ud-switch-slider {
+    position: absolute; inset: 0; border-radius: 24px;
+    background: rgba(255,255,255,0.1); cursor: pointer;
+    transition: background 0.3s;
+}
+.ud-switch-slider::before {
+    content: ''; position: absolute; width: 18px; height: 18px;
+    border-radius: 50%; background: #fff; top: 3px; left: 3px;
+    transition: transform 0.3s;
+}
+.ud-switch input:checked + .ud-switch-slider { background: var(--gold); }
+.ud-switch input:checked + .ud-switch-slider::before { transform: translateX(18px); }
+
+/* ── Book List (Library / My Stories) ────────────────────────────── */
+.ud-book-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 16px;
+}
+.ud-book-item {
+    text-decoration: none; color: inherit; transition: transform 0.2s;
+}
+.ud-book-item:hover { transform: translateY(-3px); }
+.ud-book-cover {
+    width: 100%; aspect-ratio: 2/3; border-radius: 10px; object-fit: cover;
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.06);
+}
+.ud-book-cover-placeholder {
+    width: 100%; aspect-ratio: 2/3; border-radius: 10px;
+    background: linear-gradient(135deg, rgba(212,168,67,0.1), rgba(212,168,67,0.03));
+    border: 1px solid rgba(255,255,255,0.06);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2rem; color: var(--gold); opacity: 0.4;
+}
+.ud-book-title {
+    font-size: 0.75rem; font-weight: 600; color: var(--text-primary);
+    margin-top: 8px; line-height: 1.3;
+    overflow: hidden; text-overflow: ellipsis;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+}
+.ud-book-meta {
+    font-size: 0.65rem; color: var(--text-muted); margin-top: 3px;
+    display: flex; align-items: center; gap: 6px;
+}
+
+/* ── Story Table (Creator) ───────────────────────────────────────── */
+.ud-story-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+    text-decoration: none; color: inherit; transition: background 0.15s;
+}
+.ud-story-row:hover { background: rgba(255,255,255,0.02); border-radius: 10px; padding: 14px 10px; margin: 0 -10px; }
+.ud-story-cover-sm {
+    width: 44px; height: 64px; border-radius: 6px; object-fit: cover;
+    background: rgba(255,255,255,0.05); flex-shrink: 0;
+}
+.ud-story-info { flex: 1; min-width: 0; }
+.ud-story-name { font-size: 0.82rem; font-weight: 600; color: var(--text-primary); }
+.ud-story-stats { font-size: 0.68rem; color: var(--text-muted); margin-top: 3px; }
+.ud-status-badge {
+    padding: 3px 8px; border-radius: 6px; font-size: 0.62rem;
+    font-weight: 700; text-transform: uppercase; flex-shrink: 0;
+}
+.ud-status-published { background: rgba(46,204,113,0.15); color: #2ecc71; }
+.ud-status-draft { background: rgba(255,255,255,0.08); color: var(--text-muted); }
+.ud-status-ongoing { background: rgba(52,152,219,0.15); color: #5dade2; }
+.ud-status-review { background: rgba(243,156,18,0.15); color: #f39c12; }
+
+/* ── Follower List ───────────────────────────────────────────────── */
+.ud-follower-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.ud-follower-avatar {
+    width: 38px; height: 38px; border-radius: 50%; object-fit: cover;
+    background: rgba(212,168,67,0.15); flex-shrink: 0;
+}
+.ud-follower-initials {
+    width: 38px; height: 38px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem; font-weight: 700; color: #000;
+    background: linear-gradient(135deg, var(--gold), #f0d78c); flex-shrink: 0;
+}
+.ud-follower-name { font-size: 0.82rem; font-weight: 600; color: var(--text-primary); }
+.ud-follower-since { font-size: 0.65rem; color: var(--text-muted); }
+
+/* ── Earnings Table ──────────────────────────────────────────────── */
+.ud-earn-table { width: 100%; border-collapse: collapse; }
+.ud-earn-table th {
+    text-align: left; font-size: 0.68rem; font-weight: 700; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.04em;
+    padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.ud-earn-table td {
+    padding: 10px 12px; font-size: 0.8rem; color: var(--text-secondary);
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+.ud-earn-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+/* ── Empty State ─────────────────────────────────────────────────── */
+.ud-empty {
+    text-align: center; padding: 48px 20px;
+    color: var(--text-muted); font-size: 0.85rem;
+}
+.ud-empty i { font-size: 2.5rem; display: block; margin-bottom: 12px; opacity: 0.3; }
+.ud-empty-cta { margin-top: 16px; }
+
+/* ── Connected Account Card ──────────────────────────────────────── */
+.ud-connected {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px; border-radius: 12px;
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+    margin-bottom: 10px;
+}
+.ud-connected-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem;
+}
+.ud-connected-google { background: rgba(66,133,244,0.15); color: #4285f4; }
+.ud-connected-info { flex: 1; }
+.ud-connected-name { font-size: 0.82rem; font-weight: 600; color: var(--text-primary); }
+.ud-connected-status { font-size: 0.68rem; color: var(--text-muted); }
+
+/* ── Streak Visual ───────────────────────────────────────────────── */
+.ud-streak-card {
+    display: flex; align-items: center; gap: 18px;
+    background: linear-gradient(135deg, rgba(231,76,60,0.08), rgba(243,156,18,0.08));
+    border: 1px solid rgba(231,76,60,0.15);
+    border-radius: 16px; padding: 20px 24px; margin-bottom: 24px;
+}
+.ud-streak-flame { font-size: 2.4rem; }
+.ud-streak-num { font-size: 2rem; font-weight: 800; color: #e74c3c; line-height: 1; }
+.ud-streak-text { font-size: 0.75rem; color: var(--text-muted); }
+
+/* ── Mobile ──────────────────────────────────────────────────────── */
+.ud-mob-nav {
+    display: none; background: rgba(18,18,22,0.98);
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    padding: 12px 16px; position: sticky; top: 56px; z-index: 50;
+}
+.ud-mob-profile {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 10px; cursor: pointer;
+}
+.ud-mob-avatar {
+    width: 44px; height: 44px; border-radius: 50%; object-fit: cover;
+    border: 2px solid rgba(212,168,67,0.5);
+    background: rgba(212,168,67,0.15);
+}
+.ud-mob-avatar-initials {
+    width: 44px; height: 44px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; font-weight: 700; color: #000;
+    background: linear-gradient(135deg, var(--gold), #f0d78c);
+    border: 2px solid rgba(212,168,67,0.5);
+}
+.ud-mob-name { font-size: 0.9rem; font-weight: 700; color: var(--text-primary); }
+.ud-mob-role { font-size: 0.65rem; color: var(--text-muted); }
+.ud-mob-tabs {
+    display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch; scrollbar-width: none;
+}
+.ud-mob-tabs::-webkit-scrollbar { display: none; }
+.ud-mob-tab {
+    flex-shrink: 0; padding: 7px 14px; border-radius: 20px;
+    font-size: 0.72rem; font-weight: 600; color: var(--text-muted);
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
+    cursor: pointer; transition: all 0.2s; white-space: nowrap;
+    text-decoration: none;
+}
+.ud-mob-tab.active { background: rgba(212,168,67,0.15); color: var(--gold); border-color: rgba(212,168,67,0.3); }
+
+@media (max-width: 991px) {
+    .ud { flex-direction: column; }
+    .ud-sidebar { display: none; }
+    .ud-mob-nav { display: block; width: 100%; }
+    .ud-main { padding: 20px 16px 40px; max-width: 100%; width: 100%; }
+    .ud-stats { grid-template-columns: repeat(2, 1fr); }
+    .ud-form-row { grid-template-columns: 1fr; }
+    .ud-book-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .ud-streak-card { padding: 16px; gap: 14px; }
+    .ud-streak-num { font-size: 1.5rem; }
+}
+@media (max-width: 480px) {
+    .ud-book-grid { grid-template-columns: repeat(2, 1fr); }
+    .ud-stats { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .ud-stat-card { padding: 14px 10px; }
+    .ud-stat-value { font-size: 1.3rem; }
+}
+
+/* ── Avatar Upload Modal ─────────────────────────────────────────── */
+.ud-modal-bg {
+    display: none; position: fixed; inset: 0; z-index: 9999;
+    background: rgba(0,0,0,0.7); align-items: center; justify-content: center;
+}
+.ud-modal-bg.show { display: flex; }
+.ud-modal {
+    background: #1a1a1e; border-radius: 16px; padding: 28px;
+    max-width: 400px; width: 90%; text-align: center;
+    border: 1px solid rgba(255,255,255,0.06);
+}
+.ud-modal h3 { font-size: 1rem; font-weight: 700; margin-bottom: 16px; color: var(--text-primary); }
+.ud-modal-preview {
+    width: 120px; height: 120px; border-radius: 50%; margin: 0 auto 16px;
+    object-fit: cover; border: 3px solid var(--gold);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hidden file input for avatar upload -->
+<input type="file" id="avatarInput" accept="image/*" style="display:none">
+
+<!-- Avatar Upload Modal -->
+<div class="ud-modal-bg" id="avatarModal">
+    <div class="ud-modal">
+        <h3>Update Profile Photo</h3>
+        <img id="avatarPreview" class="ud-modal-preview" src="" alt="Preview">
+        <canvas id="avatarCanvas" style="display:none" width="256" height="256"></canvas>
+        <div style="display:flex;gap:10px;justify-content:center;margin-top:16px;">
+            <button class="ud-btn ud-btn-outline" onclick="closeAvatarModal()">Cancel</button>
+            <button class="ud-btn ud-btn-gold" id="avatarSaveBtn" onclick="saveAvatar()">
+                <i class="bi bi-check-lg"></i> Save Photo
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="ud">
+    <!-- ═══════════ SIDEBAR (Desktop) ═══════════ -->
+    <aside class="ud-sidebar">
+        <div class="ud-profile-card">
+            <div class="ud-avatar-wrap" onclick="document.getElementById('avatarInput').click()">
+                {% if current_user.avatar_url %}
+                <img class="ud-avatar" src="{{ current_user.avatar_url }}" alt="{{ current_user.display_name }}">
+                {% else %}
+                <div class="ud-avatar-initials">{{ current_user.display_name[0]|upper }}</div>
+                {% endif %}
+                <div class="ud-avatar-overlay"><i class="bi bi-camera-fill"></i> Change</div>
+            </div>
+            <div class="ud-profile-name">{{ current_user.display_name }}</div>
+            <div class="ud-profile-email">{{ current_user.email or '' }}</div>
+            {% if current_user.is_founder %}
+            <span class="ud-role-badge ud-role-founder"><i class="bi bi-star-fill"></i> Founder</span>
+            {% elif current_user.is_creator %}
+            <span class="ud-role-badge ud-role-creator"><i class="bi bi-pen-fill"></i> Creator</span>
+            {% else %}
+            <span class="ud-role-badge ud-role-reader"><i class="bi bi-book"></i> Reader</span>
+            {% endif %}
+        </div>
+
+        <nav class="ud-nav">
+            <div class="ud-nav-section">
+                <p class="ud-nav-label">Personal</p>
+                <a class="ud-nav-item {% if tab == 'overview' %}active{% endif %}" data-tab="overview" href="?tab=overview">
+                    <i class="bi bi-grid-1x2-fill"></i> Overview
+                </a>
+                <a class="ud-nav-item {% if tab == 'library' %}active{% endif %}" data-tab="library" href="?tab=library">
+                    <i class="bi bi-collection-fill"></i> My Library
+                </a>
+                <a class="ud-nav-item {% if tab == 'profile' %}active{% endif %}" data-tab="profile" href="?tab=profile">
+                    <i class="bi bi-person-fill"></i> Edit Profile
+                </a>
+                <a class="ud-nav-item {% if tab == 'settings' %}active{% endif %}" data-tab="settings" href="?tab=settings">
+                    <i class="bi bi-gear-fill"></i> Settings
+                </a>
+            </div>
+
+            <div class="ud-nav-section">
+                <p class="ud-nav-label">Explore</p>
+                <a class="ud-nav-item" href="{{ url_for('notifications.list_notifications') }}">
+                    <i class="bi bi-bell-fill" style="color:#fbbf24;"></i> Notifications
+                    {% if unread_notif_count > 0 %}<span class="ud-nav-badge">{{ unread_notif_count }}</span>{% endif %}
+                </a>
+                <a class="ud-nav-item" href="{{ url_for('bulletin.bulletin_list') }}">
+                    <i class="bi bi-megaphone-fill" style="color:#60a5fa;"></i> Bulletin Feed
+                </a>
+                <a class="ud-nav-item" href="{{ url_for('payment.coins') }}">
+                    <i class="bi bi-coin" style="color:var(--gold);"></i> Wiam Coins
+                </a>
+                <a class="ud-nav-item" href="{{ url_for('gift.my_gifts') }}">
+                    <i class="bi bi-gift-fill" style="color:#e879f9;"></i> Received Gifts
+                </a>
+                <a class="ud-nav-item" href="{{ url_for('payment.tip_history') }}">
+                    <i class="bi bi-heart-fill" style="color:#ec4899;"></i> Tip History
+                </a>
+                {% if current_user.is_creator %}
+                <a class="ud-nav-item" href="{{ url_for('gift.sticker_history') }}">
+                    <i class="bi bi-emoji-smile-fill" style="color:#fb923c;"></i> Sticker History
+                </a>
+                {% endif %}
+                <a class="ud-nav-item" href="{{ url_for('payment.history') }}">
+                    <i class="bi bi-clock-history" style="color:#a78bfa;"></i> Coin History
+                </a>
+                <a class="ud-nav-item" href="{{ url_for('programs.hub') }}">
+                    <i class="bi bi-stars" style="color:#9b59b6;"></i> Programs
+                </a>
+                <a class="ud-nav-item" href="{{ url_for('profile.reading_streaks') }}">
+                    <i class="bi bi-fire" style="color:#e74c3c;"></i> Reading Streaks
+                </a>
+                <a class="ud-nav-item" href="{{ url_for('programs.magic_box') }}">
+                    <i class="bi bi-box-seam-fill" style="color:#d4a843;"></i> Magic Box
+                </a>
+                <a class="ud-nav-item" href="{{ url_for('elite.elite_page') }}">
+                    <span style="color:var(--gold);font-size:1.1rem;width:20px;text-align:center;display:inline-block;">✦</span> WiamElite
+                </a>
+                <a class="ud-nav-item" href="{{ url_for('premium.apex_page') }}">
+                    <i class="bi bi-trophy-fill" style="color:var(--gold);"></i> WiamApex
+                </a>
+                <a class="ud-nav-item" href="{% if is_premium %}{{ url_for('premium.manage') }}{% else %}{{ url_for('premium.premium_page') }}{% endif %}">
+                    <i class="bi bi-gem" style="color:#c084fc;"></i> WiamPremium
+                </a>
+            </div>
+
+            <div class="ud-nav-section">
+                <p class="ud-nav-label">Support</p>
+                <a class="ud-nav-item" href="{{ url_for('profile.feedback') }}">
+                    <i class="bi bi-chat-dots-fill" style="color:#34d399;"></i> Feedback
+                </a>
+                <a class="ud-nav-item" href="{{ url_for('profile.account_safety') }}">
+                    <i class="bi bi-shield-exclamation" style="color:#f87171;"></i> Account Safety
+                </a>
+                <a class="ud-nav-item" href="{{ url_for('profile.help_center') }}">
+                    <i class="bi bi-question-circle-fill" style="color:#60a5fa;"></i> Help Center
+                </a>
+                <a class="ud-nav-item" href="{{ url_for('profile.wiambot') }}">
+                    <i class="bi bi-robot" style="color:#2dd4bf;"></i> WiamBot Chat
+                </a>
+                <a class="ud-nav-item" href="{{ url_for('team.careers') }}">
+                    <i class="bi bi-briefcase-fill" style="color:#38bdf8;"></i> Careers
+                </a>
+            </div>
+
+            {% if current_user.is_creator %}
+            <div class="ud-nav-section">
+                <p class="ud-nav-label">Creator</p>
+                <a class="ud-nav-item {% if tab == 'creator' %}active{% endif %}" data-tab="creator" href="?tab=creator">
+                    <i class="bi bi-bar-chart-fill"></i> Creator Hub
+                </a>
+                <a class="ud-nav-item {% if tab == 'stories' %}active{% endif %}" data-tab="stories" href="?tab=stories">
+                    <i class="bi bi-journal-text"></i> My Stories
+                    {% if draft_count is defined and draft_count > 0 %}
+                    <span class="ud-nav-badge">{{ draft_count }}</span>
+                    {% endif %}
+                </a>
+                <a class="ud-nav-item {% if tab == 'earnings' %}active{% endif %}" data-tab="earnings" href="?tab=earnings">
+                    <i class="bi bi-coin"></i> Earnings
+                </a>
+                <a class="ud-nav-item {% if tab == 'orders' %}active{% endif %}" data-tab="orders" href="?tab=orders">
+                    <i class="bi bi-receipt"></i> Orders
+                    {% if pending_orders is defined and pending_orders > 0 %}
+                    <span class="ud-nav-badge">{{ pending_orders }}</span>
+                    {% endif %}
+                </a>
+                <a class="ud-nav-item {% if tab == 'followers' %}active{% endif %}" data-tab="followers" href="?tab=followers">
+                    <i class="bi bi-people-fill"></i> Followers
+                </a>
+                <a class="ud-nav-item {% if tab == 'subscriptions' %}active{% endif %}" data-tab="subscriptions" href="?tab=subscriptions">
+                    <i class="bi bi-heart-fill" style="color:#c084fc"></i> Subscriptions
+                    {% if csub_subscriber_count is defined and csub_subscriber_count > 0 %}
+                    <span class="ud-nav-badge">{{ csub_subscriber_count }}</span>
+                    {% endif %}
+                </a>
+            </div>
+            {% else %}
+            <div class="ud-nav-section" style="padding-top:8px;">
+                <a class="ud-nav-item" href="{{ url_for('profile.become_creator') }}">
+                    <i class="bi bi-pen-fill" style="color:var(--gold)"></i>
+                    <span style="color:var(--gold)">Become a Creator</span>
+                </a>
+            </div>
+            {% endif %}
+
+            {% if current_user.is_team_member or current_user.is_founder %}
+            <div class="ud-nav-section">
+                <p class="ud-nav-label">Team</p>
+                <a class="ud-nav-item" href="{{ url_for('team.dashboard') }}">
+                    <i class="bi bi-people-fill" style="color:var(--gold)"></i> Team Dashboard
+                </a>
+                {% if current_user.is_admin and not current_user.is_founder %}
+                <a class="ud-nav-item" href="{{ url_for('admin_dash.overview') }}">
+                    <i class="bi bi-shield-check-fill"></i> Admin Panel
+                </a>
+                {% endif %}
+                {% if current_user.is_founder %}
+                <a class="ud-nav-item" href="{{ url_for('founder_dash.overview') }}">
+                    <i class="bi bi-gear-wide-connected"></i> Control Panel
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+            <div class="ud-nav-section" style="padding-top:8px;margin-top:auto;border-top:1px solid rgba(255,255,255,0.04);">
+                <a class="ud-nav-item" href="{{ url_for('auth.logout') }}" style="color:#f87171;">
+                    <i class="bi bi-box-arrow-right" style="color:#f87171;"></i> Logout
+                </a>
+            </div>
+        </nav>
+    </aside>
+
+    <!-- ═══════════ MOBILE NAV ═══════════ -->
+    <div class="ud-mob-nav">
+        <div class="ud-mob-profile" onclick="document.getElementById('avatarInput').click()">
+            {% if current_user.avatar_url %}
+            <img class="ud-mob-avatar" src="{{ current_user.avatar_url }}" alt="{{ current_user.display_name }}">
+            {% else %}
+            <div class="ud-mob-avatar-initials">{{ current_user.display_name[0]|upper }}</div>
+            {% endif %}
+            <div>
+                <div class="ud-mob-name">{{ current_user.display_name }}</div>
+                <div class="ud-mob-role">
+                    {% if current_user.is_founder %}Founder{% elif current_user.is_creator %}Creator{% else %}Reader{% endif %}
+                    · {{ current_user.email or '' }}
+                </div>
+            </div>
+        </div>
+        <div class="ud-mob-tabs">
+            <a class="ud-mob-tab {% if tab == 'overview' %}active{% endif %}" href="?tab=overview">Overview</a>
+            <a class="ud-mob-tab {% if tab == 'library' %}active{% endif %}" href="?tab=library">Library</a>
+            <a class="ud-mob-tab {% if tab == 'profile' %}active{% endif %}" href="?tab=profile">Profile</a>
+            <a class="ud-mob-tab {% if tab == 'settings' %}active{% endif %}" href="?tab=settings">Settings</a>
+            {% if current_user.is_creator %}
+            <a class="ud-mob-tab {% if tab == 'creator' %}active{% endif %}" href="?tab=creator">Creator Hub</a>
+            <a class="ud-mob-tab {% if tab == 'stories' %}active{% endif %}" href="?tab=stories">Stories</a>
+            <a class="ud-mob-tab {% if tab == 'earnings' %}active{% endif %}" href="?tab=earnings">Earnings</a>
+            <a class="ud-mob-tab {% if tab == 'orders' %}active{% endif %}" href="?tab=orders">Orders</a>
+            <a class="ud-mob-tab {% if tab == 'followers' %}active{% endif %}" href="?tab=followers">Followers</a>
+            <a class="ud-mob-tab {% if tab == 'subscriptions' %}active{% endif %}" href="?tab=subscriptions">Subscriptions</a>
+            {% endif %}
+            {% if current_user.is_team_member or current_user.is_founder %}
+            <a class="ud-mob-tab" href="{{ url_for('team.dashboard') }}" style="border-color:rgba(212,168,67,0.3);color:var(--gold);">Team</a>
+            {% endif %}
+            {% if current_user.is_admin and not current_user.is_founder %}
+            <a class="ud-mob-tab" href="{{ url_for('admin_dash.overview') }}">Admin</a>
+            {% endif %}
+            {% if current_user.is_founder %}
+            <a class="ud-mob-tab" href="{{ url_for('founder_dash.overview') }}" style="border-color:rgba(231,76,60,0.3);color:#e74c3c;">Control Panel</a>
+            {% endif %}
+            <a class="ud-mob-tab" href="{{ url_for('auth.logout') }}" style="border-color:rgba(248,113,113,0.3);color:#f87171;">Logout</a>
+        </div>
+        <!-- Mobile Quick Links (features only accessible via desktop dropdown otherwise) -->
+        <div style="display:flex;gap:10px;overflow-x:auto;padding:10px 0 4px;-webkit-overflow-scrolling:touch;scrollbar-width:none;">
+            <a href="{{ url_for('notifications.list_notifications') }}" style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);text-decoration:none;min-width:60px;">
+                <i class="bi bi-bell-fill" style="font-size:1.1rem;color:#fbbf24;"></i>
+                <span style="font-size:0.6rem;color:var(--text-muted);">Alerts{% if unread_notif_count > 0 %} <span style="color:var(--gold);font-weight:700;">{{ unread_notif_count }}</span>{% endif %}</span>
+            </a>
+            <a href="{{ url_for('bulletin.bulletin_list') }}" style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);text-decoration:none;min-width:60px;">
+                <i class="bi bi-megaphone-fill" style="font-size:1.1rem;color:#60a5fa;"></i>
+                <span style="font-size:0.6rem;color:var(--text-muted);">Bulletin</span>
+            </a>
+            <a href="{{ url_for('payment.coins') }}" style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);text-decoration:none;min-width:60px;">
+                <i class="bi bi-coin" style="font-size:1.1rem;color:var(--gold);"></i>
+                <span style="font-size:0.6rem;color:var(--text-muted);">Coins</span>
+            </a>
+            <a href="{{ url_for('gift.my_gifts') }}" style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);text-decoration:none;min-width:60px;">
+                <i class="bi bi-gift-fill" style="font-size:1.1rem;color:#e879f9;"></i>
+                <span style="font-size:0.6rem;color:var(--text-muted);">Gifts</span>
+            </a>
+            <a href="{{ url_for('payment.tip_history') }}" style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);text-decoration:none;min-width:60px;">
+                <i class="bi bi-heart-fill" style="font-size:1.1rem;color:#ec4899;"></i>
+                <span style="font-size:0.6rem;color:var(--text-muted);">Tips</span>
+            </a>
+            {% if current_user.is_creator %}
+            <a href="{{ url_for('gift.sticker_history') }}" style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);text-decoration:none;min-width:60px;">
+                <i class="bi bi-emoji-smile-fill" style="font-size:1.1rem;color:#fb923c;"></i>
+                <span style="font-size:0.6rem;color:var(--text-muted);">Stickers</span>
+            </a>
+            {% endif %}
+            <a href="{{ url_for('programs.hub') }}" style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);text-decoration:none;min-width:60px;">
+                <i class="bi bi-stars" style="font-size:1.1rem;color:#9b59b6;"></i>
+                <span style="font-size:0.6rem;color:var(--text-muted);">Programs</span>
+            </a>
+            <a href="{{ url_for('elite.elite_page') }}" style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);text-decoration:none;min-width:60px;">
+                <span style="font-size:1.1rem;color:var(--gold);">✦</span>
+                <span style="font-size:0.6rem;color:var(--text-muted);">Elite</span>
+            </a>
+            <a href="{{ url_for('premium.apex_page') }}" style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);text-decoration:none;min-width:60px;">
+                <i class="bi bi-trophy-fill" style="font-size:1.1rem;color:var(--gold);"></i>
+                <span style="font-size:0.6rem;color:var(--text-muted);">Apex</span>
+            </a>
+            <a href="{{ url_for('payment.history') }}" style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);text-decoration:none;min-width:60px;">
+                <i class="bi bi-clock-history" style="font-size:1.1rem;color:#a78bfa;"></i>
+                <span style="font-size:0.6rem;color:var(--text-muted);">History</span>
+            </a>
+            <a href="{% if is_premium %}{{ url_for('premium.manage') }}{% else %}{{ url_for('premium.premium_page') }}{% endif %}" style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);text-decoration:none;min-width:60px;">
+                <i class="bi bi-gem" style="font-size:1.1rem;color:#c084fc;"></i>
+                <span style="font-size:0.6rem;color:var(--text-muted);">Premium</span>
+            </a>
+            <a href="{{ url_for('profile.feedback') }}" style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);text-decoration:none;min-width:60px;">
+                <i class="bi bi-chat-dots-fill" style="font-size:1.1rem;color:#34d399;"></i>
+                <span style="font-size:0.6rem;color:var(--text-muted);">Feedback</span>
+            </a>
+            <a href="{{ url_for('profile.help_center') }}" style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);text-decoration:none;min-width:60px;">
+                <i class="bi bi-question-circle-fill" style="font-size:1.1rem;color:#60a5fa;"></i>
+                <span style="font-size:0.6rem;color:var(--text-muted);">Help</span>
+            </a>
+            <a href="{{ url_for('profile.wiambot') }}" style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);text-decoration:none;min-width:60px;">
+                <i class="bi bi-robot" style="font-size:1.1rem;color:#2dd4bf;"></i>
+                <span style="font-size:0.6rem;color:var(--text-muted);">Bot</span>
+            </a>
+            <a href="{{ url_for('team.careers') }}" style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);text-decoration:none;min-width:60px;">
+                <i class="bi bi-briefcase-fill" style="font-size:1.1rem;color:#38bdf8;"></i>
+                <span style="font-size:0.6rem;color:var(--text-muted);">Careers</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- ═══════════ MAIN CONTENT ═══════════ -->
+    <main class="ud-main">
+
+        <!-- ────────── OVERVIEW TAB ────────── -->
+        <div class="ud-section {% if tab == 'overview' %}active{% endif %}" id="sec-overview">
+            <div class="ud-section-title"><i class="bi bi-grid-1x2-fill"></i> Overview</div>
+            <div class="ud-section-subtitle">Your reading activity and account summary</div>
+
+            {% if streak > 0 %}
+            <a href="{{ url_for('profile.reading_streaks') }}" style="text-decoration:none;display:block;">
+            <div class="ud-streak-card" style="cursor:pointer;transition:transform 0.15s;">
+                <div class="ud-streak-flame">🔥</div>
+                <div>
+                    <div class="ud-streak-num">{{ streak }} day{{ 's' if streak != 1 }}</div>
+                    <div class="ud-streak-text">Reading streak · {{ total_reading_days }} total reading days · <span style="color:#e74c3c;">View details →</span></div>
+                </div>
+            </div>
+            </a>
+            {% endif %}
+
+            <div class="ud-stats">
+                <div class="ud-stat-card">
+                    <div class="ud-stat-value">{{ books_read }}</div>
+                    <div class="ud-stat-label">Books Read</div>
+                </div>
+                <div class="ud-stat-card">
+                    <div class="ud-stat-value">{{ ratings_given }}</div>
+                    <div class="ud-stat-label">Ratings Given</div>
+                </div>
+                <div class="ud-stat-card">
+                    <div class="ud-stat-value">{{ reviews_written }}</div>
+                    <div class="ud-stat-label">Reviews</div>
+                </div>
+                <div class="ud-stat-card">
+                    <div class="ud-stat-value">{{ following_count }}</div>
+                    <div class="ud-stat-label">Following</div>
+                </div>
+                <div class="ud-stat-card">
+                    <div class="ud-stat-value gold">{{ (coin_balance.balance if coin_balance else 0)|int }}</div>
+                    <div class="ud-stat-label">Coins</div>
+                </div>
+            </div>
+
+            {% if library_books %}
+            <div class="ud-card">
+                <div class="ud-card-title"><i class="bi bi-book-half"></i> Continue Reading</div>
+                <div class="ud-book-grid">
+                    {% for book in library_books[:6] %}
+                    <a class="ud-book-item" href="{{ url_for('book.book_detail', book_id=book.id) }}">
+                        {% if book.cover_url %}
+                        <img class="ud-book-cover" src="{{ book.cover_url }}" alt="{{ book.title }}" loading="lazy">
+                        {% else %}
+                        <div class="ud-book-cover-placeholder"><i class="bi bi-book"></i></div>
+                        {% endif %}
+                        <div class="ud-book-title">{{ book.title }}</div>
+                        {% if progress_map.get(book.id) %}
+                        <div class="ud-book-meta">
+                            <span>Ch {{ progress_map[book.id].chapter_number }}</span>
+                        </div>
+                        {% endif %}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if not current_user.is_creator %}
+            <div class="ud-card" style="background:linear-gradient(135deg,rgba(212,168,67,0.06),rgba(212,168,67,0.02));border-color:rgba(212,168,67,0.15);">
+                <div class="ud-card-title"><i class="bi bi-pen-fill"></i> Become a Creator</div>
+                <p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:14px;">Share your stories with thousands of readers. Start writing today.</p>
+                <a href="{{ url_for('profile.become_creator') }}" class="ud-btn ud-btn-gold"><i class="bi bi-arrow-right"></i> Apply Now</a>
+            </div>
+            {% endif %}
+
+            <!-- Feedback -->
+            <div class="ud-card">
+                <div class="ud-card-title"><i class="bi bi-chat-heart-fill"></i> Feedback</div>
+                <p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:12px;">Send feedback to the WiamApp team and view replies.</p>
+                <a href="{{ url_for('profile.feedback') }}" class="ud-btn ud-btn-gold ud-btn-sm"><i class="bi bi-chat-heart"></i> Open Feedback</a>
+            </div>
+
+            <!-- Support -->
+            <div class="ud-card">
+                <div class="ud-card-title"><i class="bi bi-life-preserver"></i> Support</div>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                    <a href="{{ url_for('profile.help_center') }}" style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);border-radius:10px;text-decoration:none;color:var(--text);font-size:0.85rem;transition:background 0.2s;">
+                        <i class="bi bi-question-circle-fill" style="color:#38bdf8;font-size:1.1rem;"></i>
+                        <div><strong>Help Center</strong><br><span style="font-size:0.75rem;color:var(--text-muted);">FAQs, guides & live chat support</span></div>
+                    </a>
+                    <a href="{{ url_for('profile.terms') }}" style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);border-radius:10px;text-decoration:none;color:var(--text);font-size:0.85rem;transition:background 0.2s;">
+                        <i class="bi bi-file-earmark-text-fill" style="color:#facc15;font-size:1.1rem;"></i>
+                        <div><strong>Terms & Conditions</strong><br><span style="font-size:0.75rem;color:var(--text-muted);">Platform rules and usage terms</span></div>
+                    </a>
+                    <a href="{{ url_for('profile.privacy_policy') }}" style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);border-radius:10px;text-decoration:none;color:var(--text);font-size:0.85rem;transition:background 0.2s;">
+                        <i class="bi bi-shield-lock-fill" style="color:#4ade80;font-size:1.1rem;"></i>
+                        <div><strong>Privacy Policy</strong><br><span style="font-size:0.75rem;color:var(--text-muted);">How we protect your data</span></div>
+                    </a>
+                    <a href="{{ url_for('profile.about') }}" style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);border-radius:10px;text-decoration:none;color:var(--text);font-size:0.85rem;transition:background 0.2s;">
+                        <i class="bi bi-info-circle-fill" style="color:var(--gold);font-size:1.1rem;"></i>
+                        <div><strong>About WiamLabs</strong><br><span style="font-size:0.75rem;color:var(--text-muted);">Our mission, team & story</span></div>
+                    </a>
+                    <a href="{{ url_for('profile.my_warnings') }}" style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);border-radius:10px;text-decoration:none;color:var(--text);font-size:0.85rem;transition:background 0.2s;">
+                        <i class="bi bi-exclamation-triangle-fill" style="color:#f59e0b;font-size:1.1rem;"></i>
+                        <div><strong>Warnings</strong><br><span style="font-size:0.75rem;color:var(--text-muted);">View warnings on your account</span></div>
+                    </a>
+                    <a href="{{ url_for('profile.community_guidelines') }}" style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);border-radius:10px;text-decoration:none;color:var(--text);font-size:0.85rem;transition:background 0.2s;">
+                        <i class="bi bi-people-fill" style="color:#a78bfa;font-size:1.1rem;"></i>
+                        <div><strong>Community Guidelines</strong><br><span style="font-size:0.75rem;color:var(--text-muted);">Rules for creators & team members</span></div>
+                    </a>
+                    <a href="{{ url_for('profile.privacy_center') }}" style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);border-radius:10px;text-decoration:none;color:var(--text);font-size:0.85rem;transition:background 0.2s;">
+                        <i class="bi bi-fingerprint" style="color:#06b6d4;font-size:1.1rem;"></i>
+                        <div><strong>Privacy Center</strong><br><span style="font-size:0.75rem;color:var(--text-muted);">How we handle & protect your data</span></div>
+                    </a>
+                    <a href="{{ url_for('profile.wiambot') }}" style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);border-radius:10px;text-decoration:none;color:var(--text);font-size:0.85rem;transition:background 0.2s;">
+                        <i class="bi bi-robot" style="color:#818cf8;font-size:1.1rem;"></i>
+                        <div><strong>WiamBot</strong><br><span style="font-size:0.75rem;color:var(--text-muted);">Chat with our AI assistant</span></div>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- ────────── LIBRARY TAB ────────── -->
+        <div class="ud-section {% if tab == 'library' %}active{% endif %}" id="sec-library">
+            <div class="ud-section-title"><i class="bi bi-collection-fill"></i> My Library</div>
+            <div class="ud-section-subtitle">Books you're reading and your library</div>
+
+            {% if library_books %}
+            <div class="ud-card">
+                <div class="ud-card-title"><i class="bi bi-book-half"></i> Reading ({{ library_books|length }})</div>
+                <div class="ud-book-grid">
+                    {% for book in library_books %}
+                    <a class="ud-book-item" href="{{ url_for('book.book_detail', book_id=book.id) }}">
+                        {% if book.cover_url %}
+                        <img class="ud-book-cover" src="{{ book.cover_url }}" alt="{{ book.title }}" loading="lazy">
+                        {% else %}
+                        <div class="ud-book-cover-placeholder"><i class="bi bi-book"></i></div>
+                        {% endif %}
+                        <div class="ud-book-title">{{ book.title }}</div>
+                        {% if progress_map.get(book.id) %}
+                        <div class="ud-book-meta"><span>Ch {{ progress_map[book.id].chapter_number }}</span></div>
+                        {% endif %}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% else %}
+            <div class="ud-empty">
+                <i class="bi bi-book"></i>
+                <p>No books in your library yet</p>
+                <div class="ud-empty-cta">
+                    <a href="{{ url_for('browse.browse_home') }}" class="ud-btn ud-btn-gold"><i class="bi bi-compass"></i> Browse Stories</a>
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+
+        <!-- ────────── EDIT PROFILE TAB ────────── -->
+        <div class="ud-section {% if tab == 'profile' %}active{% endif %}" id="sec-profile">
+            <div class="ud-section-title"><i class="bi bi-person-fill"></i> Edit Profile</div>
+            <div class="ud-section-subtitle">Update your personal information</div>
+
+            <!-- Avatar section at top -->
+            <div class="ud-card">
+                <div class="ud-card-title"><i class="bi bi-camera-fill"></i> Profile Photo</div>
+                <div style="display:flex;align-items:center;gap:20px;">
+                    <div class="ud-avatar-wrap" onclick="document.getElementById('avatarInput').click()" style="width:80px;height:80px;">
+                        {% if current_user.avatar_url %}
+                        <img class="ud-avatar" id="currentAvatar" src="{{ current_user.avatar_url }}" alt="Avatar" style="width:80px;height:80px;">
+                        {% else %}
+                        <div class="ud-avatar-initials" id="currentAvatar" style="width:80px;height:80px;font-size:1.5rem;">{{ current_user.display_name[0]|upper }}</div>
+                        {% endif %}
+                        <div class="ud-avatar-overlay"><i class="bi bi-camera-fill"></i></div>
+                    </div>
+                    <div>
+                        <p style="font-size:0.8rem;color:var(--text-secondary);margin-bottom:8px;">Tap to upload a new photo</p>
+                        <p style="font-size:0.68rem;color:var(--text-muted);">JPG, PNG or GIF. Max 2MB.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Basic Info -->
+            <div class="ud-card">
+                <div class="ud-card-title"><i class="bi bi-person-badge-fill"></i> Basic Info</div>
+                <form method="POST" action="{{ url_for('dashboard.edit_profile') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    
+                    <!-- Username -->
+                    <div class="ud-form-group">
+                        <label class="ud-form-label">Username</label>
+                        <div style="position:relative;">
+                            <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-muted);">@</span>
+                            <input type="text" name="username" id="usernameInput" class="ud-form-input" style="padding-left:28px;" 
+                                   value="{{ current_user.username or '' }}" 
+                                   pattern="[a-z0-9_]{3,30}" 
+                                   title="3-30 characters, lowercase letters, numbers, and underscores only"
+                                   oninput="this.value = this.value.toLowerCase().replace(/[^a-z0-9_]/g, '')">
+                        </div>
+                        <p id="usernameStatus" style="font-size:0.72rem;margin-top:6px;color:var(--text-muted);">Your unique @username</p>
+                    </div>
+
+                    <div class="ud-form-row">
+                        <div class="ud-form-group">
+                            <label class="ud-form-label">First Name</label>
+                            <input type="text" name="first_name" class="ud-form-input" value="{{ current_user.first_name or '' }}">
+                        </div>
+                        <div class="ud-form-group">
+                            <label class="ud-form-label">Last Name</label>
+                            <input type="text" name="last_name" class="ud-form-input" value="{{ current_user.last_name or '' }}">
+                        </div>
+                    </div>
+
+                    {% if current_user.is_creator %}
+                    <div class="ud-form-row">
+                        <div class="ud-form-group">
+                            <label class="ud-form-label">Pen Name</label>
+                            <input type="text" name="pen_name" class="ud-form-input" value="{{ creator_profile.pen_name if creator_profile else '' }}">
+                        </div>
+                        <div class="ud-form-group">
+                            <label class="ud-form-label">Country</label>
+                            <input type="text" name="country" class="ud-form-input" value="{{ creator_profile.country if creator_profile else '' }}">
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="ud-form-group">
+                        <label class="ud-form-label">Bio</label>
+                        <textarea name="bio" class="ud-form-input ud-form-textarea" maxlength="500" placeholder="Tell readers about yourself...">{{ creator_profile.bio if creator_profile and creator_profile.bio else (current_user.bio or '') }}</textarea>
+                        <p style="font-size:0.68rem;color:var(--text-muted);margin-top:4px;">Max 500 characters</p>
+                    </div>
+
+                    <button type="submit" class="ud-btn ud-btn-gold"><i class="bi bi-check-lg"></i> Save Profile</button>
+                </form>
+            </div>
+
+            <!-- Identity & Preferences -->
+            <div class="ud-card">
+                <div class="ud-card-title"><i class="bi bi-emoji-smile-fill"></i> Identity & Preferences</div>
+                <form method="POST" action="{{ url_for('dashboard.edit_profile') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="identity_form" value="1">
+                    
+                    <div class="ud-form-row">
+                        <div class="ud-form-group">
+                            <label class="ud-form-label">Pronouns</label>
+                            <select name="pronouns" class="ud-form-input">
+                                <option value="">Prefer not to say</option>
+                                <option value="he/him" {% if current_user.pronouns == 'he/him' %}selected{% endif %}>He / Him</option>
+                                <option value="she/her" {% if current_user.pronouns == 'she/her' %}selected{% endif %}>She / Her</option>
+                                <option value="they/them" {% if current_user.pronouns == 'they/them' %}selected{% endif %}>They / Them</option>
+                                <option value="other" {% if current_user.pronouns and current_user.pronouns not in ['he/him','she/her','they/them'] %}selected{% endif %}>Other</option>
+                            </select>
+                        </div>
+                        <div class="ud-form-group">
+                            <label class="ud-form-label">Region</label>
+                            <input type="text" name="account_region" class="ud-form-input" value="{{ current_user.account_region or '' }}" placeholder="e.g. Ghana, Nigeria, UK">
+                        </div>
+                    </div>
+
+                    <div class="ud-form-row">
+                        <div class="ud-form-group">
+                            <label class="ud-form-label">Date of Birth</label>
+                            <input type="date" name="date_of_birth" class="ud-form-input" value="{{ current_user.date_of_birth.strftime('%Y-%m-%d') if current_user.date_of_birth else '' }}">
+                        </div>
+                        <div class="ud-form-group" style="display:flex;flex-direction:column;justify-content:flex-end;">
+                            <div class="ud-toggle-row" style="padding:0;border:none;">
+                                <div class="ud-toggle-info">
+                                    <div class="ud-toggle-title">Show birthday publicly</div>
+                                </div>
+                                <label class="ud-switch">
+                                    <input type="checkbox" name="dob_visible" {% if current_user.dob_visible %}checked{% endif %}>
+                                    <span class="ud-switch-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="ud-toggle-row" style="margin-top:8px;">
+                        <div class="ud-toggle-info">
+                            <div class="ud-toggle-title">Show pronouns on profile</div>
+                            <div class="ud-toggle-desc">Display your pronouns next to your name</div>
+                        </div>
+                        <label class="ud-switch">
+                            <input type="checkbox" name="show_pronouns" {% if current_user.show_pronouns %}checked{% endif %}>
+                            <span class="ud-switch-slider"></span>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="ud-btn ud-btn-gold" style="margin-top:16px;"><i class="bi bi-check-lg"></i> Save Preferences</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ────────── SETTINGS TAB ────────── -->
+        <div class="ud-section {% if tab == 'settings' %}active{% endif %}" id="sec-settings">
+            <div class="ud-section-title"><i class="bi bi-gear-fill"></i> Settings</div>
+            <div class="ud-section-subtitle">Account, security, notifications, and privacy</div>
+
+            <!-- Appearance / Theme -->
+            <div class="ud-card">
+                <div class="ud-card-title"><i class="bi bi-palette-fill"></i> Appearance</div>
+                <div class="ud-toggle-row">
+                    <div class="ud-toggle-info">
+                        <div class="ud-toggle-title"><i class="bi bi-moon-stars" style="margin-right:6px;"></i>Dark / Light Mode</div>
+                        <div class="ud-toggle-desc">Switch between dark and light theme</div>
+                    </div>
+                    <label class="ud-switch">
+                        <input type="checkbox" id="dashThemeToggle" onchange="toggleWiamTheme()">
+                        <span class="ud-switch-slider"></span>
+                    </label>
+                </div>
+                <script>
+                (function(){
+                    var t = document.getElementById('dashThemeToggle');
+                    if (t) t.checked = (localStorage.getItem('wiamapp_theme') === 'light');
+                })();
+                </script>
+            </div>
+
+            <!-- Account Info -->
+            <div class="ud-card">
+                <div class="ud-card-title"><i class="bi bi-person-vcard"></i> Account Information</div>
+                <form method="POST" action="{{ url_for('dashboard.update_account') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="ud-form-row">
+                        <div class="ud-form-group">
+                            <label class="ud-form-label">Email</label>
+                            <input type="email" class="ud-form-input" value="{{ current_user.email or '' }}" disabled>
+                        </div>
+                        <div class="ud-form-group">
+                            <label class="ud-form-label">Phone</label>
+                            <input type="text" name="phone" class="ud-form-input" value="{{ current_user.phone or '' }}" placeholder="+233...">
+                        </div>
+                    </div>
+                    <div class="ud-form-row">
+                        <div class="ud-form-group">
+                            <label class="ud-form-label">Date of Birth</label>
+                            <input type="date" name="date_of_birth" class="ud-form-input" value="{{ current_user.date_of_birth.isoformat() if current_user.date_of_birth else '' }}">
+                        </div>
+                        <div class="ud-form-group">
+                            <label class="ud-form-label">Pronouns</label>
+                            <select name="pronouns" class="ud-form-input">
+                                <option value="">Prefer not to say</option>
+                                <option value="he/him" {% if current_user.pronouns == 'he/him' %}selected{% endif %}>He/Him</option>
+                                <option value="she/her" {% if current_user.pronouns == 'she/her' %}selected{% endif %}>She/Her</option>
+                                <option value="they/them" {% if current_user.pronouns == 'they/them' %}selected{% endif %}>They/Them</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="ud-form-group">
+                        <label class="ud-form-label">Region</label>
+                        <input type="text" name="account_region" class="ud-form-input" value="{{ current_user.account_region or '' }}" placeholder="e.g. Ghana" style="max-width:300px;">
+                    </div>
+                    <button type="submit" class="ud-btn ud-btn-gold ud-btn-sm"><i class="bi bi-check-lg"></i> Save</button>
+                </form>
+            </div>
+
+            <!-- Change Password -->
+            <div class="ud-card">
+                <div class="ud-card-title"><i class="bi bi-shield-lock-fill"></i> Change Password</div>
+                <form method="POST" action="{{ url_for('dashboard.change_password') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    {% if current_user.password_hash %}
+                    <div class="ud-form-group">
+                        <label class="ud-form-label">Current Password</label>
+                        <input type="password" name="current_password" class="ud-form-input" style="max-width:350px;">
+                    </div>
+                    {% endif %}
+                    <div class="ud-form-row" style="max-width:350px;">
+                        <div class="ud-form-group">
+                            <label class="ud-form-label">New Password</label>
+                            <input type="password" name="new_password" class="ud-form-input" minlength="8" required>
+                        </div>
+                        <div class="ud-form-group">
+                            <label class="ud-form-label">Confirm</label>
+                            <input type="password" name="confirm_password" class="ud-form-input" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="ud-btn ud-btn-outline ud-btn-sm"><i class="bi bi-key-fill"></i> Change Password</button>
+                </form>
+            </div>
+
+            <!-- Two-Factor Authentication -->
+            <div class="ud-card">
+                <div class="ud-card-title"><i class="bi bi-shield-check"></i> Two-Factor Authentication (2FA)</div>
+                <p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:12px;">
+                    {% if current_user.two_factor_enabled %}
+                    <i class="bi bi-check-circle-fill" style="color:#2ecc71;"></i> 2FA is <strong style="color:#2ecc71;">enabled</strong> — your account has extra security.
+                    {% else %}
+                    <i class="bi bi-exclamation-circle" style="color:#f39c12;"></i> 2FA is <strong>not enabled</strong> — add an extra layer of security to your account.
+                    {% endif %}
+                </p>
+                <a href="{{ url_for('auth.settings_2fa') }}" class="ud-btn ud-btn-outline ud-btn-sm"><i class="bi bi-shield-lock"></i> Manage 2FA</a>
+            </div>
+
+            <!-- Connected Accounts -->
+            <div class="ud-card">
+                <div class="ud-card-title"><i class="bi bi-link-45deg"></i> Connected Accounts</div>
+                <div class="ud-connected">
+                    <div class="ud-connected-icon ud-connected-google"><i class="bi bi-google"></i></div>
+                    <div class="ud-connected-info">
+                        <div class="ud-connected-name">Google</div>
+                        <div class="ud-connected-status">
+                            {% if current_user.google_id %}
+                            <span style="color:#2ecc71;">Connected</span>
+                            {% else %}
+                            Not connected
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% if current_user.google_id %}
+                    <form method="POST" action="{{ url_for('profile.unlink_google') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="ud-btn ud-btn-danger ud-btn-sm">Unlink</button>
+                    </form>
+                    {% elif google_client_id %}
+                    <div id="g_id_onload"
+                         data-client_id="{{ google_client_id }}"
+                         data-callback="handleGoogleLink"
+                         data-auto_prompt="false">
+                    </div>
+                    <div class="g_id_signin" data-type="standard" data-size="small" data-text="signin_with" data-shape="pill"></div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Notifications -->
+            <div class="ud-card">
+                <div class="ud-card-title"><i class="bi bi-bell-fill"></i> Notifications</div>
+                <form method="POST" action="{{ url_for('dashboard.update_notifications') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="ud-toggle-row">
+                        <div class="ud-toggle-info"><div class="ud-toggle-title">New Chapters</div><div class="ud-toggle-desc">When creators you follow publish new chapters</div></div>
+                        <label class="ud-switch"><input type="checkbox" name="notif_new_chapter" {% if current_user.notif_new_chapter %}checked{% endif %}><span class="ud-switch-slider"></span></label>
+                    </div>
+                    <div class="ud-toggle-row">
+                        <div class="ud-toggle-info"><div class="ud-toggle-title">New Followers</div><div class="ud-toggle-desc">When someone follows you</div></div>
+                        <label class="ud-switch"><input type="checkbox" name="notif_new_follower" {% if current_user.notif_new_follower %}checked{% endif %}><span class="ud-switch-slider"></span></label>
+                    </div>
+                    <div class="ud-toggle-row">
+                        <div class="ud-toggle-info"><div class="ud-toggle-title">Comments</div><div class="ud-toggle-desc">When someone comments on your stories</div></div>
+                        <label class="ud-switch"><input type="checkbox" name="notif_comments" {% if current_user.notif_comments %}checked{% endif %}><span class="ud-switch-slider"></span></label>
+                    </div>
+                    <div class="ud-toggle-row">
+                        <div class="ud-toggle-info"><div class="ud-toggle-title">Likes</div><div class="ud-toggle-desc">When someone likes your content</div></div>
+                        <label class="ud-switch"><input type="checkbox" name="notif_likes" {% if current_user.notif_likes %}checked{% endif %}><span class="ud-switch-slider"></span></label>
+                    </div>
+                    <div class="ud-toggle-row">
+                        <div class="ud-toggle-info"><div class="ud-toggle-title">Mentions</div><div class="ud-toggle-desc">When someone mentions you</div></div>
+                        <label class="ud-switch"><input type="checkbox" name="notif_mentions" {% if current_user.notif_mentions %}checked{% endif %}><span class="ud-switch-slider"></span></label>
+                    </div>
+                    <div class="ud-toggle-row">
+                        <div class="ud-toggle-info"><div class="ud-toggle-title">Announcements</div><div class="ud-toggle-desc">Platform updates and news</div></div>
+                        <label class="ud-switch"><input type="checkbox" name="notif_announcements" {% if current_user.notif_announcements %}checked{% endif %}><span class="ud-switch-slider"></span></label>
+                    </div>
+                    <div class="ud-toggle-row">
+                        <div class="ud-toggle-info"><div class="ud-toggle-title">Coin Activity</div><div class="ud-toggle-desc">Purchases, tips, and rewards</div></div>
+                        <label class="ud-switch"><input type="checkbox" name="notif_coins" {% if current_user.notif_coins %}checked{% endif %}><span class="ud-switch-slider"></span></label>
+                    </div>
+                    <div class="ud-toggle-row">
+                        <div class="ud-toggle-info"><div class="ud-toggle-title">WiamElite</div><div class="ud-toggle-desc">Elite promotions and premium story updates</div></div>
+                        <label class="ud-switch"><input type="checkbox" name="notif_elite" {% if current_user.notif_elite %}checked{% endif %}><span class="ud-switch-slider"></span></label>
+                    </div>
+
+                    <div style="border-top:1px solid rgba(255,255,255,0.06);margin:14px 0;padding-top:14px;">
+                        <div style="font-weight:600;font-size:0.88rem;margin-bottom:10px;">Delivery Method</div>
+                    </div>
+                    <div class="ud-toggle-row">
+                        <div class="ud-toggle-info"><div class="ud-toggle-title">Push Notifications</div><div class="ud-toggle-desc">Browser & mobile push alerts</div></div>
+                        <label class="ud-switch"><input type="checkbox" name="notif_push" {% if current_user.notif_push %}checked{% endif %}><span class="ud-switch-slider"></span></label>
+                    </div>
+                    <div class="ud-toggle-row">
+                        <div class="ud-toggle-info"><div class="ud-toggle-title">Email Notifications</div><div class="ud-toggle-desc">Receive important alerts by email</div></div>
+                        <label class="ud-switch"><input type="checkbox" name="notif_email" {% if current_user.notif_email %}checked{% endif %}><span class="ud-switch-slider"></span></label>
+                    </div>
+
+                    <div style="border-top:1px solid rgba(255,255,255,0.06);margin:14px 0;padding-top:14px;">
+                        <div style="font-weight:600;font-size:0.88rem;margin-bottom:6px;">🔊 Notification Sound</div>
+                        <div style="font-size:0.78rem;color:var(--text-secondary);margin-bottom:10px;">Choose the tone that plays when you receive a notification</div>
+                        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                            {% set sounds = [('chime','🎵 Chime'),('bell','🔔 Bell'),('drop','💧 Drop'),('ping','📌 Ping'),('marimba','🎶 Marimba')] %}
+                            {% for skey, slabel in sounds %}
+                            <label style="display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;border:1px solid {{ 'var(--gold)' if (current_user.notif_sound or 'chime') == skey else 'rgba(255,255,255,0.1)' }};background:{{ 'rgba(212,168,67,0.1)' if (current_user.notif_sound or 'chime') == skey else 'rgba(255,255,255,0.03)' }};cursor:pointer;transition:all 0.2s;font-size:0.82rem;" onclick="WiamNotifSound.preview('{{ skey }}')">
+                                <input type="radio" name="notif_sound" value="{{ skey }}" {% if (current_user.notif_sound or 'chime') == skey %}checked{% endif %} style="accent-color:var(--gold);">
+                                {{ slabel }}
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div style="margin-top:14px;">
+                        <button type="submit" class="ud-btn ud-btn-gold ud-btn-sm"><i class="bi bi-check-lg"></i> Save Notifications</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Privacy -->
+            <div class="ud-card">
+                <div class="ud-card-title"><i class="bi bi-eye-slash-fill"></i> Privacy</div>
+                <form method="POST" action="{{ url_for('dashboard.update_privacy') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="ud-toggle-row">
+                        <div class="ud-toggle-info"><div class="ud-toggle-title">Public Profile</div><div class="ud-toggle-desc">Others can view your profile</div></div>
+                        <label class="ud-switch"><input type="checkbox" name="privacy_profile_visible" {% if current_user.privacy_profile_visible %}checked{% endif %}><span class="ud-switch-slider"></span></label>
+                    </div>
+                    <div class="ud-toggle-row">
+                        <div class="ud-toggle-info"><div class="ud-toggle-title">Show Reading Activity</div><div class="ud-toggle-desc">Display what you're currently reading</div></div>
+                        <label class="ud-switch"><input type="checkbox" name="privacy_show_reading_activity" {% if current_user.privacy_show_reading_activity %}checked{% endif %}><span class="ud-switch-slider"></span></label>
+                    </div>
+                    <div class="ud-toggle-row">
+                        <div class="ud-toggle-info"><div class="ud-toggle-title">Show Library</div><div class="ud-toggle-desc">Let others see your book collection</div></div>
+                        <label class="ud-switch"><input type="checkbox" name="privacy_show_library" {% if current_user.privacy_show_library %}checked{% endif %}><span class="ud-switch-slider"></span></label>
+                    </div>
+                    <div style="margin-top:14px;">
+                        <button type="submit" class="ud-btn ud-btn-gold ud-btn-sm"><i class="bi bi-check-lg"></i> Save Privacy</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Danger Zone -->
+            <div class="ud-card" style="border-color:rgba(231,76,60,0.2);">
+                <div class="ud-card-title" style="color:#e74c3c;"><i class="bi bi-exclamation-triangle-fill" style="color:#e74c3c;"></i> Danger Zone</div>
+                <div style="display:flex;gap:12px;flex-wrap:wrap;">
+                    <form method="POST" action="{{ url_for('profile.deactivate_account') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="ud-btn ud-btn-danger ud-btn-sm" onclick="return confirm('Are you sure you want to deactivate your account?')">
+                            <i class="bi bi-pause-circle"></i> Deactivate Account
+                        </button>
+                    </form>
+                    <a href="{{ url_for('profile.delete_account') }}" class="ud-btn ud-btn-danger ud-btn-sm">
+                        <i class="bi bi-trash3"></i> Delete Account
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        {% if current_user.is_creator %}
+        <!-- ────────── CREATOR HUB TAB ────────── -->
+        <div class="ud-section {% if tab == 'creator' %}active{% endif %}" id="sec-creator">
+            <div class="ud-section-title"><i class="bi bi-bar-chart-fill"></i> Creator Hub</div>
+            <div class="ud-section-subtitle">Your creator performance at a glance</div>
+
+            <div class="ud-stats">
+                <div class="ud-stat-card">
+                    <div class="ud-stat-value">{{ total_books }}</div>
+                    <div class="ud-stat-label">Total Stories</div>
+                </div>
+                <div class="ud-stat-card">
+                    <div class="ud-stat-value" style="color:#2ecc71;">{{ published_count }}</div>
+                    <div class="ud-stat-label">Published</div>
+                </div>
+                <div class="ud-stat-card">
+                    <div class="ud-stat-value">{{ draft_count }}</div>
+                    <div class="ud-stat-label">Drafts</div>
+                </div>
+                <div class="ud-stat-card">
+                    <div class="ud-stat-value">{{ '{:,}'.format(total_views) }}</div>
+                    <div class="ud-stat-label">Total Views</div>
+                </div>
+                <div class="ud-stat-card">
+                    <div class="ud-stat-value gold">{{ follower_count }}</div>
+                    <div class="ud-stat-label">Followers</div>
+                </div>
+                <div class="ud-stat-card">
+                    <div class="ud-stat-value">{{ total_sales }}</div>
+                    <div class="ud-stat-label">Total Sales</div>
+                </div>
+            </div>
+
+            <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:24px;">
+                <a href="{{ url_for('studio.new_book') }}" class="ud-btn ud-btn-gold"><i class="bi bi-plus-lg"></i> New Story</a>
+                <a href="{{ url_for('studio.dashboard') }}" class="ud-btn ud-btn-outline"><i class="bi bi-pencil-square"></i> WiamStudio</a>
+                <a href="{{ url_for('studio.top_readers') }}" class="ud-btn ud-btn-outline"><i class="bi bi-trophy-fill" style="color:#fbbf24;"></i> Top Readers</a>
+                <a href="{{ url_for('bulletin.feed', creator_id=current_user.wiam_id) }}" class="ud-btn ud-btn-outline"><i class="bi bi-megaphone-fill"></i> My Bulletin</a>
+                <a href="{{ url_for('wiambot.creator_tools') }}" class="ud-btn ud-btn-outline"><i class="bi bi-robot" style="color:#2dd4bf;"></i> Creator Tools</a>
+                <a href="{{ url_for('wiambot.apex_submit') }}" class="ud-btn ud-btn-outline"><i class="bi bi-trophy-fill" style="color:var(--gold);"></i> Apply for Apex</a>
+            </div>
+
+            <!-- Eligibility Tracker -->
+            {% if elig %}
+            <div class="ud-card" style="margin-bottom:20px;">
+                <div class="ud-card-title"><i class="bi bi-bar-chart-steps" style="color:var(--gold);"></i> Monetization Eligibility Tracker</div>
+                <p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:14px;">Meet all requirements to unlock monetization for your stories.</p>
+                <div style="display:grid;gap:10px;">
+                    {% for key, item in elig.items() %}
+                    {% set pct = ((item.val / item.req * 100) if item.req and item.req > 0 else 100) | int %}
+                    {% set pct = [pct, 100] | min %}
+                    {% if item.get('inverse') %}
+                        {% set met = (item.val <= item.req) %}
+                        {% set bar_color = '#2ecc71' if met else '#e74c3c' %}
+                        {% set pct = 100 if met else 50 %}
+                    {% else %}
+                        {% set met = (item.val >= item.req) %}
+                        {% set bar_color = '#2ecc71' if met else ('#d4a843' if pct >= 50 else '#e74c3c') %}
+                    {% endif %}
+                    <div>
+                        <div style="display:flex;justify-content:space-between;font-size:0.78rem;margin-bottom:3px;">
+                            <span style="color:var(--text-secondary);">{{ item.label }}</span>
+                            <span style="color:{{ bar_color }};font-weight:600;">
+                                {% if met %}<i class="bi bi-check-circle-fill"></i>{% endif %}
+                                {{ item.val }}{{ item.unit }} / {{ item.req }}{{ item.unit }}
+                            </span>
+                        </div>
+                        <div style="height:6px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;">
+                            <div style="height:100%;width:{{ pct }}%;background:{{ bar_color }};border-radius:3px;transition:width 0.5s ease;"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if my_books %}
+            <div class="ud-card">
+                <div class="ud-card-title"><i class="bi bi-journal-text"></i> Recent Stories</div>
+                {% for book in my_books[:5] %}
+                <a class="ud-story-row" href="{{ url_for('studio.editor', book_id=book.id) }}">
+                    {% if book.cover_url %}
+                    <img class="ud-story-cover-sm" src="{{ book.cover_url }}" alt="{{ book.title }}" loading="lazy">
+                    {% else %}
+                    <div class="ud-story-cover-sm" style="display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);"><i class="bi bi-book" style="color:var(--text-muted)"></i></div>
+                    {% endif %}
+                    <div class="ud-story-info">
+                        <div class="ud-story-name">{{ book.title }}</div>
+                        <div class="ud-story-stats">
+                            {{ chapter_counts.get(book.id, 0) }} chapters · {{ '{:,}'.format(book.views or 0) }} views
+                        </div>
+                    </div>
+                    <span class="ud-status-badge ud-status-{{ book.status }}">{{ book.status }}</span>
+                </a>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- ────────── MY STORIES TAB ────────── -->
+        <div class="ud-section {% if tab == 'stories' %}active{% endif %}" id="sec-stories">
+            <div class="ud-section-title"><i class="bi bi-journal-text"></i> My Stories</div>
+            <div class="ud-section-subtitle">All your stories — click to edit in WiamStudio</div>
+
+            <div style="margin-bottom:20px;">
+                <a href="{{ url_for('studio.new_book') }}" class="ud-btn ud-btn-gold"><i class="bi bi-plus-lg"></i> New Story</a>
+            </div>
+
+            {% if my_books %}
+            <div class="ud-card" style="padding:16px;">
+                {% for book in my_books %}
+                <a class="ud-story-row" href="{{ url_for('studio.editor', book_id=book.id) }}">
+                    {% if book.cover_url %}
+                    <img class="ud-story-cover-sm" src="{{ book.cover_url }}" alt="{{ book.title }}" loading="lazy">
+                    {% else %}
+                    <div class="ud-story-cover-sm" style="display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);"><i class="bi bi-book" style="color:var(--text-muted)"></i></div>
+                    {% endif %}
+                    <div class="ud-story-info">
+                        <div class="ud-story-name">{{ book.title }}</div>
+                        <div class="ud-story-stats">
+                            {{ chapter_counts.get(book.id, 0) }} chapters · {{ '{:,}'.format(book.views or 0) }} views · {{ book.genre or 'No genre' }}
+                        </div>
+                    </div>
+                    <span class="ud-status-badge ud-status-{{ book.status }}">{{ book.status }}</span>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="ud-empty">
+                <i class="bi bi-journal-plus"></i>
+                <p>No stories yet. Start writing your first masterpiece!</p>
+                <div class="ud-empty-cta">
+                    <a href="{{ url_for('studio.new_book') }}" class="ud-btn ud-btn-gold"><i class="bi bi-plus-lg"></i> Create Story</a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- ────────── EARNINGS TAB ────────── -->
+        <div class="ud-section {% if tab == 'earnings' %}active{% endif %}" id="sec-earnings">
+            <div class="ud-section-title"><i class="bi bi-wallet2"></i> Creator Wallet</div>
+            <div class="ud-section-subtitle">Your earnings & automatic monthly payouts</div>
+
+            <!-- ═══ WALLET BALANCE HERO CARD ═══ -->
+            <div class="ud-card" style="background:linear-gradient(135deg,rgba(212,168,67,0.12) 0%,rgba(46,204,113,0.08) 100%);border:1px solid rgba(212,168,67,0.25);padding:24px 28px;">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
+                    <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,var(--gold),#f0d78c);display:flex;align-items:center;justify-content:center;">
+                        <i class="bi bi-wallet-fill" style="font-size:1.4rem;color:#000;"></i>
+                    </div>
+                    <div>
+                        <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);">Available Balance</div>
+                        <div style="font-size:1.8rem;font-weight:800;color:#2ecc71;line-height:1.1;">GH₵{{ '%.2f'|format(available_ghs) }}</div>
+                    </div>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;">
+                    <div style="background:rgba(0,0,0,0.2);border-radius:10px;padding:12px 14px;">
+                        <div style="font-size:0.62rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);margin-bottom:2px;">Total Earned</div>
+                        <div style="font-size:1.05rem;font-weight:700;color:var(--gold);">GH₵{{ '%.2f'|format(total_ghs_earned) }}</div>
+                    </div>
+                    <div style="background:rgba(0,0,0,0.2);border-radius:10px;padding:12px 14px;">
+                        <div style="font-size:0.62rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);margin-bottom:2px;">Pending (7-day hold)</div>
+                        <div style="font-size:1.05rem;font-weight:700;color:#f39c12;">GH₵{{ '%.2f'|format(pending_ghs) }}</div>
+                    </div>
+                    <div style="background:rgba(0,0,0,0.2);border-radius:10px;padding:12px 14px;">
+                        <div style="font-size:0.62rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);margin-bottom:2px;">Total Paid Out</div>
+                        <div style="font-size:1.05rem;font-weight:700;color:var(--text-primary);">GH₵{{ '%.2f'|format(total_paid_out) }}</div>
+                    </div>
+                    <div style="background:rgba(0,0,0,0.2);border-radius:10px;padding:12px 14px;">
+                        <div style="font-size:0.62rem;font-weight:600;text-transform:uppercase;color:var(--text-muted);margin-bottom:2px;">Today</div>
+                        <div style="font-size:1.05rem;font-weight:700;color:#2ecc71;">+{{ today_coins }} coins</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══ QUICK STATS ROW ═══ -->
+            <div class="ud-stats" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr));">
+                <div class="ud-stat-card">
+                    <div class="ud-stat-value gold">{{ '{:,}'.format(total_coins_earned) }}</div>
+                    <div class="ud-stat-label">Total Coins</div>
+                </div>
+                <div class="ud-stat-card">
+                    <div class="ud-stat-value">{{ current_earn.coins_from_unlocks if current_earn else 0 }}</div>
+                    <div class="ud-stat-label">Unlocks This Month</div>
+                </div>
+                <div class="ud-stat-card">
+                    <div class="ud-stat-value">{{ current_earn.coins_from_tips if current_earn else 0 }}</div>
+                    <div class="ud-stat-label">Tips This Month</div>
+                </div>
+            </div>
+
+            <!-- ═══ MONETIZATION STATUS ═══ -->
+            {% if mon_status %}
+            <div class="ud-card">
+                <div class="ud-card-title"><i class="bi bi-patch-check-fill"></i> Monetization Status</div>
+                <p style="font-size:0.82rem;color:{% if mon_status.is_eligible %}#2ecc71{% else %}var(--text-muted){% endif %};">
+                    {% if mon_status.is_eligible %}
+                    <i class="bi bi-check-circle-fill" style="color:#2ecc71;"></i> You are eligible for monetization
+                    {% else %}
+                    <i class="bi bi-clock" style="color:#f39c12;"></i> Not yet eligible — keep growing your audience
+                    {% endif %}
+                </p>
+            </div>
+            {% endif %}
+
+            <!-- ═══ AUTO PAYOUT INFO ═══ -->
+            <div class="ud-card" style="border:1px solid rgba(46,204,113,0.2);">
+                <div class="ud-card-title"><i class="bi bi-calendar-check"></i> Automatic Monthly Payout</div>
+                <div style="text-align:center;padding:16px 0;">
+                    <i class="bi bi-cash-stack" style="font-size:2.2rem;color:#2ecc71;"></i>
+                    <p style="font-size:0.88rem;color:var(--text);margin-top:10px;font-weight: 600;">Monthly payouts are direct to you.</p>
+                    <p style="font-size:0.78rem;color:var(--text-muted);margin-top:4px;line-height:1.6;max-width:420px;margin-left:auto;margin-right:auto;">On the <strong>1st of every month</strong>, WiamApp automatically pays your earnings to your Mobile Money account. Minimum payout: <strong>GH₵{{ '%.2f'|format(min_payout_ghs) }}</strong>. If your balance is below the minimum, it rolls over to the next month.</p>
+                    {% if not payout_settings or not payout_settings.account_number %}
+                    <div style="margin-top:12px;padding:10px 16px;background:rgba(243,156,18,0.1);border:1px solid rgba(243,156,18,0.25);border-radius:10px;">
+                        <i class="bi bi-exclamation-triangle" style="color:#f39c12;"></i>
+                        <span style="font-size:0.78rem;color:#f39c12;font-weight:600;">Set up your Mobile Money details below to receive payouts.</span>
+                    </div>
+                    {% else %}
+                    <div style="margin-top:12px;padding:10px 16px;background:rgba(46,204,113,0.08);border:1px solid rgba(46,204,113,0.2);border-radius:10px;">
+                        <i class="bi bi-check-circle-fill" style="color:#2ecc71;"></i>
+                        <span style="font-size:0.78rem;color:#2ecc71;font-weight:600;">Payouts go to {{ payout_settings.provider }} — {{ payout_settings.account_number }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- ═══ PER-STORY EARNINGS ═══ -->
+            {% if per_story_earnings %}
+            <div class="ud-card">
+                <div class="ud-card-title"><i class="bi bi-book-half"></i> Earnings Per Story</div>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                    {% for s in per_story_earnings %}
+                    <a href="{{ url_for('book.detail', book_id=s.id) }}" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(255,255,255,0.03);border-radius:8px;text-decoration:none;transition:background 0.2s;" onmouseover="this.style.background='rgba(212,168,67,0.08)'" onmouseout="this.style.background='rgba(255,255,255,0.03)'">
+                        <div style="flex:1;min-width:0;">
+                            <div style="font-size:0.82rem;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ s.title }}</div>
+                            <div style="font-size:0.68rem;color:var(--text-muted);">{{ '{:,}'.format(s.coins) }} coins earned</div>
+                        </div>
+                        <div style="font-size:0.9rem;font-weight:700;color:#2ecc71;white-space:nowrap;margin-left:12px;">GH₵{{ '%.2f'|format(s.ghs) }}</div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- ═══ TRANSACTION HISTORY ═══ -->
+            {% if creator_transactions %}
+            <div class="ud-card">
+                <div class="ud-card-title"><i class="bi bi-receipt-cutoff"></i> Recent Transactions</div>
+                <div style="overflow-x:auto;">
+                    <table class="ud-earn-table">
+                        <thead><tr><th>Date</th><th>Type</th><th>Story</th><th>Coins</th></tr></thead>
+                        <tbody>
+                        {% for tx, story in creator_transactions %}
+                        <tr>
+                            <td style="white-space:nowrap;">{{ tx.created_at.strftime('%d %b %H:%M') }}</td>
+                            <td>
+                                {% if tx.type == 'unlock' %}
+                                <span style="color:var(--gold);font-weight:600;"><i class="bi bi-unlock-fill"></i> Unlock</span>
+                                {% elif tx.type == 'tip' %}
+                                <span style="color:#e74c3c;font-weight:600;"><i class="bi bi-heart-fill"></i> Tip</span>
+                                {% else %}
+                                <span>{{ tx.type }}</span>
+                                {% endif %}
+                            </td>
+                            <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ story.title if story else '—' }}</td>
+                            <td style="color:var(--gold);font-weight:700;">+{{ (tx.amount * -1)|int }}</td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- ═══ MONTHLY EARNINGS TABLE ═══ -->
+            {% if all_earnings %}
+            <div class="ud-card">
+                <div class="ud-card-title"><i class="bi bi-calendar3"></i> Monthly Earnings</div>
+                <div style="overflow-x:auto;">
+                    <table class="ud-earn-table">
+                        <thead><tr><th>Period</th><th>Unlocks</th><th>Tips</th><th>Total Coins</th><th>Your Share</th><th>Status</th></tr></thead>
+                        <tbody>
+                        {% for e in all_earnings %}
+                        <tr>
+                            <td>{{ '%02d/%d'|format(e.month, e.year) }}</td>
+                            <td>{{ '{:,}'.format(e.coins_from_unlocks) }}</td>
+                            <td>{{ '{:,}'.format(e.coins_from_tips) }}</td>
+                            <td style="color:var(--gold);font-weight:600;">{{ '{:,}'.format(e.total_coins) }}</td>
+                            <td style="color:#2ecc71;font-weight:600;">GH₵{{ '%.2f'|format(e.creator_share_ghs) }}</td>
+                            <td>
+                                {% if e.is_paid %}
+                                <span class="ud-status-badge ud-status-published">Paid</span>
+                                {% elif e.rolled_over %}
+                                <span class="ud-status-badge ud-status-draft">Rolled Over</span>
+                                {% else %}
+                                <span class="ud-status-badge ud-status-review">Pending</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- ═══ PAYOUT SETTINGS ═══ -->
+            <div class="ud-card">
+                <div class="ud-card-title"><i class="bi bi-phone"></i> Mobile Money Settings</div>
+                <form method="POST" action="{{ url_for('dashboard.payout_settings') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="ud-form-row" style="grid-template-columns:1fr 1fr 1fr;">
+                        <div class="ud-form-group">
+                            <label class="ud-form-label">Provider</label>
+                            <select name="provider" class="ud-form-input">
+                                <option value="MTN" {% if payout_settings and payout_settings.provider == 'MTN' %}selected{% endif %}>MTN MoMo</option>
+                                <option value="Vodafone" {% if payout_settings and payout_settings.provider == 'Vodafone' %}selected{% endif %}>Vodafone Cash</option>
+                                <option value="AirtelTigo" {% if payout_settings and payout_settings.provider == 'AirtelTigo' %}selected{% endif %}>AirtelTigo Money</option>
+                            </select>
+                        </div>
+                        <div class="ud-form-group">
+                            <label class="ud-form-label">Account Number</label>
+                            <input type="text" name="account_number" class="ud-form-input" value="{{ payout_settings.account_number if payout_settings else '' }}" placeholder="0551234567">
+                        </div>
+                        <div class="ud-form-group">
+                            <label class="ud-form-label">Account Name</label>
+                            <input type="text" name="account_name" class="ud-form-input" value="{{ payout_settings.account_name if payout_settings else '' }}" placeholder="Full name on account">
+                        </div>
+                    </div>
+                    <button type="submit" class="ud-btn ud-btn-gold ud-btn-sm"><i class="bi bi-check-lg"></i> Save Payout Settings</button>
+                </form>
+            </div>
+
+            <!-- ═══ PAYOUT HISTORY (auto monthly) ═══ -->
+            {% if payouts %}
+            <div class="ud-card">
+                <div class="ud-card-title"><i class="bi bi-cash-stack"></i> Auto Payout History</div>
+                <div style="overflow-x:auto;">
+                    <table class="ud-earn-table">
+                        <thead><tr><th>Date</th><th>Amount</th><th>Provider</th><th>Status</th></tr></thead>
+                        <tbody>
+                        {% for p in payouts %}
+                        <tr>
+                            <td>{{ p.created_at.strftime('%d %b %Y') }}</td>
+                            <td style="color:#2ecc71;font-weight:600;">GH₵{{ '%.2f'|format(p.amount_ghs) }}</td>
+                            <td>{{ p.provider or '—' }}</td>
+                            <td><span class="ud-status-badge {% if p.status == 'sent' %}ud-status-published{% elif p.status in ['pending','processing'] %}ud-status-review{% else %}ud-status-draft{% endif %}">{{ p.status }}</span></td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- ═══ HOW IT WORKS ═══ -->
+            <div class="ud-card" style="border:1px solid rgba(212,168,67,0.15);">
+                <div class="ud-card-title"><i class="bi bi-info-circle"></i> How Earnings Work</div>
+                <div style="font-size:0.78rem;color:var(--text-muted);line-height:1.7;">
+                    <div style="display:flex;align-items:start;gap:10px;margin-bottom:8px;">
+                        <span style="background:var(--gold);color:#000;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:800;flex-shrink:0;">1</span>
+                        <span>Readers buy coins and spend them to unlock your locked chapters.</span>
+                    </div>
+                    <div style="display:flex;align-items:start;gap:10px;margin-bottom:8px;">
+                        <span style="background:var(--gold);color:#000;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:800;flex-shrink:0;">2</span>
+                        <span>Your earnings are <strong>50% of the coin value</strong> (GH₵). The platform keeps 50%.</span>
+                    </div>
+                    <div style="display:flex;align-items:start;gap:10px;margin-bottom:8px;">
+                        <span style="background:var(--gold);color:#000;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:800;flex-shrink:0;">3</span>
+                        <span>On the <strong>1st of every month</strong>, WiamApp automatically pays your earnings to your <strong>Mobile Money</strong>.</span>
+                    </div>
+                    <div style="display:flex;align-items:start;gap:10px;">
+                        <span style="background:var(--gold);color:#000;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:800;flex-shrink:0;">4</span>
+                        <span>Minimum payout: <strong>GH₵{{ '%.2f'|format(min_payout_ghs) }}</strong>. If below, earnings roll over to next month.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ────────── ORDERS TAB ────────── -->
+        <div class="ud-section {% if tab == 'orders' %}active{% endif %}" id="sec-orders">
+            <div class="ud-section-title"><i class="bi bi-receipt"></i> Orders</div>
+            <div class="ud-section-subtitle">Purchase orders for your books</div>
+
+            {% if orders %}
+            <div class="ud-card" style="padding:16px;">
+                <div style="overflow-x:auto;">
+                    <table class="ud-earn-table">
+                        <thead><tr><th>Reader</th><th>Book</th><th>Status</th><th>Action</th></tr></thead>
+                        <tbody>
+                        {% for order, book, buyer in orders %}
+                        <tr>
+                            <td>{{ buyer.display_name }}</td>
+                            <td>{{ book.title }}</td>
+                            <td><span class="ud-status-badge {% if order.status == 'approved' %}ud-status-published{% elif order.status == 'pending_review' %}ud-status-review{% else %}ud-status-draft{% endif %}">{{ order.status }}</span></td>
+                            <td>
+                                {% if order.status == 'pending_review' %}
+                                <form method="POST" action="{{ url_for('creator_dash.approve_order', order_id=order.id) }}" style="display:inline;">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="ud-btn ud-btn-gold ud-btn-sm">Approve</button>
+                                </form>
+                                <form method="POST" action="{{ url_for('creator_dash.reject_order', order_id=order.id) }}" style="display:inline;margin-left:6px;">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="ud-btn ud-btn-danger ud-btn-sm">Reject</button>
+                                </form>
+                                {% else %}
+                                —
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% else %}
+            <div class="ud-empty">
+                <i class="bi bi-receipt"></i>
+                <p>No orders yet</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- ────────── SUBSCRIPTIONS TAB ────────── -->
+        <div class="ud-section {% if tab == 'subscriptions' %}active{% endif %}" id="sec-subscriptions">
+            <div class="ud-section-title"><i class="bi bi-heart-fill" style="color:#c084fc"></i> Creator Subscriptions</div>
+            <div class="ud-section-subtitle">Let your biggest fans support you with monthly or yearly subscriptions</div>
+
+            {% if not csub_eligible %}
+            <div class="ud-card" style="padding:20px; border-left: 3px solid #c084fc;">
+                <p style="color:var(--text);margin:0 0 14px 0;font-weight:600;">
+                    <i class="bi bi-lock-fill" style="color:#c084fc"></i> Unlock Creator Subscriptions
+                </p>
+                <p style="color:var(--text-secondary);font-size:13px;margin:0 0 16px 0;">
+                    Meet these milestones to start offering paid subscriptions to your readers.
+                </p>
+                {% for check in csub_progress.get('checks', []) %}
+                <div style="margin-bottom:12px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                        <span style="color:var(--text);font-size:13px;font-weight:500;">
+                            {% if check.met %}<i class="bi bi-check-circle-fill" style="color:#22c55e;margin-right:4px;"></i>{% else %}<i class="bi bi-circle" style="color:var(--text-muted);margin-right:4px;"></i>{% endif %}
+                            {{ check.label }}
+                        </span>
+                        <span style="font-size:12px;color:{% if check.met %}#22c55e{% else %}var(--text-muted){% endif %};">
+                            {{ check.current }} / {{ check.required }}
+                        </span>
+                    </div>
+                    <div style="height:6px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;">
+                        <div style="height:100%;width:{{ [100, (check.current / check.required * 100)|int]|min }}%;background:{% if check.met %}#22c55e{% else %}#c084fc{% endif %};border-radius:3px;transition:width 0.3s;"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+
+            <!-- Summary cards -->
+            <div class="ud-stats-grid">
+                <div class="ud-stat-card">
+                    <div class="ud-stat-value" style="color:#c084fc">{{ csub_subscriber_count }}</div>
+                    <div class="ud-stat-label">Active Subscribers</div>
+                </div>
+                <div class="ud-stat-card">
+                    <div class="ud-stat-value" style="color:var(--gold)">GHS {{ '%.2f'|format(csub_earnings_total|float) }}</div>
+                    <div class="ud-stat-label">Total Earned</div>
+                </div>
+                <div class="ud-stat-card">
+                    <div class="ud-stat-value">GHS {{ '%.2f'|format(csub_earnings_pending|float) }}</div>
+                    <div class="ud-stat-label">Pending</div>
+                </div>
+                <div class="ud-stat-card">
+                    <div class="ud-stat-value">{{ csub_tiers|length }}</div>
+                    <div class="ud-stat-label">Tiers</div>
+                </div>
+            </div>
+
+            <!-- Tiers management -->
+            <div class="ud-card" style="padding:20px; margin-top:16px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+                    <h3 style="margin:0;color:var(--text);font-size:16px;"><i class="bi bi-layers"></i> Your Tiers</h3>
+                    {% if csub_tiers|length < 3 %}
+                    <button onclick="document.getElementById('tier-form').style.display='block'" class="btn btn-sm" style="background:#c084fc;color:#fff;border:0;">+ New Tier</button>
+                    {% endif %}
+                </div>
+
+                <!-- New tier form (hidden by default) -->
+                <div id="tier-form" style="display:none;padding:16px;background:rgba(192,132,252,0.08);border-radius:10px;margin-bottom:16px;">
+                    <form method="POST" action="{{ url_for('dashboard.create_sub_tier') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                            <div>
+                                <label style="color:var(--text-secondary);font-size:12px;">Tier Name</label>
+                                <input name="name" maxlength="50" placeholder="e.g. Supporter, VIP" required style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.3);color:var(--text);">
+                            </div>
+                            <div>
+                                <label style="color:var(--text-secondary);font-size:12px;">Monthly Price (GHS)</label>
+                                <input name="price_ghs" type="number" min="1" max="100" step="0.5" value="5" required style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.3);color:var(--text);">
+                            </div>
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">
+                            <div>
+                                <label style="color:var(--text-secondary);font-size:12px;">Billing Period</label>
+                                <select name="billing_period" id="tier-billing-period" onchange="document.getElementById('yearly-price-row').style.display=this.value==='yearly'?'block':'none'" style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.3);color:var(--text);">
+                                    <option value="monthly">Monthly only</option>
+                                    <option value="yearly">Monthly + Yearly</option>
+                                </select>
+                            </div>
+                            <div id="yearly-price-row" style="display:none;">
+                                <label style="color:var(--text-secondary);font-size:12px;">Yearly Price (GHS)</label>
+                                <input name="yearly_price_ghs" type="number" min="1" max="1000" step="0.5" placeholder="e.g. 50" style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.3);color:var(--text);">
+                            </div>
+                        </div>
+                        <div style="margin-top:10px;">
+                            <label style="color:var(--text-secondary);font-size:12px;">Description</label>
+                            <textarea name="description" maxlength="200" rows="2" placeholder="What do subscribers get?" style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.3);color:var(--text);resize:none;"></textarea>
+                        </div>
+                        <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:12px;">
+                            <label style="color:var(--text-secondary);font-size:12px;display:flex;align-items:center;gap:4px;">
+                                <input type="checkbox" name="perk_subscriber_posts" checked> Subscriber-only posts
+                            </label>
+                            <label style="color:var(--text-secondary);font-size:12px;display:flex;align-items:center;gap:4px;">
+                                <input type="checkbox" name="perk_badge" checked> Subscriber badge
+                            </label>
+                            <label style="color:var(--text-secondary);font-size:12px;display:flex;align-items:center;gap:4px;">
+                                <input type="checkbox" name="perk_no_ads" checked> No ads
+                            </label>
+                            <label style="color:var(--text-secondary);font-size:12px;display:flex;align-items:center;gap:4px;">
+                                <input type="checkbox" name="perk_author_notes"> Author notes
+                            </label>
+                            <label style="color:var(--text-secondary);font-size:12px;display:flex;align-items:center;gap:4px;">
+                                <input type="checkbox" name="perk_priority_comments"> Priority comments
+                            </label>
+                        </div>
+                        <div style="margin-top:12px;display:flex;gap:8px;">
+                            <button type="submit" class="btn btn-sm" style="background:#c084fc;color:#fff;border:0;">Create Tier</button>
+                            <button type="button" onclick="document.getElementById('tier-form').style.display='none'" class="btn btn-sm" style="background:rgba(255,255,255,0.06);color:var(--text-secondary);border:0;">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+
+                {% for tier in csub_tiers %}
+                <div style="display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,0.04);">
+                    <div style="width:44px;height:44px;border-radius:10px;background:{% if tier.is_active %}rgba(192,132,252,0.15){% else %}rgba(255,255,255,0.04){% endif %};display:flex;align-items:center;justify-content:center;">
+                        <i class="bi bi-heart-fill" style="color:{% if tier.is_active %}#c084fc{% else %}#555{% endif %};font-size:18px;"></i>
+                    </div>
+                    <div style="flex:1;">
+                        <div style="font-weight:600;color:var(--text);">{{ tier.name }}
+                            {% if not tier.is_active %}<span style="color:#f59e0b;font-size:11px;"> (paused{% if tier.paused_reason %} — {{ tier.paused_reason }}{% endif %})</span>{% endif %}
+                        </div>
+                        <div style="font-size:12px;color:var(--text-secondary);">GHS {{ '%.2f'|format(tier.price_ghs) }}/mo{% if tier.yearly_price_ghs %} · GHS {{ '%.2f'|format(tier.yearly_price_ghs) }}/yr{% endif %} · {{ tier.description[:60] }}{% if tier.description|length > 60 %}...{% endif %}</div>
+                        <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">
+                            {% if tier.perk_subscriber_posts %}<span style="margin-right:8px;">📝 Posts</span>{% endif %}
+                            {% if tier.perk_badge %}<span style="margin-right:8px;">🏷️ Badge</span>{% endif %}
+                            {% if tier.perk_no_ads %}<span style="margin-right:8px;">🚫 No Ads</span>{% endif %}
+                            {% if tier.perk_author_notes %}<span style="margin-right:8px;">📖 Notes</span>{% endif %}
+                            {% if tier.perk_priority_comments %}<span style="margin-right:8px;">💬 Priority</span>{% endif %}
+                            {% if tier.perk_early_access_hours %}<span>⏰ {{ tier.perk_early_access_hours }}h early</span>{% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% if not csub_tiers %}
+                <p style="color:var(--text-muted);text-align:center;padding:20px 0;">No tiers yet. Create your first tier to start accepting subscribers!</p>
+                {% endif %}
+            </div>
+
+            <!-- Subscribers list -->
+            {% if csub_subscribers %}
+            <div class="ud-card" style="padding:20px;margin-top:16px;">
+                <h3 style="margin:0 0 14px 0;color:var(--text);font-size:16px;"><i class="bi bi-people-fill"></i> Recent Subscribers</h3>
+                {% for item in csub_subscribers %}
+                <div class="ud-follower-row">
+                    {% if item.user and item.user.avatar_url %}
+                    <img class="ud-follower-avatar" src="{{ item.user.avatar_url }}" alt="">
+                    {% else %}
+                    <div class="ud-follower-initials">{{ item.user.display_name[0]|upper if item.user else '?' }}</div>
+                    {% endif %}
+                    <div style="flex:1;">
+                        <div class="ud-follower-name">{{ item.user.display_name if item.user else 'Unknown' }}
+                            <span style="font-size:11px;color:#c084fc;font-weight:600;margin-left:6px;">{{ item.tier.name if item.tier else '' }}</span>
+                        </div>
+                        <div class="ud-follower-since">
+                            {{ item.sub.status }}
+                            {% if item.sub.started_at %} · since {{ item.sub.started_at.strftime('%b %d, %Y') }}{% endif %}
+                        </div>
+                    </div>
+                    {% if item.sub.status == 'paused' %}
+                    <span style="font-size:11px;color:#f59e0b;background:rgba(245,158,11,0.1);padding:2px 8px;border-radius:6px;">paused</span>
+                    {% else %}
+                    <span style="font-size:11px;color:#22c55e;background:rgba(34,197,94,0.1);padding:2px 8px;border-radius:6px;">active</span>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <p style="color:var(--text-muted);font-size:12px;margin-top:16px;text-align:center;">
+                Revenue split: you earn 70% of each subscription payment. Payouts are included in your monthly creator earnings.
+            </p>
+            {% endif %}
+        </div>
+
+        <!-- ────────── FOLLOWERS TAB ────────── -->
+        <div class="ud-section {% if tab == 'followers' %}active{% endif %}" id="sec-followers">
+            <div class="ud-section-title"><i class="bi bi-people-fill"></i> Followers</div>
+            <div class="ud-section-subtitle">{{ follower_count }} people follow you</div>
+
+            {% if follows %}
+            <div class="ud-card" style="padding:16px;">
+                {% for f in follows %}
+                {% set fuser = follower_map.get(f.user_id) %}
+                {% if fuser %}
+                <div class="ud-follower-row">
+                    {% if fuser.avatar_url %}
+                    <img class="ud-follower-avatar" src="{{ fuser.avatar_url }}" alt="{{ fuser.display_name }}">
+                    {% else %}
+                    <div class="ud-follower-initials">{{ fuser.display_name[0]|upper }}</div>
+                    {% endif %}
+                    <div>
+                        <div class="ud-follower-name">{{ fuser.display_name }}</div>
+                        <div class="ud-follower-since">Following since {{ f.created_at.strftime('%b %d, %Y') if f.created_at else 'Unknown' }}</div>
+                    </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="ud-empty">
+                <i class="bi bi-people"></i>
+                <p>No followers yet. Keep publishing great stories!</p>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+    </main>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if google_client_id %}
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+function handleGoogleLink(response) {
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '{{ url_for("profile.link_google") }}';
+    const inp = document.createElement('input');
+    inp.type = 'hidden'; inp.name = 'credential'; inp.value = response.credential;
+    form.appendChild(inp);
+    document.body.appendChild(form);
+    form.submit();
+}
+</script>
+{% endif %}
+
+<script>
+/* ── Avatar Upload ──────────────────────────────────────────────── */
+const avatarInput = document.getElementById('avatarInput');
+const avatarModal = document.getElementById('avatarModal');
+const avatarPreview = document.getElementById('avatarPreview');
+const avatarCanvas = document.getElementById('avatarCanvas');
+
+avatarInput.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) { alert('Image too large. Max 2MB.'); return; }
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+        avatarPreview.src = ev.target.result;
+        avatarModal.classList.add('show');
+    };
+    reader.readAsDataURL(file);
+});
+
+function closeAvatarModal() {
+    avatarModal.classList.remove('show');
+    avatarInput.value = '';
+}
+
+function saveAvatar() {
+    const btn = document.getElementById('avatarSaveBtn');
+    btn.disabled = true; btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Saving...';
+
+    const img = new Image();
+    img.onload = function() {
+        const ctx = avatarCanvas.getContext('2d');
+        const size = Math.min(img.width, img.height);
+        const sx = (img.width - size) / 2;
+        const sy = (img.height - size) / 2;
+        ctx.drawImage(img, sx, sy, size, size, 0, 0, 256, 256);
+        const dataUrl = avatarCanvas.toDataURL('image/jpeg', 0.85);
+
+        fetch('{{ url_for("dashboard.upload_avatar") }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ avatar_data: dataUrl }),
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.url) {
+                // Update all avatar images on page
+                document.querySelectorAll('.ud-avatar, .ud-mob-avatar, #currentAvatar').forEach(el => {
+                    if (el.tagName === 'IMG') { el.src = data.url; }
+                    else { el.outerHTML = `<img class="${el.className}" src="${data.url}" alt="Avatar" style="${el.getAttribute('style') || ''}">`; }
+                });
+                closeAvatarModal();
+            } else {
+                alert('Upload failed. Please try again.');
+            }
+            btn.disabled = false; btn.innerHTML = '<i class="bi bi-check-lg"></i> Save Photo';
+        })
+        .catch(() => {
+            alert('Upload failed.');
+            btn.disabled = false; btn.innerHTML = '<i class="bi bi-check-lg"></i> Save Photo';
+        });
+    };
+    img.src = avatarPreview.src;
+}
+
+avatarModal.addEventListener('click', function(e) {
+    if (e.target === avatarModal) closeAvatarModal();
+});
+</script>
+{% endblock %}

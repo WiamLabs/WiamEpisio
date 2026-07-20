@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamEpisio — Home</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); }
+  .statusbar{ height:44px; }
+
+  .topfixed{ padding:0 20px 10px; }
+  .brand-row{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+  .brand{ display:flex; align-items:center; gap:8px; }
+  .logo-badge{ width:30px; height:30px; border-radius:9px; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); display:flex; align-items:center; justify-content:center; color:var(--navy); font-weight:800; font-size:14px; clip-path: polygon(30% 0%, 100% 0, 100% 100%, 30% 100%, 0% 50%); }
+  .brand-name{ font-size:17px; font-weight:800; color:#fff; letter-spacing:-0.3px; }
+  .brand-name span{ color:var(--gold); }
+  .header-icons{ display:flex; gap:9px; }
+  .icon-btn{ width:36px; height:36px; border-radius:50%; background:var(--navy-card); border:none; display:flex; align-items:center; justify-content:center; }
+  .signin-pill{ padding:8px 15px; border-radius:999px; background:var(--gold); color:var(--navy); font-size:12px; font-weight:700; }
+
+  .search-bar{ display:flex; align-items:center; gap:8px; background:var(--navy-card); border-radius:12px; padding:9px 13px; margin-bottom:12px; }
+  .search-bar svg{ color:var(--text-faint); width:14px; height:14px; flex-shrink:0; }
+  .search-bar span{ font-size:12.5px; color:var(--text-faint); }
+  .search-icons{ margin-left:auto; display:flex; gap:8px; }
+
+  .tab-row{ display:flex; gap:20px; overflow-x:auto; scrollbar-width:none; padding-bottom:2px; }
+  .tab-row::-webkit-scrollbar{ display:none; }
+  .tab{ flex-shrink:0; font-size:14px; font-weight:600; color:var(--text-faint); padding-bottom:8px; border-bottom:2px solid transparent; white-space:nowrap; }
+  .tab.active{ color:#fff; border-color:var(--gold); }
+  .tab.origin{ color:var(--gold); }
+
+  .scrollarea{ height:calc(100% - 44px - 132px); overflow-y:auto; padding:14px 20px 20px; }
+
+  /* Hero trailer card */
+  .hero-card{ position:relative; border-radius:22px; overflow:hidden; height:230px; margin-bottom:20px; background:linear-gradient(160deg,#2a1a1a,#0d0d24); }
+  .hero-gradient{ position:absolute; inset:0; background:linear-gradient(0deg, rgba(8,8,26,0.95) 0%, rgba(8,8,26,0.2) 55%, transparent 80%); }
+  .hero-play{ position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:52px; height:52px; border-radius:50%; background:rgba(212,160,23,0.9); display:flex; align-items:center; justify-content:center; }
+  .hero-content{ position:absolute; bottom:0; left:0; right:0; padding:16px; }
+  .hero-badge{ display:inline-block; font-size:9.5px; font-weight:700; color:var(--navy); background:var(--gold); padding:3px 9px; border-radius:5px; margin-bottom:8px; letter-spacing:0.4px; }
+  .hero-title{ font-size:18px; font-weight:800; color:#fff; margin:0 0 4px; }
+  .hero-meta{ font-size:11px; color:#C9C9DE; }
+
+  .section-head{ display:flex; align-items:center; justify-content:space-between; margin:4px 0 12px; }
+  .section-head h2{ font-size:15px; font-weight:700; color:#fff; margin:0; }
+  .section-head .see-all{ font-size:11.5px; color:var(--gold); font-weight:500; }
+
+  .poster-row{ display:flex; gap:11px; overflow-x:auto; padding-bottom:4px; margin-bottom:22px; }
+  .poster{ flex-shrink:0; width:108px; }
+  .poster-art{ width:108px; height:154px; border-radius:14px; background:linear-gradient(160deg,var(--navy-soft),#0d0d24); position:relative; overflow:hidden; display:flex; align-items:flex-end; }
+  .poster-badge{ position:absolute; top:7px; left:7px; font-size:8.5px; font-weight:700; padding:2px 6px; border-radius:4px; }
+  .poster-badge.new{ background:var(--gold); color:var(--navy); }
+  .poster-badge.hot{ background:#EF4444; color:#fff; }
+  .poster-views{ position:absolute; bottom:7px; right:7px; font-size:9px; color:#fff; background:rgba(0,0,0,0.5); padding:2px 6px; border-radius:999px; display:flex; align-items:center; gap:3px; }
+  .poster-views svg{ width:9px; height:9px; }
+  .poster-title{ font-size:11.5px; font-weight:600; color:#fff; margin:7px 0 0; line-height:1.3; }
+  .poster-tag{ font-size:10px; color:var(--text-faint); margin:2px 0 0; }
+
+  .genre-chips{ display:flex; gap:8px; overflow-x:auto; margin-bottom:22px; }
+  .genre-chip{ flex-shrink:0; padding:8px 15px; border-radius:999px; background:var(--navy-card); border:1px solid var(--navy-line); color:#B8B8CC; font-size:12px; font-weight:500; }
+  .genre-chip.active{ background:var(--gold); color:var(--navy); }
+
+  .footer-copy{ text-align:center; font-size:10px; color:#3A3A56; padding:8px 0 6px; }
+
+  .bottomnav{ position:absolute; bottom:0; left:0; right:0; height:84px; background:var(--navy-soft); border-top:1px solid #1C1C38; display:flex; align-items:flex-start; justify-content:space-around; padding-top:12px; }
+  .navitem{ display:flex; flex-direction:column; align-items:center; gap:4px; width:60px; }
+  .navitem span{ font-size:9.5px; color:var(--text-faint); }
+  .navitem.active span{ color:var(--gold); }
+  .navitem svg{ width:20px; height:20px; }
+
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"></div>
+  <div class="topfixed">
+    <div class="brand-row">
+      <div class="brand">
+        <div class="logo-badge">W</div>
+        <div class="brand-name">Wiam<span>Episio</span></div>
+      </div>
+      <div class="header-icons">
+        <button class="icon-btn"><svg viewBox="0 0 24 24" width="16" height="16" color="#C9C9DE"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
+        <button class="signin-pill">Sign In</button>
+      </div>
+    </div>
+    <div class="search-bar">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <span>The King's Forgotten Son</span>
+    </div>
+    <div class="tab-row">
+      <span class="tab active">Popular</span>
+      <span class="tab">Fresh</span>
+      <span class="tab">Rankings</span>
+      <span class="tab">Categories</span>
+      <span class="tab origin">Wiam Origin</span>
+      <span class="tab">Anime</span>
+      <span class="tab">VIP</span>
+    </div>
+  </div>
+
+  <div class="scrollarea">
+    <div class="hero-card">
+      <div class="hero-gradient"></div>
+      <div class="hero-play"><svg viewBox="0 0 24 24" width="22" height="22" color="#08081A" fill="#08081A"><polygon points="6 3 20 12 6 21 6 3"/></svg></div>
+      <div class="hero-content">
+        <span class="hero-badge">TRAILER</span>
+        <p class="hero-title">The King's Forgotten Son</p>
+        <p class="hero-meta">Drama · Revenge · 48 Episodes</p>
+      </div>
+    </div>
+
+    <div class="genre-chips">
+      <span class="genre-chip active">All</span>
+      <span class="genre-chip">Drama</span>
+      <span class="genre-chip">Romance</span>
+      <span class="genre-chip">Revenge</span>
+      <span class="genre-chip">Hidden Identity</span>
+      <span class="genre-chip">African Originals</span>
+    </div>
+
+    <div class="section-head"><h2>Continue Watching</h2><span class="see-all">See all</span></div>
+    <div class="poster-row">
+      <div class="poster">
+        <div class="poster-art"><span class="poster-views"><svg viewBox="0 0 24 24" stroke="#fff"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/></svg>1.1M</span></div>
+        <p class="poster-title">Love Me When I'm Gone</p>
+        <p class="poster-tag">EP 12 of 40</p>
+      </div>
+      <div class="poster">
+        <div class="poster-art"><span class="poster-views"><svg viewBox="0 0 24 24" stroke="#fff"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/></svg>890K</span></div>
+        <p class="poster-title">My Husband is a Hidden Hero</p>
+        <p class="poster-tag">EP 5 of 32</p>
+      </div>
+    </div>
+
+    <div class="section-head"><h2>Trending Now</h2><span class="see-all">See all</span></div>
+    <div class="poster-row">
+      <div class="poster">
+        <div class="poster-art">
+          <span class="poster-badge hot">HOT</span>
+          <span class="poster-views"><svg viewBox="0 0 24 24" stroke="#fff"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/></svg>4.9M</span>
+        </div>
+        <p class="poster-title">The King's Forgotten Son</p>
+        <p class="poster-tag">Drama · Revenge</p>
+      </div>
+      <div class="poster">
+        <div class="poster-art">
+          <span class="poster-badge new">NEW</span>
+          <span class="poster-views"><svg viewBox="0 0 24 24" stroke="#fff"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/></svg>210K</span>
+        </div>
+        <p class="poster-title">Betrayed by My Fiancée</p>
+        <p class="poster-tag">Revenge</p>
+      </div>
+      <div class="poster">
+        <div class="poster-art">
+          <span class="poster-views"><svg viewBox="0 0 24 24" stroke="#fff"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/></svg>1.8M</span>
+        </div>
+        <p class="poster-title">Combat King Returns</p>
+        <p class="poster-tag">Action</p>
+      </div>
+    </div>
+
+    <div class="section-head"><h2>Wiam Origin</h2><span class="see-all">See all</span></div>
+    <div class="poster-row">
+      <div class="poster">
+        <div class="poster-art"><span class="poster-badge new">NEW</span></div>
+        <p class="poster-title">Accra Nights</p>
+        <p class="poster-tag">Wiam Origin</p>
+      </div>
+      <div class="poster">
+        <div class="poster-art"></div>
+        <p class="poster-title">The Chief's Daughter</p>
+        <p class="poster-tag">Wiam Origin</p>
+      </div>
+    </div>
+
+    <div class="section-head"><h2>Coming Soon</h2></div>
+    <div class="poster-row">
+      <div class="poster" style="width:118px;">
+        <div class="poster-art" style="width:118px; height:154px;"></div>
+        <p class="poster-title">The Return of the Fallen Queen</p>
+        <button style="width:100%; margin-top:8px; padding:7px; border-radius:10px; background:var(--navy-card); border:1px solid var(--navy-line); color:#C9C9DE; font-size:10.5px; font-weight:600; display:flex; align-items:center; justify-content:center; gap:5px;">
+          <svg viewBox="0 0 24 24" width="11" height="11"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Remind Me
+        </button>
+      </div>
+      <div class="poster" style="width:118px;">
+        <div class="poster-art" style="width:118px; height:154px;"></div>
+        <p class="poster-title">Love Found Too Late</p>
+        <button style="width:100%; margin-top:8px; padding:7px; border-radius:10px; background:var(--navy-card); border:1px solid var(--navy-line); color:#C9C9DE; font-size:10.5px; font-weight:600; display:flex; align-items:center; justify-content:center; gap:5px;">
+          <svg viewBox="0 0 24 24" width="11" height="11"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Remind Me
+        </button>
+      </div>
+    </div>
+
+    <p class="footer-copy">© 2026 WiamEpisio · Powered by WiamLabs</p>
+  </div>
+
+  <div class="bottomnav">
+    <div class="navitem active">
+      <svg viewBox="0 0 24 24" fill="#D4A017" stroke="none"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10" fill="none" stroke="#D4A017" stroke-width="1.8"/></svg>
+      <span style="color:#D4A017">Home</span>
+    </div>
+    <div class="navitem" style="color:#5A5A75"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span>Discover</span></div>
+    <div class="navitem" style="color:#5A5A75"><svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="3"/><polygon points="10 9 10 15 15 12" fill="#5A5A75"/></svg><span>Member</span></div>
+    <div class="navitem" style="color:#5A5A75"><svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span>My List</span></div>
+    <div class="navitem" style="color:#5A5A75"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Profile</span></div>
+  </div>
+</div>
+
+</body>
+</html>

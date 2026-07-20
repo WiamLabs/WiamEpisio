@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamEpisio — Privacy &amp; Terms</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); display:flex; flex-direction:column; }
+  .statusbar{ height:44px; flex-shrink:0; }
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+
+  .topbar{ display:flex; align-items:center; gap:12px; padding:2px 20px 14px; flex-shrink:0; }
+  .icon-btn{ width:34px; height:34px; border-radius:50%; background:var(--navy-card); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .topbar h1{ font-size:16px; font-weight:800; color:#fff; margin:0; }
+
+  .tabs{ display:flex; gap:8px; padding:0 20px 14px; flex-shrink:0; }
+  .tab{ flex:1; text-align:center; padding:10px; border-radius:11px; background:var(--navy-card); border:1px solid var(--navy-line); font-size:12px; font-weight:700; color:var(--text-dim); }
+  .tab.active{ background:var(--gold); color:var(--navy); border-color:var(--gold); }
+
+  .scroll{ flex:1; overflow-y:auto; padding:0 20px 24px; }
+
+  .doc-meta{ font-size:10.5px; color:var(--text-faint); margin:0 0 18px; }
+  .doc-meta b{ color:var(--gold); }
+
+  .doc-section{ margin-bottom:20px; }
+  .doc-heading{ font-size:13px; font-weight:800; color:#fff; margin:0 0 8px; }
+  .doc-text{ font-size:11.5px; color:var(--text-dim); line-height:1.75; margin:0 0 8px; }
+  .doc-text:last-child{ margin-bottom:0; }
+
+  .bullet-list{ margin:0 0 8px; padding-left:18px; }
+  .bullet-list li{ font-size:11.5px; color:var(--text-dim); line-height:1.75; margin-bottom:4px; }
+
+  .contact-strip{ background:var(--navy-card); border:1px solid var(--navy-line); border-radius:14px; padding:14px 16px; margin-top:6px; }
+  .contact-strip b{ display:block; font-size:12px; font-weight:700; color:#fff; margin-bottom:4px; }
+  .contact-strip span{ font-size:11px; color:var(--gold); }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"></div>
+  <div class="topbar">
+    <div class="icon-btn"><svg viewBox="0 0 24 24" width="15" height="15" color="#fff"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></div>
+    <h1>Privacy &amp; Terms</h1>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active">Privacy Policy</div>
+    <div class="tab">Terms of Service</div>
+  </div>
+
+  <div class="scroll">
+    <p class="doc-meta">Last updated: <b>June 1, 2026</b> · Effective for all WiamEpisio users</p>
+
+    <div class="doc-section">
+      <p class="doc-heading">1. What We Collect</p>
+      <p class="doc-text">We collect account details (email, phone), viewing activity, device information, and payment metadata (never full card numbers — those are handled by our payment processors).</p>
+    </div>
+
+    <div class="doc-section">
+      <p class="doc-heading">2. How We Use Your Data</p>
+      <ul class="bullet-list">
+        <li>Personalizing your Home feed and recommendations</li>
+        <li>Processing coin purchases and creator payouts</li>
+        <li>Sending notifications you've opted into</li>
+        <li>Improving app performance and fixing bugs</li>
+      </ul>
+    </div>
+
+    <div class="doc-section">
+      <p class="doc-heading">3. What We Don't Do</p>
+      <p class="doc-text">We never sell your personal data to third parties. We don't share your watch history with advertisers outside of aggregated, anonymized trends.</p>
+    </div>
+
+    <div class="doc-section">
+      <p class="doc-heading">4. Your Rights</p>
+      <p class="doc-text">You can request a copy of your data, correct inaccurate information, or delete your account entirely at any time from Settings.</p>
+    </div>
+
+    <div class="doc-section">
+      <p class="doc-heading">5. Data Retention</p>
+      <p class="doc-text">We retain account data while your account is active, and for up to 90 days after deletion for fraud-prevention purposes, after which it's permanently erased.</p>
+    </div>
+
+    <div class="contact-strip">
+      <b>Questions about your data?</b>
+      <span>privacy@wiamepisio.com</span>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

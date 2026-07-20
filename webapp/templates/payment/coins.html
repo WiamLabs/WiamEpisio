@@ -1,0 +1,552 @@
+{% extends "base.html" %}
+{% block title %}Get Wiam Coins — WiamApp{% endblock %}
+
+{% block extra_head %}
+<style>
+/* ── Floating particles canvas ── */
+.coins-page { position: relative; min-height: 100vh; overflow: hidden; }
+#coinParticles { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+
+/* ── Hero section ── */
+.coins-hero {
+    position: relative; z-index: 1;
+    padding: 2.5rem 0 1rem;
+    text-align: center;
+}
+.coins-hero::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 50% 0%, rgba(212,168,67,0.12) 0%, transparent 70%);
+    pointer-events: none;
+}
+.hero-title {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #d4a843, #f5d98a, #d4a843);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.3rem;
+    letter-spacing: -0.5px;
+}
+.hero-sub { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.5rem; }
+
+/* ── Balance card ── */
+.balance-glass {
+    background: linear-gradient(135deg, rgba(212,168,67,0.08), rgba(212,168,67,0.03));
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(212,168,67,0.25);
+    border-radius: 20px;
+    padding: 1.5rem 2rem;
+    max-width: 420px;
+    margin: 0 auto 2.5rem;
+    position: relative;
+    overflow: hidden;
+}
+.balance-glass::before {
+    content: ''; position: absolute; top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: conic-gradient(from 0deg, transparent, rgba(212,168,67,0.06), transparent, rgba(212,168,67,0.06), transparent);
+    animation: balanceRotate 8s linear infinite;
+}
+@keyframes balanceRotate { to { transform: rotate(360deg); } }
+.balance-inner { position: relative; z-index: 1; }
+.balance-row { display: flex; align-items: center; justify-content: center; gap: 0.8rem; }
+.balance-coin-icon {
+    width: 52px; height: 52px;
+    background: linear-gradient(135deg, #d4a843, #f5d98a);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem; color: #000;
+    box-shadow: 0 0 20px rgba(212,168,67,0.4);
+    animation: coinPulse 2s ease-in-out infinite;
+}
+@keyframes coinPulse {
+    0%, 100% { box-shadow: 0 0 20px rgba(212,168,67,0.4); }
+    50% { box-shadow: 0 0 35px rgba(212,168,67,0.7); }
+}
+.balance-amount {
+    font-family: var(--font-display);
+    font-size: 2.8rem;
+    font-weight: 800;
+    color: var(--gold);
+    line-height: 1;
+}
+.balance-label { color: var(--text-muted); font-size: 0.82rem; margin-top: 0.5rem; }
+.balance-actions { display: flex; gap: 1rem; justify-content: center; margin-top: 1rem; }
+.balance-actions a {
+    font-size: 0.8rem; color: var(--text-secondary);
+    text-decoration: none; transition: color 0.2s;
+}
+.balance-actions a:hover { color: var(--gold); }
+
+/* ── Section title ── */
+.section-title {
+    font-family: var(--font-display);
+    font-size: 1.2rem; font-weight: 700;
+    color: var(--text); text-align: center;
+    margin-bottom: 1.8rem;
+}
+.section-title span { color: var(--gold); }
+
+/* ── Package grid ── */
+.pkg-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    max-width: 800px;
+    margin: 0 auto 3rem;
+    padding: 0 0.5rem;
+}
+@media (max-width: 600px) { .pkg-grid { grid-template-columns: 1fr; max-width: 380px; } }
+
+/* ── Package card ── */
+.pkg-card {
+    position: relative;
+    background: var(--bg-card);
+    border: 2px solid var(--border-subtle);
+    border-radius: 18px;
+    padding: 1.8rem 1.2rem 1.4rem;
+    text-align: center;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    cursor: pointer;
+}
+.pkg-card::after {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(circle at 50% 0%, rgba(212,168,67,0.06) 0%, transparent 60%);
+    opacity: 0; transition: opacity 0.35s;
+}
+.pkg-card:hover {
+    border-color: var(--gold);
+    transform: translateY(-6px) scale(1.02);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3), 0 0 40px rgba(212,168,67,0.1);
+}
+.pkg-card:hover::after { opacity: 1; }
+
+/* ── Ribbon badges ── */
+.pkg-ribbon {
+    position: absolute; top: 16px; right: -35px;
+    padding: 4px 40px;
+    font-size: 0.6rem; font-weight: 800;
+    letter-spacing: 1px; text-transform: uppercase;
+    transform: rotate(45deg);
+    z-index: 2;
+}
+.pkg-card.tier-popular { border-color: rgba(212,168,67,0.5); }
+.pkg-card.tier-popular .pkg-ribbon { background: linear-gradient(135deg, #d4a843, #f5d98a); color: #000; }
+.pkg-card.tier-best { border-color: rgba(74,222,128,0.5); }
+.pkg-card.tier-best .pkg-ribbon { background: linear-gradient(135deg, #22c55e, #4ade80); color: #000; }
+.pkg-card.tier-super { border-color: rgba(139,92,246,0.5); }
+.pkg-card.tier-super .pkg-ribbon { background: linear-gradient(135deg, #7c3aed, #a78bfa); color: #fff; }
+
+/* ── Glow ring on hover for each tier ── */
+.pkg-card.tier-popular:hover { box-shadow: 0 20px 60px rgba(0,0,0,0.3), 0 0 50px rgba(212,168,67,0.15); }
+.pkg-card.tier-best:hover { box-shadow: 0 20px 60px rgba(0,0,0,0.3), 0 0 50px rgba(74,222,128,0.15); }
+.pkg-card.tier-super:hover { box-shadow: 0 20px 60px rgba(0,0,0,0.3), 0 0 50px rgba(139,92,246,0.15); }
+
+/* ── Card inner elements ── */
+.pkg-label {
+    font-size: 0.75rem; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 1.5px; color: var(--text-muted); margin-bottom: 0.8rem;
+}
+.pkg-coin-stack {
+    display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+    margin-bottom: 0.3rem;
+}
+.pkg-coin-visual {
+    width: 48px; height: 48px;
+    background: linear-gradient(135deg, #d4a843, #f5d98a);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem; color: #1a1a1a; font-weight: 800;
+    box-shadow: 0 4px 15px rgba(212,168,67,0.3);
+    position: relative;
+}
+.pkg-card.tier-best .pkg-coin-visual { background: linear-gradient(135deg, #22c55e, #86efac); }
+.pkg-card.tier-super .pkg-coin-visual { background: linear-gradient(135deg, #7c3aed, #c4b5fd); color: #fff; }
+.pkg-coin-count {
+    font-family: var(--font-display);
+    font-size: 2.4rem; font-weight: 800;
+    color: var(--text);
+    line-height: 1;
+}
+.pkg-coin-word { font-size: 0.85rem; color: var(--text-muted); font-weight: 500; }
+
+.pkg-bonus {
+    display: inline-block;
+    background: rgba(74,222,128,0.12);
+    color: #4ade80;
+    font-size: 0.78rem; font-weight: 700;
+    padding: 3px 12px;
+    border-radius: 20px;
+    margin: 0.6rem 0 0.4rem;
+}
+
+.pkg-divider {
+    width: 40px; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--border-subtle), transparent);
+    margin: 0.8rem auto;
+}
+
+.pkg-price {
+    font-family: var(--font-display);
+    font-size: 1.6rem; font-weight: 800;
+    color: var(--text);
+    margin-bottom: 0.2rem;
+}
+.pkg-price .curr { font-size: 0.8rem; font-weight: 500; color: var(--text-muted); vertical-align: super; }
+
+.pkg-savings {
+    font-size: 0.75rem; font-weight: 600;
+    padding: 2px 10px;
+    border-radius: 10px;
+    display: inline-block;
+    margin-bottom: 0.8rem;
+}
+.pkg-savings.save-green { background: rgba(74,222,128,0.1); color: #4ade80; }
+.pkg-savings.save-purple { background: rgba(139,92,246,0.1); color: #a78bfa; }
+
+.pkg-per { color: var(--text-muted); font-size: 0.72rem; margin-bottom: 1rem; }
+
+.pkg-btn {
+    display: block; width: 100%;
+    padding: 0.75rem;
+    border: none; border-radius: 12px;
+    font-weight: 700; font-size: 0.92rem;
+    cursor: pointer;
+    transition: all 0.25s;
+    position: relative; z-index: 1;
+    letter-spacing: 0.3px;
+}
+.pkg-btn.btn-gold { background: linear-gradient(135deg, #d4a843, #f5d98a); color: #000; }
+.pkg-btn.btn-gold:hover { background: linear-gradient(135deg, #e6c347, #f5d98a); transform: scale(1.03); box-shadow: 0 8px 25px rgba(212,168,67,0.3); }
+.pkg-btn.btn-green { background: linear-gradient(135deg, #22c55e, #4ade80); color: #000; }
+.pkg-btn.btn-green:hover { background: linear-gradient(135deg, #16a34a, #4ade80); transform: scale(1.03); box-shadow: 0 8px 25px rgba(74,222,128,0.3); }
+.pkg-btn.btn-purple { background: linear-gradient(135deg, #7c3aed, #a78bfa); color: #fff; }
+.pkg-btn.btn-purple:hover { background: linear-gradient(135deg, #6d28d9, #a78bfa); transform: scale(1.03); box-shadow: 0 8px 25px rgba(139,92,246,0.3); }
+
+/* ── Trust badges ── */
+.trust-strip {
+    display: flex; justify-content: center; gap: 2rem;
+    flex-wrap: wrap;
+    padding: 1.5rem 0 2rem;
+    max-width: 700px; margin: 0 auto;
+}
+.trust-badge {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 0.4rem; text-align: center;
+}
+.trust-icon {
+    width: 44px; height: 44px;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem;
+}
+.trust-icon.gold { background: rgba(212,168,67,0.1); color: var(--gold); }
+.trust-icon.green { background: rgba(74,222,128,0.1); color: #4ade80; }
+.trust-icon.blue { background: rgba(96,165,250,0.1); color: #60a5fa; }
+.trust-icon.purple { background: rgba(139,92,246,0.1); color: #a78bfa; }
+.trust-text { font-size: 0.72rem; color: var(--text-muted); font-weight: 500; line-height: 1.2; }
+
+/* ── How it works ── */
+.how-section {
+    max-width: 700px; margin: 0 auto 2.5rem; padding: 0 1rem;
+}
+.how-steps {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.2rem;
+}
+@media (max-width: 500px) { .how-steps { grid-template-columns: 1fr; } }
+.how-step {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 16px;
+    padding: 1.5rem 1rem;
+    text-align: center;
+    transition: border-color 0.3s;
+}
+.how-step:hover { border-color: var(--gold); }
+.how-num {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, #d4a843, #f5d98a);
+    color: #000; font-weight: 800; font-size: 0.85rem;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 0.8rem;
+}
+.how-icon { font-size: 1.8rem; color: var(--gold); margin-bottom: 0.5rem; }
+.how-title { font-weight: 700; font-size: 0.9rem; color: var(--text); margin-bottom: 0.3rem; }
+.how-desc { font-size: 0.78rem; color: var(--text-muted); line-height: 1.4; }
+
+/* ── FAQ accordion ── */
+.faq-section { max-width: 600px; margin: 0 auto 3rem; padding: 0 1rem; }
+.faq-item {
+    border-bottom: 1px solid var(--border-subtle);
+}
+.faq-q {
+    width: 100%; background: none; border: none;
+    padding: 1rem 0; text-align: left;
+    color: var(--text); font-size: 0.92rem; font-weight: 600;
+    cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+    transition: color 0.2s;
+}
+.faq-q:hover { color: var(--gold); }
+.faq-q i { transition: transform 0.3s; font-size: 0.8rem; color: var(--text-muted); }
+.faq-q.open i { transform: rotate(180deg); }
+.faq-a {
+    max-height: 0; overflow: hidden;
+    transition: max-height 0.35s ease, padding 0.35s;
+    color: var(--text-secondary); font-size: 0.85rem; line-height: 1.6;
+}
+.faq-a.open { max-height: 200px; padding-bottom: 1rem; }
+
+/* ── Entrance animations ── */
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.anim-up { animation: fadeUp 0.6s ease both; }
+.anim-d1 { animation-delay: 0.1s; }
+.anim-d2 { animation-delay: 0.2s; }
+.anim-d3 { animation-delay: 0.3s; }
+.anim-d4 { animation-delay: 0.4s; }
+.anim-d5 { animation-delay: 0.5s; }
+.anim-d6 { animation-delay: 0.6s; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="coins-page">
+
+    <!-- Floating coin particles -->
+    <canvas id="coinParticles"></canvas>
+
+    <!-- ── Hero ── -->
+    <div class="coins-hero">
+        <div class="container position-relative" style="z-index: 1;">
+            <div class="hero-title anim-up">Wiam Coins</div>
+            <div class="hero-sub anim-up anim-d1">Unlock stories, support creators, fuel your reading adventure</div>
+        </div>
+    </div>
+
+    <!-- ── Balance card ── -->
+    <div class="container" style="position: relative; z-index: 1;">
+        <div class="balance-glass anim-up anim-d2">
+            <div class="balance-inner">
+                <div class="balance-row">
+                    <div class="balance-coin-icon"><i class="bi bi-coin"></i></div>
+                    <div>
+                        <div class="balance-amount" id="balanceCounter">{{ balance.balance|default(0) }}</div>
+                        <div class="balance-label">Your Wiam Coins</div>
+                    </div>
+                </div>
+                <div class="balance-actions">
+                    <a href="{{ url_for('payment.history') }}"><i class="bi bi-clock-history me-1"></i>History</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Packages ── -->
+        <div class="section-title anim-up anim-d3">Choose Your <span>Coin Package</span></div>
+
+        <div class="pkg-grid">
+            {% for pkg in packages %}
+            {% set tier = 'tier-starter' %}
+            {% set btn_cls = 'btn-gold' %}
+            {% set save_cls = '' %}
+            {% set pct = 0 %}
+            {% if pkg.label == 'Popular' %}
+                {% set tier = 'tier-popular' %}
+            {% elif pkg.label == 'Best Value' %}
+                {% set tier = 'tier-best' %}
+                {% set btn_cls = 'btn-green' %}
+                {% set save_cls = 'save-green' %}
+                {% set pct = 35 %}
+            {% elif pkg.label == 'Super Reader' %}
+                {% set tier = 'tier-super' %}
+                {% set btn_cls = 'btn-purple' %}
+                {% set save_cls = 'save-purple' %}
+                {% set pct = 45 %}
+            {% endif %}
+
+            <div class="pkg-card {{ tier }} anim-up anim-d{{ loop.index + 2 }}">
+
+                {% if pkg.label == 'Popular' %}
+                <div class="pkg-ribbon">POPULAR</div>
+                {% elif pkg.label == 'Best Value' %}
+                <div class="pkg-ribbon">BEST VALUE</div>
+                {% elif pkg.label == 'Super Reader' %}
+                <div class="pkg-ribbon">VIP</div>
+                {% endif %}
+
+                <div class="pkg-label">{{ pkg.label }}</div>
+
+                <div class="pkg-coin-stack">
+                    <div class="pkg-coin-visual"><i class="bi bi-coin"></i></div>
+                    <div>
+                        <div class="pkg-coin-count">{{ pkg.coins }}</div>
+                        <div class="pkg-coin-word">coins</div>
+                    </div>
+                </div>
+
+                {% if pkg.bonus_coins > 0 %}
+                <div class="pkg-bonus">+ {{ pkg.bonus_coins }} BONUS</div>
+                {% endif %}
+
+                <div class="pkg-divider"></div>
+
+                <div class="pkg-price">
+                    <span class="curr">GHS</span> {{ "%.2f"|format(pkg.price_ghs) }}
+                </div>
+
+                {% if pct > 0 %}
+                <div class="pkg-savings {{ save_cls }}">Save {{ pct }}%</div>
+                {% endif %}
+
+                <div class="pkg-per">{{ "%.3f"|format(pkg.price_ghs / pkg.total_coins) }} GHS per coin</div>
+
+                <form method="POST" action="{{ url_for('payment.initialize') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="package_id" value="{{ pkg.id }}">
+                    <button type="submit" class="pkg-btn {{ btn_cls }}">
+                        Get {{ pkg.total_coins }} Coins
+                    </button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- ── Trust badges ── -->
+        <div class="trust-strip anim-up anim-d5">
+            <div class="trust-badge">
+                <div class="trust-icon green"><i class="bi bi-shield-lock-fill"></i></div>
+                <div class="trust-text">Secured by<br>Paystack</div>
+            </div>
+            <div class="trust-badge">
+                <div class="trust-icon gold"><i class="bi bi-lightning-fill"></i></div>
+                <div class="trust-text">Instant<br>Delivery</div>
+            </div>
+            <div class="trust-badge">
+                <div class="trust-icon blue"><i class="bi bi-phone-fill"></i></div>
+                <div class="trust-text">Mobile Money<br>& Card</div>
+            </div>
+            <div class="trust-badge">
+                <div class="trust-icon purple"><i class="bi bi-infinity"></i></div>
+                <div class="trust-text">Coins Never<br>Expire</div>
+            </div>
+        </div>
+
+        <!-- ── How it works ── -->
+        <div class="how-section">
+            <div class="section-title anim-up">How It <span>Works</span></div>
+            <div class="how-steps">
+                <div class="how-step anim-up anim-d1">
+                    <div class="how-num">1</div>
+                    <div class="how-icon"><i class="bi bi-coin"></i></div>
+                    <div class="how-title">Buy Coins</div>
+                    <div class="how-desc">Choose a package and pay securely with Mobile Money, Card, or Bank Transfer</div>
+                </div>
+                <div class="how-step anim-up anim-d2">
+                    <div class="how-num">2</div>
+                    <div class="how-icon"><i class="bi bi-unlock-fill"></i></div>
+                    <div class="how-title">Unlock Chapters</div>
+                    <div class="how-desc">Spend coins to unlock premium chapters from your favorite stories</div>
+                </div>
+                <div class="how-step anim-up anim-d3">
+                    <div class="how-num">3</div>
+                    <div class="how-icon"><i class="bi bi-heart-fill"></i></div>
+                    <div class="how-title">Support Creators</div>
+                    <div class="how-desc">Your coins directly support the creators whose stories you love</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── FAQ ── -->
+        <div class="faq-section">
+            <div class="section-title anim-up">Frequently <span>Asked</span></div>
+            <div class="faq-item anim-up anim-d1">
+                <button class="faq-q" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+                    What are Wiam Coins? <i class="bi bi-chevron-down"></i>
+                </button>
+                <div class="faq-a">Wiam Coins are the currency of WiamApp. Use them to unlock premium chapters, tip creators, and access exclusive content. They're credited instantly and never expire.</div>
+            </div>
+            <div class="faq-item anim-up anim-d2">
+                <button class="faq-q" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+                    How do I pay? <i class="bi bi-chevron-down"></i>
+                </button>
+                <div class="faq-a">We support Mobile Money (MTN MoMo, Vodafone Cash, AirtelTigo Money), Visa/Mastercard, and Bank Transfer — all secured by Paystack.</div>
+            </div>
+            <div class="faq-item anim-up anim-d3">
+                <button class="faq-q" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+                    Do coins expire? <i class="bi bi-chevron-down"></i>
+                </button>
+                <div class="faq-a">No! Your Wiam Coins never expire. Buy them today, use them whenever you want. They'll always be in your account.</div>
+            </div>
+            <div class="faq-item anim-up anim-d4">
+                <button class="faq-q" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+                    Is my payment secure? <i class="bi bi-chevron-down"></i>
+                </button>
+                <div class="faq-a">Absolutely. All payments are processed by Paystack, a PCI-DSS certified payment provider backed by Stripe. Your financial data is never stored on our servers.</div>
+            </div>
+            <div class="faq-item anim-up anim-d5">
+                <button class="faq-q" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+                    Can I get a refund? <i class="bi bi-chevron-down"></i>
+                </button>
+                <div class="faq-a">If you experience any payment issues, contact our support team. We'll review your case and help resolve it quickly.</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ── Floating coin particles ──
+(function(){
+    var c = document.getElementById('coinParticles');
+    if (!c) return;
+    var ctx = c.getContext('2d');
+    var W, H, particles = [];
+    function resize() { W = c.width = window.innerWidth; H = c.height = window.innerHeight; }
+    resize(); window.addEventListener('resize', resize);
+
+    function Particle() {
+        this.x = Math.random() * W;
+        this.y = Math.random() * H + H;
+        this.r = Math.random() * 4 + 2;
+        this.speed = Math.random() * 0.8 + 0.3;
+        this.opacity = Math.random() * 0.3 + 0.1;
+        this.drift = (Math.random() - 0.5) * 0.5;
+    }
+    for (var i = 0; i < 35; i++) {
+        var p = new Particle();
+        p.y = Math.random() * H;
+        particles.push(p);
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, W, H);
+        for (var i = 0; i < particles.length; i++) {
+            var p = particles[i];
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(212,168,67,' + p.opacity + ')';
+            ctx.fill();
+            // glow
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r * 2.5, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(212,168,67,' + (p.opacity * 0.15) + ')';
+            ctx.fill();
+
+            p.y -= p.speed;
+            p.x += p.drift;
+            if (p.y < -20) {
+                p.y = H + 20;
+                p.x = Math.random() * W;
+            }
+        }
+        requestAnimationFrame(draw);
+    }
+    draw();
+})();
+</script>
+{% endblock %}

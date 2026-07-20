@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamEpisio — Checkout</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:#fff; border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); display:flex; flex-direction:column; }
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+
+  .browser-chrome{ background:#08081A; padding:8px 14px; display:flex; align-items:center; gap:8px; flex-shrink:0; }
+  .browser-dots{ display:flex; gap:5px; }
+  .browser-dots span{ width:7px; height:7px; border-radius:50%; background:#3A3A56; }
+  .browser-url{ flex:1; background:#161634; border-radius:8px; padding:6px 12px; display:flex; align-items:center; gap:6px; }
+  .browser-url svg{ width:10px; height:10px; color:var(--gold); }
+  .browser-url span{ font-size:10px; color:#B8B8CC; font-family:monospace; }
+
+  .statusbar{ height:20px; flex-shrink:0; background:#fff; }
+
+  .scroll{ flex:1; overflow-y:auto; background:#F4F4F8; padding:18px 20px; }
+
+  .merchant-row{ display:flex; align-items:center; gap:10px; margin-bottom:22px; }
+  .merchant-logo{ width:34px; height:34px; border-radius:9px; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); display:flex; align-items:center; justify-content:center; color:#08081A; font-weight:800; font-size:15px; }
+  .merchant-row b{ font-size:13.5px; color:#08081A; font-weight:800; display:block; }
+  .merchant-row span{ font-size:10.5px; color:#78788C; }
+
+  .order-card{ background:#fff; border-radius:16px; padding:16px; margin-bottom:16px; box-shadow:0 2px 10px rgba(0,0,0,0.04); }
+  .order-row{ display:flex; justify-content:space-between; padding:8px 0; font-size:12.5px; }
+  .order-row.total{ border-top:1px solid #ECECF2; margin-top:6px; padding-top:14px; font-weight:800; font-size:14px; color:#08081A; }
+  .order-row .k{ color:#78788C; }
+  .order-row .v{ color:#08081A; font-weight:600; }
+
+  .section-label{ font-size:11px; font-weight:800; color:#78788C; letter-spacing:0.4px; text-transform:uppercase; margin:0 0 10px; }
+
+  .pay-methods{ background:#fff; border-radius:16px; overflow:hidden; margin-bottom:16px; box-shadow:0 2px 10px rgba(0,0,0,0.04); }
+  .pay-row{ display:flex; align-items:center; gap:12px; padding:14px 16px; border-bottom:1px solid #F0F0F5; }
+  .pay-row:last-child{ border-bottom:none; }
+  .pay-radio{ width:18px; height:18px; border-radius:50%; border:2px solid #D8D8E4; flex-shrink:0; }
+  .pay-radio.checked{ border-color:var(--gold); position:relative; }
+  .pay-radio.checked::after{ content:''; position:absolute; inset:3px; border-radius:50%; background:var(--gold); }
+  .pay-icon{ width:30px; height:30px; border-radius:8px; background:#F4F4F8; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:13px; }
+  .pay-row span.label{ font-size:12.5px; color:#08081A; font-weight:600; flex:1; }
+
+  .card-fields{ background:#fff; border-radius:16px; padding:14px 16px; margin-bottom:20px; box-shadow:0 2px 10px rgba(0,0,0,0.04); }
+  .card-field{ display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid #F0F0F5; }
+  .card-field:last-child{ border-bottom:none; }
+  .card-field input{ border:none; outline:none; font-size:12.5px; color:#08081A; font-family:inherit; width:100%; }
+  .card-field input::placeholder{ color:#B0B0C0; }
+
+  .secure-note{ display:flex; align-items:center; justify-content:center; gap:6px; font-size:10.5px; color:#9494A8; margin-bottom:4px; }
+  .secure-note svg{ width:12px; height:12px; }
+
+  .footer{ flex-shrink:0; padding:14px 20px 26px; background:#fff; border-top:1px solid #ECECF2; }
+  .pay-btn{ width:100%; padding:16px; border-radius:15px; background:#08081A; border:none; color:#fff; font-size:14.5px; font-weight:800; font-family:'Inter',sans-serif; display:flex; align-items:center; justify-content:center; gap:8px; }
+  .pay-btn b{ color:var(--gold); }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="browser-chrome">
+    <div class="browser-dots"><span></span><span></span><span></span></div>
+    <div class="browser-url"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span>checkout.paystack.com</span></div>
+  </div>
+  <div class="statusbar"></div>
+
+  <div class="scroll">
+    <div class="merchant-row">
+      <div class="merchant-logo">W</div>
+      <div><b>WiamEpisio</b><span>Secure checkout via Paystack</span></div>
+    </div>
+
+    <div class="order-card">
+      <div class="order-row"><span class="k">Coin Pack</span><span class="v">650 Coins</span></div>
+      <div class="order-row"><span class="k">Bonus</span><span class="v">+65 Coins</span></div>
+      <div class="order-row total"><span class="k">Total</span><span class="v">₵50.00</span></div>
+    </div>
+
+    <p class="section-label">Payment Method</p>
+    <div class="pay-methods">
+      <div class="pay-row"><div class="pay-radio checked"></div><div class="pay-icon">📱</div><span class="label">Mobile Money (MTN, Telecel)</span></div>
+      <div class="pay-row"><div class="pay-radio"></div><div class="pay-icon">💳</div><span class="label">Debit / Credit Card</span></div>
+      <div class="pay-row"><div class="pay-radio"></div><div class="pay-icon">🏦</div><span class="label">Bank Transfer</span></div>
+    </div>
+
+    <p class="section-label">Mobile Money Number</p>
+    <div class="card-fields">
+      <div class="card-field"><input placeholder="024 555 0187" value="024 555 0187" /></div>
+      <div class="card-field"><input placeholder="Network" value="MTN Mobile Money" /></div>
+    </div>
+
+    <p class="secure-note"><svg viewBox="0 0 24 24" color="#78788C"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>256-bit encrypted · PCI DSS compliant</p>
+  </div>
+
+  <div class="footer">
+    <button class="pay-btn">Pay <b>₵50.00</b></button>
+  </div>
+</div>
+
+</body>
+</html>

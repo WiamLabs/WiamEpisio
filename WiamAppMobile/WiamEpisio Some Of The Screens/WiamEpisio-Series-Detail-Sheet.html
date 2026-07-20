@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamEpisio — Series Detail Sheet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:#000; border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); display:flex; flex-direction:column; }
+  .statusbar{ height:44px; flex-shrink:0; }
+
+  /* Trailer hero at top — plays high quality, not a blurred backdrop */
+  .trailer-hero{ position:relative; height:280px; flex-shrink:0; background:linear-gradient(160deg,#2a1a1a,#0d0d24); }
+  .trailer-gradient{ position:absolute; inset:0; background:linear-gradient(0deg, var(--navy) 2%, rgba(8,8,26,0.15) 55%, transparent 78%); }
+  .trailer-topbar{ position:absolute; top:16px; left:16px; right:16px; display:flex; align-items:center; justify-content:space-between; z-index:2; }
+  .th-btn{ width:34px; height:34px; border-radius:50%; background:rgba(8,8,26,0.55); display:flex; align-items:center; justify-content:center; }
+  .trailer-play{ position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:60px; height:60px; border-radius:50%; background:var(--gold); display:flex; align-items:center; justify-content:center; box-shadow:0 6px 20px rgba(212,160,23,0.4); z-index:2; }
+  .trailer-label{ position:absolute; bottom:14px; left:16px; font-size:10px; font-weight:700; color:var(--gold); background:rgba(8,8,26,0.6); padding:4px 10px; border-radius:6px; letter-spacing:0.5px; z-index:2; }
+  .trailer-quality{ position:absolute; bottom:14px; right:16px; font-size:9.5px; font-weight:700; color:#fff; background:rgba(0,0,0,0.5); padding:3px 8px; border-radius:5px; z-index:2; }
+
+  .sheet-body{ flex:1; overflow-y:auto; padding:16px 20px 20px; }
+
+  .info-block{ margin-bottom:16px; }
+  .header-title{ font-size:17px; font-weight:800; color:#fff; margin:0 0 6px; line-height:1.3; }
+  .header-views{ font-size:11px; color:var(--text-faint); margin:0 0 4px; }
+  .header-rate{ display:flex; align-items:center; gap:5px; font-size:12px; }
+  .header-rate svg{ color:var(--gold); width:12px; height:12px; }
+  .header-rate b{ color:#fff; }
+  .header-rate span{ color:var(--text-faint); }
+  .rate-link{ color:var(--gold); font-weight:600; margin-left:4px; }
+
+  .sheet-tabs{ display:flex; gap:24px; border-bottom:1px solid var(--navy-line); margin-bottom:16px; }
+  .sheet-tab{ font-size:13.5px; font-weight:600; color:var(--text-faint); padding-bottom:10px; border-bottom:2px solid transparent; }
+  .sheet-tab.active{ color:#fff; border-color:var(--gold); }
+
+  .synopsis-text{ font-size:12.5px; color:#B8B8CC; line-height:1.65; margin:0 0 16px; }
+
+  .tag-row{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:24px; }
+  .tag-chip{ display:flex; align-items:center; gap:4px; font-size:11.5px; color:#D3D3E2; background:var(--navy-card); border:1px solid var(--navy-line); padding:6px 12px; border-radius:999px; }
+  .tag-chip svg{ width:11px; height:11px; color:var(--gold); }
+
+  .divider-label{ text-align:center; font-size:12px; color:var(--text-faint); margin:0 0 16px; display:flex; align-items:center; gap:10px; }
+  .divider-label::before, .divider-label::after{ content:''; flex:1; height:1px; background:var(--navy-line); }
+
+  .recs-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  .rec-item{ position:relative; }
+  .rec-poster{ aspect-ratio:2/3; border-radius:11px; background:linear-gradient(160deg,var(--navy-card),#0d0d24); position:relative; margin-bottom:6px; }
+  .rec-badge{ position:absolute; top:6px; left:6px; font-size:8px; font-weight:700; padding:2px 6px; border-radius:4px; background:rgba(212,160,23,0.9); color:var(--navy); }
+  .rec-views{ position:absolute; bottom:6px; right:6px; font-size:8.5px; color:#fff; background:rgba(0,0,0,0.5); padding:2px 5px; border-radius:999px; }
+  .rec-title{ font-size:11px; font-weight:600; color:#fff; margin:0; line-height:1.3; }
+  .rec-tag{ font-size:9.5px; color:var(--text-faint); margin:2px 0 0; }
+
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"></div>
+
+  <div class="trailer-hero">
+    <div class="trailer-gradient"></div>
+    <div class="trailer-topbar">
+      <div class="th-btn"><svg viewBox="0 0 24 24" width="16" height="16" color="#fff"><polyline points="15 18 9 12 15 6"/></svg></div>
+      <div class="th-btn"><svg viewBox="0 0 24 24" width="15" height="15" color="#fff"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></svg></div>
+    </div>
+    <div class="trailer-play"><svg viewBox="0 0 24 24" width="26" height="26" fill="#08081A" stroke="none"><polygon points="6 3 20 12 6 21 6 3"/></svg></div>
+    <span class="trailer-label">TRAILER</span>
+    <span class="trailer-quality">HD</span>
+  </div>
+
+  <div class="sheet-body">
+    <div class="info-block">
+      <p class="header-title">The King's Forgotten Son</p>
+      <p class="header-views">4.9M Views</p>
+      <p class="header-rate"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15 9 22 9.5 16.5 14.3 18.2 21 12 17.3 5.8 21 7.5 14.3 2 9.5 9 9"/></svg><b>4.9</b> <span>(30.9K)</span><span class="rate-link">Rate ›</span></p>
+    </div>
+
+      <div class="sheet-tabs">
+        <span class="sheet-tab active">Synopsis</span>
+        <span class="sheet-tab">Episodes</span>
+      </div>
+
+      <p class="synopsis-text">Cast out at birth to protect him from a deadly royal conspiracy, Kwame grows up believing he's an ordinary orphan — until a stranger arrives claiming he is the rightful heir to a throne soaked in betrayal. As enemies close in from every side, Kwame must decide whether reclaiming his birthright is worth the family he's already built.</p>
+
+      <div class="tag-row">
+        <span class="tag-chip"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>Revenge</span>
+        <span class="tag-chip"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>Hidden Identity</span>
+        <span class="tag-chip"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>Royal Drama</span>
+      </div>
+
+      <div class="divider-label">More Like This</div>
+
+      <div class="recs-grid">
+        <div class="rec-item">
+          <div class="rec-poster"><span class="rec-badge">NEW</span><span class="rec-views">1.8M</span></div>
+          <p class="rec-title">Combat King Returns</p>
+          <p class="rec-tag">Action</p>
+        </div>
+        <div class="rec-item">
+          <div class="rec-poster"><span class="rec-views">890K</span></div>
+          <p class="rec-title">Hidden Heir</p>
+          <p class="rec-tag">Royal Drama</p>
+        </div>
+        <div class="rec-item">
+          <div class="rec-poster"><span class="rec-views">2.4M</span></div>
+          <p class="rec-title">Betrayed Bloodline</p>
+          <p class="rec-tag">Revenge</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

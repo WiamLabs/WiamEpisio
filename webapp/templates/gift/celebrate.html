@@ -1,0 +1,299 @@
+{% extends "base.html" %}
+{% block title %}🎁 You Got a Gift! — WiamApp{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* ── Full-screen celebration page ── */
+    body { overflow-x: hidden; }
+
+    .celeb-page {
+        min-height: 100vh; display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        position: relative; overflow: hidden;
+        padding: 2rem 1.25rem 3rem;
+        background: radial-gradient(ellipse at 50% 20%, rgba(212,168,67,0.12) 0%, transparent 60%),
+                    radial-gradient(ellipse at 80% 80%, rgba(236,72,153,0.08) 0%, transparent 50%),
+                    linear-gradient(180deg, #08081a 0%, #0c0c1e 50%, #12122a 100%);
+    }
+
+    /* ── Floating particles (gold + pink) ── */
+    .celeb-particles {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        pointer-events: none; z-index: 0;
+    }
+    .celeb-particle {
+        position: absolute; border-radius: 50%; opacity: 0;
+        animation: floatUp 4s ease-in-out infinite;
+    }
+    @keyframes floatUp {
+        0%   { opacity: 0; transform: translateY(100vh) scale(0.3); }
+        20%  { opacity: 1; }
+        80%  { opacity: 0.6; }
+        100% { opacity: 0; transform: translateY(-20vh) scale(1.2); }
+    }
+
+    /* ── Confetti burst ── */
+    .celeb-confetti { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+    .confetti-piece {
+        position: absolute; width: 10px; height: 10px; opacity: 0;
+        animation: confettiFall 3.5s ease-out forwards;
+    }
+    @keyframes confettiFall {
+        0%   { opacity: 1; transform: translateY(-10vh) rotate(0deg) scale(1); }
+        60%  { opacity: 0.8; }
+        100% { opacity: 0; transform: translateY(110vh) rotate(720deg) scale(0.4); }
+    }
+
+    /* ── Spotlight glow behind sticker ── */
+    .celeb-spotlight {
+        position: absolute; width: 400px; height: 400px;
+        background: radial-gradient(circle, rgba(212,168,67,0.15) 0%, transparent 70%);
+        border-radius: 50%; filter: blur(40px);
+        animation: spotlightPulse 3s ease-in-out infinite;
+        z-index: 0;
+    }
+    @keyframes spotlightPulse {
+        0%, 100% { transform: scale(1); opacity: 0.6; }
+        50%      { transform: scale(1.2); opacity: 1; }
+    }
+
+    /* ── Main card ── */
+    .celeb-card {
+        position: relative; z-index: 2; text-align: center;
+        max-width: 420px; width: 100%;
+        animation: cardEnter 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        opacity: 0; transform: translateY(40px) scale(0.9);
+    }
+    @keyframes cardEnter {
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* ── Sticker display ── */
+    .celeb-sticker {
+        font-size: 5rem; line-height: 1;
+        animation: stickerBounce 2s ease-in-out infinite;
+        filter: drop-shadow(0 0 30px rgba(212,168,67,0.4));
+        margin-bottom: 1rem;
+    }
+    @keyframes stickerBounce {
+        0%, 100% { transform: translateY(0) rotate(-2deg); }
+        50%      { transform: translateY(-12px) rotate(2deg); }
+    }
+
+    /* ── Coin amount badge ── */
+    .celeb-coins {
+        display: inline-flex; align-items: center; gap: 8px;
+        background: linear-gradient(135deg, rgba(212,168,67,0.2), rgba(212,168,67,0.08));
+        border: 1px solid rgba(212,168,67,0.3);
+        padding: 10px 24px; border-radius: 30px;
+        font-size: 1.5rem; font-weight: 800; color: var(--gold);
+        margin-bottom: 1.5rem;
+        animation: coinsPop 0.6s 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+    @keyframes coinsPop {
+        from { opacity: 0; transform: scale(0.5); }
+        to   { opacity: 1; transform: scale(1); }
+    }
+    .celeb-coins i { font-size: 1.2rem; }
+
+    /* ── Title ── */
+    .celeb-title {
+        font-size: 1.8rem; font-weight: 900; margin: 0 0 0.6rem;
+        background: linear-gradient(135deg, var(--gold), #f5d77a, #ec4899);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        background-size: 200% 200%;
+        animation: shimmerText 3s ease-in-out infinite, titleFade 0.8s 0.3s ease both;
+        opacity: 0;
+    }
+    @keyframes shimmerText {
+        0%, 100% { background-position: 0% 50%; }
+        50%      { background-position: 100% 50%; }
+    }
+    @keyframes titleFade {
+        from { opacity: 0; transform: translateY(15px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Sender info ── */
+    .celeb-sender {
+        display: flex; align-items: center; gap: 10px;
+        justify-content: center; margin: 1.5rem 0 1rem;
+        animation: fadeInUp 0.8s 1s ease both;
+    }
+    .celeb-sender-avatar {
+        width: 48px; height: 48px; border-radius: 50%;
+        background: linear-gradient(135deg, #1a1a2e, #2a2a4e);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.2rem; font-weight: 700; color: var(--gold);
+        overflow: hidden; border: 2px solid rgba(212,168,67,0.3);
+    }
+    .celeb-sender-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .celeb-sender-name { font-weight: 700; font-size: 1.05rem; color: var(--text); }
+    .celeb-sender-label { font-size: 0.75rem; color: var(--text-muted); }
+
+    /* ── Message ── */
+    .celeb-message {
+        font-size: 1rem; line-height: 1.7; color: var(--text-muted);
+        max-width: 360px; margin: 0 auto 2rem;
+        animation: fadeInUp 0.8s 1.2s ease both;
+    }
+    .celeb-message strong { color: var(--gold); font-weight: 700; }
+
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── CTA buttons ── */
+    .celeb-actions {
+        display: flex; flex-direction: column; gap: 10px; align-items: center;
+        animation: fadeInUp 0.8s 1.5s ease both;
+    }
+    .celeb-btn-primary {
+        display: inline-flex; align-items: center; gap: 8px;
+        background: linear-gradient(135deg, var(--gold), #e8c55a);
+        color: #0a0a0c; padding: 12px 32px; border-radius: 30px;
+        text-decoration: none; font-weight: 700; font-size: 0.95rem;
+        box-shadow: 0 6px 24px rgba(212,168,67,0.3);
+        transition: all 0.3s;
+    }
+    .celeb-btn-primary:hover { transform: translateY(-3px); box-shadow: 0 10px 36px rgba(212,168,67,0.45); color: #0a0a0c; }
+    .celeb-btn-ghost {
+        display: inline-flex; align-items: center; gap: 6px;
+        color: var(--text-muted); font-size: 0.85rem;
+        text-decoration: none; padding: 8px 16px;
+        transition: color 0.2s;
+    }
+    .celeb-btn-ghost:hover { color: var(--text); }
+
+    /* ── Star burst ring ── */
+    .celeb-ring {
+        position: absolute; width: 300px; height: 300px;
+        border: 2px solid rgba(212,168,67,0.08);
+        border-radius: 50%; animation: ringExpand 2s ease-out infinite;
+        z-index: 0;
+    }
+    .celeb-ring:nth-child(2) { animation-delay: 0.6s; }
+    .celeb-ring:nth-child(3) { animation-delay: 1.2s; }
+    @keyframes ringExpand {
+        0%   { transform: scale(0.5); opacity: 0.6; }
+        100% { transform: scale(2.5); opacity: 0; }
+    }
+
+    @media(max-width: 480px) {
+        .celeb-sticker { font-size: 4rem; }
+        .celeb-title { font-size: 1.45rem; }
+        .celeb-coins { font-size: 1.2rem; padding: 8px 18px; }
+        .celeb-message { font-size: 0.9rem; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="celeb-page">
+    <!-- Floating particles -->
+    <div class="celeb-particles" id="particles"></div>
+
+    <!-- Confetti burst -->
+    <div class="celeb-confetti" id="confetti"></div>
+
+    <!-- Expanding rings -->
+    <div class="celeb-ring"></div>
+    <div class="celeb-ring"></div>
+    <div class="celeb-ring"></div>
+
+    <!-- Spotlight -->
+    <div class="celeb-spotlight"></div>
+
+    <!-- Main Card -->
+    <div class="celeb-card">
+        <!-- Sticker -->
+        <div class="celeb-sticker">
+            {% if sticker %}{{ sticker.emoji }}{% else %}🎁{% endif %}
+        </div>
+
+        <!-- Coin Amount -->
+        <div class="celeb-coins">
+            <i class="bi bi-coin"></i> +{{ coin_amount }} Coins
+        </div>
+
+        <!-- Title -->
+        <h1 class="celeb-title">Congratulations!</h1>
+
+        <!-- Sender -->
+        <div class="celeb-sender">
+            <div class="celeb-sender-avatar">
+                {% if sender_avatar %}
+                <img src="{{ sender_avatar }}" alt="">
+                {% else %}
+                {{ sender_name[0]|upper if sender_name else '?' }}
+                {% endif %}
+            </div>
+            <div>
+                <div class="celeb-sender-name">{{ sender_name }}</div>
+                <div class="celeb-sender-label">sent you a gift</div>
+            </div>
+        </div>
+
+        <!-- Message -->
+        <div class="celeb-message">
+            <strong>{{ sender_name }}</strong> really appreciates what you're doing as a reader!
+            Keep reading their stories every day and you'll continue earning amazing gifts from them.
+            Your dedication means the world to creators. 💛
+        </div>
+
+        <!-- Actions -->
+        <div class="celeb-actions">
+            <a href="{{ url_for('home.home') }}" class="celeb-btn-primary">
+                <i class="bi bi-book"></i> Keep Reading
+            </a>
+            <a href="{{ url_for('payment.coins') }}" class="celeb-btn-ghost">
+                <i class="bi bi-coin"></i> View My Coins
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+// ── Generate floating particles ──
+(function() {
+    const container = document.getElementById('particles');
+    const colors = ['#d4a843','#f5d77a','#ec4899','#f472b6','#a78bfa','#4ade80'];
+    for (let i = 0; i < 35; i++) {
+        const p = document.createElement('div');
+        p.className = 'celeb-particle';
+        const size = Math.random() * 8 + 4;
+        p.style.width = size + 'px';
+        p.style.height = size + 'px';
+        p.style.left = Math.random() * 100 + '%';
+        p.style.background = colors[Math.floor(Math.random() * colors.length)];
+        p.style.animationDuration = (Math.random() * 3 + 3) + 's';
+        p.style.animationDelay = (Math.random() * 4) + 's';
+        container.appendChild(p);
+    }
+})();
+
+// ── Confetti burst on load ──
+(function() {
+    const container = document.getElementById('confetti');
+    const colors = ['#d4a843','#f5d77a','#ec4899','#f472b6','#60a5fa','#4ade80','#fb923c','#c084fc'];
+    const shapes = ['square','circle'];
+    for (let i = 0; i < 80; i++) {
+        const c = document.createElement('div');
+        c.className = 'confetti-piece';
+        const sz = Math.random() * 8 + 5;
+        c.style.width = sz + 'px';
+        c.style.height = sz + (shapes[i%2]==='square' ? 0 : sz*0.6) + 'px';
+        c.style.left = (Math.random() * 100) + '%';
+        c.style.top = '-5%';
+        c.style.background = colors[Math.floor(Math.random() * colors.length)];
+        c.style.borderRadius = shapes[i%2] === 'circle' ? '50%' : '2px';
+        c.style.animationDelay = (Math.random() * 1.5) + 's';
+        c.style.animationDuration = (Math.random() * 2 + 2.5) + 's';
+        container.appendChild(c);
+    }
+    // Remove after animation
+    setTimeout(() => container.innerHTML = '', 6000);
+})();
+</script>
+{% endblock %}

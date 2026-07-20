@@ -1,0 +1,196 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Platform Settings — Founder{% endblock %}
+{% block sidebar_title %}Founder Dashboard{% endblock %}
+
+{% block sidebar_nav %}
+<a class="nav-link" href="{{ url_for('founder_dash.overview') }}"><i class="bi bi-speedometer2"></i> Overview</a>
+<a class="nav-link" href="{{ url_for('founder_dash.users') }}"><i class="bi bi-people"></i> Users</a>
+<a class="nav-link" href="{{ url_for('founder_dash.content') }}"><i class="bi bi-book"></i> Content</a>
+<a class="nav-link" href="{{ url_for('founder_dash.revenue') }}"><i class="bi bi-cash-stack"></i> Revenue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.financial_dashboard') }}"><i class="bi bi-bank" style="color:var(--gold);"></i> Financial v5</a>
+<a class="nav-link" href="{{ url_for('founder_dash.premium_analytics') }}"><i class="bi bi-gem" style="color:#c084fc;"></i> Premium Analytics</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payouts') }}"><i class="bi bi-send-check"></i> Payouts</a>
+<a class="nav-link" href="{{ url_for('founder_dash.withdrawals') }}"><i class="bi bi-arrow-up-right-circle" style="color:var(--gold);"></i> Withdrawals</a>
+<a class="nav-link" href="{{ url_for('founder_dash.subscribers') }}"><i class="bi bi-gem" style="color:#9b59b6;"></i> Subscribers</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payroll') }}"><i class="bi bi-wallet2" style="color:#2ecc71;"></i> Team Payroll</a>
+<a class="nav-link" href="{{ url_for('founder_dash.creators') }}"><i class="bi bi-person-badge"></i> Creators</a>
+<a class="nav-link" href="{{ url_for('founder_dash.genres') }}"><i class="bi bi-tags"></i> Genres</a>
+<a class="nav-link" href="{{ url_for('founder_dash.announcements') }}"><i class="bi bi-megaphone"></i> Announcements</a>
+<a class="nav-link" href="{{ url_for('founder_dash.collections') }}"><i class="bi bi-grid"></i> Collections</a>
+<a class="nav-link" href="{{ url_for('founder_dash.moderation') }}"><i class="bi bi-shield-exclamation"></i> Moderation</a>
+<a class="nav-link" href="{{ url_for('founder_dash.warnings_list') }}"><i class="bi bi-exclamation-triangle" style="color:#f59e0b;"></i> Warnings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.elite_manage') }}"><span style="color:var(--gold);">?</span> WiamElite</a>
+<a class="nav-link" href="{{ url_for('wiambot.apex_review') }}"><i class="bi bi-trophy-fill" style="color:var(--gold);"></i> Apex Review</a>
+<a class="nav-link" href="{{ url_for('founder_dash.review_queue') }}"><i class="bi bi-robot"></i> Bot Review Queue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.episio_quality') }}"><i class="bi bi-camera-reels" style="color:var(--gold);"></i> Episio Season QC</a>
+<a class="nav-link active" href="{{ url_for('founder_dash.platform_settings') }}"><i class="bi bi-sliders"></i> Platform Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.forms_dashboard') }}"><i class="bi bi-file-earmark-text"></i> Application Forms</a>
+<a class="nav-link" href="{{ url_for('founder_dash.email_studio') }}"><i class="bi bi-envelope-paper" style="color:var(--gold);"></i> Email Studio</a>
+<a class="nav-link" href="{{ url_for('founder_dash.team_management') }}"><i class="bi bi-people-fill"></i> Team</a>
+<a class="nav-link" href="{{ url_for('founder_dash.account_management') }}"><i class="bi bi-person-x"></i> Account Management</a>
+<a class="nav-link" href="{{ url_for('founder_dash.notification_testing') }}"><i class="bi bi-bell" style="color:#fbbf24;"></i> Notifications</a>
+<a class="nav-link" href="{{ url_for('classics.dashboard') }}"><i class="bi bi-journal-bookmark" style="color:#a78bfa;"></i> Content Seeder</a>
+<a class="nav-link" href="{{ url_for('founder_dash.settings') }}"><i class="bi bi-gear"></i> Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.admins') }}"><i class="bi bi-shield-check"></i> Admins</a>
+{% endblock %}
+
+{% block dash_content %}
+<div class="dash-header">
+    <h1><i class="bi bi-sliders" style="color:var(--gold);"></i> Platform Settings</h1>
+    <p>Configure platform behavior, scoring thresholds, and content rules</p>
+</div>
+
+<!-- Platform Settings -->
+<div class="dash-card">
+    <h3 style="margin-bottom:16px;"><i class="bi bi-gear-wide-connected" style="color:var(--gold);margin-right:6px;"></i> Settings</h3>
+    <form method="post" action="{{ url_for('founder_dash.save_platform_settings') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;">
+            {% for s in settings %}
+            <div style="background:rgba(255,255,255,0.02);border:1px solid var(--border-subtle);border-radius:10px;padding:14px;">
+                <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:6px;">
+                    <label style="font-size:0.82rem;font-weight:600;color:var(--text);">{{ s.key }}</label>
+                    <span style="font-size:0.65rem;padding:2px 6px;border-radius:4px;background:rgba(212,168,67,0.1);color:var(--gold);font-weight:600;text-transform:uppercase;">{{ s.value_type }}</span>
+                </div>
+                <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:8px;">{{ s.description }}</div>
+                {% if s.value_type == 'bool' %}
+                <select name="setting_{{ s.key }}" style="width:100%;padding:6px 10px;background:var(--bg);border:1px solid var(--border-subtle);color:var(--text);border-radius:6px;font-size:0.82rem;">
+                    <option value="true" {{ 'selected' if s.value == true }}>Enabled (true)</option>
+                    <option value="false" {{ 'selected' if s.value == false }}>Disabled (false)</option>
+                </select>
+                {% elif s.value_type == 'int' %}
+                <input type="number" name="setting_{{ s.key }}" value="{{ s.value }}" style="width:100%;padding:6px 10px;background:var(--bg);border:1px solid var(--border-subtle);color:var(--text);border-radius:6px;font-size:0.82rem;">
+                {% else %}
+                <input type="text" name="setting_{{ s.key }}" value="{{ s.value }}" style="width:100%;padding:6px 10px;background:var(--bg);border:1px solid var(--border-subtle);color:var(--text);border-radius:6px;font-size:0.82rem;">
+                {% endif %}
+                {% if s.updated_by %}
+                <div style="font-size:0.65rem;color:var(--text-muted);margin-top:4px;">Last changed {{ s.updated_at.strftime('%b %d, %Y %H:%M') if s.updated_at else 'N/A' }}</div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        <button type="submit" style="margin-top:20px;padding:10px 28px;background:var(--gold);color:#000;border:none;border-radius:10px;font-weight:700;font-size:0.9rem;cursor:pointer;">
+            <i class="bi bi-floppy me-1"></i> Save All Settings
+        </button>
+    </form>
+</div>
+
+<!-- Auth Gate Control -->
+<div class="dash-card" style="margin-top:20px;">
+    <h3 style="margin-bottom:6px;"><i class="bi bi-shield-lock" style="color:#e74c3c;margin-right:6px;"></i> Auth Gate Control</h3>
+    <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:16px;">Block or unblock user login and registration independently. Team login (WIAMid) is <strong>never blocked</strong>. Set an auto-unblock date or toggle manually.</p>
+    <form method="post" action="{{ url_for('founder_dash.save_auth_gate') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;">
+            <!-- LOGIN GATE -->
+            <div style="background:rgba(255,255,255,0.02);border:1px solid {% if platform_cfg.is_login_blocked %}rgba(239,68,68,0.3){% else %}var(--border-subtle){% endif %};border-radius:12px;padding:16px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                    <div>
+                        <div style="font-size:0.85rem;font-weight:700;color:var(--text);"><i class="bi bi-box-arrow-in-right me-1"></i> User Login</div>
+                        <div style="font-size:0.7rem;color:var(--text-muted);">Block regular users from logging in</div>
+                    </div>
+                    <div style="padding:6px 14px;border-radius:8px;font-weight:700;font-size:0.78rem;
+                        {% if platform_cfg.is_login_blocked %}background:rgba(239,68,68,0.15);color:#f87171;{% else %}background:rgba(34,197,94,0.15);color:#4ade80;{% endif %}">
+                        {% if platform_cfg.is_login_blocked %}<i class="bi bi-lock-fill me-1"></i>BLOCKED{% else %}<i class="bi bi-unlock-fill me-1"></i>OPEN{% endif %}
+                    </div>
+                </div>
+                <select name="login_blocked" style="width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--border-subtle);color:var(--text);border-radius:8px;font-size:0.85rem;font-weight:600;margin-bottom:10px;">
+                    <option value="false" {{ '' if platform_cfg.auth_login_blocked else 'selected' }}>OPEN — Allow Login</option>
+                    <option value="true" {{ 'selected' if platform_cfg.auth_login_blocked else '' }}>BLOCKED — Block Login</option>
+                </select>
+                <div style="font-size:0.75rem;font-weight:600;color:var(--text-muted);margin-bottom:4px;">Auto-Unblock Date/Time (UTC, optional)</div>
+                <input type="datetime-local" name="login_blocked_until" value="{{ platform_cfg.auth_login_blocked_until.strftime('%Y-%m-%dT%H:%M') if platform_cfg.auth_login_blocked_until else '' }}" style="width:100%;padding:6px 10px;background:var(--bg);border:1px solid var(--border-subtle);color:var(--text);border-radius:6px;font-size:0.82rem;margin-bottom:10px;">
+                <div style="font-size:0.75rem;font-weight:600;color:var(--text-muted);margin-bottom:4px;">Blocked Message</div>
+                <textarea name="login_blocked_message" rows="2" style="width:100%;padding:6px 10px;background:var(--bg);border:1px solid var(--border-subtle);color:var(--text);border-radius:6px;font-size:0.82rem;resize:vertical;">{{ platform_cfg.auth_login_blocked_message or 'Login is temporarily disabled. Please try again later.' }}</textarea>
+            </div>
+            <!-- REGISTRATION GATE -->
+            <div style="background:rgba(255,255,255,0.02);border:1px solid {% if platform_cfg.is_registration_blocked %}rgba(239,68,68,0.3){% else %}var(--border-subtle){% endif %};border-radius:12px;padding:16px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                    <div>
+                        <div style="font-size:0.85rem;font-weight:700;color:var(--text);"><i class="bi bi-person-plus me-1"></i> User Registration</div>
+                        <div style="font-size:0.7rem;color:var(--text-muted);">Block new users from creating accounts</div>
+                    </div>
+                    <div style="padding:6px 14px;border-radius:8px;font-weight:700;font-size:0.78rem;
+                        {% if platform_cfg.is_registration_blocked %}background:rgba(239,68,68,0.15);color:#f87171;{% else %}background:rgba(34,197,94,0.15);color:#4ade80;{% endif %}">
+                        {% if platform_cfg.is_registration_blocked %}<i class="bi bi-lock-fill me-1"></i>BLOCKED{% else %}<i class="bi bi-unlock-fill me-1"></i>OPEN{% endif %}
+                    </div>
+                </div>
+                <select name="registration_blocked" style="width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--border-subtle);color:var(--text);border-radius:8px;font-size:0.85rem;font-weight:600;margin-bottom:10px;">
+                    <option value="false" {{ '' if platform_cfg.auth_registration_blocked else 'selected' }}>OPEN — Allow Registration</option>
+                    <option value="true" {{ 'selected' if platform_cfg.auth_registration_blocked else '' }}>BLOCKED — Block Registration</option>
+                </select>
+                <div style="font-size:0.75rem;font-weight:600;color:var(--text-muted);margin-bottom:4px;">Auto-Unblock Date/Time (UTC, optional)</div>
+                <input type="datetime-local" name="registration_blocked_until" value="{{ platform_cfg.auth_registration_blocked_until.strftime('%Y-%m-%dT%H:%M') if platform_cfg.auth_registration_blocked_until else '' }}" style="width:100%;padding:6px 10px;background:var(--bg);border:1px solid var(--border-subtle);color:var(--text);border-radius:6px;font-size:0.82rem;margin-bottom:10px;">
+                <div style="font-size:0.75rem;font-weight:600;color:var(--text-muted);margin-bottom:4px;">Blocked Message</div>
+                <textarea name="registration_blocked_message" rows="2" style="width:100%;padding:6px 10px;background:var(--bg);border:1px solid var(--border-subtle);color:var(--text);border-radius:6px;font-size:0.82rem;resize:vertical;">{{ platform_cfg.auth_registration_blocked_message or 'Registration is temporarily closed. Please try again later.' }}</textarea>
+            </div>
+        </div>
+        {% if platform_cfg.auth_gate_updated_at %}
+        <div style="font-size:0.7rem;color:var(--text-muted);margin-top:10px;"><i class="bi bi-clock me-1"></i> Last updated: {{ platform_cfg.auth_gate_updated_at.strftime('%b %d, %Y %H:%M UTC') }}</div>
+        {% endif %}
+        <button type="submit" style="margin-top:16px;padding:10px 28px;background:#e74c3c;color:#fff;border:none;border-radius:10px;font-weight:700;font-size:0.9rem;cursor:pointer;">
+            <i class="bi bi-shield-lock me-1"></i> Save Auth Gate Settings
+        </button>
+    </form>
+</div>
+
+<!-- Google Ads Control -->
+<div class="dash-card" style="margin-top:20px;">
+    <h3 style="margin-bottom:16px;"><i class="bi bi-megaphone" style="color:var(--gold);margin-right:6px;"></i> Google Ads</h3>
+    <p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:16px;">Control Google AdSense ads across the entire platform. Ads appear in the reader, home page, and browse page. Premium users with ad-free enabled will not see ads.</p>
+    <form method="post" action="{{ url_for('founder_dash.save_ads_settings') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;">
+            <!-- Ads Master Switch -->
+            <div style="background:rgba(255,255,255,0.02);border:1px solid var(--border-subtle);border-radius:10px;padding:14px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                    <div>
+                        <div style="font-size:0.82rem;font-weight:600;color:var(--text);">Ads Status</div>
+                        <div style="font-size:0.7rem;color:var(--text-muted);">Turn Google Ads on or off for the entire platform</div>
+                    </div>
+                    <div style="padding:6px 14px;border-radius:8px;font-weight:700;font-size:0.78rem;
+                        {% if platform_cfg.ads_enabled %}background:rgba(34,197,94,0.15);color:#4ade80;{% else %}background:rgba(239,68,68,0.15);color:#f87171;{% endif %}">
+                        {% if platform_cfg.ads_enabled %}<i class="bi bi-check-circle-fill me-1"></i>ON{% else %}<i class="bi bi-x-circle me-1"></i>OFF{% endif %}
+                    </div>
+                </div>
+                <select name="ads_enabled" style="width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--border-subtle);color:var(--text);border-radius:8px;font-size:0.85rem;font-weight:600;">
+                    <option value="true" {{ 'selected' if platform_cfg.ads_enabled }}>ON — Show Ads</option>
+                    <option value="false" {{ 'selected' if not platform_cfg.ads_enabled }}>OFF — Hide All Ads</option>
+                </select>
+            </div>
+            <!-- AdSense Publisher ID -->
+            <div style="background:rgba(255,255,255,0.02);border:1px solid var(--border-subtle);border-radius:10px;padding:14px;">
+                <div style="font-size:0.82rem;font-weight:600;color:var(--text);margin-bottom:4px;">AdSense Publisher ID</div>
+                <div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:8px;">Your Google AdSense client ID (e.g. ca-pub-1234567890)</div>
+                <input type="text" name="ads_client_id" value="{{ platform_cfg.ads_client_id or '' }}" placeholder="ca-pub-XXXXXXXXXXXXXXXX" style="width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--border-subtle);color:var(--text);border-radius:8px;font-size:0.85rem;font-family:monospace;">
+            </div>
+        </div>
+        <button type="submit" style="margin-top:16px;padding:10px 28px;background:var(--gold);color:#000;border:none;border-radius:10px;font-weight:700;font-size:0.9rem;cursor:pointer;">
+            <i class="bi bi-floppy me-1"></i> Save Ads Settings
+        </button>
+    </form>
+</div>
+
+<!-- Feature Flags -->
+<div class="dash-card" style="margin-top:20px;">
+    <h3 style="margin-bottom:16px;"><i class="bi bi-toggles" style="color:var(--gold);margin-right:6px;"></i> Feature Flags</h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;">
+        {% for f in flags %}
+        <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.02);border:1px solid var(--border-subtle);border-radius:10px;padding:12px 16px;">
+            <div style="flex:1;">
+                <div style="font-size:0.82rem;font-weight:600;color:var(--text);">{{ f.key }}</div>
+                <div style="font-size:0.7rem;color:var(--text-muted);">{{ f.description }}</div>
+            </div>
+            <form method="post" action="{{ url_for('founder_dash.toggle_platform_flag') }}" style="margin-left:12px;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="key" value="{{ f.key }}">
+                <button type="submit" style="padding:6px 14px;border:none;border-radius:8px;font-weight:700;font-size:0.78rem;cursor:pointer;transition:all 0.15s;
+                    {% if f.is_enabled %}background:rgba(34,197,94,0.15);color:#4ade80;{% else %}background:rgba(239,68,68,0.15);color:#f87171;{% endif %}">
+                    {% if f.is_enabled %}<i class="bi bi-check-circle-fill me-1"></i>ON{% else %}<i class="bi bi-x-circle me-1"></i>OFF{% endif %}
+                </button>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

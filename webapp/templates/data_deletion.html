@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}Account & Data Deletion — WiamApp{% endblock %}
+{% block meta_description %}How to delete your WiamApp account and all associated personal data. In-app, web, and email-based deletion paths for users who can no longer access their account.{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/support.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="legal-page">
+    <a href="javascript:void(0)" onclick="window.history.length>1?history.back():location.href='/'" class="legal-back" data-no-loader>
+        <i class="bi bi-arrow-left"></i> Back
+    </a>
+
+    <div class="legal-hero">
+        <i class="bi bi-trash3"></i>
+        <h1>Delete your WiamApp account</h1>
+        <div class="legal-meta">Last updated: <span>April 2026</span></div>
+    </div>
+
+    <section>
+        <p>
+            You can permanently delete your WiamApp account and all personal data
+            associated with it. This page exists so users (and Google Play
+            reviewers) can find the deletion process without needing to install
+            or sign in to the app.
+        </p>
+    </section>
+
+    <h2 id="what-is-deleted">What gets deleted</h2>
+    <ul>
+        <li>Your profile (name, email, avatar, bio, country, phone number).</li>
+        <li>Your reading history, library, reading lists, bookmarks, streaks, and badges.</li>
+        <li>Comments, ratings, follows, and gifts you sent or received.</li>
+        <li>Notification subscriptions and push tokens.</li>
+        <li>Wallet balance, coin transactions, premium subscription state, and referral data.</li>
+        <li>Any draft stories, chapters, or creator earnings tied to your account.</li>
+        <li>Authentication records, session tokens, and device fingerprints.</li>
+    </ul>
+
+    <h2 id="what-is-retained">What we may retain (and why)</h2>
+    <p>
+        Some data must be retained for a limited window for legal, anti-fraud,
+        or financial-reconciliation reasons:
+    </p>
+    <ul>
+        <li>
+            <strong>Payment records</strong> — for up to <strong>7 years</strong>
+            to satisfy tax, accounting, and chargeback-investigation
+            requirements. These are stripped of personally identifying fields
+            (name, email) at deletion time and reduced to anonymous transaction
+            IDs.
+        </li>
+        <li>
+            <strong>Anti-abuse signals</strong> — for up to <strong>90 days</strong>
+            (hashed device fingerprint, IP) to prevent banned accounts from
+            re-registering immediately.
+        </li>
+        <li>
+            <strong>Aggregate analytics</strong> — already anonymous, retained
+            indefinitely.
+        </li>
+    </ul>
+
+    <h2 id="how-to-delete">How to delete</h2>
+
+    <h3>Option 1 — From inside the WiamApp Android / iOS app</h3>
+    <ol>
+        <li>Open WiamApp and sign in.</li>
+        <li>Go to <strong>Profile → Settings → Account safety → Delete account</strong>.</li>
+        <li>Confirm by entering your password.</li>
+        <li>Your account is deleted immediately. You will be signed out automatically.</li>
+    </ol>
+
+    <h3>Option 2 — From the WiamApp website</h3>
+    <ol>
+        <li>Visit <a href="https://wiamapp.com/account/delete">https://wiamapp.com/account/delete</a></li>
+        <li>Sign in with the account you want to delete.</li>
+        <li>Confirm by entering your password.</li>
+        <li>The page completes the deletion and signs you out.</li>
+    </ol>
+
+    <h3>Option 3 — Email request (for users locked out of their account)</h3>
+    <p>
+        If you can no longer access your account (lost password, lost email,
+        device unavailable), email us from any address with the subject
+        line <strong>"Delete my WiamApp account"</strong> and include enough
+        information for us to identify the account:
+    </p>
+    <ul>
+        <li>The email address you used to register, OR</li>
+        <li>Your WiamApp username / profile URL, OR</li>
+        <li>The Google account or phone number associated with the account.</li>
+    </ul>
+    <p>
+        Send to: <strong><a href="mailto:{{ config.SUPPORT_EMAIL or 'support@wiamapp.com' }}?subject=Delete%20my%20WiamApp%20account">{{ config.SUPPORT_EMAIL or 'support@wiamapp.com' }}</a></strong>
+    </p>
+    <p>
+        We confirm receipt within <strong>72 hours</strong> and complete the
+        deletion within <strong>30 days</strong> of identity verification.
+    </p>
+
+    <h2 id="developer">Developer information</h2>
+    <p>
+        Developer: <strong>WiamLabs</strong><br>
+        App: <strong>WiamApp</strong> (Android package <code>com.wiamapp.mobile</code>)<br>
+        Privacy Policy: <a href="/privacy">https://wiamapp.com/privacy</a><br>
+        Terms: <a href="/terms">https://wiamapp.com/terms</a>
+    </p>
+
+    <p style="margin-top: 2rem; opacity: 0.7;">
+        This page is the official data-deletion disclosure required by
+        Google Play's User Data policy.
+    </p>
+</div>
+{% endblock %}

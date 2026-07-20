@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamEpisio — Notifications</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75; --green:#3BB273;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); display:flex; flex-direction:column; }
+  .statusbar{ height:44px; flex-shrink:0; }
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+
+  .topbar{ display:flex; align-items:center; gap:12px; padding:2px 20px 14px; flex-shrink:0; }
+  .icon-btn{ width:34px; height:34px; border-radius:50%; background:var(--navy-card); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .topbar h1{ font-size:18px; font-weight:800; color:#fff; margin:0; flex:1; }
+  .mark-read{ font-size:11.5px; color:var(--gold); font-weight:700; }
+
+  .scroll{ flex:1; overflow-y:auto; padding:0 20px 20px; }
+  .day-label{ font-size:11px; font-weight:800; color:var(--text-faint); letter-spacing:0.4px; text-transform:uppercase; margin:16px 0 10px; }
+  .day-label:first-child{ margin-top:6px; }
+
+  .notif-row{ display:flex; gap:12px; padding:12px 0; border-bottom:1px solid var(--navy-line); position:relative; }
+  .notif-row.unread::before{ content:''; position:absolute; left:-14px; top:20px; width:6px; height:6px; border-radius:50%; background:var(--gold); }
+  .notif-icon{ width:38px; height:38px; border-radius:11px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .notif-icon.ep{ background:rgba(212,160,23,0.14); }
+  .notif-icon.ep svg{ color:var(--gold); }
+  .notif-icon.unlock{ background:rgba(76,141,255,0.14); }
+  .notif-icon.unlock svg{ color:#4C8DFF; }
+  .notif-icon.coin{ background:rgba(212,160,23,0.14); }
+  .notif-icon.coin svg{ color:var(--gold); }
+  .notif-icon.creator{ background:rgba(59,178,115,0.14); }
+  .notif-icon.creator svg{ color:var(--green); }
+  .notif-icon.live{ background:rgba(228,87,61,0.14); }
+  .notif-icon.live svg{ color:#E4573D; }
+  .notif-icon.system{ background:var(--navy-card); border:1px solid var(--navy-line); }
+  .notif-icon.system svg{ color:var(--text-faint); }
+
+  .notif-body{ flex:1; min-width:0; }
+  .notif-title{ font-size:12.5px; font-weight:700; color:#fff; margin:0 0 3px; line-height:1.4; }
+  .notif-text{ font-size:11.5px; color:var(--text-dim); margin:0 0 4px; line-height:1.4; }
+  .notif-time{ font-size:10px; color:var(--text-faint); }
+
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"></div>
+  <div class="topbar">
+    <div class="icon-btn"><svg viewBox="0 0 24 24" width="15" height="15" color="#fff"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></div>
+    <h1>Notifications</h1>
+    <span class="mark-read">Mark all read</span>
+  </div>
+
+  <div class="scroll">
+
+    <p class="day-label">Today</p>
+
+    <div class="notif-row unread">
+      <div class="notif-icon live"><svg viewBox="0 0 24 24" width="17" height="17"><path d="M12 2 3 7l9 5 9-5-9-5z"/><path d="M3 12l9 5 9-5"/></svg></div>
+      <div class="notif-body"><p class="notif-title">Your series is live! 🎉</p><p class="notif-text">The Chief's Daughter just went public — viewers can watch it now.</p><span class="notif-time">2 hours ago</span></div>
+    </div>
+
+    <div class="notif-row unread">
+      <div class="notif-icon ep"><svg viewBox="0 0 24 24" width="17" height="17"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+      <div class="notif-body"><p class="notif-title">New episode: Accra Nights</p><p class="notif-text">Episode 15 just dropped — continue where you left off.</p><span class="notif-time">5 hours ago</span></div>
+    </div>
+
+    <div class="notif-row">
+      <div class="notif-icon coin"><svg viewBox="0 0 24 24" width="17" height="17"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg></div>
+      <div class="notif-body"><p class="notif-title">Coins added</p><p class="notif-text">+250 coins from your purchase. Balance updated.</p><span class="notif-time">8 hours ago</span></div>
+    </div>
+
+    <p class="day-label">Yesterday</p>
+
+    <div class="notif-row">
+      <div class="notif-icon creator"><svg viewBox="0 0 24 24" width="17" height="17"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <div class="notif-body"><p class="notif-title">Creator application accepted</p><p class="notif-text">Welcome to WiamStudio — you can start uploading now.</p><span class="notif-time">1 day ago</span></div>
+    </div>
+
+    <div class="notif-row">
+      <div class="notif-icon unlock"><svg viewBox="0 0 24 24" width="17" height="17"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg></div>
+      <div class="notif-body"><p class="notif-title">Episode unlocked</p><p class="notif-text">You unlocked EP 29 of My Father is Thor for 15 coins.</p><span class="notif-time">1 day ago</span></div>
+    </div>
+
+    <p class="day-label">This week</p>
+
+    <div class="notif-row">
+      <div class="notif-icon system"><svg viewBox="0 0 24 24" width="17" height="17"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+      <div class="notif-body"><p class="notif-title">Scheduled maintenance</p><p class="notif-text">Brief downtime expected Sunday, 2:00–2:30 AM GMT.</p><span class="notif-time">3 days ago</span></div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

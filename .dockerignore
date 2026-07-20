@@ -1,0 +1,25 @@
+WiamAppMobile/
+.expo/
+.windsurf/
+Screenshot Folder/
+WattPad/
+WattPad Profile/
+WiamLabs/
+WiamLight_Full_Master_Plan.txt
+WiamLight_Full_System_Plan.txt
+*.jpg
+*.png
+*.pdf
+.env
+__pycache__/
+*.py[cod]
+.git/
+.gitignore
+.vscode/
+.idea/
+Plan.txt
+plan.txt
+Fly.io.txt
+WiamLight_Plan.txt
+*_Plan.txt
+*_Features.txt

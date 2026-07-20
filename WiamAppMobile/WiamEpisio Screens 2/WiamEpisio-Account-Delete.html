@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamEpisio — Delete Account</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75; --red:#E4573D;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); display:flex; flex-direction:column; }
+  .statusbar{ height:44px; flex-shrink:0; }
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+
+  .topbar{ display:flex; align-items:center; gap:12px; padding:2px 20px 14px; flex-shrink:0; }
+  .icon-btn{ width:34px; height:34px; border-radius:50%; background:var(--navy-card); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .topbar h1{ font-size:16px; font-weight:800; color:#fff; margin:0; }
+
+  .scroll{ flex:1; overflow-y:auto; padding:0 20px 20px; }
+
+  .hero{ text-align:center; padding:8px 0 22px; }
+  .warn-icon{ width:60px; height:60px; border-radius:50%; background:rgba(228,87,61,0.14); border:1px solid rgba(228,87,61,0.35); display:flex; align-items:center; justify-content:center; margin:0 auto 16px; }
+  .warn-icon svg{ color:var(--red); width:26px; height:26px; }
+  .hero h2{ font-size:17px; font-weight:800; color:#fff; margin:0 0 8px; }
+  .hero p{ font-size:12px; color:var(--text-dim); line-height:1.6; margin:0; max-width:290px; margin:0 auto; }
+
+  .section-title{ font-size:12px; font-weight:800; color:var(--text-dim); letter-spacing:0.4px; text-transform:uppercase; margin:4px 0 12px; }
+
+  .consequence-card{ background:var(--navy-card); border:1px solid var(--navy-line); border-radius:16px; padding:6px 16px; margin-bottom:20px; }
+  .cons-row{ display:flex; gap:10px; padding:11px 0; border-bottom:1px solid var(--navy-line); }
+  .cons-row:last-child{ border-bottom:none; }
+  .cons-row svg{ width:15px; height:15px; color:var(--red); flex-shrink:0; margin-top:1px; }
+  .cons-row span{ font-size:11.5px; color:var(--text-dim); line-height:1.55; }
+  .cons-row span b{ color:#fff; }
+
+  .keep-card{ display:flex; gap:10px; background:rgba(212,160,23,0.08); border:1px solid rgba(212,160,23,0.25); border-radius:14px; padding:13px 14px; margin-bottom:22px; }
+  .keep-card svg{ color:var(--gold); width:15px; height:15px; flex-shrink:0; margin-top:1px; }
+  .keep-card span{ font-size:11px; color:#D9C89A; line-height:1.6; }
+
+  .confirm-field{ margin-bottom:20px; }
+  .confirm-label{ font-size:11.5px; color:var(--text-dim); margin:0 0 8px; line-height:1.5; }
+  .confirm-label b{ color:var(--red); }
+  .confirm-box{ background:var(--navy-card); border:1.5px solid var(--navy-line); border-radius:13px; padding:13px 14px; }
+  .confirm-box input{ background:none; border:none; outline:none; color:#fff; font-size:13.5px; font-family:inherit; width:100%; letter-spacing:1px; }
+  .confirm-box input::placeholder{ color:var(--text-faint); letter-spacing:normal; }
+
+  .footer{ flex-shrink:0; padding:12px 20px 26px; }
+  .btn-delete{ width:100%; padding:16px; border-radius:16px; background:var(--red); border:none; color:#fff; font-size:14.5px; font-weight:800; font-family:'Inter',sans-serif; margin-bottom:10px; opacity:0.5; }
+  .btn-cancel{ width:100%; padding:14px; border-radius:16px; background:var(--navy-card); border:1px solid var(--navy-line); color:#C9C9DE; font-size:13px; font-weight:700; font-family:'Inter',sans-serif; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"></div>
+  <div class="topbar">
+    <div class="icon-btn"><svg viewBox="0 0 24 24" width="15" height="15" color="#fff"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></div>
+    <h1>Delete Account</h1>
+  </div>
+
+  <div class="scroll">
+
+    <div class="hero">
+      <div class="warn-icon"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+      <h2>This can't be undone</h2>
+      <p>Deleting your account permanently removes your data. Please read what happens below.</p>
+    </div>
+
+    <p class="section-title">What you'll lose</p>
+    <div class="consequence-card">
+      <div class="cons-row"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg><span><b>934 coins</b> in your wallet — non-refundable, gone permanently</span></div>
+      <div class="cons-row"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg><span><b>My List and watch history</b> — all saved series and progress</span></div>
+      <div class="cons-row"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg><span><b>VIP membership</b> — cancelled immediately, no partial refund</span></div>
+      <div class="cons-row"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg><span><b>Creator earnings</b> — if you're a creator, pending payouts are forfeited</span></div>
+    </div>
+
+    <div class="keep-card">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span>Want a break instead? You can deactivate temporarily from Settings without losing anything.</span>
+    </div>
+
+    <div class="confirm-field">
+      <p class="confirm-label">Type <b>DELETE</b> to confirm</p>
+      <div class="confirm-box"><input placeholder="DELETE" /></div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <button class="btn-delete">Permanently Delete Account</button>
+    <button class="btn-cancel">Keep My Account</button>
+  </div>
+</div>
+
+</body>
+</html>

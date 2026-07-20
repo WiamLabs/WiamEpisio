@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamEpisio — Welcome Bonus</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{ --navy:#08081A; --navy-card:#12122A; --navy-line:#1E1E42; --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:0 30px; text-align:center; }
+
+  .glow{ position:absolute; width:340px; height:340px; border-radius:50%; background:radial-gradient(circle, rgba(212,160,23,0.2), transparent 70%); }
+
+  .coin-stack{ position:relative; z-index:1; margin-bottom:22px; }
+  .coin{ width:88px; height:88px; border-radius:50%; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); display:flex; align-items:center; justify-content:center; box-shadow:0 8px 24px rgba(212,160,23,0.35); margin:0 auto; }
+  .coin svg{ color:var(--navy); width:40px; height:40px; }
+
+  h1{ font-size:22px; font-weight:800; color:#fff; margin:0 0 8px; z-index:1; }
+  .amount{ font-size:36px; font-weight:800; color:var(--gold); margin:0 0 6px; z-index:1; }
+  .sub{ font-size:12.5px; color:var(--text-dim); line-height:1.55; margin:0 0 28px; z-index:1; }
+
+  .perks{ width:100%; z-index:1; margin-bottom:28px; }
+  .perk-row{ display:flex; align-items:center; gap:11px; background:var(--navy-card); border:1px solid var(--navy-line); border-radius:14px; padding:12px 14px; margin-bottom:9px; text-align:left; }
+  .perk-row svg{ color:var(--gold); width:16px; height:16px; flex-shrink:0; }
+  .perk-row span{ font-size:12px; color:#D3D3E2; }
+
+  .claim-btn{ width:100%; padding:15px; border-radius:16px; background:var(--gold); color:var(--navy); font-size:14.5px; font-weight:700; border:none; z-index:1; }
+
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="glow"></div>
+  <div class="coin-stack"><div class="coin"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="10"/></svg></div></div>
+  <h1>Welcome to WiamEpisio!</h1>
+  <p class="amount">+50 Coins</p>
+  <p class="sub">Your free coins are ready. Use them to<br/>unlock any locked episode right now.</p>
+
+  <div class="perks">
+    <div class="perk-row"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span>Follow any creator for +10 bonus coins</span></div>
+    <div class="perk-row"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span>Come back daily for free member points</span></div>
+    <div class="perk-row"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span>Save series to My List, never lose your place</span></div>
+  </div>
+
+  <button class="claim-btn">Claim & Start Watching</button>
+</div>
+</body>
+</html>

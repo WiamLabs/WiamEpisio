@@ -1,0 +1,117 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Team Compensation Plans — Control Panel{% endblock %}
+{% block sidebar_title %}Control Panel{% endblock %}
+
+{% block sidebar_nav %}
+<a class="nav-link" href="{{ url_for('founder_dash.overview') }}"><i class="bi bi-speedometer2"></i> Overview</a>
+<a class="nav-link" href="{{ url_for('founder_dash.users') }}"><i class="bi bi-people"></i> Users</a>
+<a class="nav-link" href="{{ url_for('founder_dash.content') }}"><i class="bi bi-book"></i> Content</a>
+<a class="nav-link" href="{{ url_for('founder_dash.revenue') }}"><i class="bi bi-cash-stack"></i> Revenue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.financial_dashboard') }}"><i class="bi bi-bank" style="color:var(--gold);"></i> Financial v5</a>
+<a class="nav-link" href="{{ url_for('founder_dash.premium_analytics') }}"><i class="bi bi-gem" style="color:#c084fc;"></i> Premium Analytics</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payouts') }}"><i class="bi bi-send-check"></i> Payouts</a>
+<a class="nav-link" href="{{ url_for('founder_dash.withdrawals') }}"><i class="bi bi-arrow-up-right-circle" style="color:var(--gold);"></i> Withdrawals</a>
+<a class="nav-link" href="{{ url_for('founder_dash.subscribers') }}"><i class="bi bi-gem" style="color:#9b59b6;"></i> Subscribers</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payroll') }}"><i class="bi bi-wallet2" style="color:#2ecc71;"></i> Team Payroll</a>
+<a class="nav-link" href="{{ url_for('founder_dash.creators') }}"><i class="bi bi-person-badge"></i> Creators</a>
+<a class="nav-link" href="{{ url_for('founder_dash.team_management') }}"><i class="bi bi-people-fill"></i> Team</a>
+<a class="nav-link active" href="{{ url_for('founder_dash.team_comp_plans') }}"><i class="bi bi-currency-exchange"></i> Comp Plans</a>
+<a class="nav-link" href="{{ url_for('founder_dash.disputes') }}"><i class="bi bi-flag"></i> Disputes</a>
+<a class="nav-link" href="{{ url_for('founder_dash.notification_testing') }}"><i class="bi bi-bell" style="color:#fbbf24;"></i> Notifications</a>
+<a class="nav-link" href="{{ url_for('classics.dashboard') }}"><i class="bi bi-journal-bookmark" style="color:#a78bfa;"></i> Content Seeder</a>
+<a class="nav-link" href="{{ url_for('founder_dash.settings') }}"><i class="bi bi-gear"></i> Settings</a>
+{% endblock %}
+
+{% block dash_content %}
+<div class="dash-header">
+    <h1><i class="bi bi-currency-exchange" style="color:var(--gold);"></i> Team Compensation Plans</h1>
+    <p>Track compensation agreements per role — payouts can be manual initially</p>
+</div>
+
+<!-- Existing Plans -->
+<div class="dash-card" style="margin-bottom:1.5rem;">
+    <h3 style="margin-bottom:1rem;">Active Plans</h3>
+    <table class="dash-table">
+        <thead>
+            <tr><th>Role</th><th>Type</th><th>Base Amount</th><th>Commission %</th><th>Notes</th><th>Status</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+        {% for p in plans %}
+        <tr style="{% if not p.is_active %}opacity:0.5;{% endif %}">
+            <td><strong>{{ p.role_name }}</strong></td>
+            <td><span style="background:rgba(212,168,67,0.1);color:var(--gold);padding:2px 8px;border-radius:10px;font-size:0.72rem;font-weight:600;">{{ p.plan_type }}</span></td>
+            <td>
+                <form method="POST" action="{{ url_for('founder_dash.update_comp_plan', plan_id=p.id) }}" style="display:flex;gap:4px;align-items:center;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="plan_type" value="{{ p.plan_type }}">
+                    <input type="hidden" name="commission_pct" value="{{ p.commission_pct }}">
+                    <input type="hidden" name="notes" value="{{ p.notes }}">
+                    <span style="font-size:0.75rem;color:var(--text-muted);">GH₵</span>
+                    <input type="number" name="base_amount" value="{{ '%.2f'|format(p.base_amount) }}" step="0.01" min="0"
+                        style="width:80px;padding:3px 6px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:6px;color:var(--text-primary);font-size:0.8rem;">
+                    <button type="submit" style="background:var(--gold);color:#000;border:none;border-radius:6px;padding:3px 8px;font-size:0.7rem;cursor:pointer;">Save</button>
+                </form>
+            </td>
+            <td style="color:var(--text-muted);">{{ '%.1f'|format(p.commission_pct) }}%</td>
+            <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:0.8rem;color:var(--text-muted);">{{ p.notes or '—' }}</td>
+            <td>
+                <span style="font-size:0.72rem;font-weight:600;color:{% if p.is_active %}#4ade80{% else %}#f87171{% endif %};">
+                    {{ 'Active' if p.is_active else 'Inactive' }}
+                </span>
+            </td>
+            <td>
+                <form method="POST" action="{{ url_for('founder_dash.toggle_comp_plan', plan_id=p.id) }}" style="display:inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" style="background:rgba(255,255,255,0.05);color:var(--text-muted);border:none;border-radius:6px;padding:3px 10px;font-size:0.72rem;cursor:pointer;">
+                        {{ 'Deactivate' if p.is_active else 'Activate' }}
+                    </button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+        {% if not plans %}
+        <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:2rem;">No compensation plans configured yet.</td></tr>
+        {% endif %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Add New Plan -->
+<div class="dash-card">
+    <h3 style="margin-bottom:1rem;"><i class="bi bi-plus-circle" style="color:var(--gold);margin-right:6px;"></i> Add Compensation Plan</h3>
+    <form method="POST" action="{{ url_for('founder_dash.add_comp_plan') }}" style="display:flex;gap:0.75rem;align-items:end;flex-wrap:wrap;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div>
+            <label style="font-size:0.7rem;color:var(--text-muted);display:block;">Role</label>
+            <select name="role_name" required style="padding:6px 8px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:6px;color:var(--text-primary);font-size:0.8rem;">
+                <option value="">Select role...</option>
+                {% for r in roles %}
+                <option value="{{ r.name }}">{{ r.display_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label style="font-size:0.7rem;color:var(--text-muted);display:block;">Plan Type</label>
+            <select name="plan_type" style="padding:6px 8px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:6px;color:var(--text-primary);font-size:0.8rem;">
+                <option value="MONTHLY">Monthly</option>
+                <option value="PER_TASK">Per Task</option>
+                <option value="COMMISSION">Commission</option>
+                <option value="HYBRID">Hybrid</option>
+            </select>
+        </div>
+        <div>
+            <label style="font-size:0.7rem;color:var(--text-muted);display:block;">Base (GH₵)</label>
+            <input type="number" name="base_amount" value="0" step="0.01" min="0" style="width:90px;padding:6px 8px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:6px;color:var(--text-primary);font-size:0.8rem;">
+        </div>
+        <div>
+            <label style="font-size:0.7rem;color:var(--text-muted);display:block;">Commission %</label>
+            <input type="number" name="commission_pct" value="0" step="0.1" min="0" max="100" style="width:80px;padding:6px 8px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:6px;color:var(--text-primary);font-size:0.8rem;">
+        </div>
+        <div>
+            <label style="font-size:0.7rem;color:var(--text-muted);display:block;">Notes</label>
+            <input type="text" name="notes" placeholder="Agreement details..." style="width:200px;padding:6px 8px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:6px;color:var(--text-primary);font-size:0.8rem;">
+        </div>
+        <button type="submit" style="background:var(--gold);color:#000;border:none;border-radius:8px;padding:6px 16px;font-size:0.8rem;font-weight:600;cursor:pointer;">Add Plan</button>
+    </form>
+</div>
+{% endblock %}

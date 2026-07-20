@@ -1,0 +1,262 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Announcements — WiamApp{% endblock %}
+{% block sidebar_title %}Control Panel{% endblock %}
+
+{% block sidebar_nav %}
+<a class="nav-link" href="{{ url_for('founder_dash.overview') }}"><i class="bi bi-speedometer2"></i> Overview</a>
+<a class="nav-link" href="{{ url_for('founder_dash.users') }}"><i class="bi bi-people"></i> Users</a>
+<a class="nav-link" href="{{ url_for('founder_dash.content') }}"><i class="bi bi-book"></i> Content</a>
+
+<a class="nav-link" href="{{ url_for('founder_dash.revenue') }}"><i class="bi bi-cash-stack"></i> Revenue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.financial_dashboard') }}"><i class="bi bi-bank" style="color:var(--gold);"></i> Financial v5</a>
+<a class="nav-link" href="{{ url_for('founder_dash.premium_analytics') }}"><i class="bi bi-gem" style="color:#c084fc;"></i> Premium Analytics</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payouts') }}"><i class="bi bi-send-check"></i> Payouts</a>
+<a class="nav-link" href="{{ url_for('founder_dash.withdrawals') }}"><i class="bi bi-arrow-up-right-circle" style="color:var(--gold);"></i> Withdrawals</a>
+<a class="nav-link" href="{{ url_for('founder_dash.subscribers') }}"><i class="bi bi-gem" style="color:#9b59b6;"></i> Subscribers</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payroll') }}"><i class="bi bi-wallet2" style="color:#2ecc71;"></i> Team Payroll</a>
+<a class="nav-link" href="{{ url_for('founder_dash.creators') }}"><i class="bi bi-person-badge"></i> Creators</a>
+<a class="nav-link" href="{{ url_for('founder_dash.genres') }}"><i class="bi bi-tags"></i> Genres</a>
+<a class="nav-link" href="{{ url_for('founder_dash.warnings_list') }}"><i class="bi bi-exclamation-triangle" style="color:#f59e0b;"></i> Warnings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.elite_manage') }}"><span style="color:var(--gold);">?</span> WiamElite</a>
+<a class="nav-link" href="{{ url_for('wiambot.apex_review') }}"><i class="bi bi-trophy-fill" style="color:var(--gold);"></i> Apex Review</a>
+<a class="nav-link" href="{{ url_for('founder_dash.review_queue') }}"><i class="bi bi-robot"></i> Bot Review Queue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.platform_settings') }}"><i class="bi bi-sliders"></i> Platform Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.forms_dashboard') }}"><i class="bi bi-file-earmark-text"></i> Application Forms</a>
+<a class="nav-link" href="{{ url_for('founder_dash.email_studio') }}"><i class="bi bi-envelope-paper" style="color:var(--gold);"></i> Email Studio</a>
+<a class="nav-link" href="{{ url_for('founder_dash.team_management') }}"><i class="bi bi-people-fill"></i> Team</a>
+<a class="nav-link" href="{{ url_for('founder_dash.account_management') }}"><i class="bi bi-person-x"></i> Account Management</a>
+<a class="nav-link active" href="{{ url_for('founder_dash.announcements') }}"><i class="bi bi-megaphone"></i> Announcements</a>
+<a class="nav-link" href="{{ url_for('founder_dash.notification_testing') }}"><i class="bi bi-bell" style="color:#fbbf24;"></i> Notifications</a>
+<a class="nav-link" href="{{ url_for('classics.dashboard') }}"><i class="bi bi-journal-bookmark" style="color:#a78bfa;"></i> Content Seeder</a>
+<a class="nav-link" href="{{ url_for('founder_dash.settings') }}"><i class="bi bi-gear"></i> Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.admins') }}"><i class="bi bi-shield-check"></i> Admins</a>
+{% endblock %}
+
+{% block dash_content %}
+<style>
+/* -----------------------------------------------------------------------
+   ANNOUNCEMENTS — Premium Founder Page
+   ----------------------------------------------------------------------- */
+.ann-header {
+    display: flex; align-items: center; gap: 0.75rem;
+    margin-bottom: 1.8rem; padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.ann-header-icon {
+    width: 48px; height: 48px; border-radius: 14px;
+    background: linear-gradient(135deg, rgba(212,168,67,0.15), rgba(212,168,67,0.05));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem; color: var(--gold);
+}
+.ann-header h1 { font-size: 1.35rem; font-weight: 700; margin: 0; color: var(--text-primary, #fff); }
+.ann-header p { font-size: 0.78rem; color: var(--text-muted); margin: 2px 0 0; }
+
+/* -- Compose Card ----------------------------------------------------- */
+.ann-compose {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 16px; padding: 1.5rem 1.6rem;
+    margin-bottom: 2rem; position: relative; overflow: hidden;
+}
+.ann-compose::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--gold), rgba(212,168,67,0.2));
+}
+.ann-compose-title {
+    font-size: 1rem; font-weight: 700; color: var(--text-primary, #fff);
+    margin-bottom: 1.2rem; display: flex; align-items: center; gap: 0.5rem;
+}
+.ann-compose-title i { color: var(--gold); font-size: 0.9rem; }
+
+.ann-field { margin-bottom: 1rem; }
+.ann-label {
+    font-size: 0.72rem; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 0.4rem; display: block;
+}
+.ann-input, .ann-textarea, .ann-select {
+    width: 100%; padding: 0.65rem 0.9rem; border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.03); color: var(--text-primary, #fff);
+    font-size: 0.88rem; transition: border-color 0.2s, box-shadow 0.2s;
+    font-family: inherit;
+}
+.ann-input:focus, .ann-textarea:focus, .ann-select:focus {
+    outline: none; border-color: rgba(212,168,67,0.4);
+    box-shadow: 0 0 0 3px rgba(212,168,67,0.08);
+}
+.ann-textarea { resize: vertical; min-height: 80px; }
+.ann-select { cursor: pointer; }
+
+.ann-row { display: flex; gap: 1rem; flex-wrap: wrap; }
+.ann-row .ann-field { flex: 1; min-width: 140px; }
+
+.ann-submit {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    padding: 0.65rem 1.6rem; border-radius: 10px; border: none;
+    background: linear-gradient(135deg, var(--gold), #c4982d);
+    color: #000; font-weight: 700; font-size: 0.85rem;
+    cursor: pointer; transition: all 0.2s; margin-top: 0.5rem;
+}
+.ann-submit:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(212,168,67,0.25); }
+.ann-submit:active { transform: translateY(0); }
+
+/* -- Past Announcements ----------------------------------------------- */
+.ann-history-title {
+    font-size: 0.95rem; font-weight: 700; color: var(--text-primary, #fff);
+    margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;
+}
+.ann-history-title .ann-count {
+    background: rgba(255,255,255,0.06); padding: 2px 8px; border-radius: 20px;
+    font-size: 0.68rem; font-weight: 600; color: var(--text-muted);
+}
+.ann-list { display: flex; flex-direction: column; gap: 0.6rem; }
+
+.ann-card {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 12px; padding: 1rem 1.2rem;
+    display: flex; align-items: flex-start; gap: 0.8rem;
+    transition: all 0.2s;
+}
+.ann-card:hover { background: rgba(255,255,255,0.035); border-color: rgba(255,255,255,0.08); }
+
+.ann-card-icon {
+    width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 1rem;
+}
+.ann-card-icon.info { background: rgba(99,102,241,0.12); color: #818cf8; }
+.ann-card-icon.update { background: rgba(59,130,246,0.12); color: #60a5fa; }
+.ann-card-icon.promo { background: rgba(34,197,94,0.12); color: #4ade80; }
+
+.ann-card-body { flex: 1; min-width: 0; }
+.ann-card-top { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem; flex-wrap: wrap; }
+.ann-card-name { font-size: 0.88rem; font-weight: 600; color: var(--text-primary, #fff); }
+.ann-badge {
+    padding: 2px 8px; border-radius: 20px; font-size: 0.6rem;
+    font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em;
+}
+.ann-badge.active { background: rgba(34,197,94,0.15); color: #4ade80; }
+.ann-badge.dismissed { background: rgba(107,114,128,0.15); color: #9ca3af; }
+.ann-badge.audience-tag { background: rgba(212,168,67,0.1); color: var(--gold); }
+
+.ann-card-msg {
+    font-size: 0.8rem; color: var(--text-muted); line-height: 1.4;
+    margin-bottom: 0.3rem;
+}
+.ann-card-meta { font-size: 0.68rem; color: var(--text-muted); opacity: 0.6; }
+
+.ann-card-actions { display: flex; gap: 0.4rem; flex-shrink: 0; align-self: center; }
+.ann-action-btn {
+    padding: 0.35rem 0.7rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);
+    background: transparent; color: var(--text-muted); font-size: 0.72rem;
+    cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 0.3rem;
+}
+.ann-action-btn:hover { border-color: rgba(212,168,67,0.3); color: var(--gold); }
+.ann-action-btn.danger { border-color: rgba(239,68,68,0.2); color: rgba(239,68,68,0.7); }
+.ann-action-btn.danger:hover { border-color: #ef4444; color: #ef4444; background: rgba(239,68,68,0.06); }
+
+.ann-empty {
+    text-align: center; padding: 3rem 1.5rem; color: var(--text-muted); font-size: 0.85rem;
+}
+.ann-empty i { font-size: 2rem; opacity: 0.15; display: block; margin-bottom: 0.5rem; }
+
+@media(max-width: 600px) {
+    .ann-compose { padding: 1.1rem; }
+    .ann-card { flex-direction: column; }
+    .ann-card-actions { align-self: flex-start; }
+}
+</style>
+
+<div class="ann-header">
+    <div class="ann-header-icon"><i class="bi bi-megaphone-fill"></i></div>
+    <div>
+        <h1>Announcements</h1>
+        <p>Broadcast messages to all users via in-app notifications</p>
+    </div>
+</div>
+
+<!-- ----------- COMPOSE ----------- -->
+<div class="ann-compose">
+    <div class="ann-compose-title"><i class="bi bi-pencil-square"></i> New Announcement</div>
+    <form method="POST" action="{{ url_for('founder_dash.create_announcement') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="ann-field">
+            <label class="ann-label">Title</label>
+            <input type="text" name="title" required placeholder="e.g. Exciting new features coming soon!" class="ann-input">
+        </div>
+        <div class="ann-field">
+            <label class="ann-label">Message</label>
+            <textarea name="message" rows="3" placeholder="Share the details with your community..." class="ann-textarea"></textarea>
+        </div>
+        <div class="ann-row">
+            <div class="ann-field">
+                <label class="ann-label">Type</label>
+                <select name="type" class="ann-select">
+                    <option value="info">Info</option>
+                    <option value="update">Update</option>
+                    <option value="promo">Promotion</option>
+                </select>
+            </div>
+            <div class="ann-field">
+                <label class="ann-label">Audience</label>
+                <select name="audience" class="ann-select">
+                    <option value="all">All Users</option>
+                    <option value="creators">Creators Only</option>
+                </select>
+            </div>
+        </div>
+        <button type="submit" class="ann-submit"><i class="bi bi-send-fill"></i> Publish Announcement</button>
+    </form>
+</div>
+
+<!-- ----------- HISTORY ----------- -->
+<div class="ann-history-title">
+    <i class="bi bi-clock-history" style="color:var(--gold);opacity:0.7;"></i>
+    Past Announcements
+    {% if announcements %}<span class="ann-count">{{ announcements|length }}</span>{% endif %}
+</div>
+
+{% if announcements %}
+<div class="ann-list">
+    {% for ann in announcements %}
+    <div class="ann-card">
+        <div class="ann-card-icon {{ ann.type }}">
+            {% if ann.type == 'promo' %}<i class="bi bi-gift"></i>
+            {% elif ann.type == 'update' %}<i class="bi bi-arrow-up-circle"></i>
+            {% else %}<i class="bi bi-info-circle"></i>{% endif %}
+        </div>
+        <div class="ann-card-body">
+            <div class="ann-card-top">
+                <span class="ann-card-name">{{ ann.title }}</span>
+                {% if ann.is_active %}
+                <span class="ann-badge active">Active</span>
+                {% else %}
+                <span class="ann-badge dismissed">Dismissed</span>
+                {% endif %}
+                <span class="ann-badge audience-tag">{{ ann.audience }}</span>
+            </div>
+            {% if ann.message %}<div class="ann-card-msg">{{ ann.message[:200] }}{% if ann.message|length > 200 %}...{% endif %}</div>{% endif %}
+            <div class="ann-card-meta">{{ ann.created_at.strftime('%b %d, %Y at %I:%M %p') }}</div>
+        </div>
+        <div class="ann-card-actions">
+            <form method="POST" action="{{ url_for('founder_dash.toggle_announcement', ann_id=ann.id) }}" style="margin:0;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="ann-action-btn">
+                    {% if ann.is_active %}<i class="bi bi-pause-circle"></i> Dismiss{% else %}<i class="bi bi-play-circle"></i> Reactivate{% endif %}
+                </button>
+            </form>
+            <form method="POST" action="{{ url_for('founder_dash.delete_announcement', ann_id=ann.id) }}" style="margin:0;" onsubmit="return confirm('Delete this announcement permanently?');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="ann-action-btn danger"><i class="bi bi-trash3"></i></button>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="ann-empty">
+    <i class="bi bi-megaphone"></i>
+    No announcements yet. Compose your first message above to reach your community!
+</div>
+{% endif %}
+{% endblock %}

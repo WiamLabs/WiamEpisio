@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WiamEpisio — Watch Home</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;0,700;1,600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.44.0/iconfont/tabler-icons.min.css">
+<link rel="stylesheet" href="design-system.css">
+<style>
+.home-body{padding:0 16px 12px;flex:1;display:flex;flex-direction:column;gap:22px}
+.top-row{display:flex;align-items:center;justify-content:space-between;padding-top:6px}
+.wordmark{font-family:var(--font-display);font-size:17px;font-weight:600;color:var(--paper)}
+.top-actions{display:flex;align-items:center;gap:12px}
+.coin-chip{display:flex;align-items:center;gap:5px;background:var(--ink-700);padding:6px 10px;border-radius:var(--radius-pill);font-size:12px;font-weight:700;color:var(--ember)}
+.hero{border-radius:18px;overflow:hidden;position:relative;height:210px;background:linear-gradient(160deg,#4A3216 0%,#20160B 100%);display:flex;flex-direction:column;justify-content:flex-end;padding:18px}
+.hero::before{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(11,10,8,0.85) 0%,rgba(11,10,8,0.1) 60%)}
+.hero-top{position:absolute;top:14px;left:14px;right:14px;display:flex;justify-content:space-between;z-index:2}
+.hero-content{position:relative;z-index:2}
+.hero-title{font-family:var(--font-display);font-style:italic;font-weight:600;font-size:26px;color:var(--paper);margin:6px 0 4px}
+.hero-meta{font-size:12px;color:var(--smoke);margin-bottom:14px}
+.cw-card{min-width:112px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.cw-title{font-size:11px;font-weight:600;color:var(--paper);text-align:center}
+.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.section{display:flex;flex-direction:column;gap:12px}
+.section-head{display:flex;justify-content:space-between;align-items:baseline}
+</style>
+</head>
+<body>
+
+<div class="device">
+<div class="screen">
+  <div class="status-space"></div>
+  <div class="home-body">
+
+    <div class="top-row">
+      <span class="wordmark">Wiamepisio</span>
+      <div class="top-actions">
+        <i class="ti ti-search" style="font-size:18px;color:var(--smoke)"></i>
+        <div class="coin-chip"><i class="ti ti-coin" style="font-size:14px"></i>120</div>
+      </div>
+    </div>
+
+    <div class="scroll-row">
+      <span class="chip active">For you</span>
+      <span class="chip">Drama</span>
+      <span class="chip">Romance</span>
+      <span class="chip">Thriller</span>
+      <span class="chip">Comedy</span>
+      <span class="chip">African originals</span>
+    </div>
+
+    <!-- Hero: cinematic trailer card for a featured series -->
+    <div class="hero">
+      <div class="hero-top">
+        <span class="chip active" style="padding:5px 10px;font-size:10px">New season</span>
+        <div class="ring" style="--pct:21"><div class="ring-inner">5/24<br>free</div></div>
+      </div>
+      <div class="hero-content">
+        <span class="eyebrow">Drama · African originals</span>
+        <p class="hero-title">Ashes of Accra</p>
+        <p class="hero-meta">Season 1 · 24 episodes · 92% match to your taste</p>
+        <button class="btn-primary"><i class="ti ti-player-play-filled" style="font-size:13px"></i>Watch episode 1</button>
+      </div>
+    </div>
+
+    <!-- Continue watching: ring shows watch progress, not free-episode count, on this row only -->
+    <div class="section">
+      <div class="section-head">
+        <span class="section-title">Continue watching</span>
+        <span class="see-all">See all</span>
+      </div>
+      <div class="scroll-row">
+        <div class="cw-card">
+          <div class="ring lg" style="--pct:62"><div class="ring-inner" style="background:var(--tone,#2A3D45)">EP 7</div></div>
+          <span class="cw-title">The Lagos Affair</span>
+        </div>
+        <div class="cw-card">
+          <div class="ring lg" style="--pct:30"><div class="ring-inner" style="background:#3A2438">EP 3</div></div>
+          <span class="cw-title">Bloodline</span>
+        </div>
+        <div class="cw-card">
+          <div class="ring lg" style="--pct:88"><div class="ring-inner" style="background:#463016">EP 15</div></div>
+          <span class="cw-title">Crownless</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Trending grid: ring-badge in the corner replaces a generic lock icon,
+         and doubles as the free-episode indicator for that series -->
+    <div class="section">
+      <div class="section-head">
+        <span class="section-title">Trending now</span>
+        <span class="see-all">See all</span>
+      </div>
+      <div class="grid-2">
+        <div class="poster" style="--tone:#463016">
+          <div class="poster-badge"><div class="ring-badge" style="--pct:100"><i class="ti ti-player-play-filled"></i></div></div>
+          <p class="poster-title">Crownless</p>
+          <p class="poster-meta">18 episodes · Drama</p>
+        </div>
+        <div class="poster" style="--tone:#1F3A2E">
+          <div class="poster-badge"><div class="ring-badge" style="--pct:25"><i class="ti ti-lock"></i></div></div>
+          <p class="poster-title">Nairobi Nights</p>
+          <p class="poster-meta">12 episodes · Thriller</p>
+        </div>
+        <div class="poster" style="--tone:#3A1F28">
+          <div class="poster-badge"><div class="ring-badge" style="--pct:55"><i class="ti ti-lock"></i></div></div>
+          <p class="poster-title">Sisi's Secret</p>
+          <p class="poster-meta">9 episodes · Romance</p>
+        </div>
+        <div class="poster" style="--tone:#25324A">
+          <div class="poster-badge"><div class="ring-badge" style="--pct:24"><i class="ti ti-lock"></i></div></div>
+          <p class="poster-title">Second Chance</p>
+          <p class="poster-meta">21 episodes · Romance</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- New releases -->
+    <div class="section">
+      <div class="section-head">
+        <span class="section-title">New releases</span>
+        <span class="see-all">See all</span>
+      </div>
+      <div class="scroll-row">
+        <div class="poster" style="--tone:#4A2F09;min-width:130px">
+          <div class="poster-badge"><div class="ring-badge" style="--pct:100"><i class="ti ti-player-play-filled"></i></div></div>
+          <p class="poster-title">Midnight in Kumasi</p>
+          <p class="poster-meta">Ep 1 out now</p>
+        </div>
+        <div class="poster" style="--tone:#2A2217;min-width:130px">
+          <div class="poster-badge"><div class="ring-badge" style="--pct:100"><i class="ti ti-player-play-filled"></i></div></div>
+          <p class="poster-title">The Understudy</p>
+          <p class="poster-meta">Ep 1 out now</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <nav class="nav-bar">
+    <div class="nav-item active"><i class="ti ti-player-play"></i>Watch</div>
+    <div class="nav-item"><i class="ti ti-compass"></i>Browse</div>
+    <div class="nav-item"><i class="ti ti-bookmark"></i>Library</div>
+    <div class="nav-item"><i class="ti ti-user"></i>Profile</div>
+  </nav>
+</div>
+</div>
+
+</body>
+</html>

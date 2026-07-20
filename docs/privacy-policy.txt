@@ -1,0 +1,72 @@
+WIAMAPP PRIVACY POLICY
+Last updated: February 9, 2026
+
+=====================================
+1. INTRODUCTION
+=====================================
+WiamApp is a Telegram bot that provides a digital book marketplace where creators can publish and sell e-books. This policy explains what data we collect and how we use it.
+
+=====================================
+2. DATA WE COLLECT
+=====================================
+When you interact with WiamApp, we collect:
+
+- Telegram user information: Your Telegram ID, username, first name, and last name (as provided by Telegram).
+- Usage data: Your interactions with the bot such as book purchases, uploads, ratings, comments, and feedback.
+- Payment information: Mobile money numbers or bank details you voluntarily provide for transactions. We do not process payments directly.
+- Uploaded content: Books (PDFs), cover images, and profile information that creators submit.
+
+=====================================
+3. HOW WE USE YOUR DATA
+=====================================
+Your data is used exclusively to:
+
+- Provide the book marketplace service
+- Manage your account and role (user, creator, admin)
+- Process book purchases and access permissions
+- Display ratings, comments, and recommendations
+- Send notifications about orders and subscriptions
+
+=====================================
+4. DATA STORAGE
+=====================================
+Your data is stored securely in a PostgreSQL database hosted on Supabase (cloud database provider). All connections use SSL encryption. We do not store passwords as authentication is handled entirely by Telegram.
+
+=====================================
+5. DATA SHARING
+=====================================
+We do NOT sell, trade, or share your personal data with third parties. Your data is only accessible to:
+
+- The bot's founder for platform administration
+- Creators can see limited buyer information (username) for order fulfillment
+
+=====================================
+6. DATA RETENTION
+=====================================
+Your data is retained for as long as you use the service. If you wish to have your data removed, contact the bot founder through the feedback feature in the bot.
+
+=====================================
+7. YOUR RIGHTS
+=====================================
+You have the right to:
+
+- Access your data through the bot interface
+- Request deletion of your account and data
+- Submit feedback or complaints via the bot's feedback system
+
+=====================================
+8. CHILDREN'S PRIVACY
+=====================================
+WiamApp does not knowingly collect data from children under 13. If you believe a child has provided us with personal data, please contact us through the bot.
+
+=====================================
+9. CHANGES TO THIS POLICY
+=====================================
+We may update this privacy policy from time to time. Changes will be posted on this page with an updated date.
+
+=====================================
+10. CONTACT
+=====================================
+For privacy questions or data requests, use the "Send Feedback" button in the WiamApp bot on Telegram.
+
+(c) 2026 WiamLabs. All rights reserved.

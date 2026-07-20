@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}Gift Premium — WiamApp{% endblock %}
+{% block content %}
+<div style="max-width:800px;margin:0 auto;padding:var(--space-xl) var(--space-md);">
+
+    <div style="text-align:center;margin-bottom:var(--space-2xl);">
+        <h1 style="font-size:1.8rem;font-family:var(--font-display);color:var(--text);margin-bottom:var(--space-sm);">
+            🎁 Gift Premium
+        </h1>
+        <p style="color:var(--text-secondary);font-size:0.9rem;max-width:480px;margin:0 auto;">
+            Share the joy of reading! Gift a WiamPremium subscription to a friend.
+        </p>
+    </div>
+
+    <!-- Send Gift Form -->
+    <div style="padding:var(--space-xl);background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);margin-bottom:var(--space-2xl);">
+        <h2 style="font-size:1rem;font-family:var(--font-display);color:var(--text);margin-bottom:var(--space-lg);">
+            Send a Gift
+        </h2>
+        <form method="POST" action="{{ url_for('programs.gift_send') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-md);margin-bottom:var(--space-md);">
+                <div>
+                    <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:4px;">Recipient's Email</label>
+                    <input type="email" name="recipient_email" required placeholder="friend@email.com" style="width:100%;padding:10px 14px;background:var(--bg-elevated);color:var(--text);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);font-size:0.85rem;">
+                </div>
+                <div>
+                    <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:4px;">Plan</label>
+                    <select name="plan" style="width:100%;padding:10px 14px;background:var(--bg-elevated);color:var(--text);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);font-size:0.85rem;">
+                        <option value="premium">WiamPremium — GH₵20/mo</option>
+                        <option value="elite">WiamElite — GH₵25/mo</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="margin-bottom:var(--space-lg);">
+                <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:4px;">Personal Message (optional)</label>
+                <textarea name="message" rows="3" maxlength="200" placeholder="Happy reading! 📚" style="width:100%;padding:10px 14px;background:var(--bg-elevated);color:var(--text);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);font-size:0.85rem;resize:vertical;"></textarea>
+            </div>
+
+            <button type="submit" style="padding:12px 28px;background:linear-gradient(135deg,var(--wine),#a0404a);color:#fff;border:none;border-radius:var(--radius-md);font-weight:700;font-size:0.9rem;cursor:pointer;">
+                <i class="bi bi-gift-fill"></i> Send Gift
+            </button>
+        </form>
+    </div>
+
+    <!-- Sent Gifts -->
+    {% if sent_gifts %}
+    <div style="margin-bottom:var(--space-xl);">
+        <h2 style="font-size:1rem;font-family:var(--font-display);color:var(--text);margin-bottom:var(--space-md);">Gifts You've Sent</h2>
+        <div style="display:grid;gap:var(--space-sm);">
+            {% for g in sent_gifts %}
+            <div style="padding:var(--space-md);background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);display:flex;align-items:center;gap:var(--space-md);">
+                <div style="font-size:1.3rem;">🎁</div>
+                <div style="flex:1;">
+                    <div style="font-size:0.85rem;color:var(--text);font-weight:600;">{{ g.plan|capitalize }} Gift</div>
+                    <div style="font-size:0.7rem;color:var(--text-muted);">
+                        To user #{{ g.recipient_id }} · {{ g.created_at.strftime('%b %d, %Y') }}
+                        {% if g.message %} · "{{ g.message[:50] }}"{% endif %}
+                    </div>
+                </div>
+                <span style="font-size:0.7rem;padding:2px 8px;border-radius:10px;font-weight:600;
+                    {% if g.status == 'active' %}background:rgba(46,204,113,0.15);color:#2ecc71;
+                    {% elif g.status == 'expired' %}background:rgba(149,165,166,0.15);color:#95a5a6;
+                    {% elif g.status == 'paid' %}background:rgba(52,152,219,0.15);color:#3498db;
+                    {% else %}background:rgba(241,196,15,0.15);color:#f1c40f;{% endif %}">
+                    {{ g.status|capitalize }}
+                </span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Received Gifts -->
+    {% if received_gifts %}
+    <div style="margin-bottom:var(--space-xl);">
+        <h2 style="font-size:1rem;font-family:var(--font-display);color:var(--text);margin-bottom:var(--space-md);">Gifts You've Received</h2>
+        <div style="display:grid;gap:var(--space-sm);">
+            {% for g in received_gifts %}
+            <div style="padding:var(--space-md);background:var(--bg-card);border:1px solid rgba(212,168,67,0.2);border-radius:var(--radius-md);display:flex;align-items:center;gap:var(--space-md);">
+                <div style="font-size:1.3rem;">✨</div>
+                <div style="flex:1;">
+                    <div style="font-size:0.85rem;color:var(--text);font-weight:600;">{{ g.plan|capitalize }} Gift</div>
+                    <div style="font-size:0.7rem;color:var(--text-muted);">
+                        From user #{{ g.sender_id }} · {{ g.created_at.strftime('%b %d, %Y') }}
+                        {% if g.message %} · "{{ g.message[:50] }}"{% endif %}
+                    </div>
+                </div>
+                <span style="font-size:0.7rem;padding:2px 8px;border-radius:10px;font-weight:600;
+                    {% if g.status == 'active' %}background:rgba(46,204,113,0.15);color:#2ecc71;
+                    {% else %}background:var(--bg-elevated);color:var(--text-muted);{% endif %}">
+                    {{ g.status|capitalize }}
+                </span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div style="text-align:center;margin-top:var(--space-xl);">
+        <a href="{{ url_for('programs.hub') }}" style="color:var(--text-muted);font-size:0.8rem;text-decoration:none;">&larr; Back to Programs</a>
+    </div>
+</div>
+{% endblock %}

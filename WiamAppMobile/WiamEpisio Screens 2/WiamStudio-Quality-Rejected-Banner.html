@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamEpisio — Quality Rejected Banner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75; --red:#E4573D;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); display:flex; flex-direction:column; }
+  .statusbar{ height:44px; flex-shrink:0; }
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+
+  .topbar{ display:flex; align-items:center; gap:12px; padding:2px 20px 14px; flex-shrink:0; }
+  .icon-btn{ width:34px; height:34px; border-radius:50%; background:var(--navy-card); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .topbar h1{ font-size:16px; font-weight:800; color:#fff; margin:0; }
+
+  .scroll{ flex:1; overflow-y:auto; padding:0 20px 20px; }
+
+  /* Compact banner variant — Studio Home context */
+  .label-tag{ font-size:10px; font-weight:800; color:var(--text-faint); letter-spacing:0.4px; text-transform:uppercase; margin:0 0 10px; }
+
+  .banner-compact{ display:flex; align-items:center; gap:10px; background:rgba(228,87,61,0.1); border:1px solid rgba(228,87,61,0.3); border-radius:14px; padding:12px 14px; margin-bottom:24px; }
+  .banner-compact svg{ color:var(--red); width:18px; height:18px; flex-shrink:0; }
+  .banner-compact-text{ flex:1; }
+  .banner-compact-text b{ display:block; font-size:12px; font-weight:700; color:#fff; }
+  .banner-compact-text span{ font-size:10.5px; color:#E0A79A; }
+  .banner-compact-link{ font-size:11px; font-weight:800; color:var(--gold); flex-shrink:0; }
+
+  /* Full-width top banner variant — inline on Episode List */
+  .banner-full{ background:linear-gradient(90deg, rgba(228,87,61,0.16), rgba(228,87,61,0.06)); border:1px solid rgba(228,87,61,0.3); border-left:3px solid var(--red); border-radius:12px; padding:13px 15px; margin-bottom:24px; }
+  .banner-full-head{ display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+  .banner-full-head svg{ color:var(--red); width:15px; height:15px; }
+  .banner-full-head b{ font-size:12px; font-weight:800; color:#fff; }
+  .banner-full-text{ font-size:11px; color:#E0A79A; line-height:1.55; margin:0 0 10px; }
+  .banner-full-btn{ font-size:11px; font-weight:800; color:var(--navy); background:var(--gold); padding:7px 14px; border-radius:8px; display:inline-block; }
+
+  /* Row-level flag variant — inline on Episode List rows */
+  .ep-row{ display:flex; align-items:center; gap:10px; background:var(--navy-card); border:1px solid rgba(228,87,61,0.35); border-radius:14px; padding:11px 12px; margin-bottom:12px; }
+  .ep-thumb{ width:40px; height:58px; border-radius:8px; background:linear-gradient(160deg,#3a1414,#12122a); flex-shrink:0; }
+  .ep-body{ flex:1; min-width:0; }
+  .ep-title{ font-size:12px; font-weight:700; color:#fff; margin:0 0 3px; }
+  .ep-flag{ display:inline-flex; align-items:center; gap:4px; font-size:9.5px; font-weight:800; color:var(--red); background:rgba(228,87,61,0.14); padding:3px 8px; border-radius:6px; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"></div>
+  <div class="topbar">
+    <div class="icon-btn"><svg viewBox="0 0 24 24" width="15" height="15" color="#fff"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></div>
+    <h1>Quality-Rejected Banner</h1>
+  </div>
+
+  <div class="scroll">
+
+    <p class="label-tag">Variant 1 — Compact (Studio Home card)</p>
+    <div class="banner-compact">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <div class="banner-compact-text"><b>Episode 10 rejected</b><span>Wrong aspect ratio</span></div>
+      <span class="banner-compact-link">Fix →</span>
+    </div>
+
+    <p class="label-tag">Variant 2 — Full-width (top of Episode List)</p>
+    <div class="banner-full">
+      <div class="banner-full-head"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg><b>1 episode needs attention</b></div>
+      <p class="banner-full-text">Episode 10 was rejected for wrong aspect ratio. Fix and re-upload before you can submit for review.</p>
+      <span class="banner-full-btn">Review Issue</span>
+    </div>
+
+    <p class="label-tag">Variant 3 — Inline row flag (Episode List)</p>
+    <div class="ep-row">
+      <div class="ep-thumb"></div>
+      <div class="ep-body">
+        <p class="ep-title">EP 10 — The Accusation</p>
+        <span class="ep-flag"><svg viewBox="0 0 24 24" width="9" height="9"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>WRONG SIZE</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

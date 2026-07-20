@@ -1,0 +1,194 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Admin Dashboard — WiamApp{% endblock %}
+{% block sidebar_title %}Admin Panel{% endblock %}
+
+{% block sidebar_nav %}
+<a class="nav-link active" href="{{ url_for('team.dashboard') }}"><i class="bi bi-speedometer2"></i> Overview</a>
+<div class="sidebar-title" style="margin-top:1rem;">User Management</div>
+<a class="nav-link" href="{{ url_for('team.admin_user_list') }}"><i class="bi bi-people"></i> All Users</a>
+<a class="nav-link" href="{{ url_for('team.admin_user_list', status='banned') }}"><i class="bi bi-slash-circle" style="color:#f87171;"></i> Banned Users</a>
+<a class="nav-link" href="{{ url_for('admin_dash.creators') }}"><i class="bi bi-person-badge"></i> Creator Apps</a>
+<div class="sidebar-title" style="margin-top:1rem;">Content</div>
+<a class="nav-link" href="{{ url_for('team.mod_flagged_stories') }}"><i class="bi bi-flag" style="color:#f87171;"></i> Flagged Stories</a>
+<a class="nav-link" href="{{ url_for('admin_dash.content') }}"><i class="bi bi-journal-text"></i> All Content</a>
+<a class="nav-link" href="{{ url_for('admin_dash.orders') }}"><i class="bi bi-receipt"></i> Orders</a>
+<div class="sidebar-title" style="margin-top:1rem;">Account</div>
+<a class="nav-link" href="{{ url_for('profile.account_safety') }}"><i class="bi bi-shield-check"></i> Account Safety</a>
+{% endblock %}
+
+{% block dash_content %}
+{% include "team/_dashboard_switcher.html" ignore missing %}
+{% include "team/_greeting.html" ignore missing %}
+<div class="dash-header">
+    <h1><i class="bi bi-gear-wide-connected" style="color:#fbbf24;"></i> Admin Dashboard</h1>
+</div>
+
+<!-- Stats -->
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="label">Total Users</div>
+        <div class="value gold">{{ total_users }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">New This Week</div>
+        <div class="value" style="color:#60a5fa;">{{ new_users_week }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Active (30d)</div>
+        <div class="value" style="color:#4ade80;">{{ active_users_month }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Creators</div>
+        <div class="value">{{ total_creators }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Total Stories</div>
+        <div class="value">{{ total_stories }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Published</div>
+        <div class="value" style="color:#4ade80;">{{ total_published }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Flagged</div>
+        <div class="value" style="color:#f87171;">{{ reported_count }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Pending Apps</div>
+        <div class="value" style="color:#fbbf24;">{{ pending_apps }}</div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px;">
+    <a href="{{ url_for('team.admin_user_list') }}" class="btn-dash btn-dash-primary" style="padding:0.5rem 1.2rem;border-radius:10px;text-decoration:none;font-size:0.88rem;">
+        <i class="bi bi-people"></i> Manage Users
+    </a>
+    {% if reported_count %}
+    <a href="{{ url_for('team.mod_flagged_stories') }}" class="btn-dash" style="padding:0.5rem 1.2rem;border-radius:10px;text-decoration:none;font-size:0.88rem;background:rgba(248,113,113,0.1);color:#f87171;">
+        <i class="bi bi-flag"></i> Review {{ reported_count }} Flagged
+    </a>
+    {% endif %}
+</div>
+
+<!-- Auth Gate Control -->
+<div class="dash-card" style="margin-bottom:24px;">
+    <h3 style="margin-bottom:6px;"><i class="bi bi-shield-lock" style="color:#e74c3c;margin-right:6px;"></i> Auth Gate Control</h3>
+    <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:16px;">Block or unblock user login and registration. Team login (WIAMid) is <strong>never blocked</strong>.</p>
+    <form method="post" action="{{ url_for('team.save_auth_gate') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;">
+            <!-- LOGIN GATE -->
+            <div style="background:rgba(255,255,255,0.02);border:1px solid var(--border-subtle);border-radius:12px;padding:14px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                    <div style="font-size:0.85rem;font-weight:700;color:var(--text);"><i class="bi bi-box-arrow-in-right me-1"></i> User Login</div>
+                    {% if platform_cfg.is_login_blocked %}
+                    <span style="padding:4px 12px;border-radius:8px;font-weight:700;font-size:0.75rem;background:rgba(239,68,68,0.15);color:#f87171;"><i class="bi bi-lock-fill me-1"></i>BLOCKED</span>
+                    {% else %}
+                    <span style="padding:4px 12px;border-radius:8px;font-weight:700;font-size:0.75rem;background:rgba(34,197,94,0.15);color:#4ade80;"><i class="bi bi-unlock-fill me-1"></i>OPEN</span>
+                    {% endif %}
+                </div>
+                <select name="login_blocked" style="width:100%;padding:6px 10px;background:var(--bg);border:1px solid var(--border-subtle);color:var(--text);border-radius:8px;font-size:0.82rem;font-weight:600;margin-bottom:8px;">
+                    <option value="false" {{ '' if platform_cfg.auth_login_blocked else 'selected' }}>OPEN — Allow Login</option>
+                    <option value="true" {{ 'selected' if platform_cfg.auth_login_blocked else '' }}>BLOCKED — Block Login</option>
+                </select>
+                <div style="font-size:0.72rem;font-weight:600;color:var(--text-muted);margin-bottom:3px;">Auto-Unblock (UTC)</div>
+                <input type="datetime-local" name="login_blocked_until" value="{{ platform_cfg.auth_login_blocked_until.strftime('%Y-%m-%dT%H:%M') if platform_cfg.auth_login_blocked_until else '' }}" style="width:100%;padding:5px 8px;background:var(--bg);border:1px solid var(--border-subtle);color:var(--text);border-radius:6px;font-size:0.8rem;margin-bottom:8px;">
+                <div style="font-size:0.72rem;font-weight:600;color:var(--text-muted);margin-bottom:3px;">Message</div>
+                <textarea name="login_blocked_message" rows="2" style="width:100%;padding:5px 8px;background:var(--bg);border:1px solid var(--border-subtle);color:var(--text);border-radius:6px;font-size:0.8rem;resize:vertical;">{{ platform_cfg.auth_login_blocked_message or 'Login is temporarily disabled. Please try again later.' }}</textarea>
+            </div>
+            <!-- REGISTRATION GATE -->
+            <div style="background:rgba(255,255,255,0.02);border:1px solid var(--border-subtle);border-radius:12px;padding:14px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                    <div style="font-size:0.85rem;font-weight:700;color:var(--text);"><i class="bi bi-person-plus me-1"></i> Registration</div>
+                    {% if platform_cfg.is_registration_blocked %}
+                    <span style="padding:4px 12px;border-radius:8px;font-weight:700;font-size:0.75rem;background:rgba(239,68,68,0.15);color:#f87171;"><i class="bi bi-lock-fill me-1"></i>BLOCKED</span>
+                    {% else %}
+                    <span style="padding:4px 12px;border-radius:8px;font-weight:700;font-size:0.75rem;background:rgba(34,197,94,0.15);color:#4ade80;"><i class="bi bi-unlock-fill me-1"></i>OPEN</span>
+                    {% endif %}
+                </div>
+                <select name="registration_blocked" style="width:100%;padding:6px 10px;background:var(--bg);border:1px solid var(--border-subtle);color:var(--text);border-radius:8px;font-size:0.82rem;font-weight:600;margin-bottom:8px;">
+                    <option value="false" {{ '' if platform_cfg.auth_registration_blocked else 'selected' }}>OPEN — Allow Registration</option>
+                    <option value="true" {{ 'selected' if platform_cfg.auth_registration_blocked else '' }}>BLOCKED — Block Registration</option>
+                </select>
+                <div style="font-size:0.72rem;font-weight:600;color:var(--text-muted);margin-bottom:3px;">Auto-Unblock (UTC)</div>
+                <input type="datetime-local" name="registration_blocked_until" value="{{ platform_cfg.auth_registration_blocked_until.strftime('%Y-%m-%dT%H:%M') if platform_cfg.auth_registration_blocked_until else '' }}" style="width:100%;padding:5px 8px;background:var(--bg);border:1px solid var(--border-subtle);color:var(--text);border-radius:6px;font-size:0.8rem;margin-bottom:8px;">
+                <div style="font-size:0.72rem;font-weight:600;color:var(--text-muted);margin-bottom:3px;">Message</div>
+                <textarea name="registration_blocked_message" rows="2" style="width:100%;padding:5px 8px;background:var(--bg);border:1px solid var(--border-subtle);color:var(--text);border-radius:6px;font-size:0.8rem;resize:vertical;">{{ platform_cfg.auth_registration_blocked_message or 'Registration is temporarily closed. Please try again later.' }}</textarea>
+            </div>
+        </div>
+        {% if platform_cfg.auth_gate_updated_at %}
+        <div style="font-size:0.68rem;color:var(--text-muted);margin-top:8px;"><i class="bi bi-clock me-1"></i> Last updated: {{ platform_cfg.auth_gate_updated_at.strftime('%b %d, %Y %H:%M UTC') }}</div>
+        {% endif %}
+        <button type="submit" style="margin-top:12px;padding:8px 24px;background:#e74c3c;color:#fff;border:none;border-radius:10px;font-weight:700;font-size:0.85rem;cursor:pointer;">
+            <i class="bi bi-shield-lock me-1"></i> Save Auth Gate
+        </button>
+    </form>
+</div>
+
+<!-- Recent Users -->
+<div class="dash-card">
+    <h3><i class="bi bi-person-plus" style="color:var(--gold);margin-right:6px;"></i> Newest Users</h3>
+    {% if recent_users %}
+    <table class="dash-table">
+        <thead>
+            <tr><th>User</th><th>Role</th><th>Joined</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+            {% for u in recent_users %}
+            <tr>
+                <td>
+                    <span style="font-weight:600;">{{ u.display_name }}</span>
+                    <div style="font-size:0.75rem;color:var(--text-muted);">{{ u.email or u.username or '' }}</div>
+                </td>
+                <td><span class="badge-status badge-{{ u.role }}">{{ u.role }}</span></td>
+                <td style="color:var(--text-muted);font-size:0.8rem;">{{ u.date_joined.strftime('%b %d, %H:%M') if u.date_joined else '' }}</td>
+                <td>
+                    {% if u.status == 'banned' %}<span class="badge-status badge-banned">Banned</span>
+                    {% elif u.status == 'deactivated' %}<span class="badge-status badge-draft">Deactivated</span>
+                    {% else %}<span class="badge-status badge-active">Active</span>{% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="color:var(--text-muted);text-align:center;padding:20px;">No recent users.</p>
+    {% endif %}
+</div>
+
+<!-- Creator Applications -->
+<div class="dash-card">
+    <h3><i class="bi bi-person-badge" style="color:#fbbf24;margin-right:6px;"></i> Pending Creator Applications</h3>
+    {% if pending_creators %}
+    <table class="dash-table">
+        <thead>
+            <tr><th>User</th><th>Joined</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+            {% for u in pending_creators %}
+            <tr>
+                <td style="font-weight:600;">{{ u.display_name }}</td>
+                <td style="color:var(--text-muted);font-size:0.8rem;">{{ u.date_joined.strftime('%b %d, %Y') if u.date_joined else '' }}</td>
+                <td>
+                    <form method="POST" action="{{ url_for('admin_dash.approve_creator', user_id=u.id) }}" style="display:inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="btn-dash btn-dash-success btn-dash-sm">Approve</button>
+                    </form>
+                    <form method="POST" action="{{ url_for('admin_dash.reject_creator', user_id=u.id) }}" style="display:inline;margin-left:4px;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="btn-dash btn-dash-danger btn-dash-sm">Reject</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div style="text-align:center;padding:30px;color:var(--text-muted);">
+        <i class="bi bi-check-circle" style="font-size:1.5rem;opacity:0.3;display:block;margin-bottom:6px;"></i>
+        <p>No pending applications.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

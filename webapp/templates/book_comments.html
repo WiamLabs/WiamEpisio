@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}Comments — {{ book.title }} — WiamApp{% endblock %}
+
+{% block extra_head %}
+<style>
+    .comments-page { max-width: 600px; margin: 0 auto; padding: var(--space-xl) var(--space-md) var(--space-2xl); }
+    .comments-header { display: flex; align-items: center; gap: var(--space-md); margin-bottom: var(--space-xl); }
+    .comments-header h1 { font-size: 1.2rem; font-weight: 600; margin: 0; }
+    .comment-card { padding: var(--space-md); border-bottom: 1px solid var(--border-subtle); }
+    .comment-card:last-child { border-bottom: none; }
+    .comment-user { display: flex; align-items: center; gap: var(--space-sm); margin-bottom: 6px; }
+    .comment-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--wine-dark); display: flex; align-items: center; justify-content: center; color: var(--gold); font-size: 0.7rem; font-weight: 600; flex-shrink: 0; }
+    .comment-name { font-weight: 500; font-size: 0.88rem; }
+    .comment-time { color: var(--text-muted); font-size: 0.72rem; }
+    .comment-text { color: var(--text-secondary); font-size: 0.9rem; line-height: 1.7; margin: 0 0 8px; }
+    .comment-actions { display: flex; align-items: center; gap: 12px; }
+    .comment-actions button { background: none; border: none; cursor: pointer; font-size: 0.78rem; display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px; color: var(--text-muted); }
+    .comment-actions button.liked { color: var(--gold); }
+    .comment-form textarea { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); color: var(--text); padding: var(--space-md); width: 100%; font-family: var(--font-ui); font-size: 0.9rem; resize: vertical; min-height: 80px; }
+    .comment-form textarea:focus { outline: none; border-color: var(--gold-dim); box-shadow: 0 0 0 3px var(--gold-glow); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="comments-page">
+    <div class="comments-header">
+        <a href="{{ url_for('book.detail', book_id=book.id) }}" class="btn-ghost"><i class="bi bi-arrow-left"></i></a>
+        <h1>Comments on "{{ book.title }}"</h1>
+    </div>
+
+    {% if current_user.is_authenticated %}
+    <form class="comment-form" style="margin-bottom: var(--space-xl);" onsubmit="submitComment(event, {{ book.id }})">
+        <textarea name="text" placeholder="Share your thoughts on this story..." id="commentText"></textarea>
+        <button type="submit" class="btn btn-outline-gold mt-2" style="font-size: 0.85rem; padding: 6px 20px;">Post Comment</button>
+    </form>
+    {% endif %}
+
+    <div id="commentsList">
+    {% if reviews %}
+        {% for review, reviewer in reviews %}
+        <div class="comment-card" id="comment-{{ review.id }}">
+            <div class="comment-user">
+                <div class="comment-avatar">{{ reviewer.display_name[0] | upper }}</div>
+                <span class="comment-name">{{ reviewer.display_name }}</span>
+                <span class="comment-time">{{ review.created_at.strftime('%b %d, %Y') if review.created_at else '' }}</span>
+            </div>
+            <p class="comment-text">{{ review.text }}</p>
+            <div class="comment-actions">
+                {% if current_user.is_authenticated %}
+                <button onclick="toggleLike({{ book.id }}, {{ review.id }}, this)" class="{% if review.id in user_liked_reviews %}liked{% endif %}">
+                    <i class="bi bi-heart{% if review.id in user_liked_reviews %}-fill{% endif %}"></i>
+                    <span class="like-count">{{ review.like_count }}</span>
+                </button>
+                {% else %}
+                <span style="font-size:0.78rem;color:var(--text-muted);display:inline-flex;align-items:center;gap:4px;">
+                    <i class="bi bi-heart"></i> {{ review.like_count }}
+                </span>
+                {% endif %}
+                {% if current_user.is_authenticated and (review.user_id == current_user.wiam_id or current_user.is_admin) %}
+                <button onclick="deleteComment({{ book.id }}, {{ review.id }})" style="color:#f87171;" title="Delete">
+                    <i class="bi bi-trash3"></i>
+                </button>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p style="color: var(--text-muted); font-size: 0.88rem; font-style: italic; text-align: center; padding: var(--space-xl);">No comments yet. Be the first to share your thoughts!</p>
+    {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+function submitComment(e, bookId) {
+    e.preventDefault();
+    var text = document.getElementById('commentText').value.trim();
+    if(text.length < 10){ alert('Comment must be at least 10 characters'); return; }
+    var fd = new FormData();
+    fd.append('text', text);
+    fetch('/book/' + bookId + '/review', {method:'POST', headers:{'X-Requested-With':'XMLHttpRequest','X-CSRFToken':csrfToken}, body: fd})
+    .then(function(r){return r.json()})
+    .then(function(d){
+        if(d.success){
+            document.getElementById('commentText').value = '';
+            location.reload();
+        }
+    });
+}
+
+function toggleLike(bookId, reviewId, btn) {
+    fetch('/book/' + bookId + '/review/' + reviewId + '/like', {method:'POST', headers:{'X-Requested-With':'XMLHttpRequest','X-CSRFToken':csrfToken}})
+    .then(function(r){return r.json()})
+    .then(function(d){
+        var icon = btn.querySelector('i');
+        var cnt = btn.querySelector('.like-count');
+        if(d.liked){ icon.className='bi bi-heart-fill'; btn.classList.add('liked'); }
+        else { icon.className='bi bi-heart'; btn.classList.remove('liked'); }
+        cnt.textContent = d.count;
+    });
+}
+
+function deleteComment(bookId, reviewId) {
+    if(!confirm('Delete this comment?')) return;
+    fetch('/book/' + bookId + '/review/' + reviewId + '/delete', {method:'POST', headers:{'X-Requested-With':'XMLHttpRequest','X-CSRFToken':csrfToken}})
+    .then(function(r){return r.json()})
+    .then(function(d){
+        if(d.deleted){ var el = document.getElementById('comment-'+reviewId); if(el) el.remove(); }
+    });
+}
+</script>
+{% endblock %}

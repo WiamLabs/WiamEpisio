@@ -1,0 +1,229 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Notification Testing — Control Panel{% endblock %}
+{% block sidebar_title %}Control Panel{% endblock %}
+
+{% block sidebar_nav %}
+<a class="nav-link" href="{{ url_for('founder_dash.overview') }}"><i class="bi bi-speedometer2"></i> Overview</a>
+<a class="nav-link" href="{{ url_for('founder_dash.users') }}"><i class="bi bi-people"></i> Users</a>
+<a class="nav-link" href="{{ url_for('founder_dash.content') }}"><i class="bi bi-book"></i> Content</a>
+<a class="nav-link" href="{{ url_for('founder_dash.revenue') }}"><i class="bi bi-cash-stack"></i> Revenue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.financial_dashboard') }}"><i class="bi bi-bank" style="color:var(--gold);"></i> Financial v5</a>
+<a class="nav-link" href="{{ url_for('founder_dash.premium_analytics') }}"><i class="bi bi-gem" style="color:#c084fc;"></i> Premium Analytics</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payouts') }}"><i class="bi bi-send-check"></i> Payouts</a>
+<a class="nav-link" href="{{ url_for('founder_dash.withdrawals') }}"><i class="bi bi-arrow-up-right-circle" style="color:var(--gold);"></i> Withdrawals</a>
+<a class="nav-link" href="{{ url_for('founder_dash.subscribers') }}"><i class="bi bi-gem" style="color:#9b59b6;"></i> Subscribers</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payroll') }}"><i class="bi bi-wallet2" style="color:#2ecc71;"></i> Team Payroll</a>
+<a class="nav-link" href="{{ url_for('founder_dash.creators') }}"><i class="bi bi-person-badge"></i> Creators</a>
+<a class="nav-link" href="{{ url_for('founder_dash.genres') }}"><i class="bi bi-tags"></i> Genres</a>
+<a class="nav-link" href="{{ url_for('founder_dash.announcements') }}"><i class="bi bi-megaphone"></i> Announcements</a>
+<a class="nav-link" href="{{ url_for('founder_dash.collections') }}"><i class="bi bi-grid"></i> Collections</a>
+<a class="nav-link" href="{{ url_for('founder_dash.moderation') }}"><i class="bi bi-shield-exclamation"></i> Moderation</a>
+<a class="nav-link" href="{{ url_for('founder_dash.warnings_list') }}"><i class="bi bi-exclamation-triangle" style="color:#f59e0b;"></i> Warnings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.elite_manage') }}"><span style="color:var(--gold);">?</span> WiamElite</a>
+<a class="nav-link" href="{{ url_for('wiambot.apex_review') }}"><i class="bi bi-trophy-fill" style="color:var(--gold);"></i> Apex Review</a>
+<a class="nav-link" href="{{ url_for('founder_dash.review_queue') }}"><i class="bi bi-robot"></i> Bot Review Queue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.platform_settings') }}"><i class="bi bi-sliders"></i> Platform Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.forms_dashboard') }}"><i class="bi bi-file-earmark-text"></i> Application Forms</a>
+<a class="nav-link" href="{{ url_for('founder_dash.email_studio') }}"><i class="bi bi-envelope-paper" style="color:var(--gold);"></i> Email Studio</a>
+<a class="nav-link" href="{{ url_for('founder_dash.team_management') }}"><i class="bi bi-people-fill"></i> Team</a>
+<a class="nav-link" href="{{ url_for('founder_dash.account_management') }}"><i class="bi bi-person-x"></i> Account Management</a>
+<a class="nav-link active" href="{{ url_for('founder_dash.notification_testing') }}"><i class="bi bi-bell" style="color:#fbbf24;"></i> Notifications</a>
+<a class="nav-link" href="{{ url_for('classics.dashboard') }}"><i class="bi bi-journal-bookmark" style="color:#a78bfa;"></i> Content Seeder</a>
+<a class="nav-link" href="{{ url_for('founder_dash.settings') }}"><i class="bi bi-gear"></i> Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.admins') }}"><i class="bi bi-shield-check"></i> Admins</a>
+{% endblock %}
+
+{% block dash_content %}
+<style>
+.notif-test-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-top:16px;}
+.notif-test-card{background:var(--card-bg,rgba(255,255,255,0.04));border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px;}
+.notif-test-card .ntc-header{display:flex;align-items:center;gap:10px;}
+.notif-test-card .ntc-icon{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;}
+.ntc-icon.new_book,.ntc-icon.new_chapter{background:rgba(59,130,246,0.15);color:#60a5fa;}
+.ntc-icon.follow{background:rgba(168,85,247,0.15);color:#a855f7;}
+.ntc-icon.comment{background:rgba(34,197,94,0.15);color:#4ade80;}
+.ntc-icon.like{background:rgba(239,68,68,0.15);color:#f87171;}
+.ntc-icon.mention{background:rgba(251,191,36,0.15);color:#fbbf24;}
+.ntc-icon.coins{background:rgba(212,168,67,0.15);color:#d4a843;}
+.ntc-icon.order_update{background:rgba(34,197,94,0.15);color:#4ade80;}
+.ntc-icon.elite{background:rgba(212,168,67,0.15);color:#d4a843;}
+.ntc-icon.announcement{background:rgba(59,130,246,0.15);color:#60a5fa;}
+.ntc-icon.system{background:rgba(156,163,175,0.15);color:#9ca3af;}
+.ntc-title{font-weight:700;font-size:0.9rem;}
+.ntc-desc{font-size:0.78rem;color:var(--text-secondary,rgba(255,255,255,0.5));line-height:1.4;}
+.ntc-send{margin-top:auto;padding:8px 16px;border-radius:10px;border:none;background:var(--gold,#d4a843);color:#000;font-weight:700;font-size:0.82rem;cursor:pointer;transition:opacity 0.2s;}
+.ntc-send:hover{opacity:0.85;}
+.status-card{background:var(--card-bg,rgba(255,255,255,0.04));border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:16px;margin-bottom:8px;}
+.status-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:0.85rem;}
+.status-badge{padding:3px 10px;border-radius:20px;font-size:0.75rem;font-weight:600;}
+.status-ok{background:rgba(34,197,94,0.15);color:#4ade80;}
+.status-warn{background:rgba(251,191,36,0.15);color:#fbbf24;}
+.status-err{background:rgba(239,68,68,0.15);color:#f87171;}
+.recent-notif{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:10px;background:rgba(255,255,255,0.02);margin-bottom:4px;font-size:0.82rem;}
+.recent-notif .rn-type{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.8rem;flex-shrink:0;background:rgba(255,255,255,0.06);}
+.recent-notif .rn-body{flex:1;min-width:0;}
+.recent-notif .rn-title{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.recent-notif .rn-msg{font-size:0.75rem;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.recent-notif .rn-time{font-size:0.7rem;color:var(--text-secondary);flex-shrink:0;}
+.sound-test-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+.sound-btn{padding:8px 16px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:var(--text,#fff);font-size:0.82rem;cursor:pointer;transition:all 0.2s;}
+.sound-btn:hover{background:rgba(212,168,67,0.15);border-color:rgba(212,168,67,0.3);}
+</style>
+
+<h2 style="margin-bottom:4px;">?? Notification Testing</h2>
+<p style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:20px;">Test all notification types. Each button creates a real notification (in-app + push + toast).</p>
+
+<!-- Status Overview -->
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-bottom:24px;">
+    <div class="status-card">
+        <div style="font-weight:700;margin-bottom:10px;font-size:0.9rem;">?? Push Configuration</div>
+        <div class="status-row">
+            <span>VAPID Keys</span>
+            {% if vapid_configured %}
+            <span class="status-badge status-ok">Configured</span>
+            {% else %}
+            <span class="status-badge status-err">Not Set</span>
+            {% endif %}
+        </div>
+        <div class="status-row">
+            <span>Your Push Subscriptions</span>
+            <span class="status-badge {{ 'status-ok' if push_subs > 0 else 'status-warn' }}">{{ push_subs }} device{{ 's' if push_subs != 1 else '' }}</span>
+        </div>
+        <div class="status-row">
+            <span>Browser Permission</span>
+            <span class="status-badge" id="permBadge">Checking...</span>
+        </div>
+        {% if vapid_public %}
+        <div style="margin-top:8px;font-size:0.72rem;color:var(--text-secondary);word-break:break-all;">
+            <strong>VAPID Public:</strong> {{ vapid_public[:20] }}...{{ vapid_public[-10:] }}
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="status-card">
+        <div style="font-weight:700;margin-bottom:10px;font-size:0.9rem;">?? Sound Preview</div>
+        <p style="font-size:0.78rem;color:var(--text-secondary);margin-bottom:4px;">Click to preview each notification tone:</p>
+        <div class="sound-test-row">
+            <button class="sound-btn" onclick="WiamNotifSound.preview('chime')">?? Chime</button>
+            <button class="sound-btn" onclick="WiamNotifSound.preview('bell')">?? Bell</button>
+            <button class="sound-btn" onclick="WiamNotifSound.preview('drop')">?? Drop</button>
+            <button class="sound-btn" onclick="WiamNotifSound.preview('ping')">?? Ping</button>
+            <button class="sound-btn" onclick="WiamNotifSound.preview('marimba')">?? Marimba</button>
+        </div>
+    </div>
+</div>
+
+<!-- Test Notification Cards -->
+<h3 style="font-size:1rem;margin-bottom:4px;">Send Test Notifications</h3>
+<p style="color:var(--text-secondary);font-size:0.78rem;margin-bottom:12px;">Each button sends a real notification to your account — in-app toast, database notification, and push (if configured).</p>
+
+<div class="notif-test-grid">
+    {% set types = [
+        ('new_book', '??', 'New Book', 'Tests "new story published" notification sent to followers'),
+        ('new_chapter', '??', 'New Chapter', 'Tests "new chapter" notification sent to followers'),
+        ('follow', '??', 'New Follower', 'Tests follower notification sent to creators'),
+        ('comment', '??', 'Comment', 'Tests comment notification on a story'),
+        ('like', '??', 'Like', 'Tests like notification on a chapter'),
+        ('mention', '??', 'Mention', 'Tests @mention notification in comments'),
+        ('coins', '??', 'Coins Received', 'Tests coin reward notification'),
+        ('order_update', '??', 'Order Update', 'Tests order status change notification'),
+        ('elite', '?', 'Elite Promotion', 'Tests WiamElite story promotion'),
+        ('announcement', '??', 'Announcement', 'Tests platform announcement notification'),
+        ('system', '??', 'System', 'Tests generic system notification'),
+    ] %}
+    {% for type_key, emoji, label, desc in types %}
+    <div class="notif-test-card">
+        <div class="ntc-header">
+            <div class="ntc-icon {{ type_key }}">{{ emoji }}</div>
+            <div class="ntc-title">{{ label }}</div>
+        </div>
+        <div class="ntc-desc">{{ desc }}</div>
+        <form method="POST" action="{{ url_for('founder_dash.send_test_notification') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="type" value="{{ type_key }}">
+            <button type="submit" class="ntc-send">Send Test</button>
+        </form>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Send All at Once -->
+<div style="margin-top:20px;text-align:center;">
+    <form method="POST" action="{{ url_for('founder_dash.send_test_notification') }}" style="display:inline;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="type" value="system">
+        <button type="button" onclick="sendAllTests()" style="padding:12px 32px;border-radius:12px;border:2px solid var(--gold,#d4a843);background:transparent;color:var(--gold,#d4a843);font-weight:700;font-size:0.9rem;cursor:pointer;transition:all 0.2s;">
+            ?? Send ALL Test Notifications
+        </button>
+    </form>
+</div>
+
+<!-- Recent Notifications -->
+<h3 style="font-size:1rem;margin-top:28px;margin-bottom:12px;">Recent Notifications (Your Account)</h3>
+{% if recent_notifs %}
+<div>
+    {% for n in recent_notifs %}
+    {% set emojis = {'new_book':'??','new_chapter':'??','follow':'??','comment':'??','like':'??','mention':'??','coins':'??','order_update':'??','elite':'?','announcement':'??','system':'??'} %}
+    <div class="recent-notif">
+        <div class="rn-type">{{ emojis.get(n.type, '??') }}</div>
+        <div class="rn-body">
+            <div class="rn-title">{{ n.title }}</div>
+            <div class="rn-msg">{{ n.message }}</div>
+        </div>
+        <div class="rn-time">{{ n.created_at.strftime('%H:%M') if n.created_at else '' }}</div>
+        <div style="width:8px;height:8px;border-radius:50%;{{ 'background:#4ade80;' if not n.is_read else 'background:transparent;' }}flex-shrink:0;"></div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<p style="color:var(--text-secondary);font-size:0.85rem;">No recent notifications.</p>
+{% endif %}
+
+<script>
+// Check browser push permission
+(function(){
+    var badge = document.getElementById('permBadge');
+    if (!badge) return;
+    if (!('Notification' in window)) {
+        badge.textContent = 'Not Supported';
+        badge.className = 'status-badge status-err';
+    } else if (Notification.permission === 'granted') {
+        badge.textContent = 'Granted';
+        badge.className = 'status-badge status-ok';
+    } else if (Notification.permission === 'denied') {
+        badge.textContent = 'Denied';
+        badge.className = 'status-badge status-err';
+    } else {
+        badge.textContent = 'Not Asked';
+        badge.className = 'status-badge status-warn';
+    }
+})();
+
+// Send all test notifications sequentially
+function sendAllTests() {
+    var types = ['new_book','new_chapter','follow','comment','like','mention','coins','order_update','elite','announcement','system'];
+    var i = 0;
+    function sendNext() {
+        if (i >= types.length) {
+            location.reload();
+            return;
+        }
+        var form = new FormData();
+        form.append('csrf_token', '{{ csrf_token() }}');
+        form.append('type', types[i]);
+        fetch('{{ url_for("founder_dash.send_test_notification") }}', {
+            method: 'POST',
+            body: form,
+            redirect: 'manual',
+        }).then(function(){
+            i++;
+            setTimeout(sendNext, 500);
+        }).catch(function(){
+            i++;
+            setTimeout(sendNext, 500);
+        });
+    }
+    sendNext();
+}
+</script>
+{% endblock %}

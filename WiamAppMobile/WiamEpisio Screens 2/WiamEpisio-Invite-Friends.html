@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamEpisio — Invite Friends</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{ --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42; --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75; }
+  *{box-sizing:border-box;} body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); display:flex; flex-direction:column; }
+  .statusbar{ height:44px; flex-shrink:0; } svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+  .topbar{ display:flex; align-items:center; gap:12px; padding:2px 20px 14px; flex-shrink:0; }
+  .icon-btn{ width:34px; height:34px; border-radius:50%; background:var(--navy-card); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .topbar h1{ font-size:16px; font-weight:800; color:#fff; margin:0; }
+  .scroll{ flex:1; overflow-y:auto; padding:0 22px 20px; }
+  .hero{ text-align:center; padding:8px 0 22px; }
+  .gift-icon{ width:76px; height:76px; border-radius:50%; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); display:flex; align-items:center; justify-content:center; margin:0 auto 16px; box-shadow:0 14px 34px rgba(212,160,23,0.35); }
+  .hero h2{ font-size:19px; font-weight:800; color:#fff; margin:0 0 8px; }
+  .hero p{ font-size:12px; color:var(--text-dim); line-height:1.6; margin:0; max-width:280px; margin:0 auto; }
+  .hero p b{ color:var(--gold); }
+  .reward-row{ display:flex; gap:10px; margin-bottom:22px; }
+  .reward-card{ flex:1; background:var(--navy-card); border:1px solid var(--navy-line); border-radius:14px; padding:14px; text-align:center; }
+  .reward-card b{ display:block; font-size:17px; font-weight:800; color:var(--gold); margin-bottom:4px; }
+  .reward-card span{ font-size:10px; color:var(--text-faint); }
+  .code-card{ background:var(--navy-card); border:1.5px dashed var(--navy-line); border-radius:14px; padding:16px; text-align:center; margin-bottom:16px; }
+  .code-label{ font-size:10px; color:var(--text-faint); font-weight:700; text-transform:uppercase; margin:0 0 8px; }
+  .code-value{ font-size:22px; font-weight:800; color:#fff; letter-spacing:3px; margin:0 0 12px; }
+  .copy-btn{ padding:9px 20px; border-radius:10px; background:var(--gold); color:var(--navy); font-size:12px; font-weight:800; display:inline-block; }
+  .share-row{ display:flex; justify-content:space-between; margin-bottom:24px; }
+  .app-item{ display:flex; flex-direction:column; align-items:center; gap:7px; }
+  .app-icon{ width:48px; height:48px; border-radius:14px; display:flex; align-items:center; justify-content:center; }
+  .app-icon.wa{ background:#25D366; } .app-icon.tg{ background:#26A5E4; } .app-icon.fb{ background:#1877F2; } .app-icon.sms{ background:var(--navy-card); border:1px solid var(--navy-line); }
+  .app-item span{ font-size:9.5px; color:#C9C9DE; font-weight:600; }
+  .progress-title{ font-size:12px; font-weight:800; color:var(--text-dim); letter-spacing:0.4px; text-transform:uppercase; margin:4px 0 12px; }
+  .invite-row{ display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--navy-line); }
+  .invite-row:last-child{ border-bottom:none; }
+  .invite-avatar{ width:32px; height:32px; border-radius:50%; background:var(--navy-soft); display:flex; align-items:center; justify-content:center; color:var(--text-dim); font-weight:700; font-size:12px; flex-shrink:0; }
+  .invite-row span.name{ flex:1; font-size:12px; color:#E7E7F2; font-weight:500; }
+  .invite-status{ font-size:10px; font-weight:800; padding:3px 8px; border-radius:6px; }
+  .invite-status.joined{ background:rgba(59,178,115,0.16); color:#3BB273; }
+  .invite-status.pending{ background:var(--navy-card); color:var(--text-faint); }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="statusbar"></div>
+  <div class="topbar"><div class="icon-btn"><svg viewBox="0 0 24 24" width="15" height="15" color="#fff"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></div><h1>Invite Friends</h1></div>
+
+  <div class="scroll">
+    <div class="hero">
+      <div class="gift-icon"><svg viewBox="0 0 24 24" width="32" height="32" stroke="#08081A" stroke-width="2"><rect x="3" y="8" width="18" height="4"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5"/></svg></div>
+      <h2>Give 50, Get 50</h2>
+      <p>Share your code — your friend gets <b>50 free coins</b>, and you get <b>50 coins</b> the moment they watch their first episode.</p>
+    </div>
+
+    <div class="reward-row">
+      <div class="reward-card"><b>340</b><span>COINS EARNED</span></div>
+      <div class="reward-card"><b>7</b><span>FRIENDS JOINED</span></div>
+    </div>
+
+    <div class="code-card">
+      <p class="code-label">Your invite code</p>
+      <p class="code-value">AMA-K7F2</p>
+      <span class="copy-btn">Copy Code</span>
+    </div>
+
+    <div class="share-row">
+      <div class="app-item"><div class="app-icon wa"><svg viewBox="0 0 24 24" width="22" height="22" fill="#fff" stroke="none"><path d="M12 2C6.5 2 2 6.5 2 12c0 1.8.5 3.5 1.3 5L2 22l5.2-1.3c1.5.8 3.1 1.3 4.8 1.3 5.5 0 10-4.5 10-10S17.5 2 12 2z"/></svg></div><span>WhatsApp</span></div>
+      <div class="app-item"><div class="app-icon tg"><svg viewBox="0 0 24 24" width="19" height="19" fill="#fff" stroke="none"><path d="M22 3L2 11l6 2 2 7 3-4 5 4z"/></svg></div><span>Telegram</span></div>
+      <div class="app-item"><div class="app-icon fb"><svg viewBox="0 0 24 24" width="18" height="18" fill="#fff" stroke="none"><path d="M22 12c0-5.5-4.5-10-10-10S2 6.5 2 12c0 5 3.7 9.1 8.4 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.5h-1.3c-1.2 0-1.6.8-1.6 1.6V12h2.8l-.4 2.9h-2.4v7C18.3 21.1 22 17 22 12z"/></svg></div><span>Facebook</span></div>
+      <div class="app-item"><div class="app-icon sms"><svg viewBox="0 0 24 24" width="18" height="18" color="#C9C9DE"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><span>SMS</span></div>
+    </div>
+
+    <p class="progress-title">Your Invites</p>
+    <div class="invite-row"><div class="invite-avatar">E</div><span class="name">Efua Boateng</span><span class="invite-status joined">JOINED · +50</span></div>
+    <div class="invite-row"><div class="invite-avatar">K</div><span class="name">Kojo Mensah</span><span class="invite-status joined">JOINED · +50</span></div>
+    <div class="invite-row"><div class="invite-avatar">?</div><span class="name">Invite pending</span><span class="invite-status pending">SENT</span></div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,141 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Editor Studio — WiamApp{% endblock %}
+{% block sidebar_title %}Editor Studio{% endblock %}
+
+{% block sidebar_nav %}
+<a class="nav-link active" href="{{ url_for('editor_studio.dashboard') }}"><i class="bi bi-stack"></i> Review Queue</a>
+<a class="nav-link" href="{{ url_for('editor_studio.content_browse') }}"><i class="bi bi-grid-3x3-gap"></i> Content Browser</a>
+<a class="nav-link" href="{{ url_for('editor_studio.my_reviews') }}"><i class="bi bi-clock-history"></i> My Reviews</a>
+<a class="nav-link" href="{{ url_for('team.dashboard') }}"><i class="bi bi-arrow-left-circle"></i> Team Dashboard</a>
+{% endblock %}
+
+{% block dash_content %}
+<div class="dash-header">
+    <h1><i class="bi bi-pencil-square" style="color:var(--gold);"></i> Editor Studio</h1>
+    <p>Review, edit, and approve stories — welcome back, {{ current_user.display_name }}</p>
+</div>
+
+<!-- Stats -->
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="label">Pending</div>
+        <div class="value" style="color:#facc15;">{{ pending_count }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">In Review</div>
+        <div class="value gold">{{ in_review_count }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">My Reviews</div>
+        <div class="value">{{ my_reviews_count }}</div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="filter-bar">
+    <form method="GET" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;width:100%;">
+        <input type="text" name="q" placeholder="Search by title..." value="{{ search_q }}" style="flex:1;min-width:150px;">
+        <select name="status">
+            <option value="">All statuses</option>
+            <option value="pending" {{ 'selected' if status_filter == 'pending' }}>Pending</option>
+            <option value="in_review" {{ 'selected' if status_filter == 'in_review' }}>In Review</option>
+            <option value="approved" {{ 'selected' if status_filter == 'approved' }}>Approved</option>
+            <option value="rejected" {{ 'selected' if status_filter == 'rejected' }}>Rejected</option>
+            <option value="revision_requested" {{ 'selected' if status_filter == 'revision_requested' }}>Revision Requested</option>
+        </select>
+        <select name="genre">
+            <option value="">All genres</option>
+            {% for g in genres %}
+            <option value="{{ g.name }}" {{ 'selected' if genre_filter == g.name }}>{{ g.name }}</option>
+            {% endfor %}
+        </select>
+        <select name="assigned">
+            <option value="">All assignments</option>
+            <option value="me" {{ 'selected' if assigned_filter == 'me' }}>Assigned to me</option>
+            <option value="unassigned" {{ 'selected' if assigned_filter == 'unassigned' }}>Unassigned</option>
+        </select>
+        <button type="submit" class="btn-dash btn-dash-primary" style="padding:0.45rem 1rem;border-radius:8px;">Filter</button>
+        {% if status_filter or genre_filter or search_q or assigned_filter %}
+        <a href="{{ url_for('editor_studio.dashboard') }}" class="btn-dash" style="padding:0.45rem 0.8rem;border-radius:8px;background:rgba(255,255,255,0.06);color:var(--text-muted);text-decoration:none;">Clear</a>
+        {% endif %}
+    </form>
+</div>
+
+<!-- Queue Items -->
+{% if items %}
+<div class="es-queue">
+    {% for item in items %}
+    {% set q = item.queue %}
+    {% set s = item.story %}
+    <a href="{{ url_for('editor_studio.review', book_id=s.id) }}" class="es-queue-card" style="text-decoration:none;">
+        <div class="es-cover">
+            {% if s.cover_file_id %}
+            <img src="{{ s.cover_url }}" alt="{{ s.title }}">
+            {% else %}
+            <div class="es-cover-placeholder"><i class="bi bi-book"></i></div>
+            {% endif %}
+        </div>
+        <div class="es-info">
+            <div class="es-title">{{ s.title|truncate(50) }}</div>
+            <div class="es-meta">
+                <span>{{ s.author or 'Unknown' }}</span>
+                <span>·</span>
+                <span>{{ s.genre or 'N/A' }}</span>
+                <span>·</span>
+                <span>{{ item.ch_count }} ch</span>
+                <span>·</span>
+                <span>{{ '{:,}'.format(item.total_words) }} words</span>
+            </div>
+            <div class="es-meta-row">
+                <span class="es-status es-status-{{ q.status }}">{{ q.status|replace('_', ' ')|title }}</span>
+                {% if q.assigned_editor %}
+                <span class="es-assigned"><i class="bi bi-person-fill"></i> {{ q.assigned_editor.display_name }}</span>
+                {% else %}
+                <span class="es-assigned unassigned"><i class="bi bi-person-dash"></i> Unassigned</span>
+                {% endif %}
+                <span class="es-date">{{ q.created_at.strftime('%b %d, %Y') }}</span>
+            </div>
+        </div>
+        <div class="es-arrow"><i class="bi bi-chevron-right"></i></div>
+    </a>
+    {% endfor %}
+</div>
+{% else %}
+<div class="dash-card" style="text-align:center;padding:60px 20px;">
+    <i class="bi bi-check-circle" style="font-size:2.5rem;opacity:0.2;display:block;margin-bottom:12px;color:var(--gold);"></i>
+    <p style="color:var(--text-muted);font-size:0.95rem;">No stories in the queue{{ ' matching your filters' if status_filter or genre_filter or search_q else '' }}.</p>
+</div>
+{% endif %}
+
+<style>
+.es-queue { display:flex; flex-direction:column; gap:8px; }
+.es-queue-card {
+    display:flex; align-items:center; gap:16px; padding:14px 18px;
+    background:var(--card-bg,#111); border:1px solid var(--border-subtle,#222);
+    border-radius:14px; transition:all 0.15s; cursor:pointer;
+}
+.es-queue-card:hover { background:rgba(255,255,255,0.03); border-color:rgba(212,168,67,0.2); transform:translateY(-1px); }
+.es-cover { width:52px; height:72px; border-radius:8px; overflow:hidden; flex-shrink:0; background:rgba(212,168,67,0.08); }
+.es-cover img { width:100%; height:100%; object-fit:cover; }
+.es-cover-placeholder { width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:var(--text-muted); font-size:1.3rem; }
+.es-info { flex:1; min-width:0; }
+.es-title { font-size:0.95rem; font-weight:700; color:var(--text,#fff); margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.es-meta { font-size:0.78rem; color:var(--text-muted,#888); display:flex; gap:6px; flex-wrap:wrap; margin-bottom:6px; }
+.es-meta-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+.es-status { padding:3px 10px; border-radius:6px; font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.3px; }
+.es-status-pending { background:rgba(234,179,8,0.15); color:#facc15; }
+.es-status-in_review { background:rgba(59,130,246,0.15); color:#60a5fa; }
+.es-status-approved { background:rgba(34,197,94,0.15); color:#4ade80; }
+.es-status-rejected { background:rgba(239,68,68,0.15); color:#f87171; }
+.es-status-revision_requested { background:rgba(251,191,36,0.15); color:#fbbf24; }
+.es-assigned { font-size:0.75rem; color:var(--text-muted); display:flex; align-items:center; gap:3px; }
+.es-assigned.unassigned { color:rgba(255,255,255,0.3); }
+.es-date { font-size:0.72rem; color:var(--text-muted); }
+.es-arrow { color:var(--text-muted); font-size:1.1rem; flex-shrink:0; }
+@media(max-width:600px) {
+    .es-queue-card { padding:12px; gap:10px; }
+    .es-cover { width:40px; height:56px; }
+    .es-title { font-size:0.88rem; }
+}
+</style>
+{% endblock %}

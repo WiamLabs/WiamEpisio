@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+{% block title %}Preview: {{ book.title }} — WiamApp{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* ── Preview Top Bar ── */
+    .pv-bar {
+        position: sticky; top: 56px; z-index: 90;
+        background: linear-gradient(135deg, rgba(18,18,32,0.95), rgba(12,12,24,0.98));
+        border-bottom: 1px solid rgba(212,168,67,0.12);
+        padding: 0.55rem 1.25rem; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;
+        backdrop-filter: blur(12px);
+    }
+    .pv-badge {
+        background: linear-gradient(135deg, var(--gold), #e8c55a); color: #0a0a0c;
+        padding: 0.2rem 0.65rem; border-radius: 6px; font-size: 0.68rem;
+        font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .pv-bar-title { font-size: 0.88rem; font-weight: 600; color: var(--text); }
+    .pv-bar-meta { font-size: 0.75rem; color: var(--text-muted); }
+    .pv-bar-back {
+        margin-left: auto; display: inline-flex; align-items: center; gap: 0.35rem;
+        font-size: 0.8rem; padding: 0.35rem 0.9rem;
+        background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+        color: var(--text-muted); border-radius: 10px; text-decoration: none; transition: all 0.2s;
+    }
+    .pv-bar-back:hover { border-color: var(--gold); color: var(--gold); background: rgba(212,168,67,0.06); }
+
+    /* ── Layout ── */
+    .pv-layout { display: flex; min-height: calc(100vh - 110px); }
+
+    /* ── Sidebar ── */
+    .pv-side {
+        width: 280px; flex-shrink: 0;
+        background: linear-gradient(180deg, rgba(18,18,32,0.95), rgba(12,12,24,0.98));
+        border-right: 1px solid rgba(255,255,255,0.05);
+        padding: 1.5rem 1.25rem; overflow-y: auto; max-height: calc(100vh - 110px);
+    }
+    .pv-cover { text-align: center; margin-bottom: 1.25rem; }
+    .pv-cover img {
+        max-width: 160px; border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.45); transition: transform 0.3s;
+    }
+    .pv-cover img:hover { transform: scale(1.03); }
+    .pv-cover-empty {
+        width: 140px; height: 195px; margin: 0 auto;
+        background: linear-gradient(135deg, rgba(114,47,55,0.15), rgba(212,168,67,0.08));
+        border: 1px dashed rgba(212,168,67,0.2); border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        color: rgba(212,168,67,0.3); font-size: 0.78rem;
+    }
+
+    .pv-meta { margin-bottom: 1.25rem; }
+    .pv-meta-row { margin-bottom: 0.6rem; }
+    .pv-meta-lbl {
+        font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+        letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 0.1rem;
+    }
+    .pv-meta-val { font-size: 0.85rem; color: var(--text); font-weight: 500; }
+
+    .pv-status-badge {
+        display: inline-block; padding: 0.15rem 0.5rem; border-radius: 20px;
+        font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+    }
+    .pv-status-draft { background: rgba(156,163,175,0.1); color: #9ca3af; }
+    .pv-status-ongoing { background: rgba(59,130,246,0.12); color: #60a5fa; }
+    .pv-status-complete { background: rgba(34,197,94,0.12); color: #4ade80; }
+    .pv-status-approved { background: rgba(34,197,94,0.12); color: #4ade80; }
+    .pv-status-published { background: rgba(34,197,94,0.12); color: #4ade80; }
+
+    .pv-synopsis {
+        font-size: 0.78rem; color: var(--text-muted); line-height: 1.55;
+        font-weight: 400; font-style: italic;
+        padding: 0.75rem; background: rgba(255,255,255,0.02);
+        border-radius: 10px; border-left: 2px solid rgba(212,168,67,0.2);
+    }
+
+    .pv-toc-title {
+        font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+        letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 0.6rem;
+        padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.04);
+    }
+    .pv-toc { list-style: none; padding: 0; margin: 0; }
+    .pv-toc li a {
+        display: flex; align-items: center; gap: 0.5rem;
+        padding: 0.45rem 0.6rem; margin-bottom: 2px;
+        font-size: 0.82rem; color: var(--text-muted); text-decoration: none;
+        border-radius: 10px; transition: all 0.2s;
+    }
+    .pv-toc li a:hover { background: rgba(255,255,255,0.04); color: var(--text); }
+    .pv-toc li a.active {
+        background: linear-gradient(135deg, rgba(212,168,67,0.1), rgba(114,47,55,0.06));
+        color: var(--gold); font-weight: 600;
+        border-left: 2px solid var(--gold); padding-left: calc(0.6rem - 2px);
+    }
+    .pv-toc .ch-num { min-width: 20px; font-size: 0.72rem; color: var(--text-muted); font-weight: 600; }
+    .pv-toc .ch-title { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pv-toc .ch-badge { font-size: 0.6rem; padding: 0.1rem 0.35rem; border-radius: 4px; }
+    .pv-toc .ch-draft { background: rgba(156,163,175,0.08); color: #9ca3af; }
+    .pv-toc .ch-lock { font-size: 0.65rem; color: var(--gold); }
+
+    /* ── Content Area ── */
+    .pv-content { flex: 1; padding: 2.5rem 2rem; max-width: 780px; margin: 0 auto; }
+
+    .pv-ch-header {
+        margin-bottom: 2rem; padding-bottom: 1.25rem;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .pv-ch-header h1 {
+        font-size: 1.65rem; font-weight: 800; color: var(--text);
+        margin: 0 0 0.4rem; letter-spacing: -0.02em; line-height: 1.3;
+    }
+    .pv-ch-meta { font-size: 0.8rem; color: var(--text-muted); display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; }
+    .pv-ch-meta span { display: flex; align-items: center; gap: 0.25rem; }
+    .pv-draft-tag { color: #facc15; font-weight: 600; }
+    .pv-lock-tag { color: var(--gold); }
+
+    /* ── Reading Body ── */
+    .pv-body {
+        font-size: 1.05rem; line-height: 1.9; color: rgba(255,255,255,0.8);
+        font-family: 'Georgia', 'Times New Roman', serif;
+    }
+    .pv-body p { margin-bottom: 1.15em; }
+    .pv-body h1, .pv-body h2, .pv-body h3 {
+        color: var(--text); margin: 1.75em 0 0.6em;
+        font-family: inherit;
+    }
+    .pv-body blockquote {
+        border-left: 3px solid rgba(212,168,67,0.3);
+        padding-left: 1.25rem; margin: 1.5em 0;
+        color: rgba(255,255,255,0.6); font-style: italic;
+    }
+    .pv-body strong { color: var(--text); }
+    .pv-body em { color: rgba(255,255,255,0.75); }
+
+    /* ── Locked Chapter Box ── */
+    .pv-locked {
+        text-align: center; padding: 2.5rem 1.5rem;
+        background: linear-gradient(135deg, rgba(212,168,67,0.04), rgba(114,47,55,0.04));
+        border-radius: 16px; border: 1px dashed rgba(212,168,67,0.2);
+    }
+    .pv-locked-icon {
+        width: 56px; height: 56px; border-radius: 50%; margin: 0 auto 1rem;
+        background: rgba(212,168,67,0.1);
+        display: flex; align-items: center; justify-content: center;
+    }
+    .pv-locked-icon i { font-size: 1.4rem; color: var(--gold); }
+    .pv-locked h3 { font-size: 1.05rem; font-weight: 700; color: var(--text); margin-bottom: 0.3rem; }
+    .pv-locked p { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0; }
+    .pv-locked-divider {
+        margin: 1.25rem 0; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.06);
+        font-size: 0.75rem; color: var(--text-muted); font-weight: 600;
+    }
+    .pv-locked .pv-body { text-align: left; opacity: 0.6; margin-top: 1rem; }
+
+    /* ── Chapter Navigation ── */
+    .pv-nav {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-top: 2.5rem; padding-top: 1.25rem;
+        border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    .pv-nav-btn {
+        display: inline-flex; align-items: center; gap: 0.4rem;
+        font-size: 0.85rem; color: var(--text-muted); text-decoration: none;
+        padding: 0.5rem 1rem; border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 12px; transition: all 0.2s;
+    }
+    .pv-nav-btn:hover { border-color: var(--gold); color: var(--gold); background: rgba(212,168,67,0.04); }
+
+    /* ── Empty State ── */
+    .pv-empty {
+        text-align: center; padding: 5rem 2rem; color: var(--text-muted);
+    }
+    .pv-empty-icon {
+        width: 64px; height: 64px; border-radius: 50%; margin: 0 auto 1.25rem;
+        background: rgba(212,168,67,0.06);
+        display: flex; align-items: center; justify-content: center;
+    }
+    .pv-empty-icon i { font-size: 1.6rem; color: rgba(212,168,67,0.3); }
+    .pv-empty h3 { font-size: 1.1rem; color: var(--text); font-weight: 600; margin-bottom: 0.3rem; }
+    .pv-empty p { font-size: 0.88rem; }
+
+    @media (max-width: 768px) {
+        .pv-side { display: none; }
+        .pv-content { padding: 1.25rem 1rem; }
+        .pv-ch-header h1 { font-size: 1.3rem; }
+        .pv-body { font-size: 0.98rem; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- ═══════ Preview Bar ═══════ -->
+<div class="pv-bar">
+    <span class="pv-badge">Preview</span>
+    <span class="pv-bar-title">{{ book.title }}</span>
+    <span class="pv-bar-meta">{{ chapters|length }} chapters · {{ '{:,}'.format(total_words) }} words</span>
+    <a href="{{ url_for('studio.editor', book_id=book.id) }}" class="pv-bar-back"><i class="bi bi-arrow-left"></i> Editor</a>
+</div>
+
+<div class="pv-layout">
+    <!-- ═══════ Sidebar ═══════ -->
+    <aside class="pv-side">
+        <div class="pv-cover">
+            {% if book.cover_file_id %}
+            <img src="{{ book.cover_url }}" alt="{{ book.title }}">
+            {% else %}
+            <div class="pv-cover-empty"><i class="bi bi-image" style="font-size:1.5rem"></i></div>
+            {% endif %}
+        </div>
+
+        <div class="pv-meta">
+            <div class="pv-meta-row">
+                <div class="pv-meta-lbl">Author</div>
+                <div class="pv-meta-val">{{ book.author or '—' }}</div>
+            </div>
+            <div class="pv-meta-row">
+                <div class="pv-meta-lbl">Genre</div>
+                <div class="pv-meta-val">{{ book.genre or '—' }}</div>
+            </div>
+            <div class="pv-meta-row">
+                <div class="pv-meta-lbl">Status</div>
+                <div class="pv-meta-val">
+                    <span class="pv-status-badge pv-status-{{ book.status }}">{{ book.status }}</span>
+                </div>
+            </div>
+            {% if book.description %}
+            <div class="pv-meta-row" style="margin-top:0.25rem">
+                <div class="pv-meta-lbl">Synopsis</div>
+                <div class="pv-synopsis">{{ book.description[:220] }}{% if book.description|length > 220 %}...{% endif %}</div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="pv-toc-title">Chapters</div>
+        <ul class="pv-toc">
+            {% for ch in chapters %}
+            <li>
+                <a href="{{ url_for('studio.preview', book_id=book.id, ch=ch.chapter_number) }}"
+                   class="{% if current_chapter and ch.chapter_number == current_chapter.chapter_number %}active{% endif %}">
+                    <span class="ch-num">{{ ch.chapter_number }}</span>
+                    <span class="ch-title">{{ ch.chapter_title }}</span>
+                    {% if ch.status == 'draft' %}<span class="ch-badge ch-draft">draft</span>{% endif %}
+                    {% if ch.is_locked %}<i class="bi bi-lock-fill ch-lock"></i>{% endif %}
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    </aside>
+
+    <!-- ═══════ Content ═══════ -->
+    <div class="pv-content">
+        {% if current_chapter %}
+        <div class="pv-ch-header">
+            <h1>{{ current_chapter.chapter_title }}</h1>
+            <div class="pv-ch-meta">
+                <span><i class="bi bi-hash"></i> Chapter {{ current_chapter.chapter_number }} of {{ chapters|length }}</span>
+                <span><i class="bi bi-text-paragraph"></i> {{ current_chapter.word_count or 0 }} words</span>
+                {% if current_chapter.status == 'draft' %}<span class="pv-draft-tag"><i class="bi bi-pencil"></i> Draft</span>{% endif %}
+                {% if current_chapter.is_locked %}<span class="pv-lock-tag"><i class="bi bi-lock-fill"></i> {{ current_chapter.chapter_price|int }} coins</span>{% endif %}
+            </div>
+        </div>
+
+        {% if current_chapter.is_locked %}
+        <div class="pv-locked">
+            <div class="pv-locked-icon"><i class="bi bi-lock-fill"></i></div>
+            <h3>Locked Chapter</h3>
+            <p>Readers will need {{ current_chapter.chapter_price|int }} coins to unlock</p>
+            <div class="pv-locked-divider">Your content preview (only visible to you)</div>
+            <div class="pv-body">
+                {{ current_chapter.body|safe }}
+            </div>
+        </div>
+        {% else %}
+        <div class="pv-body">
+            {% if current_chapter.body %}
+            {{ current_chapter.body|safe }}
+            {% else %}
+            <div class="pv-empty">
+                <div class="pv-empty-icon"><i class="bi bi-pencil"></i></div>
+                <h3>Empty chapter</h3>
+                <p>Head back to the editor to start writing.</p>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <div class="pv-nav">
+            {% if current_chapter.chapter_number > 1 %}
+            <a href="{{ url_for('studio.preview', book_id=book.id, ch=current_chapter.chapter_number - 1) }}" class="pv-nav-btn">
+                <i class="bi bi-chevron-left"></i> Previous
+            </a>
+            {% else %}<span></span>{% endif %}
+
+            {% if current_chapter.chapter_number < chapters|length %}
+            <a href="{{ url_for('studio.preview', book_id=book.id, ch=current_chapter.chapter_number + 1) }}" class="pv-nav-btn">
+                Next <i class="bi bi-chevron-right"></i>
+            </a>
+            {% else %}<span></span>{% endif %}
+        </div>
+
+        {% else %}
+        <div class="pv-empty">
+            <div class="pv-empty-icon"><i class="bi bi-book"></i></div>
+            <h3>No chapters yet</h3>
+            <p>Go back to the editor to start writing your story.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

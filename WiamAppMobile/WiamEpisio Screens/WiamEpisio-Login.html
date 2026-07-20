@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamEpisio — Sign In</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{ --navy:#08081A; --navy-card:#12122A; --navy-line:#1E1E42; --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75; }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); display:flex; flex-direction:column; padding:0 26px; }
+  .statusbar{ height:44px; }
+  .close-btn{ width:34px; height:34px; border-radius:50%; background:var(--navy-card); display:flex; align-items:center; justify-content:center; margin-bottom:26px; }
+
+  .hero{ margin-bottom:30px; }
+  .logo-badge{ width:44px; height:44px; border-radius:13px; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); display:flex; align-items:center; justify-content:center; color:var(--navy); font-weight:800; font-size:19px; clip-path: polygon(30% 0%, 100% 0, 100% 100%, 30% 100%, 0% 50%); margin-bottom:18px; }
+  h1{ font-size:23px; font-weight:800; color:#fff; margin:0 0 6px; letter-spacing:-0.3px; }
+  .sub{ font-size:13px; color:var(--text-dim); margin:0; }
+
+  .field-group{ margin-bottom:12px; }
+  .field-label{ font-size:11.5px; font-weight:600; color:var(--text-dim); margin:0 0 7px; display:block; }
+  .field-box{ background:var(--navy-card); border:1px solid var(--navy-line); border-radius:14px; padding:13px 14px; display:flex; align-items:center; gap:10px; }
+  .field-box.focus{ border-color:var(--gold); }
+  .field-box svg{ color:var(--gold); flex-shrink:0; width:15px; height:15px; }
+  .field-box input{ background:none; border:none; outline:none; color:#fff; font-size:13.5px; font-family:inherit; width:100%; }
+  .field-box input::placeholder{ color:var(--text-faint); }
+  .eye-btn{ color:var(--text-faint); flex-shrink:0; }
+
+  .forgot-row{ text-align:right; margin-bottom:22px; }
+  .forgot-row span{ font-size:12px; color:var(--gold); font-weight:600; }
+
+  .signin-btn{ padding:16px; border-radius:16px; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); color:var(--navy); font-size:14.5px; font-weight:800; border:none; margin:0 0 20px; box-shadow:0 14px 30px rgba(212,160,23,0.3); font-family:'Inter',sans-serif; }
+
+  .divider{ display:flex; align-items:center; gap:12px; margin-bottom:18px; }
+  .divider .line{ flex:1; height:1px; background:var(--navy-line); }
+  .divider span{ font-size:11.5px; color:var(--text-faint); }
+
+  .social-row{ display:flex; gap:10px; margin-bottom:24px; }
+  .social-btn{ flex:1; padding:12px; border-radius:14px; background:var(--navy-card); border:1px solid var(--navy-line); display:flex; align-items:center; justify-content:center; gap:8px; }
+  .social-btn span{ font-size:12.5px; color:#fff; font-weight:500; }
+
+  .bottom{ margin-top:auto; padding-bottom:28px; text-align:center; }
+  .signup-link{ font-size:13px; color:var(--text-dim); }
+  .signup-link span{ color:var(--gold); font-weight:700; }
+  .guest-link{ font-size:12px; color:var(--text-faint); margin-top:12px; display:block; }
+
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="statusbar"></div>
+  <div class="close-btn"><svg viewBox="0 0 24 24" width="16" height="16" color="#fff"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+
+  <div class="hero">
+    <div class="logo-badge">W</div>
+    <h1>Welcome back</h1>
+    <p class="sub">Sign in to keep watching where you left off.</p>
+  </div>
+
+  <div class="field-group">
+    <span class="field-label">Email</span>
+    <div class="field-box focus">
+      <svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z" opacity="0"/><path d="M22 6l-10 7L2 6"/><path d="M2 6h20v12H2z"/></svg>
+      <input placeholder="you@email.com" value="ama.owusu@gmail.com" />
+    </div>
+  </div>
+
+  <div class="field-group">
+    <span class="field-label">Password</span>
+    <div class="field-box">
+      <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+      <input type="password" placeholder="••••••••" value="••••••••" />
+      <svg class="eye-btn" viewBox="0 0 24 24" width="15" height="15"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+    </div>
+  </div>
+
+  <div class="forgot-row"><span>Forgot password?</span></div>
+
+  <button class="signin-btn">Sign In</button>
+
+  <div class="divider"><div class="line"></div><span>or continue with</span><div class="line"></div></div>
+
+  <div class="social-row">
+    <div class="social-btn"><svg viewBox="0 0 24 24" width="15" height="15" color="#fff"><path d="M22 12c0-5.5-4.5-10-10-10S2 6.5 2 12c0 5 3.7 9.1 8.4 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.5h-1.3c-1.2 0-1.6.8-1.6 1.6V12h2.8l-.4 2.9h-2.4v7C18.3 21.1 22 17 22 12z"/></svg><span>Facebook</span></div>
+    <div class="social-btn"><svg viewBox="0 0 24 24" width="15" height="15" color="#fff"><circle cx="12" cy="12" r="10"/></svg><span>Google</span></div>
+  </div>
+
+  <div class="bottom">
+    <p class="signup-link">Don't have an account? <span>Sign up</span></p>
+    <span class="guest-link">Keep browsing as guest</span>
+  </div>
+</div>
+</body>
+</html>

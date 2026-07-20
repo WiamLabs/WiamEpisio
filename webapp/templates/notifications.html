@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+{% block title %}Notifications — WiamApp{% endblock %}
+
+{% block extra_head %}
+<style>
+    .notif-page { max-width: 600px; margin: 0 auto; padding: 1rem 1rem 6rem; }
+    .notif-header {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-bottom: 1.2rem; padding-bottom: 0.75rem;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .notif-header h1 {
+        font-size: 1.15rem; font-weight: 700; color: var(--text); margin: 0;
+        display: flex; align-items: center; gap: 0.4rem;
+    }
+    .notif-actions { display: flex; gap: 0.4rem; }
+    .notif-btn {
+        font-size: 0.72rem; padding: 0.3rem 0.65rem; border-radius: 8px;
+        border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03);
+        color: var(--text-muted); cursor: pointer; transition: all 0.2s;
+        display: flex; align-items: center; gap: 0.3rem;
+    }
+    .notif-btn:hover { border-color: var(--gold); color: var(--gold); }
+    .notif-btn.danger:hover { border-color: #f87171; color: #f87171; }
+    .notif-item {
+        display: flex; gap: 0.7rem; padding: 0.8rem 0.7rem;
+        border-bottom: 1px solid rgba(255,255,255,0.03);
+        transition: all 0.15s; text-decoration: none; color: inherit;
+        border-radius: 10px; margin-bottom: 2px; position: relative;
+    }
+    .notif-item:hover { background: rgba(255,255,255,0.03); }
+    .notif-item.unread { background: rgba(212,168,67,0.04); }
+    .notif-link { flex: 1; display: flex; gap: 0.7rem; text-decoration: none; color: inherit; min-width: 0; }
+    .notif-icon {
+        width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center; font-size: 1rem;
+    }
+    .notif-icon.new_book { background: rgba(59,130,246,0.12); color: #60a5fa; }
+    .notif-icon.new_chapter { background: rgba(59,130,246,0.12); color: #60a5fa; }
+    .notif-icon.order_update { background: rgba(34,197,94,0.12); color: #4ade80; }
+    .notif-icon.access_expiry { background: rgba(234,179,8,0.12); color: #facc15; }
+    .notif-icon.follow { background: rgba(168,85,247,0.12); color: #a855f7; }
+    .notif-icon.comment { background: rgba(34,197,94,0.12); color: #4ade80; }
+    .notif-icon.like { background: rgba(239,68,68,0.12); color: #f87171; }
+    .notif-icon.mention { background: rgba(251,191,36,0.12); color: #fbbf24; }
+    .notif-icon.coins { background: rgba(212,168,67,0.12); color: #d4a843; }
+    .notif-icon.elite { background: rgba(212,168,67,0.12); color: #d4a843; }
+    .notif-icon.announcement { background: rgba(99,102,241,0.12); color: #818cf8; }
+    .notif-icon.system { background: rgba(156,163,175,0.1); color: #9ca3af; }
+    .notif-body { flex: 1; min-width: 0; }
+    .notif-title { font-size: 0.84rem; font-weight: 600; color: var(--text); margin-bottom: 0.1rem; }
+    .notif-msg { font-size: 0.76rem; color: var(--text-muted); line-height: 1.35; }
+    .notif-time { font-size: 0.66rem; color: var(--text-muted); margin-top: 0.2rem; opacity: 0.7; }
+    .notif-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--gold); flex-shrink: 0; margin-top: 0.4rem; }
+    .notif-del {
+        flex-shrink: 0; width: 28px; height: 28px; border-radius: 8px;
+        display: flex; align-items: center; justify-content: center;
+        background: transparent; border: none; color: var(--text-muted);
+        cursor: pointer; font-size: 0.8rem; transition: all 0.15s;
+        opacity: 0; align-self: center;
+    }
+    .notif-item:hover .notif-del { opacity: 1; }
+    .notif-del:hover { background: rgba(239,68,68,0.12); color: #f87171; }
+    .notif-empty {
+        text-align: center; padding: 4rem 1.5rem; color: var(--text-muted); font-size: 0.88rem;
+    }
+    .notif-empty i { font-size: 2.5rem; opacity: 0.2; display: block; margin-bottom: 0.75rem; }
+    @media(max-width:480px) {
+        .notif-del { opacity: 1; }
+        .notif-item { padding: 0.65rem 0.5rem; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="notif-page">
+    <div class="notif-header">
+        <h1><i class="bi bi-bell"></i> Notifications</h1>
+        {% if notifications %}
+        <div class="notif-actions">
+            <button class="notif-btn" onclick="clearAll()"><i class="bi bi-check-all"></i> Mark read</button>
+            <button class="notif-btn danger" onclick="deleteAll()"><i class="bi bi-trash3"></i> Clear all</button>
+        </div>
+        {% endif %}
+    </div>
+
+    <div id="notifList">
+    {% if notifications %}
+    {% for n in notifications %}
+    <div class="notif-item {% if not n.is_read %}unread{% endif %}" id="notif-{{ n.id }}">
+        <a href="{{ url_for('notifications.read_and_redirect', notif_id=n.id) }}" class="notif-link">
+            <div class="notif-icon {{ n.type }}">
+                {% if n.type == 'new_book' %}<i class="bi bi-book"></i>
+                {% elif n.type == 'new_chapter' %}<i class="bi bi-file-text"></i>
+                {% elif n.type == 'order_update' %}<i class="bi bi-receipt"></i>
+                {% elif n.type == 'access_expiry' %}<i class="bi bi-clock-history"></i>
+                {% elif n.type == 'follow' %}<i class="bi bi-person-plus"></i>
+                {% elif n.type == 'comment' %}<i class="bi bi-chat-dots"></i>
+                {% elif n.type == 'like' %}<i class="bi bi-heart-fill"></i>
+                {% elif n.type == 'mention' %}<i class="bi bi-at"></i>
+                {% elif n.type == 'coins' %}<i class="bi bi-coin"></i>
+                {% elif n.type == 'elite' %}<span style="font-size:1rem">✦</span>
+                {% elif n.type == 'announcement' %}<i class="bi bi-megaphone"></i>
+                {% else %}<i class="bi bi-bell"></i>{% endif %}
+            </div>
+            <div class="notif-body">
+                <div class="notif-title">{{ n.title }}</div>
+                {% if n.message %}<div class="notif-msg">{{ n.message }}</div>{% endif %}
+                <div class="notif-time">{{ n.created_at.strftime('%b %d, %Y · %I:%M %p') }}</div>
+            </div>
+            {% if not n.is_read %}<div class="notif-dot"></div>{% endif %}
+        </a>
+        <button class="notif-del" onclick="deleteNotif({{ n.id }}, event)" title="Delete"><i class="bi bi-x-lg"></i></button>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="notif-empty">
+        <i class="bi bi-bell-slash"></i>
+        No notifications yet. We'll let you know when something happens!
+    </div>
+    {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+var _csrf = document.querySelector('meta[name=csrf-token]')?.content || '';
+function _refreshBadge() {
+    fetch('/notifications/count').then(function(r){ return r.json(); }).then(function(d){
+        var c = d.count || 0;
+        var badges = document.querySelectorAll('#notifBadge,[data-notif-badge]');
+        badges.forEach(function(b){
+            if (c > 0) { b.textContent = c; b.style.display = ''; }
+            else { b.style.display = 'none'; }
+        });
+        if (c === 0 && 'clearAppBadge' in navigator) navigator.clearAppBadge().catch(function(){});
+    }).catch(function(){});
+}
+function clearAll() {
+    fetch('{{ url_for("notifications.clear_all") }}', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': _csrf, 'X-Requested-With': 'XMLHttpRequest' }
+    }).then(function() {
+        document.querySelectorAll('.notif-item.unread').forEach(function(el) { el.classList.remove('unread'); });
+        document.querySelectorAll('.notif-dot').forEach(function(el) { el.remove(); });
+        _refreshBadge();
+    });
+}
+function deleteNotif(id, e) {
+    e.preventDefault(); e.stopPropagation();
+    var el = document.getElementById('notif-' + id);
+    if (el) { el.style.transition = 'opacity 0.25s, transform 0.25s'; el.style.opacity = '0'; el.style.transform = 'translateX(40px)'; }
+    fetch('/notifications/delete/' + id, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': _csrf, 'X-Requested-With': 'XMLHttpRequest' }
+    }).then(function() {
+        setTimeout(function() { if (el) el.remove(); checkEmpty(); _refreshBadge(); }, 250);
+    });
+}
+function deleteAll() {
+    if (!confirm('Delete all notifications?')) return;
+    fetch('{{ url_for("notifications.delete_all") }}', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': _csrf, 'X-Requested-With': 'XMLHttpRequest' }
+    }).then(function() {
+        document.querySelectorAll('.notif-item').forEach(function(el) { el.remove(); });
+        checkEmpty();
+        _refreshBadge();
+    });
+}
+function checkEmpty() {
+    var list = document.getElementById('notifList');
+    if (list && !list.querySelector('.notif-item')) {
+        list.innerHTML = '<div class="notif-empty"><i class="bi bi-bell-slash"></i>No notifications. All clear!</div>';
+        document.querySelector('.notif-actions')?.remove();
+    }
+}
+</script>
+{% endblock %}

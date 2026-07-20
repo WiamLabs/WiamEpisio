@@ -1,0 +1,711 @@
+{% extends "base.html" %}
+{% block title %}{{ book.title }} — Read Free on WiamApp{% endblock %}
+{% block meta_description %}{% if book.description %}{{ book.description[:155]|striptags }}{% else %}Read {{ book.title }} on WiamApp — free stories from talented creators across Africa and beyond.{% endif %}{% endblock %}
+{% block og_type %}book{% endblock %}
+{% block og_title %}{{ book.title }} — WiamApp{% endblock %}
+{% block og_description %}{% if book.description %}{{ book.description[:200]|striptags }}{% else %}Read {{ book.title }} on WiamApp — free stories.{% endif %}{% endblock %}
+{% block og_image %}{% if book.cover_url %}{{ book.cover_url }}{% else %}{{ url_for('static', filename='img/og-card.png', _external=True) }}{% endif %}{% endblock %}
+{% block og_image_width %}600{% endblock %}
+{% block og_image_height %}900{% endblock %}
+{% block og_image_alt %}Cover of {{ book.title }} on WiamApp{% endblock %}
+{% block jsonld_extra %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Book",
+  "name": {{ book.title|tojson }},
+  "url": "https://wiamapp.com/book/{{ book.id }}",
+  {% if book.cover_url %}"image": {{ book.cover_url|tojson }},{% endif %}
+  {% if book.description %}"description": {{ (book.description[:500]|striptags)|tojson }},{% endif %}
+  {% if book.genre %}"genre": {{ book.genre|tojson }},{% endif %}
+  "inLanguage": "en",
+  "bookFormat": "https://schema.org/EBook",
+  "author": {
+    "@type": "Person",
+    "name": {{ (book.author or 'WiamApp creator')|tojson }}{% if book.creator_wiam_id %},
+    "url": "https://wiamapp.com/creator/{{ book.creator_wiam_id }}"{% endif %}
+  },
+  "publisher": { "@type": "Organization", "name": "WiamApp", "url": "https://wiamapp.com" },
+  "isAccessibleForFree": true{% if book.published_at %},
+  "datePublished": "{{ book.published_at.strftime('%Y-%m-%d') }}"{% endif %}
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://wiamapp.com/"},
+    {"@type": "ListItem", "position": 2, "name": "Browse", "item": "https://wiamapp.com/browse"}{% if book.genre %},
+    {"@type": "ListItem", "position": 3, "name": {{ book.genre|tojson }}, "item": "https://wiamapp.com/browse/genre/{{ book.genre }}"},
+    {"@type": "ListItem", "position": 4, "name": {{ book.title|tojson }}, "item": "https://wiamapp.com/book/{{ book.id }}"}
+    {% else %},
+    {"@type": "ListItem", "position": 3, "name": {{ book.title|tojson }}, "item": "https://wiamapp.com/book/{{ book.id }}"}
+    {% endif %}
+  ]
+}
+</script>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    html,body{overflow-x:hidden !important;}
+
+    /* ── Premium Book Detail Layout ── */
+    .bd-back{display:inline-flex;align-items:center;gap:6px;color:var(--text-muted);text-decoration:none;font-size:0.82rem;padding:12px 0;transition:color 0.2s;}
+    .bd-back:hover{color:var(--gold);}
+
+    /* Cover hero — blurred background + centered cover */
+    .bd-cover-hero{position:relative;overflow:hidden;margin:0 -12px;padding:2rem 12px 1.5rem;text-align:center;}
+    .bd-cover-hero::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,var(--wine-glow) 0%,var(--bg) 100%);z-index:0;}
+    .bd-cover-wrap{position:relative;z-index:1;display:inline-block;}
+    .bd-cover{width:180px;aspect-ratio:2/3;object-fit:cover;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,0.6),0 0 0 1px rgba(212,168,67,0.1);}
+    .bd-cover-ph{width:180px;aspect-ratio:2/3;border-radius:14px;background:linear-gradient(135deg,var(--wine),var(--wine-dark));display:flex;align-items:center;justify-content:center;color:var(--gold-dim);font-size:3rem;box-shadow:0 20px 60px rgba(0,0,0,0.6);}
+
+    /* Title area */
+    .bd-title-area{text-align:center;padding:0 1rem;margin-top:1rem;}
+    .bd-title{font-family:var(--font-display);font-size:clamp(1.4rem,4vw,1.8rem);font-weight:700;margin:0 0 4px;line-height:1.2;}
+    .bd-elite-badge{display:inline-block;background:linear-gradient(135deg,#d4a843,#b8860b);color:#000;font-size:0.5rem;font-weight:700;padding:2px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:1px;vertical-align:middle;margin-left:6px;}
+    .bd-author{color:var(--text-secondary);font-size:0.95rem;margin-bottom:8px;font-weight:500;}
+    .bd-author a{color:#d4a843;text-decoration:none;font-weight:600;}
+    .bd-author a:hover{text-decoration:underline;color:#e8c65a;}
+
+    /* Stats row */
+    .bd-stats{display:flex;justify-content:center;gap:1.5rem;flex-wrap:wrap;padding:12px 0;margin:8px 0;}
+    .bd-stat{text-align:center;}
+    .bd-stat-val{font-size:1rem;font-weight:700;color:var(--text);}
+    .bd-stat-label{font-size:0.62rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;}
+
+    /* Star rating */
+    .bd-stars{display:inline-flex;gap:2px;align-items:center;cursor:pointer;}
+    .bd-stars .star{font-size:1.15rem;color:var(--text-muted);transition:color 0.15s,transform 0.15s;cursor:pointer;}
+    .bd-stars .star:hover,.bd-stars .star.active{color:#d4a843;transform:scale(1.1);}
+    .bd-stars .star.filled{color:#d4a843;}
+    .bd-rating-text{color:var(--text-muted);font-size:0.78rem;margin-left:6px;}
+
+    /* Action buttons */
+    .bd-actions{display:flex;flex-direction:column;gap:10px;padding:0 1rem;margin:1rem 0;}
+    .bd-btn-primary{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;background:linear-gradient(135deg,#d4a843,#b8860b);color:#000;border:none;border-radius:14px;font-weight:700;font-size:0.95rem;cursor:pointer;text-decoration:none;transition:transform 0.2s,box-shadow 0.2s;box-shadow:0 4px 20px rgba(212,168,67,0.3);}
+    .bd-btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(212,168,67,0.4);}
+    .bd-btn-row{display:flex;gap:10px;}
+    .bd-btn-sec{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px;background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:12px;color:var(--text);font-size:0.82rem;font-weight:600;cursor:pointer;text-decoration:none;transition:all 0.2s;}
+    .bd-btn-sec:hover{border-color:var(--gold);color:var(--gold);}
+    .bd-btn-sec i{font-size:1rem;}
+
+    /* Status badge */
+    .bd-status{display:inline-block;padding:4px 14px;border-radius:20px;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;}
+    .bd-status.ongoing{background:rgba(59,130,246,0.15);color:#60a5fa;}
+    .bd-status.complete{background:rgba(34,197,94,0.15);color:#4ade80;}
+    .bd-status.draft{background:rgba(156,163,175,0.15);color:#9ca3af;}
+    .bd-status.hidden,.bd-status.rejected{background:rgba(239,68,68,0.15);color:#f87171;}
+
+    /* Synopsis */
+    .bd-section{padding:0 1rem;margin:1.2rem 0;}
+    .bd-section-title{font-family:var(--font-display);font-size:0.95rem;font-weight:700;margin:0 0 8px;display:flex;align-items:center;gap:8px;}
+    .bd-synopsis{color:var(--text-secondary);line-height:1.8;font-size:0.9rem;margin:0;}
+    .bd-synopsis.collapsed{max-height:120px;overflow:hidden;position:relative;}
+    .bd-synopsis.collapsed::after{content:'';position:absolute;bottom:0;left:0;right:0;height:40px;background:linear-gradient(transparent,var(--bg));}
+    .bd-more-btn{color:var(--gold);font-size:0.8rem;cursor:pointer;background:none;border:none;padding:4px 0;font-weight:600;}
+
+    /* Genre + Tags */
+    .bd-tags{display:flex;flex-wrap:wrap;gap:8px;padding:0 1rem;margin:1rem 0;}
+    .bd-tag{display:inline-flex;align-items:center;gap:4px;padding:6px 14px;border-radius:20px;background:var(--bg-card);border:1px solid var(--border-subtle);font-size:0.78rem;color:var(--text-secondary);text-decoration:none;transition:all 0.2s;}
+    .bd-tag:hover{border-color:var(--gold);color:var(--gold);}
+
+    /* Chapters modal */
+    .chapters-overlay{position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);display:none;opacity:0;transition:opacity 0.2s;}
+    .chapters-overlay.open{display:flex;opacity:1;align-items:flex-start;justify-content:center;}
+    .chapters-modal{width:100%;max-width:500px;max-height:85vh;background:var(--bg-card,#141428);border-radius:0 0 20px 20px;overflow:hidden;display:flex;flex-direction:column;transform:translateY(-100%);transition:transform 0.3s ease;}
+    .chapters-overlay.open .chapters-modal{transform:translateY(0);}
+    .chapters-modal-header{padding:16px 20px;border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+    .chapters-modal-header h3{margin:0;font-size:1rem;font-weight:600;}
+    .chapters-modal-body{flex:1;overflow-y:auto;padding:0;}
+    .ch-item{display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--border-subtle);text-decoration:none;color:var(--text);transition:background 0.15s;}
+    .ch-item:hover{background:var(--bg-elevated);}
+    .ch-num{min-width:32px;height:32px;border-radius:8px;background:var(--bg-elevated);display:flex;align-items:center;justify-content:center;font-size:0.78rem;font-weight:600;color:var(--text-muted);flex-shrink:0;}
+    .ch-info{flex:1;min-width:0;}
+    .ch-title{font-size:0.88rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .ch-meta{font-size:0.7rem;color:var(--text-muted);}
+
+    /* Share card modal */
+    .share-overlay{position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:1rem;}
+    .share-overlay.open{display:flex;}
+    .share-card-wrap{max-width:320px;width:100%;text-align:center;}
+    .share-card-preview{border-radius:14px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,0.6);margin-bottom:14px;}
+    .share-card-preview canvas{width:100%;display:block;}
+    .share-btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+    .share-dl-btn{display:inline-flex;align-items:center;gap:6px;padding:10px 18px;border-radius:12px;font-size:0.82rem;font-weight:600;cursor:pointer;border:none;transition:all 0.2s;}
+    .share-dl-btn.primary{background:var(--gold);color:#000;}
+    .share-dl-btn.ghost{background:rgba(255,255,255,0.1);color:var(--text);}
+
+    /* Similar books */
+    .bd-similar{padding:0 1rem;margin:1.5rem 0 2rem;}
+    .bd-similar-scroll{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding-bottom:8px;}
+    .bd-similar-scroll::-webkit-scrollbar{display:none;}
+    .bd-sim-card{flex-shrink:0;width:110px;scroll-snap-align:start;text-decoration:none;}
+    .bd-sim-card img{width:110px;aspect-ratio:2/3;object-fit:cover;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.3);}
+    .bd-sim-card .sim-ph{width:110px;aspect-ratio:2/3;border-radius:10px;background:var(--bg-elevated);display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:1.5rem;}
+    .bd-sim-card .sim-title{font-size:0.72rem;font-weight:500;color:var(--text);margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .bd-sim-card .sim-author{font-size:0.62rem;color:var(--text-muted);}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-bottom:calc(var(--space-2xl) + 80px);">
+    <!-- Back -->
+    <a href="javascript:void(0)" onclick="window.history.length>1?history.back():location.href='/'" class="bd-back" data-no-loader><i class="bi bi-chevron-left"></i> Back</a>
+
+    <!-- Cover Hero -->
+    <div class="bd-cover-hero">
+        <div class="bd-cover-wrap">
+            {% if book.cover_file_id %}
+            <img src="{{ book.cover_url }}" alt="{{ book.title }}" class="bd-cover" id="bookCover" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+            <div class="bd-cover-ph" style="display:none;"><i class="bi bi-book"></i></div>
+            {% else %}
+            <div class="bd-cover-ph"><i class="bi bi-book"></i></div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Title + Author -->
+    <div class="bd-title-area">
+        <h1 class="bd-title">
+            {{ book.title }}
+            {% if is_elite %}<span class="bd-elite-badge">✦ Elite</span>{% endif %}
+            {% if book.ai_verified %}<span style="display:inline-block;background:rgba(74,222,128,0.15);color:#4ade80;font-size:0.5rem;font-weight:700;padding:2px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:1px;vertical-align:middle;margin-left:6px;"><i class="bi bi-shield-check"></i> Verified</span>{% endif %}
+            {% if book.source == 'gutenberg' %}<span style="display:inline-block;background:rgba(167,139,250,0.15);color:#a78bfa;font-size:0.5rem;font-weight:700;padding:2px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:1px;vertical-align:middle;margin-left:6px;">Classic Edition</span>{% endif %}
+        </h1>
+        <div class="bd-author">
+            {% if creator %}
+            by <a href="{{ url_for('creator.profile', username=creator.username or creator.wiam_id) }}">@{{ creator.username or creator.display_name }}</a>
+            {% elif book.author %}
+            by <span style="color:#d4a843;font-weight:600;">@{{ book.author }}</span>
+            {% endif %}
+            {% if current_user.is_authenticated and creator and creator.id != current_user.id %}
+            <button id="followBtn" onclick="toggleFollow({{ creator.id }})" style="padding:2px 12px;border-radius:16px;font-size:0.72rem;font-weight:600;cursor:pointer;border:1px solid;transition:all 0.2s;vertical-align:middle;margin-left:4px;{% if is_following %}background:transparent;border-color:var(--text-muted);color:var(--text-muted);{% else %}background:var(--gold);border-color:var(--gold);color:#000;{% endif %}">
+                <span id="followText">{{ 'Following' if is_following else 'Follow' }}</span>
+            </button>
+            {% endif %}
+        </div>
+
+        <!-- Status -->
+        <div style="margin-bottom:4px;">
+            <span class="bd-status {{ book.status or 'ongoing' }}">{{ (book.status or 'ongoing')|title }}</span>
+        </div>
+
+        <!-- Rating -->
+        <div style="display:flex;align-items:center;justify-content:center;gap:4px;margin:8px 0;">
+            <div class="bd-stars" id="starRating">
+                {% for i in range(1, 6) %}
+                <span class="star {% if avg_rating >= i %}filled{% elif avg_rating >= i - 0.5 %}filled{% endif %} {% if user_rating and i <= user_rating %}active{% endif %}" data-val="{{ i }}" onclick="rateBook({{ book.id }}, {{ i }})">
+                    <i class="bi {% if user_rating and i <= user_rating %}bi-star-fill{% elif avg_rating >= i %}bi-star-fill{% else %}bi-star{% endif %}"></i>
+                </span>
+                {% endfor %}
+            </div>
+            <span class="bd-rating-text" id="ratingText">{{ avg_rating }}/5{% if rating_count > 0 %} ({{ rating_count }}){% endif %}</span>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="bd-stats">
+        <div class="bd-stat"><div class="bd-stat-val">{{ book.views or 0 }}</div><div class="bd-stat-label">Reads</div></div>
+        <div class="bd-stat"><div class="bd-stat-val">{{ chapter_count }}</div><div class="bd-stat-label">Chapters</div></div>
+        {% if reading_time_min %}<div class="bd-stat"><div class="bd-stat-val">{{ reading_time_min }}</div><div class="bd-stat-label">Min Read</div></div>{% endif %}
+        <div class="bd-stat"><div class="bd-stat-val" id="followerCount">{{ follower_count }}</div><div class="bd-stat-label">Followers</div></div>
+    </div>
+
+    <!-- Primary Action -->
+    <div class="bd-actions">
+        {% if current_user.is_authenticated %}
+            {% if chapter_count > 0 %}
+                {% if reading_progress and reading_progress.current_chapter > 1 %}
+                <a href="{{ url_for('book.read_book', book_id=book.id, ch=reading_progress.current_chapter) }}" class="bd-btn-primary">
+                    <i class="bi bi-book-fill"></i> Continue Chapter {{ reading_progress.current_chapter }}
+                </a>
+                {% else %}
+                <a href="{{ url_for('book.read_book', book_id=book.id) }}" class="bd-btn-primary">
+                    <i class="bi bi-book-fill"></i> Start Reading
+                </a>
+                {% endif %}
+            {% else %}
+            <span class="bd-btn-primary" style="opacity:0.5;cursor:default;background:var(--bg-card);color:var(--text-muted);box-shadow:none;border:1px solid var(--border-subtle);">
+                <i class="bi bi-hourglass-split"></i> Chapters Coming Soon
+            </span>
+            {% endif %}
+        {% else %}
+        <a href="{{ url_for('auth.login') }}" class="bd-btn-primary"><i class="bi bi-person"></i> Login to Read</a>
+        {% endif %}
+
+        <!-- Secondary actions -->
+        <div class="bd-btn-row">
+            {% if chapter_count > 0 %}
+            <button class="bd-btn-sec" onclick="openChaptersModal()">
+                <i class="bi bi-list-ol"></i> {{ chapter_count }} Ch.
+            </button>
+            {% endif %}
+
+            {% if current_user.is_authenticated %}
+            <button class="bd-btn-sec" id="libBtn" onclick="toggleLibrary({{ book.id }})">
+                <i class="bi {{ 'bi-bookmark-fill' if in_library else 'bi-bookmark' }}" id="libIcon" style="{% if in_library %}color:var(--gold){% endif %}"></i>
+                <span id="libText">{{ 'In Library' if in_library else 'Library' }}</span>
+            </button>
+            {% endif %}
+
+            {% if current_user.is_authenticated and creator and creator.wiam_id != current_user.wiam_id %}
+            <button class="bd-btn-sec" onclick="document.getElementById('tipModal').style.display='flex'" style="color:#ec4899;">
+                <i class="bi bi-heart-fill" style="color:#ec4899;"></i> Tip
+            </button>
+            {% endif %}
+
+            <button class="bd-btn-sec" onclick="openShareCard()">
+                <i class="bi bi-share-fill"></i> Share
+            </button>
+        </div>
+
+        <!-- Quick comments link -->
+        {% if current_user.is_authenticated %}
+        <a href="{{ url_for('book.book_comments', book_id=book.id) }}" class="bd-btn-sec" style="width:100%;">
+            <i class="bi bi-chat-left-text"></i> Comments {% if reviews %}({{ reviews|length }}){% endif %}
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Tags -->
+    <div class="bd-tags">
+        {% if book.genre %}
+        <a href="{{ url_for('browse.genre_books', genre_name=book.genre) }}" class="bd-tag"><i class="bi bi-tag" style="font-size:0.7rem;"></i> {{ book.genre }}</a>
+        {% endif %}
+        {% if book.created_at %}
+        <span class="bd-tag"><i class="bi bi-calendar3" style="font-size:0.7rem;"></i> {{ book.created_at.strftime('%b %Y') }}</span>
+        {% endif %}
+    </div>
+
+    <!-- Synopsis -->
+    {% if book.description %}
+    <div class="bd-section">
+        <h3 class="bd-section-title"><i class="bi bi-file-text" style="color:var(--gold);font-size:0.85rem;"></i> Synopsis</h3>
+        <p class="bd-synopsis {% if book.description|length > 300 %}collapsed{% endif %}" id="synopsisText">{{ book.description }}</p>
+        {% if book.description|length > 300 %}
+        <button class="bd-more-btn" onclick="var el=document.getElementById('synopsisText');el.classList.toggle('collapsed');this.textContent=el.classList.contains('collapsed')?'Read more':'Show less';">Read more</button>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Introduction / Author's Note -->
+    {% if book.introduction %}
+    <div class="bd-section">
+        <h3 class="bd-section-title"><i class="bi bi-pen" style="color:var(--gold);font-size:0.85rem;"></i> Author's Note</h3>
+        <div style="background:linear-gradient(135deg,rgba(212,168,67,0.04),rgba(114,47,55,0.03));border:1px solid rgba(212,168,67,0.1);border-radius:12px;padding:1rem 1.1rem;">
+            <p class="bd-synopsis" style="font-style:italic;margin:0;white-space:pre-line;">{{ book.introduction }}</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Similar books -->
+    {% if similar_books %}
+    <div class="bd-similar">
+        <h3 class="bd-section-title" style="padding:0;margin-bottom:12px;">
+            <i class="bi bi-heart-fill" style="color:#f472b6;font-size:0.85rem;"></i> You Might Also Like
+        </h3>
+        <div class="bd-similar-scroll">
+            {% for sb in similar_books %}
+            <a href="{{ url_for('book.detail', book_id=sb.id) }}" class="bd-sim-card">
+                {% if sb.cover_file_id %}
+                <img src="{{ sb.cover_url }}" alt="{{ sb.title }}" loading="lazy">
+                {% else %}
+                <div class="sim-ph"><i class="bi bi-book"></i></div>
+                {% endif %}
+                <div class="sim-title">{{ sb.title }}</div>
+                <div class="sim-author">@{{ sb.author or 'unknown' }}</div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- ── Chapters Modal ── -->
+{% if chapters %}
+<div class="chapters-overlay" id="chaptersOverlay" onclick="if(event.target===this)closeChaptersModal()">
+    <div class="chapters-modal">
+        <div class="chapters-modal-header">
+            <h3><i class="bi bi-list-ol me-2" style="color:var(--gold);"></i>Chapters ({{ chapters|length }})</h3>
+            <button onclick="closeChaptersModal()" style="width:32px;height:32px;border-radius:50%;border:none;background:rgba(255,255,255,0.06);color:var(--text-muted);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">&times;</button>
+        </div>
+        <div class="chapters-modal-body">
+            {% for ch in chapters %}
+            <a href="{% if current_user.is_authenticated %}{{ url_for('book.read_book', book_id=book.id, ch=ch.chapter_number) }}{% else %}{{ url_for('auth.login') }}{% endif %}" class="ch-item">
+                <div class="ch-num">{{ ch.chapter_number }}</div>
+                <div class="ch-info">
+                    <div class="ch-title">{{ ch.chapter_title or ('Chapter ' ~ ch.chapter_number) }}</div>
+                    <div class="ch-meta">
+                        {% if ch.word_count %}{{ ch.word_count }} words{% endif %}
+                        {% if ch.created_at %} · {{ ch.created_at.strftime('%b %d, %Y') }}{% endif %}
+                    </div>
+                </div>
+                {% if ch.is_locked %}
+                <i class="bi bi-lock-fill" style="color:var(--gold-dim);font-size:0.8rem;"></i>
+                {% endif %}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- ── Share Card Modal ── -->
+<div class="share-overlay" id="shareOverlay" onclick="if(event.target===this)closeShareCard()">
+    <div class="share-card-wrap">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <span style="color:var(--text);font-weight:700;font-size:0.95rem;">Share this Story</span>
+            <button onclick="closeShareCard()" style="background:none;border:none;color:var(--text-muted);font-size:1.3rem;cursor:pointer;">&times;</button>
+        </div>
+        <div class="share-card-preview">
+            <canvas id="shareCanvas" width="1080" height="1350"></canvas>
+        </div>
+        <div class="share-btns">
+            <button class="share-dl-btn primary" onclick="downloadShareCard()"><i class="bi bi-download"></i> Save Image</button>
+            <button class="share-dl-btn ghost" onclick="shareVia('whatsapp')"><i class="bi bi-whatsapp" style="color:#25d366;"></i></button>
+            <button class="share-dl-btn ghost" onclick="shareVia('twitter')"><i class="bi bi-twitter-x"></i></button>
+            <button class="share-dl-btn ghost" onclick="shareVia('facebook')"><i class="bi bi-facebook" style="color:#1877f2;"></i></button>
+            <button class="share-dl-btn ghost" onclick="shareVia('copy')"><i class="bi bi-link-45deg"></i></button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+function toggleLibrary(bookId) {
+    fetch('/library/toggle', {
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'},
+        body: JSON.stringify({content_id: bookId})
+    })
+    .then(function(r){return r.json()})
+    .then(function(d){
+        var icon = document.getElementById('libIcon');
+        var txt = document.getElementById('libText');
+        if(d.in_library){
+            icon.className='bi bi-bookmark-fill'; icon.style.color='var(--gold)';
+            txt.textContent='In Library';
+        } else {
+            icon.className='bi bi-bookmark'; icon.style.color='';
+            txt.textContent='Library';
+        }
+    });
+}
+
+
+function rateBook(bookId, val) {
+    {% if not current_user.is_authenticated %}
+    window.location.href = '{{ url_for("auth.login") }}';
+    return;
+    {% endif %}
+    var fd = new FormData();
+    fd.append('rating', val);
+    fetch('/book/' + bookId + '/rate', {method:'POST', headers:{'X-Requested-With':'XMLHttpRequest','X-CSRFToken':csrfToken}, body: fd})
+    .then(function(r){return r.json()})
+    .then(function(d){
+        document.querySelectorAll('#starRating .star').forEach(function(s, i){
+            var icon = s.querySelector('i');
+            if(i < d.user_rating){ s.classList.add('active'); icon.className='bi bi-star-fill'; }
+            else { s.classList.remove('active'); icon.className='bi bi-star'; }
+        });
+        document.getElementById('ratingText').textContent = d.avg + '/5 (' + d.count + ')';
+    });
+}
+
+function toggleFollow(creatorId) {
+    fetch('/creator/' + creatorId + '/follow', {method:'POST', headers:{'X-Requested-With':'XMLHttpRequest','X-CSRFToken':csrfToken}})
+    .then(function(r){return r.json()})
+    .then(function(d){
+        var btn = document.getElementById('followBtn');
+        var txt = document.getElementById('followText');
+        var cnt = document.getElementById('followerCount');
+        if(d.following){
+            btn.style.background='transparent'; btn.style.borderColor='var(--text-muted)'; btn.style.color='var(--text-muted)';
+            txt.textContent='Following';
+        } else {
+            btn.style.background='var(--gold)'; btn.style.borderColor='var(--gold)'; btn.style.color='#000';
+            txt.textContent='Follow';
+        }
+        if(cnt) cnt.textContent = d.count;
+    });
+}
+
+function openChaptersModal() {
+    var ov = document.getElementById('chaptersOverlay');
+    if(ov) { ov.classList.add('open'); document.body.style.overflow='hidden'; }
+}
+function closeChaptersModal() {
+    var ov = document.getElementById('chaptersOverlay');
+    if(ov) { ov.classList.remove('open'); document.body.style.overflow=''; }
+}
+
+// ── Share Card (Canvas-based downloadable image) ──
+var _shareCardDrawn = false;
+
+function openShareCard() {
+    document.getElementById('shareOverlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    if (!_shareCardDrawn) { drawShareCard(); _shareCardDrawn = true; }
+}
+function closeShareCard() {
+    document.getElementById('shareOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+}
+
+function drawShareCard() {
+    var canvas = document.getElementById('shareCanvas');
+    var ctx = canvas.getContext('2d');
+    var W = 1080, H = 1350;
+
+    // Premium dark gradient background
+    var grad = ctx.createLinearGradient(0, 0, W, H);
+    grad.addColorStop(0, '#06060e');
+    grad.addColorStop(0.4, '#0d0a18');
+    grad.addColorStop(0.8, '#100d1c');
+    grad.addColorStop(1, '#06060e');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    // Radial gold glow behind cover
+    var radGrad = ctx.createRadialGradient(W/2, 420, 80, W/2, 420, 550);
+    radGrad.addColorStop(0, 'rgba(212,168,67,0.08)');
+    radGrad.addColorStop(1, 'rgba(212,168,67,0)');
+    ctx.fillStyle = radGrad;
+    ctx.fillRect(0, 0, W, H);
+
+    // Gold border frame
+    ctx.strokeStyle = 'rgba(212,168,67,0.3)';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.roundRect(30, 30, W-60, H-60, 32);
+    ctx.stroke();
+
+    // Thin inner border
+    ctx.strokeStyle = 'rgba(212,168,67,0.1)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(46, 46, W-92, H-92, 24);
+    ctx.stroke();
+
+    // Book cover — BIG (500x750)
+    var coverImg = document.getElementById('bookCover');
+    var coverW = 500, coverH = 750;
+    var coverX = (W - coverW) / 2, coverY = 80;
+
+    function finishDraw() {
+        ctx.textAlign = 'center';
+
+        // Title — BIG
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 56px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+        var title = '{{ book.title|e }}';
+        var titleY = coverY + coverH + 70;
+        wrapText(ctx, title, W/2, titleY, W - 140, 66);
+
+        // Calculate title lines for positioning
+        var titleLines = 1;
+        var words = title.split(' '), testLine = '';
+        for (var wi = 0; wi < words.length; wi++) {
+            testLine += words[wi] + ' ';
+            if (ctx.measureText(testLine).width > W - 140 && wi > 0) { titleLines++; testLine = words[wi] + ' '; }
+        }
+
+        // Author — big gold
+        ctx.fillStyle = '#d4a843';
+        ctx.font = '600 38px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+        var authorName = '{% if creator and creator.username %}@{{ creator.username }}{% elif creator %}@{{ creator.display_name }}{% elif book.author %}@{{ book.author }}{% endif %}';
+        var authorY = titleY + (titleLines * 66) + 14;
+        ctx.fillText('by ' + authorName, W/2, authorY);
+
+        // Rating stars — big
+        ctx.fillStyle = '#d4a843';
+        ctx.font = '34px -apple-system, sans-serif';
+        var ratingY = authorY + 56;
+        var stars = '';
+        for (var i = 0; i < 5; i++) stars += (i < Math.round({{ avg_rating }})) ? '\u2605' : '\u2606';
+        ctx.fillText(stars + '  {{ avg_rating }}/5', W/2, ratingY);
+
+        // Stats line — bigger
+        ctx.fillStyle = 'rgba(255,255,255,0.5)';
+        ctx.font = '28px -apple-system, sans-serif';
+        var statsY = ratingY + 48;
+        var genre = '{{ book.genre or "" }}';
+        var statsText = (genre ? genre + '  \u00b7  ' : '') + '{{ book.views or 0 }} reads  \u00b7  {{ chapter_count }} chapters';
+        ctx.fillText(statsText, W/2, statsY);
+
+        // Bottom branding section
+        // Gold divider
+        ctx.strokeStyle = 'rgba(212,168,67,0.3)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(W*0.2, H - 180);
+        ctx.lineTo(W*0.8, H - 180);
+        ctx.stroke();
+
+        // Load WiamLogo
+        var logoImg = new Image();
+        logoImg.crossOrigin = 'anonymous';
+        logoImg.onload = function() {
+            var logoS = 72;
+            ctx.drawImage(logoImg, W/2 - logoS/2, H - 168, logoS, logoS);
+            ctx.fillStyle = '#d4a843';
+            ctx.font = 'bold 38px -apple-system, sans-serif';
+            ctx.fillText('WiamApp', W/2, H - 78);
+            ctx.fillStyle = 'rgba(255,255,255,0.5)';
+            ctx.font = '24px -apple-system, sans-serif';
+            ctx.fillText('WiamApp.com', W/2, H - 46);
+        };
+        logoImg.onerror = function() {
+            ctx.fillStyle = '#d4a843';
+            ctx.font = 'bold 44px -apple-system, sans-serif';
+            ctx.fillText('WiamApp', W/2, H - 110);
+            ctx.fillStyle = 'rgba(255,255,255,0.5)';
+            ctx.font = '24px -apple-system, sans-serif';
+            ctx.fillText('WiamApp.com', W/2, H - 70);
+        };
+        logoImg.src = '/static/img/WiamLogo.png';
+    }
+
+    if (coverImg && coverImg.complete && coverImg.naturalHeight > 0) {
+        ctx.save();
+        // Cover glow shadow
+        ctx.shadowColor = 'rgba(212,168,67,0.2)';
+        ctx.shadowBlur = 50;
+        ctx.shadowOffsetY = 12;
+        ctx.beginPath();
+        ctx.roundRect(coverX, coverY, coverW, coverH, 24);
+        ctx.clip();
+        ctx.drawImage(coverImg, coverX, coverY, coverW, coverH);
+        ctx.restore();
+        ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+        // Cover border
+        ctx.strokeStyle = 'rgba(212,168,67,0.25)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.roundRect(coverX, coverY, coverW, coverH, 24);
+        ctx.stroke();
+        finishDraw();
+    } else {
+        ctx.fillStyle = '#1a1528';
+        ctx.beginPath();
+        ctx.roundRect(coverX, coverY, coverW, coverH, 24);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(212,168,67,0.25)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.roundRect(coverX, coverY, coverW, coverH, 24);
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(212,168,67,0.3)';
+        ctx.font = '100px -apple-system, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('\ud83d\udcda', coverX + coverW/2, coverY + coverH/2 + 35);
+        finishDraw();
+    }
+}
+
+function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+    var words = text.split(' ');
+    var line = '';
+    for (var i = 0; i < words.length; i++) {
+        var testLine = line + words[i] + ' ';
+        if (ctx.measureText(testLine).width > maxWidth && i > 0) {
+            ctx.fillText(line.trim(), x, y);
+            line = words[i] + ' ';
+            y += lineHeight;
+        } else {
+            line = testLine;
+        }
+    }
+    ctx.fillText(line.trim(), x, y);
+}
+
+function downloadShareCard() {
+    var canvas = document.getElementById('shareCanvas');
+    // Use blob for mobile compatibility
+    canvas.toBlob(function(blob) {
+        var url = URL.createObjectURL(blob);
+        var link = document.createElement('a');
+        link.download = '{{ book.title|e }}_WiamApp.png';
+        link.href = url;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(function() { URL.revokeObjectURL(url); }, 5000);
+    }, 'image/png');
+}
+
+var bookUrl = 'https://wiamapp.com/book/{{ book.id }}';
+
+function shareVia(platform) {
+    var url = encodeURIComponent(bookUrl);
+    var title = encodeURIComponent('{{ book.title|e }}');
+    var text = encodeURIComponent('Check out "{{ book.title|e }}" on WiamApp!');
+    fetch('/book/{{ book.id }}/track-share', {
+        method:'POST', headers:{'Content-Type':'application/json','X-CSRFToken':csrfToken},
+        body: JSON.stringify({platform: platform})
+    }).catch(function(){});
+    switch(platform) {
+        case 'whatsapp': window.open('https://wa.me/?text='+text+'%20'+url); break;
+        case 'twitter': window.open('https://twitter.com/intent/tweet?text='+text+'&url='+url); break;
+        case 'facebook': window.open('https://www.facebook.com/sharer/sharer.php?u='+url); break;
+        case 'copy':
+            navigator.clipboard.writeText(bookUrl).then(function(){
+                var btn = event.target.closest('.share-dl-btn');
+                if(btn){ btn.innerHTML='<i class="bi bi-check2"></i> Copied!'; setTimeout(function(){btn.innerHTML='<i class="bi bi-link-45deg"></i>';},2000); }
+            });
+            break;
+        case 'native':
+            if(navigator.share) navigator.share({title:decodeURIComponent(title), url:bookUrl});
+            else { navigator.clipboard.writeText(bookUrl); }
+            break;
+    }
+}
+</script>
+
+<!-- Tip Modal -->
+{% if current_user.is_authenticated and creator and creator.wiam_id != current_user.wiam_id %}
+<div id="tipModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:1rem;" onclick="if(event.target===this)this.style.display='none'">
+    <div style="background:linear-gradient(135deg,#0e0e1a,#1a1a2e);border:1px solid rgba(236,72,153,0.2);border-radius:16px;padding:1.5rem;max-width:340px;width:100%;text-align:center;">
+        <div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#ec4899,#f472b6);margin:0 auto 0.8rem;display:flex;align-items:center;justify-content:center;font-size:1.3rem;">
+            <i class="bi bi-heart-fill" style="color:#fff;"></i>
+        </div>
+        <h3 style="color:#f472b6;margin:0 0 0.3rem;font-size:1.1rem;">Tip the Creator</h3>
+        <p style="color:#999;font-size:0.8rem;margin:0 0 1rem;">Show your love for <strong style="color:#fff;">{{ creator.display_name }}</strong></p>
+        <form method="post" action="{{ url_for('payment.tip_creator') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="creator_id" value="{{ creator.id }}">
+            <input type="hidden" name="content_id" value="{{ book.id }}">
+            <div style="display:flex;gap:0.5rem;justify-content:center;margin-bottom:1rem;flex-wrap:wrap;">
+                <label style="cursor:pointer;">
+                    <input type="radio" name="amount" value="5" style="display:none;" onchange="this.closest('div').querySelectorAll('label>span').forEach(s=>s.style.borderColor='rgba(236,72,153,0.2)');this.nextElementSibling.style.borderColor='#ec4899'">
+                    <span style="display:block;padding:0.5rem 1rem;border:2px solid rgba(236,72,153,0.2);border-radius:10px;color:#e0e0e0;font-size:0.85rem;font-weight:600;transition:border-color 0.2s;">5 coins</span>
+                </label>
+                <label style="cursor:pointer;">
+                    <input type="radio" name="amount" value="10" checked style="display:none;" onchange="this.closest('div').querySelectorAll('label>span').forEach(s=>s.style.borderColor='rgba(236,72,153,0.2)');this.nextElementSibling.style.borderColor='#ec4899'">
+                    <span style="display:block;padding:0.5rem 1rem;border:2px solid #ec4899;border-radius:10px;color:#e0e0e0;font-size:0.85rem;font-weight:600;transition:border-color 0.2s;">10 coins</span>
+                </label>
+                <label style="cursor:pointer;">
+                    <input type="radio" name="amount" value="25" style="display:none;" onchange="this.closest('div').querySelectorAll('label>span').forEach(s=>s.style.borderColor='rgba(236,72,153,0.2)');this.nextElementSibling.style.borderColor='#ec4899'">
+                    <span style="display:block;padding:0.5rem 1rem;border:2px solid rgba(236,72,153,0.2);border-radius:10px;color:#e0e0e0;font-size:0.85rem;font-weight:600;transition:border-color 0.2s;">25 coins</span>
+                </label>
+                <label style="cursor:pointer;">
+                    <input type="radio" name="amount" value="50" style="display:none;" onchange="this.closest('div').querySelectorAll('label>span').forEach(s=>s.style.borderColor='rgba(236,72,153,0.2)');this.nextElementSibling.style.borderColor='#ec4899'">
+                    <span style="display:block;padding:0.5rem 1rem;border:2px solid rgba(236,72,153,0.2);border-radius:10px;color:#e0e0e0;font-size:0.85rem;font-weight:600;transition:border-color 0.2s;">50 coins</span>
+                </label>
+            </div>
+            <button type="submit" style="width:100%;padding:0.7rem;background:linear-gradient(135deg,#ec4899,#f472b6);color:#fff;border:none;border-radius:12px;font-weight:700;font-size:0.95rem;cursor:pointer;box-shadow:0 4px 16px rgba(236,72,153,0.3);transition:transform 0.2s;"
+                    onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                <i class="bi bi-heart-fill me-1"></i> Send Tip
+            </button>
+        </form>
+        <p style="color:#666;font-size:0.7rem;margin:0.8rem 0 0;">100% of your tip goes to the creator</p>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

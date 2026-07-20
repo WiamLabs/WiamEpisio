@@ -1,0 +1,403 @@
+{% extends "base.html" %}
+{% block title %}Monetization Guide — WiamStudio{% endblock %}
+
+{% block extra_head %}
+<style>
+    .mg-wrap {
+        max-width: 720px; margin: 0 auto; padding: 2rem 1.2rem 4rem;
+    }
+    .mg-back {
+        display: inline-flex; align-items: center; gap: 0.4rem;
+        color: var(--text-muted); font-size: 0.82rem; text-decoration: none;
+        margin-bottom: 1.5rem; transition: color 0.2s;
+    }
+    .mg-back:hover { color: var(--gold); }
+
+    .mg-hero {
+        text-align: center; padding: 2.5rem 1.5rem 2rem;
+        background: linear-gradient(135deg, rgba(212,168,67,0.06), rgba(114,47,55,0.04));
+        border: 1px solid rgba(212,168,67,0.1); border-radius: 20px;
+        margin-bottom: 2.5rem;
+    }
+    .mg-hero-icon {
+        width: 64px; height: 64px; margin: 0 auto 1rem;
+        background: linear-gradient(135deg, rgba(212,168,67,0.12), rgba(212,168,67,0.04));
+        border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    }
+    .mg-hero-icon i { font-size: 1.8rem; color: var(--gold); }
+    .mg-hero h1 {
+        font-size: 1.6rem; font-weight: 800; color: var(--text);
+        margin-bottom: 0.5rem; letter-spacing: -0.02em;
+    }
+    .mg-hero p { font-size: 0.9rem; color: var(--text-muted); line-height: 1.6; max-width: 520px; margin: 0 auto; }
+
+    .mg-section { margin-bottom: 2.5rem; }
+    .mg-section-title {
+        display: flex; align-items: center; gap: 0.5rem;
+        font-size: 1.1rem; font-weight: 700; color: var(--text);
+        margin-bottom: 1rem; padding-bottom: 0.5rem;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .mg-section-title i { color: var(--gold); font-size: 1rem; }
+
+    .mg-text { font-size: 0.88rem; color: var(--text-muted); line-height: 1.75; margin-bottom: 1rem; }
+    .mg-text strong { color: var(--text); }
+
+    .mg-step-list { list-style: none; padding: 0; margin: 0; }
+    .mg-step {
+        display: flex; gap: 0.9rem; padding: 0.9rem 0;
+        border-bottom: 1px solid rgba(255,255,255,0.03);
+    }
+    .mg-step:last-child { border-bottom: none; }
+    .mg-step-num {
+        width: 32px; height: 32px; flex-shrink: 0;
+        background: linear-gradient(135deg, rgba(212,168,67,0.12), rgba(212,168,67,0.04));
+        border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        font-size: 0.78rem; font-weight: 800; color: var(--gold);
+    }
+    .mg-step-body { flex: 1; }
+    .mg-step-body h4 { font-size: 0.88rem; font-weight: 700; color: var(--text); margin-bottom: 0.2rem; }
+    .mg-step-body p { font-size: 0.82rem; color: var(--text-muted); line-height: 1.6; margin: 0; }
+
+    .mg-req-grid {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem;
+    }
+    @media (max-width: 600px) { .mg-req-grid { grid-template-columns: 1fr; } }
+    .mg-req-card {
+        padding: 0.75rem 0.85rem;
+        background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);
+        border-radius: 12px; display: flex; align-items: flex-start; gap: 0.6rem;
+    }
+    .mg-req-icon {
+        width: 28px; height: 28px; flex-shrink: 0; border-radius: 8px;
+        background: rgba(212,168,67,0.08); display: flex; align-items: center; justify-content: center;
+    }
+    .mg-req-icon i { font-size: 0.8rem; color: var(--gold); }
+    .mg-req-info h5 { font-size: 0.8rem; font-weight: 700; color: var(--text); margin: 0 0 0.15rem; }
+    .mg-req-info p { font-size: 0.72rem; color: var(--text-muted); margin: 0; line-height: 1.45; }
+
+    .mg-callout {
+        padding: 1rem 1.1rem; border-radius: 12px; margin-bottom: 1rem;
+        font-size: 0.82rem; line-height: 1.65;
+    }
+    .mg-callout-warn {
+        background: rgba(245,158,11,0.05); border: 1px solid rgba(245,158,11,0.12); color: #f59e0b;
+    }
+    .mg-callout-info {
+        background: rgba(59,130,246,0.05); border: 1px solid rgba(59,130,246,0.1); color: #60a5fa;
+    }
+    .mg-callout-success {
+        background: rgba(34,197,94,0.05); border: 1px solid rgba(34,197,94,0.1); color: #4ade80;
+    }
+    .mg-callout strong { color: inherit; }
+    .mg-callout i { margin-right: 0.3rem; }
+
+    .mg-faq { margin-bottom: 0.6rem; }
+    .mg-faq-q {
+        font-size: 0.85rem; font-weight: 700; color: var(--text); margin-bottom: 0.2rem;
+        display: flex; align-items: flex-start; gap: 0.4rem;
+    }
+    .mg-faq-a { font-size: 0.82rem; color: var(--text-muted); line-height: 1.6; padding-left: 1.3rem; margin-bottom: 0.8rem; }
+
+    .mg-footer {
+        text-align: center; padding: 2rem 1rem;
+        border-top: 1px solid rgba(255,255,255,0.06); margin-top: 2rem;
+    }
+    .mg-footer p { font-size: 0.82rem; color: var(--text-muted); line-height: 1.6; }
+    .mg-footer a { color: var(--gold); text-decoration: none; font-weight: 600; }
+    .mg-footer a:hover { text-decoration: underline; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mg-wrap">
+
+    <a href="{{ url_for('studio.dashboard') }}" class="mg-back"><i class="bi bi-arrow-left"></i> Back to WiamStudio</a>
+
+    <!-- Hero -->
+    <div class="mg-hero">
+        <div class="mg-hero-icon"><i class="bi bi-trophy"></i></div>
+        <h1>Monetization Guide</h1>
+        <p>Everything you need to know about earning from your stories on WiamApp. Read carefully before submitting for review.</p>
+    </div>
+
+    <!-- ═══ HOW IT WORKS ═══ -->
+    <div class="mg-section">
+        <div class="mg-section-title"><i class="bi bi-diagram-3"></i> How Monetization Works</div>
+        <p class="mg-text">
+            WiamApp uses a <strong>coin-based system</strong>. Readers buy coins, then spend them to unlock locked chapters.
+            You earn a share of every coin spent on your content. Here's how it flows:
+        </p>
+        <ol class="mg-step-list">
+            <li class="mg-step">
+                <div class="mg-step-num">1</div>
+                <div class="mg-step-body">
+                    <h4>Meet Eligibility Requirements</h4>
+                    <p>Your account must meet all the eligibility criteria below. These ensure you're a real, active creator on the platform.</p>
+                </div>
+            </li>
+            <li class="mg-step">
+                <div class="mg-step-num">2</div>
+                <div class="mg-step-body">
+                    <h4>Submit Your Story for Review</h4>
+                    <p>Each story you want to monetize must pass an automated quality review. The review checks structure, safety, formatting, and engagement quality. You submit per-story — not per-account.</p>
+                </div>
+            </li>
+            <li class="mg-step">
+                <div class="mg-step-num">3</div>
+                <div class="mg-step-body">
+                    <h4>Get Approved &amp; Lock Chapters</h4>
+                    <p>Once approved, you can lock chapters from Chapter 11 onward (first 10 are always free). Set a price of 3–10 coins per locked chapter.</p>
+                </div>
+            </li>
+            <li class="mg-step">
+                <div class="mg-step-num">4</div>
+                <div class="mg-step-body">
+                    <h4>Earn Coins &amp; Get Paid</h4>
+                    <p>When readers unlock your chapters, you earn coins. Monthly payouts are sent automatically to your Mobile Money when your balance reaches the minimum threshold.</p>
+                </div>
+            </li>
+        </ol>
+    </div>
+
+    <!-- ═══ ELIGIBILITY REQUIREMENTS ═══ -->
+    <div class="mg-section">
+        <div class="mg-section-title"><i class="bi bi-check2-circle"></i> Eligibility Requirements</div>
+        <p class="mg-text">
+            You must meet <strong>ALL</strong> of these requirements before you can submit any story for monetization review.
+            Track your progress on the <a href="{{ url_for('studio.dashboard') }}" style="color:var(--gold);text-decoration:none;font-weight:600;">Creator Hub dashboard</a>.
+        </p>
+        <div class="mg-req-grid">
+            <div class="mg-req-card">
+                <div class="mg-req-icon"><i class="bi bi-calendar3"></i></div>
+                <div class="mg-req-info">
+                    <h5>Account Age: 30+ days</h5>
+                    <p>Your account must be at least 30 days old. We need to know you're serious.</p>
+                </div>
+            </div>
+            <div class="mg-req-card">
+                <div class="mg-req-icon"><i class="bi bi-journal-text"></i></div>
+                <div class="mg-req-info">
+                    <h5>1+ Published Story</h5>
+                    <p>At least one story set to "Ongoing" or "Complete" status.</p>
+                </div>
+            </div>
+            <div class="mg-req-card">
+                <div class="mg-req-icon"><i class="bi bi-list-ol"></i></div>
+                <div class="mg-req-info">
+                    <h5>10+ Chapters (best story)</h5>
+                    <p>Your most-written story must have at least 10 published chapters.</p>
+                </div>
+            </div>
+            <div class="mg-req-card">
+                <div class="mg-req-icon"><i class="bi bi-people"></i></div>
+                <div class="mg-req-info">
+                    <h5>500+ Unique Readers</h5>
+                    <p>Across all your stories combined. Keep writing and sharing!</p>
+                </div>
+            </div>
+            <div class="mg-req-card">
+                <div class="mg-req-icon"><i class="bi bi-person-plus"></i></div>
+                <div class="mg-req-info">
+                    <h5>100+ Followers</h5>
+                    <p>Build your audience. Share your work and engage with readers.</p>
+                </div>
+            </div>
+            <div class="mg-req-card">
+                <div class="mg-req-icon"><i class="bi bi-star"></i></div>
+                <div class="mg-req-info">
+                    <h5>3.5+ Average Rating</h5>
+                    <p>With at least 20 ratings total. Quality matters.</p>
+                </div>
+            </div>
+            <div class="mg-req-card">
+                <div class="mg-req-icon"><i class="bi bi-shield-check"></i></div>
+                <div class="mg-req-info">
+                    <h5>0 Violations (60 days)</h5>
+                    <p>No content or community guideline violations in the past 60 days.</p>
+                </div>
+            </div>
+            <div class="mg-req-card">
+                <div class="mg-req-icon"><i class="bi bi-award"></i></div>
+                <div class="mg-req-info">
+                    <h5>Trust Score: 50+</h5>
+                    <p>Built through consistent, positive activity on the platform.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="mg-callout mg-callout-warn" style="margin-top:1rem;">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <strong>Important:</strong> Meeting eligibility does NOT automatically monetize all your books.
+            Each individual story must be submitted and approved separately through the Monetization Review.
+        </div>
+    </div>
+
+    <!-- ═══ MONETIZATION REVIEW ═══ -->
+    <div class="mg-section">
+        <div class="mg-section-title"><i class="bi bi-robot"></i> Monetization Review (Per Story)</div>
+        <p class="mg-text">
+            Once you're eligible, you can submit each story for an <strong>automated quality review</strong>.
+            Our system (the Automated Tester) checks your story across 4 categories:
+        </p>
+
+        <div class="mg-req-grid" style="margin-bottom:1rem;">
+            <div class="mg-req-card">
+                <div class="mg-req-icon"><i class="bi bi-building"></i></div>
+                <div class="mg-req-info">
+                    <h5>Structure (30 pts)</h5>
+                    <p>Chapter count, word count per chapter, no empty chapters, proper title &amp; synopsis.</p>
+                </div>
+            </div>
+            <div class="mg-req-card">
+                <div class="mg-req-icon"><i class="bi bi-shield-exclamation"></i></div>
+                <div class="mg-req-info">
+                    <h5>Safety (30 pts)</h5>
+                    <p>No hate speech, spam, plagiarism indicators, or prohibited content across all chapters.</p>
+                </div>
+            </div>
+            <div class="mg-req-card">
+                <div class="mg-req-icon"><i class="bi bi-text-paragraph"></i></div>
+                <div class="mg-req-info">
+                    <h5>Formatting (20 pts)</h5>
+                    <p>Proper paragraph structure, capitalization, consistent formatting, no wall-of-text.</p>
+                </div>
+            </div>
+            <div class="mg-req-card">
+                <div class="mg-req-icon"><i class="bi bi-heart"></i></div>
+                <div class="mg-req-info">
+                    <h5>Engagement (20 pts)</h5>
+                    <p>Reader interest: views, ratings, favorites. A story people actually want to read.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="mg-callout mg-callout-info">
+            <i class="bi bi-info-circle-fill"></i>
+            <strong>Minimum score: 75/100</strong> to pass.
+            The review checks up to 10 chapters for safety and formatting.
+            Make sure every chapter has at least <strong>1,000 words</strong> and is properly formatted.
+        </div>
+
+        <p class="mg-text">
+            <strong>What happens if you fail?</strong> You'll see your score and feedback.
+            Fix the issues and resubmit after 24 hours. You can resubmit up to 3 times per month.
+        </p>
+
+        <p class="mg-text">
+            <strong>What happens if you pass?</strong> That specific story is approved for monetization.
+            You can then lock individual chapters (Chapter 11+) from the editor's Settings panel.
+            Repeat the process for each story you want to monetize.
+        </p>
+    </div>
+
+    <!-- ═══ CHAPTER LOCKING ═══ -->
+    <div class="mg-section">
+        <div class="mg-section-title"><i class="bi bi-lock"></i> Chapter Locking Rules</div>
+        <ul class="mg-step-list">
+            <li class="mg-step">
+                <div class="mg-step-num"><i class="bi bi-check2" style="font-size:0.7rem;"></i></div>
+                <div class="mg-step-body">
+                    <h4>First 10 Chapters Are Always Free</h4>
+                    <p>Readers can always read the first 10 chapters for free. This lets them decide if they want to continue.</p>
+                </div>
+            </li>
+            <li class="mg-step">
+                <div class="mg-step-num"><i class="bi bi-coin" style="font-size:0.7rem;"></i></div>
+                <div class="mg-step-body">
+                    <h4>Set Price: 3–10 Coins Per Chapter</h4>
+                    <p>You choose how many coins (3 to 10) each locked chapter costs. Once a reader unlocks a chapter, it stays unlocked forever for them.</p>
+                </div>
+            </li>
+            <li class="mg-step">
+                <div class="mg-step-num"><i class="bi bi-gem" style="font-size:0.7rem;"></i></div>
+                <div class="mg-step-body">
+                    <h4>Premium Lock (Optional)</h4>
+                    <p>You can also use Premium Lock for WiamPremium subscribers. They unlock chapters using monthly credits instead of coins.</p>
+                </div>
+            </li>
+        </ul>
+    </div>
+
+    <!-- ═══ EARNINGS ═══ -->
+    <div class="mg-section">
+        <div class="mg-section-title"><i class="bi bi-cash-coin"></i> How You Earn</div>
+        <p class="mg-text">
+            Every coin spent on your locked chapters is tracked. At the end of each month, WiamApp calculates your total coins earned and converts them to real money.
+        </p>
+        <div class="mg-callout mg-callout-success">
+            <i class="bi bi-cash-stack"></i>
+            <strong>Creator share: 50%</strong> of the coin value goes to you. The other 50% supports the platform.
+            Payouts are sent via <strong>Mobile Money</strong> (MTN MoMo, Vodafone Cash, AirtelTigo Money) once you reach the minimum payout threshold of <strong>GHS 10</strong>.
+        </div>
+    </div>
+
+    <!-- ═══ FAQ ═══ -->
+    <div class="mg-section">
+        <div class="mg-section-title"><i class="bi bi-question-circle"></i> Frequently Asked Questions</div>
+
+        <div class="mg-faq">
+            <div class="mg-faq-q"><i class="bi bi-chevron-right" style="color:var(--gold);font-size:0.7rem;margin-top:3px;flex-shrink:0;"></i> Does meeting eligibility mean all my stories are monetized?</div>
+            <div class="mg-faq-a"><strong>No.</strong> Eligibility is about your account. Each story must be submitted individually for Monetization Review. Only stories that pass the review can have locked chapters.</div>
+        </div>
+
+        <div class="mg-faq">
+            <div class="mg-faq-q"><i class="bi bi-chevron-right" style="color:var(--gold);font-size:0.7rem;margin-top:3px;flex-shrink:0;"></i> How long does the review take?</div>
+            <div class="mg-faq-a">The automated review typically completes within 24 hours. You'll see your score and result in the editor's Settings panel.</div>
+        </div>
+
+        <div class="mg-faq">
+            <div class="mg-faq-q"><i class="bi bi-chevron-right" style="color:var(--gold);font-size:0.7rem;margin-top:3px;flex-shrink:0;"></i> What if my story gets rejected?</div>
+            <div class="mg-faq-a">You'll see your score breakdown. Fix the issues (e.g. add more words, fix formatting) and resubmit after 24 hours. You have up to 3 resubmissions per month.</div>
+        </div>
+
+        <div class="mg-faq">
+            <div class="mg-faq-q"><i class="bi bi-chevron-right" style="color:var(--gold);font-size:0.7rem;margin-top:3px;flex-shrink:0;"></i> Can I change chapter prices after locking?</div>
+            <div class="mg-faq-a">Yes, you can unlock and re-lock chapters with different prices anytime. Readers who already unlocked keep their access.</div>
+        </div>
+
+        <div class="mg-faq">
+            <div class="mg-faq-q"><i class="bi bi-chevron-right" style="color:var(--gold);font-size:0.7rem;margin-top:3px;flex-shrink:0;"></i> What content is not allowed?</div>
+            <div class="mg-faq-a">Hate speech, plagiarism, spam, excessive profanity, and any content violating our Community Guidelines. Please read our <strong>Terms &amp; Conditions</strong> and <strong>Community Guidelines</strong> for full details.</div>
+        </div>
+
+        <div class="mg-faq">
+            <div class="mg-faq-q"><i class="bi bi-chevron-right" style="color:var(--gold);font-size:0.7rem;margin-top:3px;flex-shrink:0;"></i> How do I get more readers and followers?</div>
+            <div class="mg-faq-a">Write consistently, publish regularly, engage with your community, and share your Bulletin posts. Quality content naturally attracts readers.</div>
+        </div>
+    </div>
+
+    <!-- ═══ IMPORTANT LINKS ═══ -->
+    <div class="mg-section">
+        <div class="mg-section-title"><i class="bi bi-link-45deg"></i> Important Links</div>
+        <div style="display:flex;flex-direction:column;gap:0.5rem;">
+            <a href="/terms" style="display:flex;align-items:center;gap:0.5rem;padding:0.6rem 0.8rem;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:10px;text-decoration:none;color:var(--text);font-size:0.85rem;transition:all 0.2s;" onmouseover="this.style.borderColor='rgba(212,168,67,0.2)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.06)'">
+                <i class="bi bi-file-text" style="color:var(--gold);"></i>
+                <span>Terms &amp; Conditions</span>
+                <i class="bi bi-arrow-right" style="margin-left:auto;opacity:0.4;font-size:0.75rem;"></i>
+            </a>
+            <a href="/community-guidelines" style="display:flex;align-items:center;gap:0.5rem;padding:0.6rem 0.8rem;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:10px;text-decoration:none;color:var(--text);font-size:0.85rem;transition:all 0.2s;" onmouseover="this.style.borderColor='rgba(212,168,67,0.2)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.06)'">
+                <i class="bi bi-people" style="color:var(--gold);"></i>
+                <span>Community Guidelines</span>
+                <i class="bi bi-arrow-right" style="margin-left:auto;opacity:0.4;font-size:0.75rem;"></i>
+            </a>
+            <a href="{{ url_for('studio.dashboard') }}" style="display:flex;align-items:center;gap:0.5rem;padding:0.6rem 0.8rem;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:10px;text-decoration:none;color:var(--text);font-size:0.85rem;transition:all 0.2s;" onmouseover="this.style.borderColor='rgba(212,168,67,0.2)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.06)'">
+                <i class="bi bi-speedometer2" style="color:var(--gold);"></i>
+                <span>Creator Hub (Track Eligibility)</span>
+                <i class="bi bi-arrow-right" style="margin-left:auto;opacity:0.4;font-size:0.75rem;"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="mg-footer">
+        <p>
+            Need help? Use the <strong>Feedback</strong> button inside the app or email us at
+            <a href="mailto:support@wiamapp.com">support@wiamapp.com</a>
+        </p>
+        <p style="margin-top:0.5rem;font-size:0.75rem;opacity:0.5;">
+            WiamApp &copy; {{ "now"|default("2026") }} — All rights reserved.
+        </p>
+    </div>
+</div>
+{% endblock %}

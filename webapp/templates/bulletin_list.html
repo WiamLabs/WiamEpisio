@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+{% block title %}WiamBulletin — WiamApp{% endblock %}
+
+{% block extra_head %}
+<style>
+    .bl-page { max-width: 600px; margin: 0 auto; padding: 0 0 100px; min-height: 80vh; }
+
+    /* Top bar */
+    .bl-topbar {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 1rem 1rem 0.6rem; position: sticky; top: 56px; z-index: 10;
+        background: var(--bg); border-bottom: 1px solid var(--border-subtle);
+    }
+    .bl-topbar-back { color: var(--text-muted); font-size: 1.2rem; text-decoration: none; }
+    .bl-topbar-back:hover { color: var(--gold); }
+    .bl-topbar h1 {
+        font-family: var(--font-display); font-size: 1.15rem; font-weight: 700;
+        letter-spacing: 0.06em; text-transform: uppercase; margin: 0; color: var(--text);
+    }
+    .bl-topbar-search { color: var(--text-muted); font-size: 1.1rem; background: none; border: none; cursor: pointer; }
+    .bl-topbar-search:hover { color: var(--gold); }
+
+    /* Channel list */
+    .bl-channels { padding: 0; }
+    .bl-channel {
+        display: flex; align-items: center; gap: 0.75rem;
+        padding: 0.85rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.04);
+        text-decoration: none; color: inherit; transition: background 0.12s;
+    }
+    .bl-channel:hover { background: rgba(255,255,255,0.03); }
+    .bl-channel-avatar {
+        width: 50px; height: 50px; border-radius: 50%; flex-shrink: 0;
+        object-fit: cover; border: 2px solid var(--gold-dim);
+    }
+    .bl-channel-avatar-ph {
+        width: 50px; height: 50px; border-radius: 50%; flex-shrink: 0;
+        background: linear-gradient(135deg, var(--wine), var(--wine-dark));
+        border: 2px solid var(--gold-dim);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.2rem; color: var(--gold); font-weight: 700;
+    }
+    .bl-channel-info { flex: 1; min-width: 0; }
+    .bl-channel-name {
+        font-weight: 600; font-size: 0.95rem; color: var(--text);
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .bl-channel-preview {
+        font-size: 0.8rem; color: var(--text-muted);
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        margin-top: 2px;
+    }
+    .bl-channel-meta {
+        flex-shrink: 0; text-align: right; display: flex; flex-direction: column;
+        align-items: flex-end; gap: 4px;
+    }
+    .bl-channel-time { font-size: 0.7rem; color: var(--text-muted); }
+    .bl-channel-badge {
+        font-size: 0.62rem; background: var(--gold); color: #000;
+        padding: 1px 6px; border-radius: 10px; font-weight: 600;
+    }
+
+    /* Own channel highlight */
+    .bl-channel.own { border-left: 3px solid var(--gold); }
+
+    /* Section label */
+    .bl-section-label {
+        padding: 0.6rem 1rem 0.3rem; font-size: 0.7rem; text-transform: uppercase;
+        letter-spacing: 0.06em; color: var(--text-muted); font-weight: 600;
+    }
+
+    /* Empty state */
+    .bl-empty {
+        text-align: center; padding: 4rem 2rem; color: var(--text-muted);
+    }
+    .bl-empty i { font-size: 3rem; display: block; margin-bottom: 1rem; opacity: 0.3; }
+    .bl-empty p { font-size: 0.9rem; margin-top: 0.5rem; }
+    .bl-empty a { color: var(--gold); text-decoration: none; }
+    .bl-empty a:hover { text-decoration: underline; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="bl-page">
+    <!-- Top Bar -->
+    <div class="bl-topbar">
+        <a href="{{ url_for('profile.my_profile') }}" class="bl-topbar-back">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <h1>Bulletin</h1>
+        <span style="width:24px"></span>
+    </div>
+
+    <div class="bl-channels">
+        <!-- Wiam Official Bulletin — always first -->
+        {% if official_channel %}
+        <div class="bl-section-label">Official</div>
+        <a href="{{ url_for('bulletin.official_feed') }}" class="bl-channel own">
+            <div class="bl-channel-avatar-ph" style="background:linear-gradient(135deg,var(--gold),#b8860b);color:#000;font-size:1.4rem;">📢</div>
+            <div class="bl-channel-info">
+                <div class="bl-channel-name">Wiam Official Bulletin</div>
+                <div class="bl-channel-preview">
+                    {% if official_channel.last_post %}
+                    {{ official_channel.last_post.text_content[:60] }}{% if official_channel.last_post.text_content|length > 60 %}...{% endif %}
+                    {% else %}
+                    Official announcements from WiamApp
+                    {% endif %}
+                </div>
+            </div>
+            <div class="bl-channel-meta">
+                {% if official_channel.last_post %}
+                <span class="bl-channel-time">{{ official_channel.last_post.created_at.strftime('%b %d') }}</span>
+                {% endif %}
+                <span class="bl-channel-badge">{{ official_channel.post_count }} posts</span>
+            </div>
+        </a>
+        {% endif %}
+
+        <!-- Own Bulletin (creators only) -->
+        {% if own_channel %}
+        <div class="bl-section-label">Your Bulletin</div>
+        <a href="{{ url_for('bulletin.feed', creator_id=own_channel.creator.wiam_id) }}" class="bl-channel own">
+            {% if own_channel.profile and own_channel.profile.avatar_url %}
+            <img src="{{ own_channel.profile.avatar_url }}" class="bl-channel-avatar" alt="">
+            {% else %}
+            <div class="bl-channel-avatar-ph">{{ (own_channel.profile.pen_name if own_channel.profile else own_channel.creator.display_name)[0]|upper }}</div>
+            {% endif %}
+            <div class="bl-channel-info">
+                <div class="bl-channel-name">{{ own_channel.profile.pen_name if own_channel.profile else own_channel.creator.display_name }}</div>
+                <div class="bl-channel-preview">
+                    {% if own_channel.last_post %}
+                    {{ own_channel.last_post.text_content[:60] }}{% if own_channel.last_post.text_content|length > 60 %}...{% endif %}
+                    {% else %}
+                    No posts yet — start sharing!
+                    {% endif %}
+                </div>
+            </div>
+            <div class="bl-channel-meta">
+                {% if own_channel.last_post %}
+                <span class="bl-channel-time">{{ own_channel.last_post.created_at.strftime('%b %d') }}</span>
+                {% endif %}
+                <span class="bl-channel-badge">{{ own_channel.follower_count }} followers</span>
+            </div>
+        </a>
+        {% endif %}
+
+        <!-- Following Bulletins -->
+        {% if channels %}
+        <div class="bl-section-label">Following</div>
+        {% for ch in channels %}
+        <a href="{{ url_for('bulletin.feed', creator_id=ch.creator.wiam_id) }}" class="bl-channel">
+            {% if ch.profile and ch.profile.avatar_url %}
+            <img src="{{ ch.profile.avatar_url }}" class="bl-channel-avatar" alt="">
+            {% else %}
+            <div class="bl-channel-avatar-ph">{{ (ch.profile.pen_name if ch.profile else ch.creator.display_name)[0]|upper }}</div>
+            {% endif %}
+            <div class="bl-channel-info">
+                <div class="bl-channel-name">{{ ch.profile.pen_name if ch.profile else ch.creator.display_name }}</div>
+                <div class="bl-channel-preview">
+                    {% if ch.last_post %}
+                    {{ ch.last_post.text_content[:60] }}{% if ch.last_post.text_content|length > 60 %}...{% endif %}
+                    {% else %}
+                    No posts yet
+                    {% endif %}
+                </div>
+            </div>
+            <div class="bl-channel-meta">
+                {% if ch.last_post %}
+                <span class="bl-channel-time">{{ ch.last_post.created_at.strftime('%b %d') }}</span>
+                {% endif %}
+            </div>
+        </a>
+        {% endfor %}
+        {% endif %}
+
+        {% if not channels and not own_channel %}
+        <div class="bl-empty">
+            <i class="bi bi-megaphone"></i>
+            <h4>No Bulletins Yet</h4>
+            <p>Follow a creator's Bulletin from their profile to see their updates here.</p>
+            <p><a href="{{ url_for('browse.browse_home') }}">Browse creators <i class="bi bi-arrow-right"></i></a></p>
+        </div>
+        {% elif not channels and own_channel %}
+        <div class="bl-empty" style="padding-top:2rem;">
+            <p>You haven't followed any creator bulletins yet.</p>
+            <p><a href="{{ url_for('browse.browse_home') }}">Discover creators <i class="bi bi-arrow-right"></i></a></p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

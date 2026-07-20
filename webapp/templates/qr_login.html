@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}QR Code Login — WiamApp{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width:480px;padding:var(--space-2xl) var(--space-md);text-align:center;">
+    <i class="bi bi-qr-code" style="font-size:2.5rem;color:var(--gold);"></i>
+    <h1 class="font-display" style="font-size:1.6rem;margin-top:var(--space-sm);">QR Code Login</h1>
+    <p style="color:var(--text-secondary);margin-bottom:var(--space-xl);">Scan this QR code with your phone to log in on this device.</p>
+
+    <div id="qrBox" style="background:#fff;display:inline-block;padding:var(--space-lg);border-radius:var(--radius-lg);margin-bottom:var(--space-xl);">
+        <canvas id="qrCanvas"></canvas>
+    </div>
+
+    <div id="statusMsg" style="color:var(--text-muted);font-size:0.9rem;margin-bottom:var(--space-lg);">
+        <i class="bi bi-hourglass-split me-1"></i> Waiting for scan...
+    </div>
+
+    <div style="background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:var(--space-lg);text-align:left;">
+        <h5 style="font-size:0.95rem;margin-bottom:var(--space-sm);">How it works:</h5>
+        <ol style="color:var(--text-secondary);font-size:0.85rem;padding-left:1.2rem;margin:0;">
+            <li>Open WiamApp on your phone (where you're already logged in)</li>
+            <li>Scan this QR code with your phone's camera</li>
+            <li>Tap "Approve" on your phone</li>
+            <li>You'll be logged in here automatically</li>
+        </ol>
+    </div>
+
+    <div style="margin-top:var(--space-xl);">
+        <a href="{{ url_for('auth.login') }}" style="color:var(--text-muted);">&larr; Back to Login</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function(){
+    var canvas = document.getElementById('qrCanvas');
+    QRCode.toCanvas(canvas, '{{ qr_url }}', {width: 240, margin: 0, color: {dark:'#1a1a1d', light:'#ffffff'}}, function(err){
+        if(err) console.error(err);
+    });
+
+    var token = '{{ token }}';
+    var statusEl = document.getElementById('statusMsg');
+    var interval = setInterval(function(){
+        fetch('/auth/qr-poll?token=' + token)
+        .then(function(r){return r.json()})
+        .then(function(d){
+            if(d.status === 'approved'){
+                clearInterval(interval);
+                statusEl.innerHTML = '<i class="bi bi-check-circle me-1" style="color:#22c55e;"></i> Approved! Redirecting...';
+                setTimeout(function(){ window.location.href = d.redirect; }, 500);
+            } else if(d.status === 'expired'){
+                clearInterval(interval);
+                statusEl.innerHTML = '<i class="bi bi-x-circle me-1" style="color:#ef4444;"></i> QR code expired. <a href="/auth/qr-login">Generate new one</a>';
+            }
+        }).catch(function(){});
+    }, 2000);
+
+    // Stop polling after 5 minutes
+    setTimeout(function(){ clearInterval(interval); }, 300000);
+})();
+</script>
+{% endblock %}

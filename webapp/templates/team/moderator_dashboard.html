@@ -1,0 +1,109 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Moderator Dashboard — WiamApp{% endblock %}
+{% block sidebar_title %}Moderator Panel{% endblock %}
+
+{% block sidebar_nav %}
+<a class="nav-link active" href="{{ url_for('team.dashboard') }}"><i class="bi bi-speedometer2"></i> Overview</a>
+<div class="sidebar-title" style="margin-top:1rem;">Moderation</div>
+<a class="nav-link" href="{{ url_for('team.mod_flagged_stories') }}"><i class="bi bi-flag" style="color:#f87171;"></i> Flagged Stories</a>
+<a class="nav-link" href="{{ url_for('team.admin_user_list') }}"><i class="bi bi-people"></i> User Lookup</a>
+<a class="nav-link" href="{{ url_for('team.admin_user_list', status='banned') }}"><i class="bi bi-slash-circle" style="color:#f87171;"></i> Banned Users</a>
+<div class="sidebar-title" style="margin-top:1rem;">Account</div>
+<a class="nav-link" href="{{ url_for('profile.account_safety') }}"><i class="bi bi-shield-check"></i> Account Safety</a>
+{% endblock %}
+
+{% block dash_content %}
+{% include "team/_dashboard_switcher.html" ignore missing %}
+{% include "team/_greeting.html" ignore missing %}
+<div class="dash-header">
+    <h1><i class="bi bi-shield-check" style="color:#4ade80;"></i> Moderator Dashboard</h1>
+</div>
+
+<!-- Stats -->
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="label">Flagged Content</div>
+        <div class="value" style="color:#f87171;">{{ reported_count }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Recent Reviews</div>
+        <div class="value gold">{{ recent_reviews|length }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Total Users</div>
+        <div class="value">{{ total_users }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">New This Week</div>
+        <div class="value" style="color:#60a5fa;">{{ new_users_week }}</div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px;">
+    <a href="{{ url_for('team.mod_flagged_stories') }}" class="btn-dash btn-dash-primary" style="padding:0.5rem 1.2rem;border-radius:10px;text-decoration:none;font-size:0.88rem;">
+        <i class="bi bi-flag"></i> Review Flagged ({{ reported_count }})
+    </a>
+    <a href="{{ url_for('team.admin_user_list', status='banned') }}" class="btn-dash" style="padding:0.5rem 1.2rem;border-radius:10px;text-decoration:none;font-size:0.88rem;background:rgba(248,113,113,0.1);color:#f87171;">
+        <i class="bi bi-slash-circle"></i> View Banned Users
+    </a>
+</div>
+
+<!-- Flagged Content Preview -->
+<div class="dash-card" style="border-left:3px solid #f87171;">
+    <h3><i class="bi bi-exclamation-triangle" style="color:#f87171;margin-right:6px;"></i> Flagged Stories</h3>
+    {% if flagged_stories %}
+    <table class="dash-table">
+        <thead>
+            <tr><th>Story</th><th>Views</th><th>Updated</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+            {% for story in flagged_stories[:10] %}
+            <tr>
+                <td style="font-weight:600;">{{ story.title|truncate(40) }}</td>
+                <td style="color:var(--text-muted);">{{ story.views or 0 }}</td>
+                <td style="color:var(--text-muted);font-size:0.8rem;">{{ story.created_at.strftime('%b %d') if story.created_at else 'N/A' }}</td>
+                <td>
+                    <div style="display:flex;gap:6px;">
+                        <a href="{{ url_for('team.editor_review', story_id=story.id) }}" class="btn-dash btn-dash-primary btn-dash-sm">Review</a>
+                        <form method="POST" action="{{ url_for('team.mod_unflag_story', story_id=story.id) }}" style="display:inline;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn-dash btn-dash-success btn-dash-sm">Restore</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div style="text-align:center;padding:40px;color:var(--text-muted);">
+        <i class="bi bi-shield-check" style="font-size:2rem;opacity:0.3;display:block;margin-bottom:8px;color:#4ade80;"></i>
+        <p>No flagged stories. Community is clean!</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Recent Reviews -->
+<div class="dash-card">
+    <h3><i class="bi bi-chat-dots" style="color:var(--gold);margin-right:6px;"></i> Latest User Reviews</h3>
+    {% if recent_reviews %}
+    <table class="dash-table">
+        <thead>
+            <tr><th>User</th><th>Review</th><th>Date</th></tr>
+        </thead>
+        <tbody>
+            {% for rev in recent_reviews[:10] %}
+            <tr>
+                <td style="font-weight:600;color:var(--gold);">User #{{ rev.user_id }}</td>
+                <td style="color:var(--text-muted);">{{ rev.text[:120] }}{{ '...' if rev.text|length > 120 else '' }}</td>
+                <td style="color:var(--text-muted);font-size:0.8rem;">{{ rev.created_at.strftime('%b %d, %H:%M') if rev.created_at else '' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="color:var(--text-muted);text-align:center;padding:20px;">No recent reviews.</p>
+    {% endif %}
+</div>
+{% endblock %}

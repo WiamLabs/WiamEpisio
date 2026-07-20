@@ -1,0 +1,106 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Engineer Dashboard — WiamApp{% endblock %}
+{% block sidebar_title %}Engineer Panel{% endblock %}
+
+{% block sidebar_nav %}
+<a class="nav-link active" href="{{ url_for('team.dashboard') }}"><i class="bi bi-speedometer2"></i> Overview</a>
+<div class="sidebar-title" style="margin-top:1rem;">Infrastructure</div>
+<a class="nav-link" href="https://dashboard.render.com" target="_blank"><i class="bi bi-cloud" style="color:#a78bfa;"></i> Render</a>
+<a class="nav-link" href="https://github.com/WiamLabs/WiamApp" target="_blank"><i class="bi bi-github"></i> GitHub</a>
+<a class="nav-link" href="https://vercel.com/wiamlabs" target="_blank"><i class="bi bi-triangle"></i> Vercel</a>
+<a class="nav-link" href="https://dash.cloudflare.com" target="_blank"><i class="bi bi-cloud-haze2" style="color:#fb923c;"></i> Cloudflare</a>
+<div class="sidebar-title" style="margin-top:1rem;">Platform</div>
+<a class="nav-link" href="{{ url_for('admin_dash.content') }}"><i class="bi bi-journal-text"></i> All Content</a>
+<a class="nav-link" href="{{ url_for('team.admin_user_list') }}"><i class="bi bi-people"></i> Users</a>
+<div class="sidebar-title" style="margin-top:1rem;">Account</div>
+<a class="nav-link" href="{{ url_for('profile.account_safety') }}"><i class="bi bi-shield-check"></i> Account Safety</a>
+{% endblock %}
+
+{% block dash_content %}
+{% include "team/_dashboard_switcher.html" ignore missing %}
+{% include "team/_greeting.html" ignore missing %}
+<div class="dash-header">
+    <h1><i class="bi bi-code-slash" style="color:#a78bfa;"></i> Engineer Dashboard</h1>
+</div>
+
+<!-- Stats -->
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="label"><i class="bi bi-people" style="margin-right:4px;opacity:0.6;"></i> Total Users</div>
+        <div class="value gold">{{ total_users }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label"><i class="bi bi-person-plus" style="margin-right:4px;opacity:0.6;"></i> New This Week</div>
+        <div class="value" style="color:#60a5fa;">{{ new_users_week }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label"><i class="bi bi-journal-text" style="margin-right:4px;opacity:0.6;"></i> Total Stories</div>
+        <div class="value">{{ total_stories }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label"><i class="bi bi-check-circle" style="margin-right:4px;opacity:0.6;"></i> Published</div>
+        <div class="value" style="color:#4ade80;">{{ total_published }}</div>
+    </div>
+</div>
+
+<!-- System Info -->
+<div class="dash-card" style="border-left:3px solid #a78bfa;">
+    <h3><i class="bi bi-cpu" style="color:#a78bfa;"></i> System Information</h3>
+    <table class="dash-table">
+        <tbody>
+            <tr><td style="font-weight:600;width:200px;">Python Version</td><td style="font-family:monospace;color:var(--gold);">{{ python_version }}</td></tr>
+            <tr><td style="font-weight:600;">Platform</td><td style="font-family:monospace;color:var(--text-muted);">{{ platform }}</td></tr>
+            <tr><td style="font-weight:600;">Database</td><td style="font-family:monospace;color:var(--text-muted);">PostgreSQL (Supabase)</td></tr>
+            <tr><td style="font-weight:600;">Framework</td><td style="font-family:monospace;color:var(--text-muted);">Flask + SQLAlchemy</td></tr>
+            <tr><td style="font-weight:600;">Backend</td><td style="font-family:monospace;color:var(--text-muted);">Render (api.wiamapp.com)</td></tr>
+            <tr><td style="font-weight:600;">Frontend</td><td style="font-family:monospace;color:var(--text-muted);">Vercel / Next.js (wiamapp.com)</td></tr>
+            <tr><td style="font-weight:600;">Payments</td><td style="font-family:monospace;color:var(--text-muted);">Paystack (Ghana GHS)</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Platform Metrics -->
+<div class="dash-card">
+    <h3><i class="bi bi-bar-chart" style="color:var(--gold);"></i> Platform Metrics</h3>
+    <div class="stat-grid" style="margin-bottom:0;">
+        <div class="stat-card">
+            <div class="label"><i class="bi bi-database" style="margin-right:4px;opacity:0.6;"></i> DB Tables</div>
+            <div class="value" style="color:#a78bfa;">{{ db_tables }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="label"><i class="bi bi-file-earmark-text" style="margin-right:4px;opacity:0.6;"></i> Content Rows</div>
+            <div class="value">{{ total_stories }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="label"><i class="bi bi-person" style="margin-right:4px;opacity:0.6;"></i> User Records</div>
+            <div class="value">{{ total_users }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="label"><i class="bi bi-heart-pulse" style="margin-right:4px;opacity:0.6;"></i> Status</div>
+            <div class="value" style="color:#4ade80;font-size:1rem;">● Healthy</div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Links -->
+<div class="dash-card">
+    <h3><i class="bi bi-link-45deg" style="color:var(--gold);"></i> Quick Links</h3>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <a href="https://dashboard.render.com" target="_blank" style="padding:10px 20px;background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.15);border-radius:12px;color:#a78bfa;font-weight:600;font-size:0.84rem;text-decoration:none;transition:all 0.2s;">
+            <i class="bi bi-cloud"></i> Render
+        </a>
+        <a href="https://github.com/WiamLabs/WiamApp" target="_blank" style="padding:10px 20px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;color:var(--text-muted);font-weight:600;font-size:0.84rem;text-decoration:none;transition:all 0.2s;">
+            <i class="bi bi-github"></i> GitHub
+        </a>
+        <a href="https://dashboard.paystack.com" target="_blank" style="padding:10px 20px;background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.15);border-radius:12px;color:#4ade80;font-weight:600;font-size:0.84rem;text-decoration:none;transition:all 0.2s;">
+            <i class="bi bi-credit-card"></i> Paystack
+        </a>
+        <a href="https://vercel.com/wiamlabs" target="_blank" style="padding:10px 20px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;color:var(--text-muted);font-weight:600;font-size:0.84rem;text-decoration:none;transition:all 0.2s;">
+            <i class="bi bi-triangle"></i> Vercel
+        </a>
+        <a href="https://dash.cloudflare.com" target="_blank" style="padding:10px 20px;background:rgba(251,146,60,0.08);border:1px solid rgba(251,146,60,0.15);border-radius:12px;color:#fb923c;font-weight:600;font-size:0.84rem;text-decoration:none;transition:all 0.2s;">
+            <i class="bi bi-cloud-haze2"></i> Cloudflare
+        </a>
+    </div>
+</div>
+{% endblock %}

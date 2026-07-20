@@ -1,0 +1,110 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Review: {{ book.title }} — WiamApp{% endblock %}
+{% block sidebar_title %}Control Panel{% endblock %}
+
+{% block sidebar_nav %}
+<a class="nav-link" href="{{ url_for('founder_dash.overview') }}"><i class="bi bi-speedometer2"></i> Overview</a>
+<a class="nav-link" href="{{ url_for('founder_dash.users') }}"><i class="bi bi-people"></i> Users</a>
+<a class="nav-link" href="{{ url_for('founder_dash.content') }}"><i class="bi bi-book"></i> Content</a>
+<a class="nav-link" href="{{ url_for('founder_dash.revenue') }}"><i class="bi bi-cash-stack"></i> Revenue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.financial_dashboard') }}"><i class="bi bi-bank" style="color:var(--gold);"></i> Financial v5</a>
+<a class="nav-link" href="{{ url_for('founder_dash.premium_analytics') }}"><i class="bi bi-gem" style="color:#c084fc;"></i> Premium Analytics</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payouts') }}"><i class="bi bi-send-check"></i> Payouts</a>
+<a class="nav-link" href="{{ url_for('founder_dash.withdrawals') }}"><i class="bi bi-arrow-up-right-circle" style="color:var(--gold);"></i> Withdrawals</a>
+<a class="nav-link" href="{{ url_for('founder_dash.subscribers') }}"><i class="bi bi-gem" style="color:#9b59b6;"></i> Subscribers</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payroll') }}"><i class="bi bi-wallet2" style="color:#2ecc71;"></i> Team Payroll</a>
+<a class="nav-link" href="{{ url_for('founder_dash.creators') }}"><i class="bi bi-person-badge"></i> Creators</a>
+<a class="nav-link" href="{{ url_for('founder_dash.genres') }}"><i class="bi bi-tags"></i> Genres</a>
+<a class="nav-link" href="{{ url_for('founder_dash.announcements') }}"><i class="bi bi-megaphone"></i> Announcements</a>
+<a class="nav-link" href="{{ url_for('founder_dash.collections') }}"><i class="bi bi-grid"></i> Collections</a>
+<a class="nav-link" href="{{ url_for('founder_dash.moderation') }}"><i class="bi bi-shield-exclamation"></i> Moderation</a>
+<a class="nav-link" href="{{ url_for('founder_dash.warnings_list') }}"><i class="bi bi-exclamation-triangle" style="color:#f59e0b;"></i> Warnings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.elite_manage') }}"><span style="color:var(--gold);">?</span> WiamElite</a>
+<a class="nav-link" href="{{ url_for('wiambot.apex_review') }}"><i class="bi bi-trophy-fill" style="color:var(--gold);"></i> Apex Review</a>
+<a class="nav-link" href="{{ url_for('founder_dash.review_queue') }}"><i class="bi bi-robot"></i> Bot Review Queue</a>
+<a class="nav-link active" href="{{ url_for('classics.dashboard') }}"><i class="bi bi-journal-bookmark" style="color:#a78bfa;"></i> Content Seeder</a>
+<a class="nav-link" href="{{ url_for('founder_dash.platform_settings') }}"><i class="bi bi-sliders"></i> Platform Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.forms_dashboard') }}"><i class="bi bi-file-earmark-text"></i> Application Forms</a>
+<a class="nav-link" href="{{ url_for('founder_dash.email_studio') }}"><i class="bi bi-envelope-paper" style="color:var(--gold);"></i> Email Studio</a>
+<a class="nav-link" href="{{ url_for('founder_dash.team_management') }}"><i class="bi bi-people-fill"></i> Team</a>
+<a class="nav-link" href="{{ url_for('founder_dash.account_management') }}"><i class="bi bi-person-x"></i> Account Management</a>
+<a class="nav-link" href="{{ url_for('founder_dash.notification_testing') }}"><i class="bi bi-bell" style="color:#fbbf24;"></i> Notifications</a>
+<a class="nav-link" href="{{ url_for('founder_dash.settings') }}"><i class="bi bi-gear"></i> Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.admins') }}"><i class="bi bi-shield-check"></i> Admins</a>
+{% endblock %}
+
+{% block dash_content %}
+<style>
+    .review-header{display:flex;gap:1.5rem;align-items:flex-start;margin-bottom:2rem;flex-wrap:wrap;}
+    .review-cover{width:120px;height:170px;border-radius:10px;object-fit:cover;background:rgba(255,255,255,0.05);flex-shrink:0;}
+    .review-meta h2{margin:0 0 0.4rem;font-size:1.3rem;color:var(--text);}
+    .review-meta p{margin:0.2rem 0;font-size:0.88rem;color:var(--text-muted);}
+    .review-meta .badge-classic{background:linear-gradient(135deg,rgba(167,139,250,0.2),rgba(124,58,237,0.15));color:#a78bfa;padding:0.2rem 0.6rem;border-radius:6px;font-size:0.72rem;font-weight:700;letter-spacing:0.04em;}
+    .review-actions{display:flex;gap:0.5rem;margin-top:0.75rem;flex-wrap:wrap;}
+    .btn-publish-lg{background:linear-gradient(135deg,#4ade80,#22c55e);color:#000;border:none;border-radius:8px;padding:0.5rem 1.5rem;font-weight:700;font-size:0.88rem;cursor:pointer;}
+    .btn-delete-lg{background:rgba(248,113,113,0.15);color:#f87171;border:1px solid rgba(248,113,113,0.2);border-radius:8px;padding:0.5rem 1.5rem;font-weight:600;font-size:0.88rem;cursor:pointer;}
+    .btn-back{background:rgba(255,255,255,0.06);color:var(--text-muted);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:0.5rem 1.5rem;font-weight:600;font-size:0.88rem;cursor:pointer;text-decoration:none;}
+    .chapter-card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;margin-bottom:0.75rem;overflow:hidden;}
+    .chapter-header{display:flex;justify-content:space-between;align-items:center;padding:0.75rem 1rem;cursor:pointer;transition:background 0.2s;}
+    .chapter-header:hover{background:rgba(255,255,255,0.04);}
+    .chapter-header .ch-num{color:#a78bfa;font-weight:700;font-size:0.85rem;margin-right:0.5rem;}
+    .chapter-header .ch-title{color:var(--text);font-weight:500;font-size:0.9rem;}
+    .chapter-header .ch-words{color:var(--text-muted);font-size:0.78rem;}
+    .chapter-body{padding:0 1rem 1rem;display:none;font-size:0.88rem;line-height:1.7;color:var(--text-muted);max-height:400px;overflow-y:auto;white-space:pre-wrap;}
+    .chapter-body.open{display:block;}
+</style>
+
+<div class="dash-header">
+    <h1><i class="bi bi-eye" style="color:var(--gold);"></i> Review Classic Draft</h1>
+    <p>Review the parsed chapters before publishing</p>
+</div>
+
+<!-- Book Info -->
+<div class="review-header">
+    {% if book.cover_image %}
+    <img src="{{ book.cover_image }}" alt="{{ book.title }}" class="review-cover">
+    {% else %}
+    <div class="review-cover" style="display:flex;align-items:center;justify-content:center;font-size:2rem;color:rgba(255,255,255,0.1);"><i class="bi bi-book"></i></div>
+    {% endif %}
+    <div class="review-meta">
+        <span class="badge-classic">CLASSIC EDITION</span>
+        <h2>{{ book.title }}</h2>
+        <p>by <strong style="color:var(--gold);">{{ book.author }}</strong></p>
+        <p>Genre: {{ book.genre }} &middot; {{ book.chapter_count }} chapters &middot; {{ '{:,}'.format(book.word_count) }} words</p>
+        <p>Gutenberg ID: #{{ book.gutenberg_id }} &middot; Language: {{ book.language|upper }}</p>
+        {% if book.description %}
+        <p style="margin-top:0.5rem;font-style:italic;">{{ book.description }}</p>
+        {% endif %}
+
+        <div class="review-actions">
+            <a href="{{ url_for('classics.dashboard') }}" class="btn-back"><i class="bi bi-arrow-left"></i> Back</a>
+            <form method="POST" action="{{ url_for('classics.publish', book_id=book.id) }}" style="display:inline;" onsubmit="return confirm('Publish this classic? Chapter 1 releases immediately, then 1 chapter per day.')">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn-publish-lg"><i class="bi bi-check-lg"></i> Publish</button>
+            </form>
+            <form method="POST" action="{{ url_for('classics.delete', book_id=book.id) }}" style="display:inline;" onsubmit="return confirm('Permanently delete this draft?')">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn-delete-lg"><i class="bi bi-trash"></i> Delete</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Chapters -->
+<h3 style="font-size:1rem;margin-bottom:1rem;color:var(--text);">
+    <i class="bi bi-list-ol" style="color:#a78bfa;"></i> Chapters ({{ chapters|length }})
+</h3>
+{% for ch in chapters %}
+<div class="chapter-card">
+    <div class="chapter-header" onclick="this.nextElementSibling.classList.toggle('open')">
+        <div>
+            <span class="ch-num">Ch {{ ch.chapter_number }}</span>
+            <span class="ch-title">{{ ch.chapter_title }}</span>
+        </div>
+        <span class="ch-words">{{ '{:,}'.format(ch.word_count) }} words</span>
+    </div>
+    <div class="chapter-body">{{ ch.content[:2000] }}{% if ch.content|length > 2000 %}...
+<em style="color:#a78bfa;">[Showing first 2,000 characters of {{ '{:,}'.format(ch.content|length) }} total]</em>{% endif %}</div>
+</div>
+{% endfor %}
+{% endblock %}

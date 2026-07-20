@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Two-Factor Authentication — WiamApp{% endblock %}
+
+{% block content %}
+<div style="max-width:500px;margin:0 auto;padding:var(--space-xl);">
+    <h2 style="margin-bottom:var(--space-sm);">Two-Factor Authentication</h2>
+    <p style="color:var(--text-muted);margin-bottom:var(--space-xl);font-size:0.9rem;">
+        Add an extra layer of security to your account. When enabled, you'll need to enter a code sent to your email each time you sign in.
+    </p>
+
+    <div style="background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);padding:var(--space-lg);">
+        <div style="display:flex;align-items:center;gap:var(--space-md);margin-bottom:var(--space-lg);">
+            <div style="width:48px;height:48px;border-radius:50%;background:var(--gold-glow);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i class="bi bi-shield-lock" style="font-size:22px;color:var(--gold);"></i>
+            </div>
+            <div>
+                <div style="font-weight:600;font-size:1rem;">Email-based 2FA</div>
+                <div style="font-size:0.82rem;color:var(--text-muted);">
+                    {% if current_user.two_factor_enabled %}
+                        <span style="color:#22c55e;"><i class="bi bi-check-circle-fill me-1"></i>Enabled</span>
+                    {% else %}
+                        <span style="color:var(--text-muted);"><i class="bi bi-x-circle me-1"></i>Disabled</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {% if current_user.email %}
+        <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:var(--space-md);">
+            Verification codes will be sent to <strong style="color:var(--text);">{{ current_user.email }}</strong>
+        </p>
+        {% endif %}
+
+        <form method="POST" action="{{ url_for('auth.settings_2fa') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            {% if current_user.two_factor_enabled %}
+                <input type="hidden" name="action" value="disable">
+                <button type="submit" class="btn" style="width:100%;padding:10px;background:transparent;border:1px solid #ef4444;color:#ef4444;border-radius:var(--radius-md);">
+                    <i class="bi bi-shield-x me-1"></i> Disable 2FA
+                </button>
+            {% else %}
+                <input type="hidden" name="action" value="enable">
+                <button type="submit" class="btn btn-gold" style="width:100%;padding:10px;">
+                    <i class="bi bi-shield-check me-1"></i> Enable 2FA
+                </button>
+            {% endif %}
+        </form>
+    </div>
+
+    <div style="margin-top:var(--space-lg);">
+        <a href="javascript:void(0)" onclick="window.history.length>1?history.back():location.href='/'" style="color:var(--text-muted);font-size:0.85rem;" data-no-loader>
+            <i class="bi bi-arrow-left me-1"></i> Back
+        </a>
+    </div>
+</div>
+{% endblock %}

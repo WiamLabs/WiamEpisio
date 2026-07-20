@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamEpisio — Transaction History</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75; --green:#3BB273; --red:#E4573D;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); display:flex; flex-direction:column; }
+  .statusbar{ height:44px; flex-shrink:0; }
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+
+  .topbar{ display:flex; align-items:center; gap:12px; padding:2px 20px 14px; flex-shrink:0; }
+  .icon-btn{ width:34px; height:34px; border-radius:50%; background:var(--navy-card); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .topbar h1{ font-size:18px; font-weight:800; color:#fff; margin:0; }
+
+  .balance-card{ margin:0 20px 16px; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); border-radius:16px; padding:16px 18px; flex-shrink:0; display:flex; align-items:center; justify-content:space-between; }
+  .balance-card b{ font-size:24px; font-weight:800; color:var(--navy); display:block; }
+  .balance-card span{ font-size:10.5px; color:rgba(8,8,26,0.7); font-weight:700; }
+  .topup-btn{ padding:9px 16px; border-radius:10px; background:var(--navy); color:var(--gold); font-size:11.5px; font-weight:800; }
+
+  .filter-row{ display:flex; gap:8px; padding:0 20px 14px; flex-shrink:0; }
+  .filter-chip{ padding:7px 14px; border-radius:999px; background:var(--navy-card); border:1px solid var(--navy-line); color:#B8B8CC; font-size:11.5px; font-weight:600; }
+  .filter-chip.active{ background:var(--gold); color:var(--navy); border-color:var(--gold); }
+
+  .scroll{ flex:1; overflow-y:auto; padding:0 20px 20px; }
+  .day-label{ font-size:11px; font-weight:800; color:var(--text-faint); letter-spacing:0.4px; text-transform:uppercase; margin:14px 0 8px; }
+  .day-label:first-child{ margin-top:0; }
+
+  .txn-row{ display:flex; align-items:center; gap:12px; padding:11px 0; border-bottom:1px solid var(--navy-line); }
+  .txn-icon{ width:36px; height:36px; border-radius:11px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .txn-icon.in{ background:rgba(59,178,115,0.14); }
+  .txn-icon.in svg{ color:var(--green); }
+  .txn-icon.out{ background:rgba(212,160,23,0.14); }
+  .txn-icon.out svg{ color:var(--gold); }
+  .txn-icon.fail{ background:rgba(228,87,61,0.14); }
+  .txn-icon.fail svg{ color:var(--red); }
+
+  .txn-body{ flex:1; min-width:0; }
+  .txn-title{ font-size:12.5px; font-weight:700; color:#fff; margin:0 0 2px; }
+  .txn-sub{ font-size:10.5px; color:var(--text-faint); margin:0; }
+
+  .txn-amt{ flex-shrink:0; text-align:right; }
+  .txn-amt b{ display:block; font-size:12.5px; font-weight:800; }
+  .txn-amt.in b{ color:var(--green); }
+  .txn-amt.out b{ color:#E7E7F2; }
+  .txn-amt.fail b{ color:var(--red); }
+  .txn-amt span{ font-size:9.5px; color:var(--text-faint); }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"></div>
+  <div class="topbar">
+    <div class="icon-btn"><svg viewBox="0 0 24 24" width="15" height="15" color="#fff"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></div>
+    <h1>Transaction History</h1>
+  </div>
+
+  <div class="balance-card">
+    <div><b>934 coins</b><span>Current balance</span></div>
+    <span class="topup-btn">+ Top Up</span>
+  </div>
+
+  <div class="filter-row">
+    <span class="filter-chip active">All</span>
+    <span class="filter-chip">Purchases</span>
+    <span class="filter-chip">Unlocks</span>
+    <span class="filter-chip">Bonuses</span>
+  </div>
+
+  <div class="scroll">
+
+    <p class="day-label">Today</p>
+    <div class="txn-row">
+      <div class="txn-icon in"><svg viewBox="0 0 24 24" width="17" height="17"><path d="M12 5v14M5 12l7 7 7-7"/></svg></div>
+      <div class="txn-body"><p class="txn-title">Coin Purchase — 650 Pack</p><p class="txn-sub">MTN Mobile Money · 9:12 AM</p></div>
+      <div class="txn-amt in"><b>+715</b><span>₵50.00</span></div>
+    </div>
+    <div class="txn-row">
+      <div class="txn-icon out"><svg viewBox="0 0 24 24" width="17" height="17"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg></div>
+      <div class="txn-body"><p class="txn-title">Unlocked EP 29 — My Father is Thor</p><p class="txn-sub">11:40 AM</p></div>
+      <div class="txn-amt out"><b>-15</b><span>coins</span></div>
+    </div>
+
+    <p class="day-label">Yesterday</p>
+    <div class="txn-row">
+      <div class="txn-icon out"><svg viewBox="0 0 24 24" width="17" height="17"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg></div>
+      <div class="txn-body"><p class="txn-title">Unlocked EP 12 — Accra Nights</p><p class="txn-sub">7:04 PM</p></div>
+      <div class="txn-amt out"><b>-15</b><span>coins</span></div>
+    </div>
+    <div class="txn-row">
+      <div class="txn-icon in"><svg viewBox="0 0 24 24" width="17" height="17"><path d="M12 5v14M5 12l7 7 7-7"/></svg></div>
+      <div class="txn-body"><p class="txn-title">Daily login bonus</p><p class="txn-sub">8:02 AM</p></div>
+      <div class="txn-amt in"><b>+10</b><span>coins</span></div>
+    </div>
+    <div class="txn-row">
+      <div class="txn-icon fail"><svg viewBox="0 0 24 24" width="17" height="17"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+      <div class="txn-body"><p class="txn-title">Coin Purchase — 300 Pack</p><p class="txn-sub">Payment declined · 6:51 PM</p></div>
+      <div class="txn-amt fail"><b>Failed</b><span>₵25.00</span></div>
+    </div>
+
+    <p class="day-label">This week</p>
+    <div class="txn-row">
+      <div class="txn-icon in"><svg viewBox="0 0 24 24" width="17" height="17"><path d="M12 5v14M5 12l7 7 7-7"/></svg></div>
+      <div class="txn-body"><p class="txn-title">Welcome bonus</p><p class="txn-sub">Monday, 2:14 PM</p></div>
+      <div class="txn-amt in"><b>+50</b><span>coins</span></div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

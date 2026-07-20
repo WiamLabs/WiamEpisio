@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Story Challenges — WiamApp{% endblock %}
+{% block content %}
+<div style="max-width:900px;margin:0 auto;padding:var(--space-xl) var(--space-md);">
+
+    <div style="text-align:center;margin-bottom:var(--space-2xl);">
+        <h1 style="font-size:1.8rem;font-family:var(--font-display);color:var(--text);margin-bottom:var(--space-sm);">
+            🏆 Story Challenges
+        </h1>
+        <p style="color:var(--text-secondary);font-size:0.9rem;max-width:480px;margin:0 auto;">
+            Put your writing to the test! Join challenges, write within the theme, and win coin rewards.
+        </p>
+    </div>
+
+    <!-- Active Challenges -->
+    {% if active_challenges %}
+    <h2 style="font-size:1.1rem;font-family:var(--font-display);color:var(--text);margin-bottom:var(--space-md);">
+        <span style="color:#2ecc71;">●</span> Active Challenges
+    </h2>
+    <div style="display:grid;gap:var(--space-md);margin-bottom:var(--space-2xl);">
+        {% for ch in active_challenges %}
+        <a href="{{ url_for('programs.challenge_detail', challenge_id=ch.id) }}" style="text-decoration:none;padding:var(--space-lg);background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);display:flex;align-items:center;gap:var(--space-lg);flex-wrap:wrap;">
+            <div style="flex:1;min-width:200px;">
+                <div style="display:flex;align-items:center;gap:var(--space-sm);margin-bottom:var(--space-xs);">
+                    <span style="font-size:0.65rem;padding:2px 8px;border-radius:10px;font-weight:600;
+                        {% if ch.challenge_type == 'weekly' %}background:rgba(52,152,219,0.15);color:#3498db;
+                        {% elif ch.challenge_type == 'monthly' %}background:rgba(155,89,182,0.15);color:#9b59b6;
+                        {% else %}background:rgba(212,168,67,0.15);color:#d4a843;{% endif %}">
+                        {{ ch.challenge_type|capitalize }}
+                    </span>
+                    {% if ch.genre %}<span style="font-size:0.65rem;color:var(--text-muted);">{{ ch.genre }}</span>{% endif %}
+                </div>
+                <h3 style="font-size:1rem;color:var(--text);font-weight:600;margin-bottom:4px;">{{ ch.title }}</h3>
+                <p style="font-size:0.8rem;color:var(--text-secondary);line-height:1.4;">{{ ch.description[:120] }}{% if ch.description|length > 120 %}...{% endif %}</p>
+                <div style="display:flex;gap:var(--space-md);margin-top:var(--space-sm);font-size:0.7rem;color:var(--text-muted);">
+                    <span>Min {{ ch.min_words }} words</span>
+                    <span>Ends {{ ch.ends_at.strftime('%b %d, %Y') }}</span>
+                </div>
+            </div>
+            <div style="text-align:center;">
+                <div style="font-size:1.2rem;font-weight:800;color:var(--gold);">{{ ch.coin_reward }}</div>
+                <div style="font-size:0.65rem;color:var(--text-muted);">coins</div>
+                {% if ch.id in my_entries %}
+                <div style="margin-top:var(--space-xs);font-size:0.65rem;padding:2px 8px;border-radius:10px;background:rgba(46,204,113,0.15);color:#2ecc71;font-weight:600;">Joined</div>
+                {% endif %}
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:var(--space-xl);background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);color:var(--text-muted);margin-bottom:var(--space-2xl);">
+        <div style="font-size:1.5rem;margin-bottom:var(--space-sm);">📝</div>
+        <p style="font-size:0.85rem;">No active challenges right now. Stay tuned for the next one!</p>
+    </div>
+    {% endif %}
+
+    <!-- Past Challenges -->
+    {% if past_challenges %}
+    <h2 style="font-size:1.1rem;font-family:var(--font-display);color:var(--text);margin-bottom:var(--space-md);">
+        Past Challenges
+    </h2>
+    <div style="display:grid;gap:var(--space-sm);">
+        {% for ch in past_challenges %}
+        <a href="{{ url_for('programs.challenge_detail', challenge_id=ch.id) }}" style="text-decoration:none;padding:var(--space-md);background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);display:flex;align-items:center;gap:var(--space-md);opacity:0.7;">
+            <div style="flex:1;">
+                <h3 style="font-size:0.85rem;color:var(--text);font-weight:600;">{{ ch.title }}</h3>
+                <div style="font-size:0.7rem;color:var(--text-muted);">
+                    {{ ch.challenge_type|capitalize }} · Ended {{ ch.ends_at.strftime('%b %d, %Y') }}
+                </div>
+            </div>
+            <span style="font-size:0.7rem;color:var(--text-muted);">{{ ch.coin_reward }} coins</span>
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div style="text-align:center;margin-top:var(--space-xl);">
+        <a href="{{ url_for('programs.hub') }}" style="color:var(--text-muted);font-size:0.8rem;text-decoration:none;">&larr; Back to Programs</a>
+    </div>
+</div>
+{% endblock %}

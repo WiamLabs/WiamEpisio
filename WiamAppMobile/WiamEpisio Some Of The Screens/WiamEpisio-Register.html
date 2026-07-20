@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamEpisio — Sign Up</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{ --navy:#08081A; --navy-card:#12122A; --navy-line:#1E1E42; --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75; }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); display:flex; flex-direction:column; padding:0 26px; }
+  .statusbar{ height:44px; }
+  .close-btn{ width:34px; height:34px; border-radius:50%; background:var(--navy-card); display:flex; align-items:center; justify-content:center; margin-bottom:20px; }
+
+  .hero{ text-align:center; margin-bottom:26px; }
+  .coin-burst{ width:76px; height:76px; border-radius:50%; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); display:flex; align-items:center; justify-content:center; margin:0 auto 16px; position:relative; }
+  .coin-burst svg{ color:var(--navy); width:34px; height:34px; }
+  .coin-burst::after{ content:''; position:absolute; inset:-8px; border-radius:50%; border:1.5px solid rgba(212,160,23,0.3); }
+  h1{ font-size:19px; font-weight:800; color:#fff; margin:0 0 6px; }
+  .sub{ font-size:12.5px; color:var(--text-dim); line-height:1.5; margin:0; }
+  .sub b{ color:var(--gold); font-weight:700; }
+
+  .field-group{ margin-bottom:14px; }
+  .field-box{ background:var(--navy-card); border:1px solid var(--navy-line); border-radius:14px; padding:13px 14px; display:flex; align-items:center; gap:10px; }
+  .field-box svg{ color:var(--gold); flex-shrink:0; width:15px; height:15px; }
+  .field-box input{ background:none; border:none; outline:none; color:#fff; font-size:13.5px; font-family:inherit; width:100%; }
+  .field-box input::placeholder{ color:var(--text-faint); }
+
+  .signup-btn{ padding:15px; border-radius:16px; background:var(--gold); color:var(--navy); font-size:14.5px; font-weight:700; border:none; margin:8px 0 16px; }
+
+  .divider{ display:flex; align-items:center; gap:12px; margin-bottom:16px; }
+  .divider .line{ flex:1; height:1px; background:var(--navy-line); }
+  .divider span{ font-size:11.5px; color:var(--text-faint); }
+
+  .social-row{ display:flex; gap:10px; margin-bottom:20px; }
+  .social-btn{ flex:1; padding:12px; border-radius:14px; background:var(--navy-card); border:1px solid var(--navy-line); display:flex; align-items:center; justify-content:center; gap:8px; }
+  .social-btn span{ font-size:12.5px; color:#fff; font-weight:500; }
+
+  .guest-link{ text-align:center; font-size:12.5px; color:var(--text-dim); margin-top:auto; padding-bottom:26px; }
+  .guest-link span{ color:var(--gold); font-weight:600; }
+
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="statusbar"></div>
+  <div class="close-btn"><svg viewBox="0 0 24 24" width="16" height="16" color="#fff"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+
+  <div class="hero">
+    <div class="coin-burst"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="10"/></svg></div>
+    <h1>Get 50 Free Coins</h1>
+    <p class="sub">Sign up now and unlock <b>3 free episodes</b><br/>instantly, on us.</p>
+  </div>
+
+  <div class="field-group">
+    <div class="field-box">
+      <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+      <input placeholder="Phone number" />
+    </div>
+  </div>
+
+  <button class="signup-btn">Continue</button>
+
+  <div class="divider"><div class="line"></div><span>or continue with</span><div class="line"></div></div>
+
+  <div class="social-row">
+    <div class="social-btn"><svg viewBox="0 0 24 24" width="15" height="15" color="#fff"><path d="M22 12c0-5.5-4.5-10-10-10S2 6.5 2 12c0 5 3.7 9.1 8.4 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.5h-1.3c-1.2 0-1.6.8-1.6 1.6V12h2.8l-.4 2.9h-2.4v7C18.3 21.1 22 17 22 12z"/></svg><span>Facebook</span></div>
+    <div class="social-btn"><svg viewBox="0 0 24 24" width="15" height="15" color="#fff"><circle cx="12" cy="12" r="10"/></svg><span>Google</span></div>
+  </div>
+
+  <p class="guest-link">Not ready? <span>Keep browsing as guest</span></p>
+</div>
+</body>
+</html>

@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+{% block title %}{{ story.title }} — WiamElite{% endblock %}
+{% block meta_description %}{{ story.title }} by {{ story.author or 'Unknown' }} — A WiamElite legendary story with {{ '{:,}'.format(elite.total_reads) }} reads.{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:var(--space-xl);padding-bottom:var(--space-2xl);max-width:800px;margin:0 auto;">
+
+    <!-- Back link -->
+    <a href="{{ url_for('elite.elite_page') }}" style="display:inline-flex;align-items:center;gap:4px;font-size:0.85rem;color:var(--gold);text-decoration:none;margin-bottom:var(--space-lg);">
+        <i class="bi bi-arrow-left"></i> Back to WiamElite
+    </a>
+
+    <!-- Book Header -->
+    <div style="display:flex;gap:var(--space-xl);margin-bottom:var(--space-xl);flex-wrap:wrap;">
+        <!-- Cover -->
+        <div style="flex-shrink:0;width:160px;">
+            <div style="position:relative;border-radius:var(--radius-md);overflow:hidden;border:2px solid rgba(212,168,67,0.4);box-shadow:0 8px 30px rgba(212,168,67,0.15);aspect-ratio:2/3;">
+                {% if story.cover_file_id %}
+                <img src="{{ story.cover_url }}" alt="{{ story.title }}" style="width:100%;height:100%;object-fit:cover;">
+                {% else %}
+                <div style="width:100%;height:100%;background:linear-gradient(135deg,var(--wine),var(--wine-deep));display:flex;align-items:center;justify-content:center;">
+                    <i class="bi bi-book" style="font-size:2.5rem;color:var(--gold);opacity:0.5;"></i>
+                </div>
+                {% endif %}
+                <div style="position:absolute;top:8px;left:8px;background:linear-gradient(135deg,#d4a843,#b8860b);color:#000;font-size:0.6rem;font-weight:700;padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:1px;">✦ Elite</div>
+            </div>
+        </div>
+
+        <!-- Info -->
+        <div style="flex:1;min-width:200px;">
+            <h1 style="font-size:1.5rem;font-family:var(--font-display);color:var(--text);margin:0 0 var(--space-xs);">
+                {{ story.title }}
+                <span style="display:inline-flex;align-items:center;gap:3px;background:linear-gradient(135deg,#d4a843,#b8860b);color:#000;font-size:0.55rem;font-weight:700;padding:3px 8px;border-radius:12px;vertical-align:middle;margin-left:6px;text-transform:uppercase;">✦ Elite</span>
+            </h1>
+
+            {% if creator %}
+            <a href="{{ url_for('creator.profile', username=creator.username) }}" style="display:inline-flex;align-items:center;gap:6px;text-decoration:none;margin-bottom:var(--space-sm);">
+                <span style="font-size:0.9rem;color:var(--text-secondary);">{{ story.author or creator.display_name }}</span>
+                {% if has_badge %}
+                <span style="display:inline-flex;width:16px;height:16px;background:linear-gradient(135deg,#d4a843,#b8860b);border-radius:50%;align-items:center;justify-content:center;"><span style="color:#722f37;font-size:0.5rem;font-weight:900;">✓</span></span>
+                {% endif %}
+            </a>
+            {% endif %}
+
+            <!-- Stats -->
+            <div style="display:flex;flex-wrap:wrap;gap:var(--space-md);margin:var(--space-md) 0;">
+                <div style="text-align:center;min-width:60px;">
+                    <div style="font-size:1.1rem;font-weight:700;color:var(--gold);">{{ '%.1f'|format(avg_rating) }}</div>
+                    <div style="font-size:0.65rem;color:var(--text-muted);">★ Rating</div>
+                </div>
+                <div style="text-align:center;min-width:60px;">
+                    <div style="font-size:1.1rem;font-weight:700;color:var(--text);">{{ '{:,}'.format(elite.total_reads) }}</div>
+                    <div style="font-size:0.65rem;color:var(--text-muted);">Reads</div>
+                </div>
+                <div style="text-align:center;min-width:60px;">
+                    <div style="font-size:1.1rem;font-weight:700;color:var(--text);">{{ elite.chapter_count }}</div>
+                    <div style="font-size:0.65rem;color:var(--text-muted);">Chapters</div>
+                </div>
+                <div style="text-align:center;min-width:60px;">
+                    <div style="font-size:1.1rem;font-weight:700;color:var(--text);">{{ '{:,}'.format(elite.total_words or 0) }}</div>
+                    <div style="font-size:0.65rem;color:var(--text-muted);">Words</div>
+                </div>
+                <div style="text-align:center;min-width:60px;">
+                    <div style="font-size:1.1rem;font-weight:700;color:var(--text);">{{ '{:,}'.format(elite.total_votes or 0) }}</div>
+                    <div style="font-size:0.65rem;color:var(--text-muted);">Favorites</div>
+                </div>
+            </div>
+
+            {% if elite.elite_streak_days and elite.elite_streak_days > 30 %}
+            <div style="font-size:0.75rem;color:var(--gold);margin-bottom:var(--space-sm);">
+                🔥 Elite for {{ (elite.elite_streak_days // 30) }} months
+            </div>
+            {% endif %}
+
+            <!-- Action buttons -->
+            <div style="display:flex;gap:var(--space-sm);flex-wrap:wrap;margin-top:var(--space-sm);">
+                {% if is_subscribed %}
+                <a href="{{ url_for('book.read_book', book_id=story.id) }}" style="display:inline-flex;align-items:center;gap:6px;padding:10px 24px;background:linear-gradient(135deg,#d4a843,#b8860b);color:#000;border-radius:var(--radius-md);font-weight:700;font-size:0.9rem;text-decoration:none;">
+                    <i class="bi bi-book"></i> Read Now
+                </a>
+                {% else %}
+                <a href="{{ url_for('elite.subscribe_page') }}" style="display:inline-flex;align-items:center;gap:6px;padding:10px 24px;background:rgba(212,168,67,0.15);color:var(--gold);border:1px solid rgba(212,168,67,0.3);border-radius:var(--radius-md);font-weight:600;font-size:0.9rem;text-decoration:none;">
+                    <i class="bi bi-lock"></i> Subscribe to Read — GH₵25/mo
+                </a>
+                {% endif %}
+                <a href="{{ url_for('elite.celebration_card', content_id=story.id) }}" style="display:inline-flex;align-items:center;gap:6px;padding:10px 18px;background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);font-size:0.85rem;color:var(--text-secondary);text-decoration:none;">
+                    <i class="bi bi-share"></i> Share
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Synopsis -->
+    {% if story.description %}
+    <div style="padding:var(--space-lg);background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);margin-bottom:var(--space-xl);">
+        <h3 style="font-size:0.9rem;font-weight:600;margin:0 0 var(--space-sm);color:var(--text);">Synopsis</h3>
+        <p style="font-size:0.85rem;color:var(--text-secondary);line-height:1.6;margin:0;">{{ story.description }}</p>
+    </div>
+    {% endif %}
+
+    <!-- Chapters List -->
+    <section style="margin-bottom:var(--space-xl);">
+        <h2 style="font-size:1.1rem;font-family:var(--font-display);margin-bottom:var(--space-md);display:flex;align-items:center;gap:var(--space-sm);">
+            <i class="bi bi-list-ol" style="color:var(--gold);"></i> Chapters ({{ chapters|length }})
+        </h2>
+
+        {% if chapters %}
+        <div style="background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);overflow:hidden;">
+            {% for ch in chapters %}
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:12px var(--space-md);{% if not loop.last %}border-bottom:1px solid var(--border-subtle);{% endif %}">
+                <div style="display:flex;align-items:center;gap:var(--space-sm);min-width:0;">
+                    <span style="font-size:0.75rem;color:var(--text-muted);width:28px;text-align:center;flex-shrink:0;">{{ ch.chapter_number }}</span>
+                    <span style="font-size:0.85rem;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ ch.chapter_title }}</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:var(--space-sm);flex-shrink:0;">
+                    {% if ch.word_count %}
+                    <span style="font-size:0.65rem;color:var(--text-muted);">{{ '{:,}'.format(ch.word_count) }} words</span>
+                    {% endif %}
+                    {% if ch.is_locked and not is_subscribed %}
+                    <span style="font-size:0.65rem;color:var(--gold);background:rgba(212,168,67,0.1);padding:2px 8px;border-radius:10px;">
+                        <i class="bi bi-lock-fill"></i> {{ int(ch.chapter_price * coin_multiplier) }} coins
+                    </span>
+                    {% elif is_subscribed %}
+                    <a href="{{ url_for('book.read_book', book_id=story.id, ch=ch.chapter_number) }}" style="font-size:0.7rem;color:var(--gold);text-decoration:none;padding:2px 8px;background:rgba(212,168,67,0.1);border-radius:10px;">
+                        Read →
+                    </a>
+                    {% else %}
+                    <span style="font-size:0.65rem;color:var(--text-muted);">Free</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p style="font-size:0.85rem;color:var(--text-muted);">No published chapters yet.</p>
+        {% endif %}
+    </section>
+
+    <!-- Reviews -->
+    <section style="margin-bottom:var(--space-xl);">
+        <h2 style="font-size:1.1rem;font-family:var(--font-display);margin-bottom:var(--space-md);display:flex;align-items:center;gap:var(--space-sm);">
+            <i class="bi bi-chat-quote" style="color:var(--gold);"></i> Reader Reviews ({{ reviews|length }})
+        </h2>
+
+        {% if reviews %}
+        <div style="display:flex;flex-direction:column;gap:var(--space-md);">
+            {% for r in reviews %}
+            <div style="padding:var(--space-md);background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);">
+                <p style="font-size:0.85rem;color:var(--text);line-height:1.6;margin:0 0 var(--space-sm);">{{ r.text }}</p>
+                <div style="display:flex;align-items:center;gap:var(--space-sm);">
+                    <div style="width:24px;height:24px;border-radius:50%;background:var(--wine);display:flex;align-items:center;justify-content:center;">
+                        <i class="bi bi-person-fill" style="color:var(--gold);font-size:0.65rem;"></i>
+                    </div>
+                    <span style="font-size:0.75rem;color:var(--text-secondary);">
+                        {{ review_users.get(r.user_id).display_name if review_users.get(r.user_id) else 'Reader' }}
+                    </span>
+                    <span style="font-size:0.65rem;color:var(--text-muted);">{{ r.created_at.strftime('%b %d, %Y') if r.created_at else '' }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p style="font-size:0.85rem;color:var(--text-muted);">No reviews yet.</p>
+        {% endif %}
+    </section>
+
+    <!-- Elite Stats Card -->
+    <section style="padding:var(--space-lg);background:linear-gradient(135deg,rgba(212,168,67,0.08),rgba(114,47,55,0.08));border:1px solid rgba(212,168,67,0.2);border-radius:var(--radius-lg);">
+        <h3 style="font-size:1rem;color:var(--gold);margin:0 0 var(--space-md);text-align:center;">✦ WiamElite Stats</h3>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:var(--space-md);text-align:center;">
+            <div>
+                <div style="font-size:1rem;font-weight:700;color:var(--gold);">{{ '{:,}'.format(elite.unique_readers or 0) }}</div>
+                <div style="font-size:0.65rem;color:var(--text-muted);">Unique Readers</div>
+            </div>
+            <div>
+                <div style="font-size:1rem;font-weight:700;color:var(--text);">{{ '%.0f'|format((elite.completion_rate or 0) * 100) }}%</div>
+                <div style="font-size:0.65rem;color:var(--text-muted);">Completion Rate</div>
+            </div>
+            <div>
+                <div style="font-size:1rem;font-weight:700;color:var(--text);">{{ '{:,}'.format(elite.active_readers_30d or 0) }}</div>
+                <div style="font-size:0.65rem;color:var(--text-muted);">Active (30d)</div>
+            </div>
+            <div>
+                <div style="font-size:1rem;font-weight:700;color:var(--text);">{{ '%.0f'|format((elite.paid_read_ratio or 0) * 100) }}%</div>
+                <div style="font-size:0.65rem;color:var(--text-muted);">Paid Reads</div>
+            </div>
+            <div>
+                <div style="font-size:1rem;font-weight:700;color:var(--text);">{{ '{:,}'.format(elite.total_shares or 0) }}</div>
+                <div style="font-size:0.65rem;color:var(--text-muted);">Shares</div>
+            </div>
+            <div>
+                <div style="font-size:1rem;font-weight:700;color:var(--text);">{{ total_ratings }}</div>
+                <div style="font-size:0.65rem;color:var(--text-muted);">Ratings</div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

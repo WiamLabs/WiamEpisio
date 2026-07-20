@@ -1,0 +1,324 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Team Management — WiamApp{% endblock %}
+{% block sidebar_title %}Control Panel{% endblock %}
+
+{% block sidebar_nav %}
+<a class="nav-link" href="{{ url_for('founder_dash.overview') }}"><i class="bi bi-speedometer2"></i> Overview</a>
+<a class="nav-link" href="{{ url_for('founder_dash.users') }}"><i class="bi bi-people"></i> Users</a>
+<a class="nav-link" href="{{ url_for('founder_dash.content') }}"><i class="bi bi-book"></i> Content</a>
+
+<a class="nav-link" href="{{ url_for('founder_dash.revenue') }}"><i class="bi bi-cash-stack"></i> Revenue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.financial_dashboard') }}"><i class="bi bi-bank" style="color:var(--gold);"></i> Financial v5</a>
+<a class="nav-link" href="{{ url_for('founder_dash.premium_analytics') }}"><i class="bi bi-gem" style="color:#c084fc;"></i> Premium Analytics</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payouts') }}"><i class="bi bi-send-check"></i> Payouts</a>
+<a class="nav-link" href="{{ url_for('founder_dash.withdrawals') }}"><i class="bi bi-arrow-up-right-circle" style="color:var(--gold);"></i> Withdrawals</a>
+<a class="nav-link" href="{{ url_for('founder_dash.subscribers') }}"><i class="bi bi-gem" style="color:#9b59b6;"></i> Subscribers</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payroll') }}"><i class="bi bi-wallet2" style="color:#2ecc71;"></i> Team Payroll</a>
+<a class="nav-link" href="{{ url_for('founder_dash.creators') }}"><i class="bi bi-person-badge"></i> Creators</a>
+<a class="nav-link" href="{{ url_for('founder_dash.genres') }}"><i class="bi bi-tags"></i> Genres</a>
+<a class="nav-link" href="{{ url_for('founder_dash.announcements') }}"><i class="bi bi-megaphone"></i> Announcements</a>
+<a class="nav-link" href="{{ url_for('founder_dash.collections') }}"><i class="bi bi-grid"></i> Collections</a>
+<a class="nav-link" href="{{ url_for('founder_dash.moderation') }}"><i class="bi bi-shield-exclamation"></i> Moderation</a>
+<a class="nav-link" href="{{ url_for('founder_dash.warnings_list') }}"><i class="bi bi-exclamation-triangle" style="color:#f59e0b;"></i> Warnings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.elite_manage') }}"><span style="color:var(--gold);">&#10022;</span> WiamElite</a>
+<a class="nav-link" href="{{ url_for('wiambot.apex_review') }}"><i class="bi bi-trophy-fill" style="color:var(--gold);"></i> Apex Review</a>
+<a class="nav-link" href="{{ url_for('founder_dash.review_queue') }}"><i class="bi bi-robot"></i> Bot Review Queue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.platform_settings') }}"><i class="bi bi-sliders"></i> Platform Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.forms_dashboard') }}"><i class="bi bi-file-earmark-text"></i> Application Forms</a>
+<a class="nav-link" href="{{ url_for('founder_dash.email_studio') }}"><i class="bi bi-envelope-paper" style="color:var(--gold);"></i> Email Studio</a>
+<a class="nav-link active" href="{{ url_for('founder_dash.team_management') }}"><i class="bi bi-people-fill"></i> Team</a>
+<a class="nav-link" href="{{ url_for('founder_dash.account_management') }}"><i class="bi bi-person-x"></i> Account Management</a>
+<a class="nav-link" href="{{ url_for('founder_dash.notification_testing') }}"><i class="bi bi-bell" style="color:#fbbf24;"></i> Notifications</a>
+<a class="nav-link" href="{{ url_for('classics.dashboard') }}"><i class="bi bi-journal-bookmark" style="color:#a78bfa;"></i> Content Seeder</a>
+<a class="nav-link" href="{{ url_for('founder_dash.settings') }}"><i class="bi bi-gear"></i> Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.admins') }}"><i class="bi bi-shield-check"></i> Admins</a>
+{% endblock %}
+
+{% block dash_content %}
+<style>
+.team-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:24px;}
+.team-header h1{margin:0;font-size:1.3rem;}
+.team-header p{color:var(--text-muted);margin:4px 0 0;font-size:0.85rem;}
+.role-pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;}
+.role-pill{padding:6px 16px;border-radius:8px;font-size:0.78rem;font-weight:600;text-decoration:none;transition:all 0.15s;border:1px solid var(--border-color);color:var(--text-muted);}
+.role-pill:hover{border-color:rgba(212,168,67,0.3);color:var(--gold);}
+.role-pill.active{background:linear-gradient(135deg,#d4a843,#b8860b);color:#000;border-color:transparent;}
+.role-pill .cnt{margin-left:4px;opacity:0.7;}
+.member-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:16px;}
+.member-card{background:var(--card-bg);border:1px solid var(--border-color);border-radius:14px;padding:20px;transition:border-color 0.2s;}
+.member-card:hover{border-color:rgba(212,168,67,0.2);}
+.member-top{display:flex;align-items:center;gap:14px;margin-bottom:12px;}
+.member-avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#d4a843,#b8860b);display:flex;align-items:center;justify-content:center;font-weight:800;color:#000;font-size:1rem;flex-shrink:0;}
+.member-info{flex:1;min-width:0;}
+.member-info .name{font-weight:700;font-size:0.95rem;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.member-info .email{font-size:0.78rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.role-badge{display:inline-block;padding:3px 10px;border-radius:6px;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;margin:2px 4px 2px 0;}
+.role-founder{background:rgba(212,168,67,0.15);color:#d4a843;}
+.role-admin{background:rgba(251,191,36,0.12);color:#fbbf24;}
+.role-editor{background:rgba(96,165,250,0.12);color:#60a5fa;}
+.role-moderator{background:rgba(74,222,128,0.12);color:#4ade80;}
+.role-support{background:rgba(167,139,250,0.12);color:#a78bfa;}
+.role-marketing{background:rgba(244,114,182,0.12);color:#f472b6;}
+.role-finance{background:rgba(56,189,248,0.12);color:#38bdf8;}
+.role-analyst{background:rgba(253,186,116,0.12);color:#fdba74;}
+.member-meta{font-size:0.78rem;color:var(--text-muted);margin-bottom:14px;line-height:1.6;}
+.member-meta span{color:var(--text-secondary,#bbb);font-weight:600;}
+.member-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding-top:14px;border-top:1px solid var(--border-color);}
+.member-actions select{padding:6px 10px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-size:0.78rem;outline:none;cursor:pointer;}
+.member-actions select:focus{border-color:rgba(212,168,67,0.4);}
+.btn-sm{padding:6px 14px;border:none;border-radius:8px;font-weight:600;font-size:0.75rem;cursor:pointer;transition:opacity 0.15s;display:inline-flex;align-items:center;gap:4px;}
+.btn-sm:hover{opacity:0.85;}
+.btn-assign{background:linear-gradient(135deg,#d4a843,#b8860b);color:#000;}
+.btn-remove{background:rgba(248,113,113,0.12);color:#f87171;border:1px solid rgba(248,113,113,0.2);}
+.btn-deactivate{background:rgba(248,113,113,0.12);color:#f87171;border:1px solid rgba(248,113,113,0.2);}
+.btn-reactivate{background:rgba(74,222,128,0.12);color:#4ade80;border:1px solid rgba(74,222,128,0.2);}
+.status-deactivated{opacity:0.5;}
+.status-indicator{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;}
+.status-indicator.active{background:#4ade80;}
+.status-indicator.deactivated{background:#9ca3af;}
+.status-indicator.banned{background:#f87171;}
+.empty-state{text-align:center;padding:60px 20px;color:var(--text-muted);}
+.empty-state i{font-size:3rem;opacity:0.3;display:block;margin-bottom:12px;}
+.total-badge{font-size:0.85rem;padding:4px 12px;border-radius:8px;background:rgba(212,168,67,0.1);color:var(--gold);font-weight:600;margin-left:10px;}
+.add-member-card{background:var(--card-bg);border:1px solid var(--border-color);border-radius:14px;padding:20px;margin-bottom:24px;}
+.cred-banner{background:linear-gradient(135deg,rgba(212,168,67,0.12),rgba(180,130,20,0.08));border:2px solid rgba(212,168,67,0.4);border-radius:14px;padding:24px;margin-bottom:24px;white-space:pre-line;font-family:'Courier New',monospace;font-size:0.9rem;line-height:1.8;color:var(--text-primary);}
+.cred-banner strong{color:var(--gold);}
+.team-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:0.65rem;font-weight:700;background:rgba(96,165,250,0.15);color:#60a5fa;margin-left:6px;vertical-align:middle;}
+.wiam-id-info{background:rgba(212,168,67,0.06);border:1px solid rgba(212,168,67,0.15);border-radius:8px;padding:10px 12px;margin:8px 0 12px;font-size:0.76rem;}
+.wiam-id-info .label{color:var(--text-muted);font-size:0.68rem;text-transform:uppercase;letter-spacing:0.3px;}
+.wiam-id-info .val{color:var(--text-primary);font-weight:600;}
+.wiam-id-active{color:#4ade80;}
+.wiam-id-expired{color:#f87171;}
+.btn-rotate{background:rgba(212,168,67,0.12);color:#d4a843;border:1px solid rgba(212,168,67,0.3);}
+</style>
+
+<!-- Credential Display Banner -->
+{% with creds = get_flashed_messages(category_filter=['team_credentials']) %}
+{% if creds %}
+{% for msg in creds %}
+<div class="cred-banner">
+{{ msg }}
+<div style="margin-top:12px;">
+    <button onclick="navigator.clipboard.writeText(this.closest('.cred-banner').innerText);this.textContent='Copied!';" style="padding:8px 18px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:0.82rem;"><i class="bi bi-clipboard"></i> Copy to Clipboard</button>
+</div>
+</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
+
+<div class="team-header">
+    <div>
+        <h1><i class="bi bi-people-fill" style="color:var(--gold);"></i> Team Management <span class="total-badge">{{ members|length }} member{{ 's' if members|length != 1 else '' }}</span></h1>
+        <p>Assign RBAC roles to users — each role grants specific permissions</p>
+    </div>
+    <div style="display:flex;gap:10px;">
+        <a href="{{ url_for('founder_dash.forms_dashboard') }}" style="padding:8px 18px;background:rgba(212,168,67,0.1);border:1px solid rgba(212,168,67,0.2);border-radius:10px;color:var(--gold);font-weight:600;font-size:0.82rem;text-decoration:none;">
+            <i class="bi bi-file-earmark-text"></i> Application Forms
+        </a>
+        <a href="{{ url_for('team.careers') }}" target="_blank" style="padding:8px 18px;background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.2);border-radius:10px;color:#60a5fa;font-weight:600;font-size:0.82rem;text-decoration:none;">
+            <i class="bi bi-box-arrow-up-right"></i> Public Careers Page
+        </a>
+    </div>
+</div>
+
+<!-- Create Team Account (dedicated work account) -->
+<div class="add-member-card" style="border-color:rgba(212,168,67,0.3);">
+    <h3 style="margin:0 0 4px;font-size:0.95rem;"><i class="bi bi-person-badge" style="color:var(--gold);margin-right:6px;"></i> Create Team Account</h3>
+    <p style="font-size:0.75rem;color:var(--text-muted);margin:0 0 14px;">Creates a dedicated work account with a secure <strong style="color:var(--gold);">WIAMid</strong>. The WIAMid will be emailed to the person's personal email. They log in with <code>wiamlabs@gmail.com</code> + their WIAMid. ID rotates every 15 days.</p>
+    <form method="POST" action="{{ url_for('founder_dash.team_create_account') }}" style="display:flex;gap:10px;flex-wrap:wrap;align-items:end;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div style="flex:1;min-width:140px;">
+            <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:4px;">First Name</label>
+            <input type="text" name="first_name" required placeholder="e.g. Khoby" style="width:100%;padding:8px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-size:0.85rem;">
+        </div>
+        <div style="flex:1;min-width:200px;">
+            <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:4px;">Personal Email (for WIAMid delivery)</label>
+            <input type="email" name="personal_email" required placeholder="person@gmail.com" style="width:100%;padding:8px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-size:0.85rem;">
+        </div>
+        <div style="min-width:160px;">
+            <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:4px;">Team Role</label>
+            <select name="role" required style="width:100%;padding:8px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-size:0.85rem;">
+                <option value="" disabled selected>-- Select role --</option>
+                {% for r in all_roles %}
+                {% if r.name != 'founder' %}
+                <option value="{{ r.name }}">{{ r.display_name }}</option>
+                {% endif %}
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn-sm btn-assign" style="padding:9px 20px;font-size:0.82rem;" onclick="return confirm('This will create a new team account and email the WIAMid to the personal email. Continue?');"><i class="bi bi-shield-plus"></i> Create Account</button>
+    </form>
+</div>
+
+<!-- Add existing user to team (assign role to existing account) -->
+<div class="add-member-card">
+    <h3 style="margin:0 0 4px;font-size:0.95rem;"><i class="bi bi-person-plus" style="color:var(--text-muted);margin-right:6px;"></i> Add Existing User to Team</h3>
+    <p style="font-size:0.75rem;color:var(--text-muted);margin:0 0 14px;">Assign a team role to an existing user account (they keep their reader access too).</p>
+    <form method="POST" action="{{ url_for('founder_dash.team_add_member') }}" style="display:flex;gap:10px;flex-wrap:wrap;align-items:end;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div style="flex:1;min-width:200px;">
+            <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:4px;">User Email</label>
+            <input type="email" name="email" required placeholder="user@example.com" style="width:100%;padding:8px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-size:0.85rem;">
+        </div>
+        <div style="min-width:160px;">
+            <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:4px;">Role</label>
+            <select name="role" required style="width:100%;padding:8px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-size:0.85rem;">
+                <option value="" disabled selected>-- Select role --</option>
+                {% for r in all_roles %}
+                {% if r.name != 'founder' %}
+                <option value="{{ r.name }}">{{ r.display_name }}</option>
+                {% endif %}
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn-sm btn-assign" style="padding:9px 20px;font-size:0.82rem;"><i class="bi bi-plus-circle"></i> Add</button>
+    </form>
+</div>
+
+<!-- Role filters -->
+<div class="role-pills">
+    <a href="{{ url_for('founder_dash.team_management') }}" class="role-pill {{ 'active' if not role_filter }}">
+        All <span class="cnt">({{ members|length }})</span>
+    </a>
+    <a href="{{ url_for('founder_dash.team_management', role='founder') }}" class="role-pill {{ 'active' if role_filter == 'founder' }}">
+        Founder <span class="cnt">({{ role_counts.get('founder', 0) }})</span>
+    </a>
+    {% for r in all_roles %}
+    {% if r.name != 'founder' %}
+    <a href="{{ url_for('founder_dash.team_management', role=r.name) }}" class="role-pill {{ 'active' if role_filter == r.name }}">
+        {{ r.display_name }} <span class="cnt">({{ role_counts.get(r.name, 0) }})</span>
+    </a>
+    {% endif %}
+    {% endfor %}
+</div>
+
+{% if members %}
+<div class="member-grid">
+    {% for item in members %}
+    {% set m = item.user %}
+    {% set m_roles = item.roles %}
+    <div class="member-card {{ 'status-deactivated' if m.status == 'deactivated' }}">
+        <div class="member-top">
+            <div class="member-avatar">
+                {% if m.avatar_url %}
+                <img src="{{ m.avatar_url }}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;">
+                {% else %}
+                {{ m.first_name[0]|upper if m.first_name else 'T' }}
+                {% endif %}
+            </div>
+            <div class="member-info">
+                <div class="name">{{ m.display_name }}{% if m.is_team_account %}<span class="team-badge">TEAM ACCOUNT</span>{% endif %}</div>
+                <div class="email">{% if m.is_team_account and m.team_personal_email %}{{ m.team_personal_email }}{% else %}{{ m.email or m.username or ('ID: ' ~ m.id) }}{% endif %}</div>
+            </div>
+        </div>
+
+        <!-- Roles -->
+        <div style="margin-bottom:10px;">
+            {% for rname in m_roles %}
+            <span class="role-badge role-{{ rname }}">{{ rname }}</span>
+            {% endfor %}
+            {% if not m_roles %}
+            <span style="font-size:0.72rem;color:var(--text-muted);">No roles</span>
+            {% endif %}
+        </div>
+
+        {% if m.is_team_account and m.team_wiam_id_hash %}
+        <div class="wiam-id-info">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                <span class="label">WIAMid Status</span>
+                {% if m.team_id_expires_at and m.team_id_expires_at > now %}
+                <span class="wiam-id-active" style="font-size:0.72rem;font-weight:700;"><i class="bi bi-shield-check"></i> Active</span>
+                {% else %}
+                <span class="wiam-id-expired" style="font-size:0.72rem;font-weight:700;"><i class="bi bi-shield-x"></i> Expired</span>
+                {% endif %}
+            </div>
+            {% if m.team_id_expires_at %}
+            <div style="font-size:0.72rem;color:var(--text-muted);">
+                Issued: <span class="val">{{ m.team_id_issued_at.strftime('%b %d, %Y %H:%M') if m.team_id_issued_at else 'N/A' }}</span> · 
+                Expires: <span class="val">{{ m.team_id_expires_at.strftime('%b %d, %Y %H:%M') if m.team_id_expires_at else 'N/A' }}</span>
+                {% set days_left = ((m.team_id_expires_at - now).days) if m.team_id_expires_at > now else 0 %}
+                {% if days_left > 0 %}
+                · <span style="color:#fbbf24;font-weight:600;">{{ days_left }}d left</span>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <div class="member-meta">
+            <span><span class="status-indicator {{ m.status or 'active' }}"></span>{{ (m.status or 'active')|title }}</span> ·
+            Joined {{ m.date_joined.strftime('%b %d, %Y') if m.date_joined else 'N/A' }}
+            {% if m.last_active %}
+            · Active {{ m.last_active.strftime('%b %d') }}
+            {% endif %}
+        </div>
+
+        {% if not m.is_founder %}
+        <div class="member-actions">
+            <!-- Assign role -->
+            <form method="POST" action="{{ url_for('founder_dash.team_assign_role', user_id=m.id) }}" style="display:flex;gap:6px;align-items:center;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <select name="role" required style="font-size:0.75rem;">
+                    <option value="" disabled selected>-- Select --</option>
+                    {% for r in all_roles %}
+                    {% if r.name != 'founder' and r.name not in m_roles %}
+                    <option value="{{ r.name }}">+ {{ r.display_name }}</option>
+                    {% endif %}
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn-sm btn-assign"><i class="bi bi-plus"></i></button>
+            </form>
+
+            <!-- Remove role buttons -->
+            {% for rname in m_roles %}
+            {% if rname != 'founder' %}
+            <form method="POST" action="{{ url_for('founder_dash.team_remove_role', user_id=m.id) }}" style="display:inline;" onsubmit="return confirm('Remove {{ rname }} role from {{ m.display_name }}?');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="role" value="{{ rname }}">
+                <button type="submit" class="btn-sm btn-remove" title="Remove {{ rname }}"><i class="bi bi-x"></i> {{ rname }}</button>
+            </form>
+            {% endif %}
+            {% endfor %}
+
+            <!-- Rotate WIAMid (team accounts only) -->
+            {% if m.is_team_account and m.team_wiam_id_hash %}
+            <form method="POST" action="{{ url_for('founder_dash.rotate_team_id', user_id=m.id) }}" style="display:inline;" onsubmit="return confirm('Rotate WIAMid for {{ m.display_name }}? Their current ID will expire immediately and a new one will be emailed to {{ m.team_personal_email }}.');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn-sm btn-rotate"><i class="bi bi-arrow-repeat"></i> Rotate WIAMid</button>
+            </form>
+            {% endif %}
+
+            <!-- Deactivate / Reactivate -->
+            {% if m.status == 'deactivated' %}
+            <form method="POST" action="{{ url_for('founder_dash.team_reactivate', user_id=m.id) }}" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn-sm btn-reactivate"><i class="bi bi-play-circle"></i> Reactivate</button>
+            </form>
+            {% elif m.status == 'banned' %}
+            <form method="POST" action="{{ url_for('founder_dash.team_unban', user_id=m.id) }}" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn-sm btn-reactivate"><i class="bi bi-unlock"></i> Unban</button>
+            </form>
+            {% else %}
+            <form method="POST" action="{{ url_for('founder_dash.team_deactivate', user_id=m.id) }}" style="display:inline;" onsubmit="return confirm('Deactivate {{ m.display_name }}?');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn-sm btn-deactivate"><i class="bi bi-pause-circle"></i></button>
+            </form>
+            {% endif %}
+        </div>
+        {% else %}
+        <div style="padding-top:14px;border-top:1px solid var(--border-color);font-size:0.75rem;color:var(--text-muted);font-style:italic;">
+            <i class="bi bi-shield-lock" style="color:var(--gold);"></i> Founder account — all permissions granted automatically
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <i class="bi bi-people"></i>
+    <p>No team members{% if role_filter %} with role "{{ role_filter }}"{% endif %} yet.</p>
+    <p style="font-size:0.82rem;">Use the form above to add a team member by email, or use <a href="{{ url_for('founder_dash.forms_dashboard') }}" style="color:var(--gold);">Application Forms</a> to recruit.</p>
+</div>
+{% endif %}
+{% endblock %}

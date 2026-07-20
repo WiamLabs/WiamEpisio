@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}My Feedback — WiamApp{% endblock %}
+
+{% block content %}
+<div style="max-width:640px;margin:0 auto;padding:1.5rem 1rem 4rem;">
+    <a href="{{ url_for('dashboard.index') }}" style="color:var(--text-muted);font-size:0.82rem;text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-bottom:1rem;">
+        <i class="bi bi-arrow-left"></i> Back to Dashboard
+    </a>
+
+    <h1 style="font-size:1.4rem;margin-bottom:0.25rem;"><i class="bi bi-chat-heart me-2" style="color:var(--gold);"></i>My Feedback</h1>
+    <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:1.5rem;">Send feedback to the WiamApp team and see their replies.</p>
+
+    <!-- Submit New Feedback -->
+    <div style="background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:12px;padding:1.25rem;margin-bottom:1.5rem;">
+        <h3 style="font-size:0.95rem;margin-bottom:0.75rem;"><i class="bi bi-send me-1" style="color:var(--gold);"></i>Send Feedback</h3>
+        <form method="post" action="{{ url_for('profile.feedback') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div style="margin-bottom:0.75rem;">
+                <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:4px;">Category</label>
+                <select name="category" style="width:100%;background:var(--bg);color:var(--text);border:1px solid var(--border-subtle);border-radius:8px;padding:0.5rem 0.7rem;font-size:0.85rem;">
+                    <option value="general">General</option>
+                    <option value="bug">Bug Report</option>
+                    <option value="feature">Feature Request</option>
+                    <option value="content">Content Issue</option>
+                </select>
+            </div>
+            <div style="margin-bottom:0.75rem;">
+                <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:4px;">Message</label>
+                <textarea name="message" rows="3" placeholder="Tell us what's on your mind..." style="width:100%;background:var(--bg);color:var(--text);border:1px solid var(--border-subtle);border-radius:8px;padding:0.6rem 0.8rem;font-size:0.85rem;resize:vertical;font-family:inherit;" required></textarea>
+            </div>
+            <button type="submit" style="background:var(--gold);color:#000;border:none;border-radius:8px;padding:0.55rem 1.25rem;font-size:0.85rem;font-weight:600;cursor:pointer;">
+                <i class="bi bi-send-fill me-1"></i>Send Feedback
+            </button>
+        </form>
+    </div>
+
+    <!-- Feedback History -->
+    {% if feedbacks %}
+    <h3 style="font-size:0.95rem;margin-bottom:0.75rem;color:var(--text-muted);">Your Feedback History</h3>
+    <div style="display:flex;flex-direction:column;gap:0.6rem;">
+        {% for fb in feedbacks %}
+        <div style="background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:12px;padding:1rem 1.1rem;">
+            <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.4rem;flex-wrap:wrap;">
+                <span style="font-size:0.7rem;padding:2px 8px;border-radius:8px;font-weight:600;
+                    {% if fb.category == 'bug' %}background:rgba(239,68,68,0.12);color:#f87171;
+                    {% elif fb.category == 'feature' %}background:rgba(59,130,246,0.12);color:#60a5fa;
+                    {% elif fb.category == 'content' %}background:rgba(234,179,8,0.12);color:#facc15;
+                    {% else %}background:rgba(255,255,255,0.06);color:var(--text-muted);{% endif %}">{{ fb.category }}</span>
+                <span style="font-size:0.7rem;padding:2px 8px;border-radius:8px;font-weight:600;
+                    {% if fb.status == 'new' %}background:rgba(212,168,67,0.15);color:var(--gold);
+                    {% elif fb.status == 'resolved' %}background:rgba(74,222,128,0.12);color:#4ade80;
+                    {% else %}background:rgba(255,255,255,0.06);color:var(--text-muted);{% endif %}">{{ fb.status }}</span>
+                <span style="color:var(--text-muted);font-size:0.7rem;margin-left:auto;">{{ fb.created_at.strftime('%b %d, %Y') if fb.created_at else '' }}</span>
+            </div>
+            <p style="font-size:0.88rem;line-height:1.6;margin:0.3rem 0 0;white-space:pre-wrap;">{{ fb.message }}</p>
+
+            {% if fb.reply %}
+            <div style="margin-top:0.75rem;padding:0.75rem 1rem;background:rgba(74,222,128,0.06);border-left:3px solid #4ade80;border-radius:6px;">
+                <div style="font-size:0.72rem;color:#4ade80;font-weight:600;margin-bottom:4px;">
+                    <i class="bi bi-reply-fill me-1"></i>WiamApp Team Reply
+                </div>
+                <p style="font-size:0.85rem;line-height:1.5;margin:0;white-space:pre-wrap;">{{ fb.reply }}</p>
+                <span style="color:var(--text-muted);font-size:0.68rem;">{{ fb.replied_at.strftime('%b %d, %Y at %H:%M') if fb.replied_at else '' }}</span>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:2rem;color:var(--text-muted);">
+        <i class="bi bi-chat-heart" style="font-size:2rem;display:block;margin-bottom:0.5rem;opacity:0.3;"></i>
+        <p style="font-size:0.85rem;">You haven't sent any feedback yet.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

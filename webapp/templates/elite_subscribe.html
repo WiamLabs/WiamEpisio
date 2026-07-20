@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block title %}WiamElite Subscription{% endblock %}
+{% block meta_description %}Subscribe to WiamElite for unlimited access to the best stories on WiamApp.{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:var(--space-xl);padding-bottom:var(--space-2xl);max-width:600px;margin:0 auto;">
+
+    <!-- Back link -->
+    <a href="{{ url_for('elite.elite_page') }}" style="display:inline-flex;align-items:center;gap:4px;font-size:0.85rem;color:var(--gold);text-decoration:none;margin-bottom:var(--space-xl);">
+        <i class="bi bi-arrow-left"></i> Back to WiamElite
+    </a>
+
+    <!-- Header -->
+    <div style="text-align:center;margin-bottom:var(--space-2xl);">
+        <div style="display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#d4a843,#b8860b);color:#000;font-size:0.7rem;font-weight:700;padding:5px 16px;border-radius:20px;text-transform:uppercase;letter-spacing:2px;margin-bottom:var(--space-md);">
+            ✦ WiamElite
+        </div>
+        <h1 style="font-size:1.6rem;font-family:var(--font-display);color:var(--text);margin:0 0 var(--space-sm);">
+            Unlock the Best Stories
+        </h1>
+        <p style="font-size:0.9rem;color:var(--text-secondary);margin:0;">
+            Read every WiamElite story — the top {{ elite_count }} stories on the platform.
+        </p>
+    </div>
+
+    {% if is_subscribed and current_sub %}
+    <!-- Active Subscription -->
+    <div style="padding:var(--space-xl);background:linear-gradient(135deg,rgba(212,168,67,0.12),rgba(114,47,55,0.08));border:2px solid rgba(212,168,67,0.3);border-radius:var(--radius-lg);text-align:center;margin-bottom:var(--space-xl);">
+        <div style="font-size:2rem;margin-bottom:var(--space-sm);">✦</div>
+        {% if current_sub.status == 'cancelled' %}
+        <h2 style="font-size:1.2rem;color:var(--gold);margin:0 0 var(--space-sm);">Subscription Cancelled</h2>
+        <p style="font-size:0.85rem;color:var(--text-secondary);margin:0 0 var(--space-md);">
+            You still have access until {{ current_sub.expires_at.strftime('%b %d, %Y') if current_sub.expires_at else 'your period ends' }}.
+        </p>
+        {% else %}
+        <h2 style="font-size:1.2rem;color:var(--gold);margin:0 0 var(--space-sm);">You're Subscribed!</h2>
+        <p style="font-size:0.85rem;color:var(--text-secondary);margin:0 0 var(--space-md);">
+            You have unlimited access to all WiamElite stories.
+        </p>
+        {% endif %}
+
+        <div style="display:flex;justify-content:center;gap:var(--space-xl);margin-bottom:var(--space-lg);">
+            <div>
+                <div style="font-size:0.7rem;color:var(--text-muted);">Plan</div>
+                <div style="font-size:0.9rem;font-weight:600;color:var(--text);text-transform:capitalize;">{{ current_sub.plan }}</div>
+            </div>
+            <div>
+                <div style="font-size:0.7rem;color:var(--text-muted);">Started</div>
+                <div style="font-size:0.9rem;font-weight:600;color:var(--text);">{{ current_sub.started_at.strftime('%b %d, %Y') if current_sub.started_at else '—' }}</div>
+            </div>
+            <div>
+                <div style="font-size:0.7rem;color:var(--text-muted);">{{ 'Access Until' if current_sub.status == 'cancelled' else 'Renews' }}</div>
+                <div style="font-size:0.9rem;font-weight:600;color:var(--text);">{{ current_sub.expires_at.strftime('%b %d, %Y') if current_sub.expires_at else '—' }}</div>
+            </div>
+        </div>
+
+        <div style="display:flex;gap:var(--space-md);justify-content:center;flex-wrap:wrap;">
+            <a href="{{ url_for('elite.elite_page') }}" style="display:inline-flex;align-items:center;gap:6px;padding:10px 24px;background:linear-gradient(135deg,#d4a843,#b8860b);color:#000;border-radius:var(--radius-md);font-weight:700;font-size:0.85rem;text-decoration:none;">
+                <i class="bi bi-book"></i> Browse Elite Stories
+            </a>
+            {% if current_sub.status == 'active' %}
+            <form method="POST" action="{{ url_for('elite.subscribe_cancel') }}" onsubmit="return confirm('Are you sure you want to cancel? You will retain access until your current period ends.');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" style="display:inline-flex;align-items:center;gap:6px;padding:10px 18px;background:transparent;border:1px solid var(--border-subtle);border-radius:var(--radius-md);font-size:0.8rem;color:var(--text-muted);cursor:pointer;">
+                    Cancel Subscription
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    {% else %}
+    <!-- Pricing Card -->
+    <div style="padding:var(--space-xl);background:linear-gradient(135deg,rgba(212,168,67,0.08),rgba(114,47,55,0.05));border:2px solid rgba(212,168,67,0.25);border-radius:var(--radius-lg);text-align:center;margin-bottom:var(--space-xl);">
+
+        <div style="font-size:0.7rem;color:var(--gold);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:var(--space-sm);">Monthly Plan</div>
+
+        <div style="margin-bottom:var(--space-md);">
+            <span style="font-size:2.5rem;font-weight:800;color:var(--gold);">GH₵{{ '%.0f'|format(price_ghs) }}</span>
+            <span style="font-size:0.85rem;color:var(--text-muted);">/month</span>
+        </div>
+
+        <!-- Benefits -->
+        <div style="text-align:left;margin-bottom:var(--space-xl);">
+            <div style="display:flex;align-items:center;gap:var(--space-sm);padding:8px 0;border-bottom:1px solid var(--border-subtle);">
+                <i class="bi bi-check-circle-fill" style="color:var(--gold);font-size:0.9rem;flex-shrink:0;"></i>
+                <span style="font-size:0.85rem;color:var(--text);">Unlimited access to all {{ elite_count }} Elite stories</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:var(--space-sm);padding:8px 0;border-bottom:1px solid var(--border-subtle);">
+                <i class="bi bi-check-circle-fill" style="color:var(--gold);font-size:0.9rem;flex-shrink:0;"></i>
+                <span style="font-size:0.85rem;color:var(--text);">Read all chapters — no coin unlocks needed</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:var(--space-sm);padding:8px 0;border-bottom:1px solid var(--border-subtle);">
+                <i class="bi bi-check-circle-fill" style="color:var(--gold);font-size:0.9rem;flex-shrink:0;"></i>
+                <span style="font-size:0.85rem;color:var(--text);">New Elite stories added automatically</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:var(--space-sm);padding:8px 0;border-bottom:1px solid var(--border-subtle);">
+                <i class="bi bi-check-circle-fill" style="color:var(--gold);font-size:0.9rem;flex-shrink:0;"></i>
+                <span style="font-size:0.85rem;color:var(--text);">Support creators with higher revenue share</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:var(--space-sm);padding:8px 0;">
+                <i class="bi bi-check-circle-fill" style="color:var(--gold);font-size:0.9rem;flex-shrink:0;"></i>
+                <span style="font-size:0.85rem;color:var(--text);">Cancel anytime — keep access until period ends</span>
+            </div>
+        </div>
+
+        <!-- Subscribe button -->
+        <form method="POST" action="{{ url_for('elite.subscribe_activate') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" style="width:100%;padding:14px;background:linear-gradient(135deg,#d4a843,#b8860b);color:#000;border:none;border-radius:var(--radius-md);font-weight:700;font-size:1rem;cursor:pointer;letter-spacing:0.5px;">
+                Subscribe Now — GH₵{{ '%.0f'|format(price_ghs) }}/mo
+            </button>
+        </form>
+
+        <p style="font-size:0.7rem;color:var(--text-muted);margin-top:var(--space-sm);">
+            Secure payment via Paystack. Cancel anytime.
+        </p>
+    </div>
+    {% endif %}
+
+    <!-- FAQ -->
+    <div style="margin-top:var(--space-xl);">
+        <h3 style="font-size:1rem;font-family:var(--font-display);margin-bottom:var(--space-md);text-align:center;">Frequently Asked Questions</h3>
+
+        <div style="background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);overflow:hidden;">
+            <div style="padding:var(--space-md);border-bottom:1px solid var(--border-subtle);">
+                <div style="font-size:0.85rem;font-weight:600;color:var(--text);margin-bottom:4px;">What is WiamElite?</div>
+                <div style="font-size:0.8rem;color:var(--text-secondary);line-height:1.5;">WiamElite is our Hall of Fame — the absolute best stories on the platform, chosen by our algorithm based on 17 ultra-hard metrics sustained over 6 months.</div>
+            </div>
+            <div style="padding:var(--space-md);border-bottom:1px solid var(--border-subtle);">
+                <div style="font-size:0.85rem;font-weight:600;color:var(--text);margin-bottom:4px;">Can I still read non-Elite stories for free?</div>
+                <div style="font-size:0.8rem;color:var(--text-secondary);line-height:1.5;">Yes! All regular stories remain free. The first 10 chapters of any story are always free. The subscription only unlocks premium Elite content.</div>
+            </div>
+            <div style="padding:var(--space-md);border-bottom:1px solid var(--border-subtle);">
+                <div style="font-size:0.85rem;font-weight:600;color:var(--text);margin-bottom:4px;">What happens when I cancel?</div>
+                <div style="font-size:0.8rem;color:var(--text-secondary);line-height:1.5;">You keep access until the end of your current billing period. After that, Elite stories will be locked again but you can re-subscribe anytime.</div>
+            </div>
+            <div style="padding:var(--space-md);">
+                <div style="font-size:0.85rem;font-weight:600;color:var(--text);margin-bottom:4px;">How does this support creators?</div>
+                <div style="font-size:0.8rem;color:var(--text-secondary);line-height:1.5;">Elite creators receive a 60% revenue share from subscription income, 3x coin multiplier on chapter unlocks, and a verified badge for 1 year.</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

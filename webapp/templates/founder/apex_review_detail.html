@@ -1,0 +1,121 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Review: {{ sub.title }} — Apex{% endblock %}
+{% block sidebar_title %}Control Panel{% endblock %}
+
+{% block sidebar_nav %}
+<a class="nav-link" href="{{ url_for('founder_dash.overview') }}"><i class="bi bi-speedometer2"></i> Overview</a>
+<a class="nav-link" href="{{ url_for('founder_dash.users') }}"><i class="bi bi-people"></i> Users</a>
+<a class="nav-link" href="{{ url_for('founder_dash.content') }}"><i class="bi bi-book"></i> Content</a>
+<a class="nav-link" href="{{ url_for('founder_dash.revenue') }}"><i class="bi bi-cash-stack"></i> Revenue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.financial_dashboard') }}"><i class="bi bi-bank" style="color:var(--gold);"></i> Financial v5</a>
+<a class="nav-link" href="{{ url_for('founder_dash.premium_analytics') }}"><i class="bi bi-gem" style="color:#c084fc;"></i> Premium Analytics</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payouts') }}"><i class="bi bi-send-check"></i> Payouts</a>
+<a class="nav-link" href="{{ url_for('founder_dash.withdrawals') }}"><i class="bi bi-arrow-up-right-circle" style="color:var(--gold);"></i> Withdrawals</a>
+<a class="nav-link" href="{{ url_for('founder_dash.subscribers') }}"><i class="bi bi-gem" style="color:#9b59b6;"></i> Subscribers</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payroll') }}"><i class="bi bi-wallet2" style="color:#2ecc71;"></i> Team Payroll</a>
+<a class="nav-link" href="{{ url_for('founder_dash.creators') }}"><i class="bi bi-person-badge"></i> Creators</a>
+<a class="nav-link" href="{{ url_for('founder_dash.genres') }}"><i class="bi bi-tags"></i> Genres</a>
+<a class="nav-link" href="{{ url_for('founder_dash.announcements') }}"><i class="bi bi-megaphone"></i> Announcements</a>
+<a class="nav-link" href="{{ url_for('founder_dash.collections') }}"><i class="bi bi-grid"></i> Collections</a>
+<a class="nav-link" href="{{ url_for('founder_dash.moderation') }}"><i class="bi bi-shield-exclamation"></i> Moderation</a>
+<a class="nav-link" href="{{ url_for('founder_dash.warnings_list') }}"><i class="bi bi-exclamation-triangle" style="color:#f59e0b;"></i> Warnings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.elite_manage') }}"><span style="color:var(--gold);">✦</span> WiamElite</a>
+<a class="nav-link" href="{{ url_for('founder_dash.review_queue') }}"><i class="bi bi-robot"></i> Bot Review Queue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.platform_settings') }}"><i class="bi bi-sliders"></i> Platform Settings</a>
+<a class="nav-link active" href="{{ url_for('wiambot.apex_review') }}"><i class="bi bi-trophy"></i> Apex Review</a>
+<a class="nav-link" href="{{ url_for('founder_dash.forms_dashboard') }}"><i class="bi bi-file-earmark-text"></i> Application Forms</a>
+<a class="nav-link" href="{{ url_for('founder_dash.email_studio') }}"><i class="bi bi-envelope-paper" style="color:var(--gold);"></i> Email Studio</a>
+<a class="nav-link" href="{{ url_for('founder_dash.team_management') }}"><i class="bi bi-people-fill"></i> Team</a>
+<a class="nav-link" href="{{ url_for('founder_dash.account_management') }}"><i class="bi bi-person-x"></i> Account Management</a>
+<a class="nav-link" href="{{ url_for('founder_dash.notification_testing') }}"><i class="bi bi-bell" style="color:#fbbf24;"></i> Notifications</a>
+<a class="nav-link" href="{{ url_for('classics.dashboard') }}"><i class="bi bi-journal-bookmark" style="color:#a78bfa;"></i> Content Seeder</a>
+<a class="nav-link" href="{{ url_for('founder_dash.settings') }}"><i class="bi bi-gear"></i> Settings</a>
+{% endblock %}
+
+{% block dashboard_content %}
+<style>
+    .rd-header{margin-bottom:20px;}
+    .rd-header h2{font-size:1.1rem;font-weight:700;margin:0 0 4px;}
+    .rd-header .rd-meta{font-size:0.78rem;color:var(--text-muted);}
+
+    .rd-score{text-align:center;margin:16px 0;}
+    .rd-score .big-score{font-size:2.5rem;font-weight:800;}
+    .rd-score .big-score.pass{color:#4ade80;}
+    .rd-score .big-score.fail{color:#ef4444;}
+
+    .rd-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:16px 0;}
+    .rd-cell{background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:10px;padding:10px;}
+    .rd-cell .rc-label{font-size:0.68rem;color:var(--text-muted);text-transform:uppercase;}
+    .rd-cell .rc-val{font-size:0.9rem;font-weight:600;color:var(--text);}
+
+    .rd-section{background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:12px;padding:14px;margin-bottom:12px;}
+    .rd-section h3{font-size:0.85rem;font-weight:700;margin:0 0 8px;color:var(--gold);}
+    .rd-section .rd-text{font-size:0.82rem;color:var(--text-secondary);line-height:1.6;max-height:300px;overflow-y:auto;white-space:pre-wrap;}
+
+    .rd-flags{margin:12px 0;}
+    .rd-flag{padding:6px 12px;background:rgba(250,204,21,0.08);border:1px solid rgba(250,204,21,0.2);border-radius:8px;font-size:0.78rem;color:#facc15;margin-bottom:6px;}
+
+    .action-form{background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:12px;padding:16px;margin-top:16px;}
+    .action-form h3{font-size:0.9rem;font-weight:700;margin:0 0 12px;}
+    .action-form textarea{width:100%;padding:10px;border-radius:8px;border:1px solid var(--border-subtle);background:var(--bg);color:var(--text);font-size:0.82rem;min-height:80px;resize:vertical;margin-bottom:12px;}
+    .action-btns{display:flex;gap:8px;flex-wrap:wrap;}
+    .action-btns button{padding:10px 20px;border-radius:10px;border:none;font-weight:700;font-size:0.85rem;cursor:pointer;}
+    .btn-approve{background:#4ade80;color:#000;}
+    .btn-reject{background:#ef4444;color:#fff;}
+    .btn-revision{background:#fb923c;color:#000;}
+</style>
+
+<a href="{{ url_for('wiambot.apex_review') }}" style="font-size:0.82rem;color:var(--text-muted);text-decoration:none;"><i class="bi bi-arrow-left"></i> Back to Apex Review</a>
+
+<div class="rd-header" style="margin-top:12px;">
+    <h2>{{ sub.title }}</h2>
+    <div class="rd-meta">{{ sub.pen_name }} · {{ sub.genre }} · {{ sub.email }} · {{ sub.country }}</div>
+</div>
+
+<div class="rd-score">
+    <div class="big-score {{ 'pass' if sub.total_score >= 90 else 'fail' }}">{{ sub.total_score }}<span style="font-size:1rem;color:var(--text-muted);">/100</span></div>
+    <div style="font-size:0.75rem;color:var(--text-muted);">Similarity: {{ (sub.max_similarity * 100)|int }}%</div>
+</div>
+
+<div class="rd-grid">
+    <div class="rd-cell"><div class="rc-label">Status</div><div class="rc-val">{{ sub.status.replace('_',' ')|title }}</div></div>
+    <div class="rd-cell"><div class="rc-label">Submitted</div><div class="rc-val">{{ sub.created_at.strftime('%b %d, %Y') }}</div></div>
+    <div class="rd-cell"><div class="rc-label">Ch.1 Words</div><div class="rc-val">{{ sub.chapter_1.split()|length }}</div></div>
+    <div class="rd-cell"><div class="rc-label">Ch.2 Words</div><div class="rc-val">{{ sub.chapter_2.split()|length }}</div></div>
+</div>
+
+{% if sub.flags and sub.flags != '[]' %}
+{% set flag_list = sub.flags | from_json %}
+<div class="rd-flags">
+    <h3 style="font-size:0.85rem;font-weight:700;margin:0 0 8px;">Flags</h3>
+    {% for flag in flag_list %}
+    <div class="rd-flag">⚠️ {{ flag }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="rd-section"><h3>Logline</h3><div class="rd-text">{{ sub.logline }}</div></div>
+<div class="rd-section"><h3>Synopsis</h3><div class="rd-text">{{ sub.synopsis }}</div></div>
+<div class="rd-section"><h3>Outline</h3><div class="rd-text">{{ sub.outline }}</div></div>
+<div class="rd-section"><h3>Chapter 1</h3><div class="rd-text">{{ sub.chapter_1[:3000] }}{% if sub.chapter_1|length > 3000 %}...{% endif %}</div></div>
+<div class="rd-section"><h3>Chapter 2</h3><div class="rd-text">{{ sub.chapter_2[:3000] }}{% if sub.chapter_2|length > 3000 %}...{% endif %}</div></div>
+
+{% if sub.status == 'pending_review' %}
+<form class="action-form" method="POST" action="{{ url_for('wiambot.apex_review_action', submission_id=sub.id) }}">
+    <h3>Decision</h3>
+    <textarea name="notes" placeholder="Optional notes for the creator..."></textarea>
+    <div class="action-btns">
+        <button type="submit" name="action" value="approve" class="btn-approve">🏆 Approve Apex</button>
+        <button type="submit" name="action" value="revision" class="btn-revision">📝 Request Revision</button>
+        <button type="submit" name="action" value="reject" class="btn-reject">❌ Reject</button>
+    </div>
+</form>
+{% endif %}
+
+{% if sub.admin_notes %}
+<div style="background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:12px;padding:14px;margin-top:12px;">
+    <h4 style="font-size:0.82rem;font-weight:700;margin:0 0 6px;">Reviewer Notes</h4>
+    <p style="font-size:0.82rem;color:var(--text-secondary);margin:0;">{{ sub.admin_notes }}</p>
+</div>
+{% endif %}
+{% endblock %}

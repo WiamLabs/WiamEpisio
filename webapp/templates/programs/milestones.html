@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Creator Milestones — WiamApp{% endblock %}
+{% block content %}
+<div style="max-width:800px;margin:0 auto;padding:var(--space-xl) var(--space-md);">
+
+    <div style="text-align:center;margin-bottom:var(--space-2xl);">
+        <h1 style="font-size:1.8rem;font-family:var(--font-display);color:var(--text);margin-bottom:var(--space-sm);">
+            🏅 Creator Milestones
+        </h1>
+        <p style="color:var(--text-secondary);font-size:0.9rem;max-width:480px;margin:0 auto;">
+            Unlock achievement badges as you grow on WiamApp. Each milestone marks a new chapter in your journey.
+        </p>
+        <div style="margin-top:var(--space-md);font-size:0.85rem;color:var(--gold);font-weight:600;">
+            {{ earned_keys|length }} / {{ milestone_defs|length }} unlocked
+        </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div style="margin-bottom:var(--space-2xl);padding:0 var(--space-md);">
+        <div style="height:6px;background:var(--bg-elevated);border-radius:3px;overflow:hidden;">
+            <div style="height:100%;width:{{ (earned_keys|length / milestone_defs|length * 100)|int }}%;background:linear-gradient(90deg,var(--wine),var(--gold));border-radius:3px;transition:width 0.5s;"></div>
+        </div>
+    </div>
+
+    <!-- Milestones Grid -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:var(--space-md);">
+        {% for m in milestone_defs %}
+        <div style="padding:var(--space-lg);background:var(--bg-card);border:1px solid {% if m.key in earned_keys %}rgba(212,168,67,0.3){% else %}var(--border-subtle){% endif %};border-radius:var(--radius-lg);text-align:center;{% if m.key not in earned_keys %}opacity:0.45;{% endif %}transition:all 0.2s;">
+            <!-- Icon -->
+            <div style="width:56px;height:56px;border-radius:50%;margin:0 auto var(--space-md);display:flex;align-items:center;justify-content:center;font-size:1.3rem;
+                {% if m.key in earned_keys %}
+                background:linear-gradient(135deg,{{ m.color }}22,{{ m.color }}44);border:2px solid {{ m.color }};color:{{ m.color }};
+                {% else %}
+                background:var(--bg-elevated);border:2px solid var(--border-subtle);color:var(--text-muted);
+                {% endif %}">
+                <i class="bi {{ m.icon }}"></i>
+            </div>
+            <h3 style="font-size:0.9rem;color:{% if m.key in earned_keys %}var(--text){% else %}var(--text-muted){% endif %};font-weight:700;margin-bottom:4px;">{{ m.name }}</h3>
+            <p style="font-size:0.75rem;color:var(--text-muted);line-height:1.4;">{{ m.desc }}</p>
+            {% if m.key in earned_keys %}
+            <div style="margin-top:var(--space-sm);font-size:0.65rem;color:var(--gold);font-weight:600;">
+                <i class="bi bi-check-circle-fill"></i> Unlocked
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <div style="text-align:center;margin-top:var(--space-2xl);">
+        <a href="{{ url_for('programs.hub') }}" style="color:var(--text-muted);font-size:0.8rem;text-decoration:none;">&larr; Back to Programs</a>
+    </div>
+</div>
+{% endblock %}

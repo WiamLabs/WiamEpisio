@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamStudio — Completeness Check</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75;
+    --green:#3BB273; --red:#E4573D;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); display:flex; flex-direction:column; }
+  .statusbar{ height:44px; flex-shrink:0; }
+
+  .topbar{ display:flex; align-items:center; gap:12px; padding:2px 20px 14px; flex-shrink:0; }
+  .icon-btn{ width:34px; height:34px; border-radius:50%; background:var(--navy-card); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .topbar h1{ font-size:16px; font-weight:800; color:#fff; margin:0; }
+  .topbar span{ display:block; font-size:10.5px; color:var(--text-faint); font-weight:600; margin-top:1px; }
+
+  .scroll{ flex:1; overflow-y:auto; padding:0 20px 20px; }
+
+  .ring-card{ text-align:center; padding:22px 0 20px; }
+  .ring-wrap{ position:relative; width:112px; height:112px; margin:0 auto 14px; }
+  .ring-wrap svg{ transform:rotate(-90deg); }
+  .ring-bg{ fill:none; stroke:var(--navy-line); stroke-width:8; }
+  .ring-fg{ fill:none; stroke:var(--gold); stroke-width:8; stroke-linecap:round; stroke-dasharray:283; stroke-dashoffset:57; }
+  .ring-label{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .ring-label b{ font-size:22px; font-weight:800; color:#fff; }
+  .ring-label span{ font-size:9px; color:var(--text-faint); font-weight:700; }
+  .ring-title{ font-size:14px; font-weight:800; color:#fff; margin:0 0 4px; }
+  .ring-sub{ font-size:11.5px; color:var(--text-dim); }
+  .ring-sub b{ color:var(--red); }
+
+  .gate-item{ display:flex; align-items:center; gap:12px; background:var(--navy-card); border:1px solid var(--navy-line); border-radius:14px; padding:13px 14px; margin-bottom:10px; }
+  .gate-item.blocked{ border-color:rgba(228,87,61,0.4); background:rgba(228,87,61,0.06); }
+  .gate-icon{ width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .gate-icon.ok{ background:rgba(59,178,115,0.16); }
+  .gate-icon.ok svg{ color:var(--green); }
+  .gate-icon.bad{ background:rgba(228,87,61,0.16); }
+  .gate-icon.bad svg{ color:var(--red); }
+  .gate-body{ flex:1; min-width:0; }
+  .gate-title{ font-size:12.5px; font-weight:700; color:#fff; margin:0 0 2px; }
+  .gate-sub{ font-size:10.5px; color:var(--text-dim); margin:0; }
+  .gate-sub.bad{ color:#E0A79A; }
+  .gate-fix{ flex-shrink:0; font-size:11px; font-weight:700; color:var(--gold); }
+
+  .footer{ flex-shrink:0; padding:12px 20px 26px; }
+  .btn-primary{ width:100%; padding:16px; border-radius:16px; background:var(--navy-line); border:none; color:var(--text-faint); font-size:15px; font-weight:800; font-family:'Inter',sans-serif; }
+  .footer-note{ text-align:center; font-size:10.5px; color:var(--text-faint); margin-top:10px; }
+
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"></div>
+  <div class="topbar">
+    <div class="icon-btn"><svg viewBox="0 0 24 24" width="15" height="15" color="#fff"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></div>
+    <div>
+      <h1>Completeness Check</h1>
+      <span>The Chief's Daughter</span>
+    </div>
+  </div>
+
+  <div class="scroll">
+
+    <div class="ring-card">
+      <div class="ring-wrap">
+        <svg width="112" height="112" viewBox="0 0 100 100">
+          <circle class="ring-bg" cx="50" cy="50" r="45"/>
+          <circle class="ring-fg" cx="50" cy="50" r="45"/>
+        </svg>
+        <div class="ring-label"><b>4/5</b><span>GATES GREEN</span></div>
+      </div>
+      <p class="ring-title">Almost ready</p>
+      <p class="ring-sub">1 item is blocking Submit — <b>fix it below</b></p>
+    </div>
+
+    <div class="gate-item">
+      <div class="gate-icon ok"><svg viewBox="0 0 24 24" width="17" height="17"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <div class="gate-body">
+        <p class="gate-title">All planned episodes uploaded</p>
+        <p class="gate-sub">20 of 20 episodes — Ready</p>
+      </div>
+    </div>
+
+    <div class="gate-item blocked">
+      <div class="gate-icon bad"><svg viewBox="0 0 24 24" width="17" height="17"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+      <div class="gate-body">
+        <p class="gate-title">Trailer QA passed</p>
+        <p class="gate-sub bad">Trailer not uploaded yet</p>
+      </div>
+      <span class="gate-fix">Fix →</span>
+    </div>
+
+    <div class="gate-item">
+      <div class="gate-icon ok"><svg viewBox="0 0 24 24" width="17" height="17"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <div class="gate-body">
+        <p class="gate-title">Cover &amp; poster set</p>
+        <p class="gate-sub">1080 × 1620 uploaded</p>
+      </div>
+    </div>
+
+    <div class="gate-item">
+      <div class="gate-icon ok"><svg viewBox="0 0 24 24" width="17" height="17"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <div class="gate-body">
+        <p class="gate-title">Synopsis &amp; metadata</p>
+        <p class="gate-sub">Title, genres, synopsis complete</p>
+      </div>
+    </div>
+
+    <div class="gate-item">
+      <div class="gate-icon ok"><svg viewBox="0 0 24 24" width="17" height="17"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <div class="gate-body">
+        <p class="gate-title">Rights confirmed</p>
+        <p class="gate-sub">Ownership checkbox signed</p>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <button class="btn-primary">Submit for Live</button>
+    <p class="footer-note">Upload a trailer to unlock Submit</p>
+  </div>
+</div>
+
+</body>
+</html>

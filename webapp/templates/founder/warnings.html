@@ -1,0 +1,160 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Warnings — Control Panel{% endblock %}
+{% block sidebar_title %}Control Panel{% endblock %}
+
+{% block sidebar_nav %}
+<a class="nav-link" href="{{ url_for('founder_dash.overview') }}"><i class="bi bi-speedometer2"></i> Overview</a>
+<a class="nav-link" href="{{ url_for('founder_dash.users') }}"><i class="bi bi-people"></i> Users</a>
+<a class="nav-link" href="{{ url_for('founder_dash.content') }}"><i class="bi bi-book"></i> Content</a>
+<a class="nav-link" href="{{ url_for('founder_dash.revenue') }}"><i class="bi bi-cash-stack"></i> Revenue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.financial_dashboard') }}"><i class="bi bi-bank" style="color:var(--gold);"></i> Financial v5</a>
+<a class="nav-link" href="{{ url_for('founder_dash.premium_analytics') }}"><i class="bi bi-gem" style="color:#c084fc;"></i> Premium Analytics</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payouts') }}"><i class="bi bi-send-check"></i> Payouts</a>
+<a class="nav-link" href="{{ url_for('founder_dash.withdrawals') }}"><i class="bi bi-arrow-up-right-circle" style="color:var(--gold);"></i> Withdrawals</a>
+<a class="nav-link" href="{{ url_for('founder_dash.subscribers') }}"><i class="bi bi-gem" style="color:#9b59b6;"></i> Subscribers</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payroll') }}"><i class="bi bi-wallet2" style="color:#2ecc71;"></i> Team Payroll</a>
+<a class="nav-link" href="{{ url_for('founder_dash.creators') }}"><i class="bi bi-person-badge"></i> Creators{% if pending_apps %} <span class="badge bg-warning text-dark ms-auto">{{ pending_apps }}</span>{% endif %}</a>
+<a class="nav-link" href="{{ url_for('founder_dash.genres') }}"><i class="bi bi-tags"></i> Genres</a>
+<a class="nav-link" href="{{ url_for('founder_dash.announcements') }}"><i class="bi bi-megaphone"></i> Announcements</a>
+<a class="nav-link" href="{{ url_for('founder_dash.collections') }}"><i class="bi bi-grid"></i> Collections</a>
+<a class="nav-link" href="{{ url_for('founder_dash.moderation') }}"><i class="bi bi-shield-exclamation"></i> Moderation</a>
+<a class="nav-link active" href="{{ url_for('founder_dash.warnings_list') }}"><i class="bi bi-exclamation-triangle" style="color:#f59e0b;"></i> Warnings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.elite_manage') }}"><span style="color:var(--gold);">?</span> WiamElite</a>
+<a class="nav-link" href="{{ url_for('wiambot.apex_review') }}"><i class="bi bi-trophy-fill" style="color:var(--gold);"></i> Apex Review</a>
+<a class="nav-link" href="{{ url_for('founder_dash.review_queue') }}"><i class="bi bi-robot"></i> Bot Review Queue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.platform_settings') }}"><i class="bi bi-sliders"></i> Platform Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.forms_dashboard') }}"><i class="bi bi-file-earmark-text"></i> Application Forms</a>
+<a class="nav-link" href="{{ url_for('founder_dash.email_studio') }}"><i class="bi bi-envelope-paper" style="color:var(--gold);"></i> Email Studio</a>
+<a class="nav-link" href="{{ url_for('founder_dash.team_management') }}"><i class="bi bi-people-fill"></i> Team</a>
+<a class="nav-link" href="{{ url_for('founder_dash.account_management') }}"><i class="bi bi-person-x"></i> Account Management</a>
+<a class="nav-link" href="{{ url_for('founder_dash.notification_testing') }}"><i class="bi bi-bell" style="color:#fbbf24;"></i> Notifications</a>
+<a class="nav-link" href="{{ url_for('classics.dashboard') }}"><i class="bi bi-journal-bookmark" style="color:#a78bfa;"></i> Content Seeder</a>
+<a class="nav-link" href="{{ url_for('founder_dash.settings') }}"><i class="bi bi-gear"></i> Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.admins') }}"><i class="bi bi-shield-check"></i> Admins</a>
+{% endblock %}
+
+{% block dash_content %}
+<div class="dash-header">
+    <h1><i class="bi bi-exclamation-triangle me-2" style="color:#f59e0b;"></i>Warnings & Strikes</h1>
+    <p>Issue and manage warnings for creators and team members separately</p>
+</div>
+
+<!-- Role Filter Tabs -->
+<div class="filter-bar" style="margin-bottom:1rem;display:flex;gap:0.4rem;flex-wrap:wrap;">
+    <a href="{{ url_for('founder_dash.warnings_list') }}" class="btn-dash {% if not role_filter %}btn-dash-primary{% endif %}" style="font-size:0.8rem;padding:0.3rem 0.75rem;">All</a>
+    <a href="{{ url_for('founder_dash.warnings_list', role='creator') }}" class="btn-dash {% if role_filter == 'creator' %}btn-dash-primary{% endif %}" style="font-size:0.8rem;padding:0.3rem 0.75rem;">Creators</a>
+    <a href="{{ url_for('founder_dash.warnings_list', role='team') }}" class="btn-dash {% if role_filter == 'team' %}btn-dash-primary{% endif %}" style="font-size:0.8rem;padding:0.3rem 0.75rem;">Team</a>
+</div>
+
+<!-- Issue Warning Form -->
+<div class="dash-card" style="margin-bottom:1.5rem;border-left:3px solid #f59e0b;">
+    <h3 style="font-size:0.95rem;margin-bottom:0.75rem;"><i class="bi bi-plus-circle me-1" style="color:#f59e0b;"></i>Issue New Warning</h3>
+    <form method="post" action="{{ url_for('founder_dash.issue_warning') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;margin-bottom:0.6rem;">
+            <div>
+                <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:3px;">User ID (Telegram ID or DB ID)</label>
+                <input type="number" name="user_id" required style="width:100%;background:var(--bg);color:var(--text);border:1px solid var(--border-subtle);border-radius:8px;padding:0.45rem 0.7rem;font-size:0.85rem;">
+            </div>
+            <div>
+                <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:3px;">Target Role</label>
+                <select name="target_role" id="warn-role-select" style="width:100%;background:var(--bg);color:var(--text);border:1px solid var(--border-subtle);border-radius:8px;padding:0.45rem 0.7rem;font-size:0.85rem;" onchange="updateCategories()">
+                    <option value="creator">Creator</option>
+                    <option value="team">Team Member</option>
+                </select>
+            </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;margin-bottom:0.6rem;">
+            <div>
+                <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:3px;">Category</label>
+                <select name="category" id="warn-category-select" style="width:100%;background:var(--bg);color:var(--text);border:1px solid var(--border-subtle);border-radius:8px;padding:0.45rem 0.7rem;font-size:0.85rem;">
+                    {% for val, label in creator_categories %}
+                    <option value="{{ val }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:3px;">Severity</label>
+                <select name="severity" style="width:100%;background:var(--bg);color:var(--text);border:1px solid var(--border-subtle);border-radius:8px;padding:0.45rem 0.7rem;font-size:0.85rem;">
+                    <option value="notice">Notice (mild)</option>
+                    <option value="warning" selected>Warning (moderate)</option>
+                    <option value="strike">Strike (severe)</option>
+                </select>
+            </div>
+        </div>
+        <div style="margin-bottom:0.6rem;">
+            <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:3px;">Message</label>
+            <textarea name="message" rows="2" required placeholder="Describe the violation or issue..." style="width:100%;background:var(--bg);color:var(--text);border:1px solid var(--border-subtle);border-radius:8px;padding:0.5rem 0.7rem;font-size:0.85rem;resize:vertical;font-family:inherit;"></textarea>
+        </div>
+        <button type="submit" class="btn-dash btn-dash-primary" style="font-size:0.82rem;"><i class="bi bi-exclamation-triangle-fill me-1"></i>Issue Warning</button>
+    </form>
+</div>
+
+<!-- Warnings List -->
+{% if warnings %}
+<div style="display:flex;flex-direction:column;gap:0.6rem;">
+    {% for w in warnings %}
+    <div class="dash-card" style="padding:0.9rem 1.1rem;border-left:3px solid {% if w.severity == 'strike' %}#ef4444{% elif w.severity == 'warning' %}#f59e0b{% else %}#38bdf8{% endif %};">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:0.75rem;flex-wrap:wrap;">
+            <div style="flex:1;min-width:200px;">
+                <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:4px;flex-wrap:wrap;">
+                    <strong style="font-size:0.88rem;">{{ users_map.get(w.user_id, 'User #' ~ w.user_id) }}</strong>
+                    {% if emails_map.get(w.user_id) %}<span style="font-size:0.62rem;padding:1px 6px;border-radius:6px;background:rgba(255,255,255,0.05);color:var(--text-muted);" title="{{ emails_map[w.user_id] }}"><i class="bi bi-envelope-fill" style="font-size:0.55rem;"></i> {{ emails_map[w.user_id]|truncate(25) }}</span>{% endif %}
+                    <span style="font-size:0.68rem;padding:2px 8px;border-radius:8px;font-weight:600;
+                        {% if w.target_role == 'team' %}background:rgba(168,139,250,0.12);color:#a78bfa;
+                        {% else %}background:rgba(250,204,21,0.12);color:#facc15;{% endif %}">{{ w.target_role }}</span>
+                    <span style="font-size:0.68rem;padding:2px 8px;border-radius:8px;font-weight:600;
+                        {% if w.severity == 'strike' %}background:rgba(239,68,68,0.12);color:#f87171;
+                        {% elif w.severity == 'warning' %}background:rgba(245,158,11,0.12);color:#f59e0b;
+                        {% else %}background:rgba(56,189,248,0.12);color:#38bdf8;{% endif %}">{{ w.severity }}</span>
+                    {% set cat_explanations = {
+                        'nsfw_cover': 'Inappropriate or explicit book cover image',
+                        'nsfw_content': 'Sexually explicit or graphic content in chapters',
+                        'hate_speech': 'Content promoting hatred or discrimination',
+                        'spam': 'Spam, scam, or repetitive low-quality content',
+                        'plagiarism': 'Content copied from other authors without permission',
+                        'tc_violation': 'Violation of WiamApp Terms & Conditions',
+                        'harassment': 'Bullying or harassing other users',
+                        'account_ban': 'Account suspended due to accumulated strikes',
+                        'general': 'General policy violation',
+                    } %}
+                    <span style="font-size:0.68rem;padding:2px 8px;border-radius:8px;font-weight:600;background:rgba(255,255,255,0.05);color:var(--text-muted);cursor:help;" title="{{ cat_explanations.get(w.category, 'Policy violation') }}">{{ w.category.replace('_', ' ').title() }}</span>
+                </div>
+                <p style="font-size:0.85rem;line-height:1.5;margin:4px 0;white-space:pre-wrap;">{{ w.message }}</p>
+                <div style="display:flex;gap:0.75rem;font-size:0.7rem;color:var(--text-muted);">
+                    <span>{{ w.created_at.strftime('%b %d, %Y at %H:%M') if w.created_at else '' }}</span>
+                    {% if w.acknowledged %}<span style="color:#4ade80;"><i class="bi bi-check-circle-fill me-1"></i>Acknowledged</span>{% endif %}
+                </div>
+            </div>
+            <form method="post" action="{{ url_for('founder_dash.delete_warning', warning_id=w.id) }}" style="display:inline" onsubmit="return confirm('Delete this warning?')">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn-dash btn-dash-sm btn-dash-danger" title="Delete"><i class="bi bi-trash3"></i></button>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="dash-card" style="text-align:center;padding:3rem 1rem;">
+    <i class="bi bi-exclamation-triangle" style="font-size:2.5rem;color:var(--border-subtle);display:block;margin-bottom:0.75rem;"></i>
+    <p style="color:var(--text-muted);font-size:0.9rem;">No warnings issued{{ ' for ' + role_filter + 's' if role_filter else '' }}.</p>
+</div>
+{% endif %}
+
+<script>
+const creatorCats = {{ creator_categories | tojson }};
+const teamCats = {{ team_categories | tojson }};
+function updateCategories() {
+    const role = document.getElementById('warn-role-select').value;
+    const sel = document.getElementById('warn-category-select');
+    const cats = role === 'team' ? teamCats : creatorCats;
+    sel.innerHTML = '';
+    cats.forEach(function(c) {
+        const opt = document.createElement('option');
+        opt.value = c[0];
+        opt.textContent = c[1];
+        sel.appendChild(opt);
+    });
+}
+</script>
+{% endblock %}

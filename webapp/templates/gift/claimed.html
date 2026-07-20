@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Gift Claimed — WiamApp{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width:560px;padding:var(--space-2xl) var(--space-md);text-align:center;">
+    {% if already %}
+    <i class="bi bi-check-circle" style="font-size:3rem;color:var(--text-muted);"></i>
+    <h1 class="font-display" style="font-size:1.6rem;margin-top:var(--space-sm);">Already Claimed</h1>
+    <p style="color:var(--text-secondary);">This gift has already been claimed.</p>
+    {% else %}
+    <i class="bi bi-gift-fill" style="font-size:3rem;color:var(--gold);"></i>
+    <h1 class="font-display" style="font-size:1.6rem;margin-top:var(--space-sm);">Gift Received!</h1>
+    <p style="color:var(--text-secondary);">You now have access to this book</p>
+    {% endif %}
+
+    {% if book %}
+    <div style="margin:var(--space-xl) 0;">
+        {% if book.cover_file_id %}
+        <img src="{{ book.cover_url }}" alt="{{ book.title }}" style="width:140px;height:200px;object-fit:cover;border-radius:var(--radius-md);box-shadow:0 8px 24px rgba(0,0,0,0.3);">
+        {% endif %}
+        <h3 style="margin-top:var(--space-md);">{{ book.title }}</h3>
+        <p style="color:var(--text-secondary);">by {{ book.author or 'Unknown' }}</p>
+    </div>
+
+    {% if not already %}
+    <a href="{{ url_for('book.read_book', book_id=book.id) }}" class="btn btn-gold" style="padding:0.7rem 2rem;">
+        <i class="bi bi-book me-1"></i> Start Reading
+    </a>
+    {% endif %}
+    {% endif %}
+
+    <div style="margin-top:var(--space-xl);">
+        <a href="{{ url_for('home.home') }}" style="color:var(--text-muted);">&larr; Back to Home</a>
+    </div>
+</div>
+{% endblock %}

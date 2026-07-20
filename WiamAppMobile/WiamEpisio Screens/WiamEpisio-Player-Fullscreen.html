@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamEpisio — Player Fullscreen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{ --navy:#08081A; --gold:#D4A017; --gold-dark:#A07810; --text-dim:#C9C9DE; }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:#000; border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); }
+
+  .video-bg{ position:absolute; inset:0; background:linear-gradient(160deg,#1a1030,#0d0d24,#000); }
+  .zoom-hint-ring{ position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:220px; height:220px; border-radius:50%; border:1px dashed rgba(255,255,255,0.08); opacity:0.5; }
+
+  .fade-top{ position:absolute; top:0; left:0; right:0; height:110px; background:linear-gradient(180deg, rgba(0,0,0,0.6), transparent); z-index:3; }
+  .fade-bottom{ position:absolute; bottom:0; left:0; right:0; height:110px; background:linear-gradient(0deg, rgba(0,0,0,0.6), transparent); z-index:3; }
+
+  .top-row{ position:absolute; top:16px; left:16px; right:16px; display:flex; align-items:center; justify-content:space-between; z-index:4; }
+  .exit-btn{ display:flex; align-items:center; gap:7px; padding:8px 14px; border-radius:999px; background:rgba(0,0,0,0.45); backdrop-filter:blur(6px); }
+  .exit-btn span{ font-size:12px; color:#fff; font-weight:600; }
+  .lock-btn{ width:34px; height:34px; border-radius:50%; background:rgba(0,0,0,0.45); display:flex; align-items:center; justify-content:center; }
+
+  .center-play{ position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:58px; height:58px; border-radius:50%; background:rgba(0,0,0,0.4); display:flex; align-items:center; justify-content:center; z-index:4; }
+
+  .ep-tag{ position:absolute; top:66px; left:16px; z-index:4; font-size:11px; font-weight:700; color:#fff; background:rgba(0,0,0,0.45); padding:5px 11px; border-radius:999px; }
+
+  .bottom-controls{ position:absolute; bottom:0; left:0; right:0; padding:10px 18px 20px; z-index:4; }
+  .scrub-row{ display:flex; align-items:center; gap:9px; margin-bottom:10px; }
+  .time-label{ font-size:10.5px; color:#fff; font-weight:600; min-width:34px; }
+  .scrub-track{ flex:1; height:3px; border-radius:999px; background:rgba(255,255,255,0.3); position:relative; }
+  .scrub-fill{ position:absolute; left:0; top:0; bottom:0; width:52%; background:var(--gold); border-radius:999px; }
+  .scrub-handle{ position:absolute; left:52%; top:50%; transform:translate(-50%,-50%); width:12px; height:12px; border-radius:50%; background:var(--gold); box-shadow:0 0 0 4px rgba(212,160,23,0.25); }
+
+  .controls-row{ display:flex; align-items:center; justify-content:space-between; }
+  .cr-left{ display:flex; align-items:center; gap:18px; }
+  .cr-btn{ color:#fff; }
+  .exit-fullscreen{ display:flex; align-items:center; gap:6px; color:#fff; font-size:11px; font-weight:600; }
+
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="video-bg"></div>
+  <div class="zoom-hint-ring"></div>
+  <div class="fade-top"></div>
+  <div class="fade-bottom"></div>
+
+  <div class="top-row">
+    <div class="exit-btn"><svg viewBox="0 0 24 24" width="14" height="14" color="#fff"><path d="M9 21H3v-6"/><path d="M21 3l-8 8"/><path d="M3 21l8-8"/><path d="M15 3h6v6"/></svg><span>Exit Fullscreen</span></div>
+    <div class="lock-btn"><svg viewBox="0 0 24 24" width="15" height="15" color="#fff"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
+  </div>
+
+  <span class="ep-tag">EP 3 of 48</span>
+
+  <div class="center-play"><svg viewBox="0 0 24 24" width="24" height="24" fill="#fff" stroke="none"><polygon points="6 3 20 12 6 21 6 3"/></svg></div>
+
+  <div class="bottom-controls">
+    <div class="scrub-row">
+      <span class="time-label">5:08</span>
+      <div class="scrub-track"><div class="scrub-fill"></div><div class="scrub-handle"></div></div>
+      <span class="time-label">9:50</span>
+    </div>
+    <div class="controls-row">
+      <div class="cr-left">
+        <svg class="cr-btn" viewBox="0 0 24 24" width="19" height="19"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg>
+        <svg class="cr-btn" viewBox="0 0 24 24" width="19" height="19"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+      </div>
+      <div class="exit-fullscreen"><svg viewBox="0 0 24 24" width="16" height="16"><path d="M8 3v4a1 1 0 0 1-1 1H3"/><path d="M21 8h-4a1 1 0 0 1-1-1V3"/><path d="M3 16h4a1 1 0 0 1 1 1v4"/><path d="M16 21v-4a1 1 0 0 1 1-1h4"/></svg>Pinch to shrink</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

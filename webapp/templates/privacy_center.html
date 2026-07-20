@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% block title %}Privacy Center — WiamApp{% endblock %}
+{% block meta_description %}Manage your privacy settings on WiamApp. Control your data, download your information, and manage account preferences.{% endblock %}
+
+{% block extra_head %}
+<style>
+.pc-page { max-width: 680px; margin: 0 auto; padding: 1.5rem 1rem 6rem; }
+.pc-back { color: var(--text-muted); font-size: 0.82rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.3rem; margin-bottom: 1rem; }
+.pc-back:hover { color: var(--gold); }
+.pc-title { font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; margin-bottom: 0.3rem; }
+.pc-subtitle { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem; }
+
+.pc-hero { background: linear-gradient(135deg, rgba(109,40,217,0.12), rgba(201,168,76,0.08)); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 1.5rem; margin-bottom: 1.5rem; text-align: center; }
+.pc-hero i { font-size: 2.5rem; color: var(--gold); margin-bottom: 0.5rem; display: block; }
+.pc-hero h2 { font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; margin-bottom: 0.3rem; }
+.pc-hero p { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6; max-width: 480px; margin: 0 auto; }
+
+.pc-card { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 14px; padding: 1.2rem; margin-bottom: 0.8rem; }
+.pc-card-header { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.6rem; }
+.pc-card-header i { font-size: 1.2rem; color: var(--gold); }
+.pc-card-header h3 { font-family: var(--font-display); font-size: 0.95rem; font-weight: 700; margin: 0; }
+.pc-card p { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.7; margin: 0; }
+.pc-card ul { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.7; margin: 0.3rem 0 0; padding-left: 1.2rem; }
+.pc-card ul li { margin-bottom: 0.2rem; }
+
+.pc-section-title { font-family: var(--font-display); font-size: 1rem; font-weight: 700; margin: 1.5rem 0 0.8rem; display: flex; align-items: center; gap: 0.4rem; }
+
+.pc-links { display: flex; flex-direction: column; gap: 0.4rem; margin-top: 1rem; }
+.pc-link { display: flex; align-items: center; gap: 0.6rem; padding: 0.65rem 0.8rem; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 10px; text-decoration: none; color: var(--text); font-size: 0.85rem; transition: all 0.15s; }
+.pc-link:hover { border-color: var(--gold); color: var(--gold); }
+.pc-link i { color: var(--text-muted); font-size: 1rem; width: 20px; text-align: center; }
+.pc-link .chevron { margin-left: auto; color: var(--text-muted); font-size: 0.65rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="pc-page">
+    <a href="javascript:void(0)" onclick="window.history.length>1?history.back():location.href='/'" class="pc-back" data-no-loader><i class="bi bi-arrow-left"></i> Back</a>
+    <h1 class="pc-title">Privacy Center</h1>
+    <p class="pc-subtitle">Understand how WiamApp protects your data and your rights.</p>
+
+    <div class="pc-hero">
+        <i class="bi bi-shield-lock-fill"></i>
+        <h2>Your Privacy Matters</h2>
+        <p>At WiamApp, we believe your data belongs to you. We collect only what's needed to provide you with the best reading experience, and we never sell your personal information.</p>
+    </div>
+
+    <!-- What we collect -->
+    <div class="pc-section-title"><i class="bi bi-clipboard-data" style="color:var(--gold);"></i> What We Collect</div>
+    <div class="pc-card">
+        <div class="pc-card-header">
+            <i class="bi bi-person"></i>
+            <h3>Account Information</h3>
+        </div>
+        <p>When you create an account, we collect your name, email address, and any optional details you provide (bio, date of birth, pronouns, avatar). If you sign in with Google, we receive your name, email, and profile picture from Google.</p>
+    </div>
+    <div class="pc-card">
+        <div class="pc-card-header">
+            <i class="bi bi-book"></i>
+            <h3>Reading Activity</h3>
+        </div>
+        <p>We track which stories you read, your reading progress, and your library to provide personalized recommendations. Reading streaks and bookmarks help you pick up where you left off.</p>
+    </div>
+    <div class="pc-card">
+        <div class="pc-card-header">
+            <i class="bi bi-credit-card"></i>
+            <h3>Payment Data</h3>
+        </div>
+        <p>All payments are processed by Paystack (PCI-DSS certified, backed by Stripe). We never store your card numbers or mobile money PINs. We only keep transaction records for coin balance tracking.</p>
+    </div>
+
+    <!-- How we use it -->
+    <div class="pc-section-title"><i class="bi bi-gear" style="color:var(--gold);"></i> How We Use Your Data</div>
+    <div class="pc-card">
+        <div class="pc-card-header">
+            <i class="bi bi-check-circle"></i>
+            <h3>To Provide Our Service</h3>
+        </div>
+        <ul>
+            <li>Personalize story recommendations based on your genres and reading history</li>
+            <li>Maintain your library, reading progress, and favorites</li>
+            <li>Process coin purchases and creator payouts</li>
+            <li>Send important account notifications (password resets, security alerts)</li>
+        </ul>
+    </div>
+    <div class="pc-card">
+        <div class="pc-card-header">
+            <i class="bi bi-x-circle"></i>
+            <h3>What We Never Do</h3>
+        </div>
+        <ul>
+            <li>Sell your personal data to third parties</li>
+            <li>Share your reading history publicly (unless you choose to)</li>
+            <li>Use your data for targeted advertising</li>
+            <li>Store payment card or mobile money credentials</li>
+        </ul>
+    </div>
+
+    <!-- Your rights -->
+    <div class="pc-section-title"><i class="bi bi-person-check" style="color:var(--gold);"></i> Your Rights</div>
+    <div class="pc-card">
+        <div class="pc-card-header">
+            <i class="bi bi-download"></i>
+            <h3>Access & Control</h3>
+        </div>
+        <ul>
+            <li><strong>View your data</strong> — See all your account info in Settings & Privacy</li>
+            <li><strong>Edit your data</strong> — Update your profile, bio, pronouns, and preferences anytime</li>
+            <li><strong>Delete your account</strong> — Permanently remove all your data from our servers</li>
+            <li><strong>Deactivate</strong> — Temporarily hide your profile without losing data</li>
+            <li><strong>Birthday visibility</strong> — Choose whether your birthday appears on your profile</li>
+        </ul>
+    </div>
+
+    <!-- Data security -->
+    <div class="pc-section-title"><i class="bi bi-lock" style="color:var(--gold);"></i> How We Protect Your Data</div>
+    <div class="pc-card">
+        <div class="pc-card-header">
+            <i class="bi bi-shield-fill-check"></i>
+            <h3>Security Measures</h3>
+        </div>
+        <ul>
+            <li>All connections encrypted with HTTPS/TLS</li>
+            <li>Passwords hashed with industry-standard bcrypt</li>
+            <li>Two-Factor Authentication (2FA) available for extra security</li>
+            <li>Regular security audits and monitoring</li>
+            <li>Payment processing by PCI-DSS certified Paystack</li>
+        </ul>
+    </div>
+
+    <!-- Quick links -->
+    <div class="pc-links">
+        <a href="{{ url_for('profile.privacy_policy') }}" class="pc-link">
+            <i class="bi bi-file-earmark-lock"></i> Full Privacy Policy
+            <span class="chevron"><i class="bi bi-chevron-right"></i></span>
+        </a>
+        <a href="{{ url_for('profile.terms') }}" class="pc-link">
+            <i class="bi bi-file-earmark-text"></i> Terms & Conditions
+            <span class="chevron"><i class="bi bi-chevron-right"></i></span>
+        </a>
+        <a href="{{ url_for('profile.settings_privacy') }}" class="pc-link">
+            <i class="bi bi-gear"></i> Settings & Privacy
+            <span class="chevron"><i class="bi bi-chevron-right"></i></span>
+        </a>
+        <a href="{{ url_for('profile.community_guidelines') }}" class="pc-link">
+            <i class="bi bi-people"></i> Community Guidelines
+            <span class="chevron"><i class="bi bi-chevron-right"></i></span>
+        </a>
+    </div>
+</div>
+{% endblock %}

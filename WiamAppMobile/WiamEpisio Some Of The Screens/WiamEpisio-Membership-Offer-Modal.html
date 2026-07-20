@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamEpisio — Membership Offer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{ --navy:#08081A; --navy-card:#12122A; --navy-line:#1E1E42; --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75; }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); }
+  .statusbar{ height:44px; }
+  .dimmed{ opacity:0.25; padding:0 20px; }
+  .dimmed h1{ font-size:19px; font-weight:800; color:#fff; }
+  .dimmed .plan-card{ border-radius:20px; padding:18px; background:var(--navy-card); border:1.5px solid var(--gold); }
+  .dimmed .plan-name{ font-size:14.5px; font-weight:700; color:#fff; margin:0 0 4px; }
+  .dimmed .plan-price{ font-size:20px; font-weight:800; color:#fff; }
+
+  .scrim{ position:absolute; inset:0; background:rgba(8,8,26,0.7); z-index:4; }
+
+  .modal{
+    position:absolute; top:50%; left:20px; right:20px; transform:translateY(-50%);
+    background:var(--navy-card); border-radius:24px; padding:26px 22px; z-index:5; text-align:center;
+    border:1px solid var(--navy-line);
+  }
+  .close-x{ position:absolute; top:14px; right:16px; color:var(--text-faint); }
+  .congrats{ font-size:19px; font-weight:800; color:var(--gold); font-style:italic; margin:0 0 18px; }
+
+  .coupon{
+    position:relative; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); border-radius:16px;
+    padding:20px 18px; margin-bottom:20px;
+  }
+  .coupon::before, .coupon::after{
+    content:''; position:absolute; top:50%; transform:translateY(-50%); width:18px; height:18px;
+    border-radius:50%; background:var(--navy-card);
+  }
+  .coupon::before{ left:-9px; }
+  .coupon::after{ right:-9px; }
+  .coupon-text{ font-size:13px; color:#3A2E05; font-weight:600; margin:0 0 8px; line-height:1.4; }
+  .coupon-amount{ font-size:28px; font-weight:800; color:var(--navy); margin:0 0 6px; }
+  .coupon-price-row{ display:flex; align-items:center; justify-content:center; gap:8px; }
+  .coupon-new{ font-size:15px; font-weight:800; color:var(--navy); }
+  .coupon-old{ font-size:13px; color:#5A4200; text-decoration:line-through; }
+
+  .timer-row{ display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:18px; }
+  .timer-label{ font-size:12px; color:var(--text-dim); }
+  .timer-box{ font-size:13px; font-weight:700; color:#fff; background:var(--navy-line); padding:3px 8px; border-radius:6px; }
+
+  .subscribe-btn{ width:100%; padding:15px; border-radius:16px; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); color:var(--navy); font-size:14.5px; font-weight:800; border:none; }
+
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"></div>
+  <div class="dimmed">
+    <h1>Join Membership</h1>
+    <div class="plan-card">
+      <p class="plan-name">Weekly Membership</p>
+      <p class="plan-price">GHS 24.99</p>
+    </div>
+  </div>
+
+  <div class="scrim"></div>
+
+  <div class="modal">
+    <svg class="close-x" viewBox="0 0 24 24" width="17" height="17"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    <p class="congrats">Congratulations!</p>
+
+    <div class="coupon">
+      <p class="coupon-text">A one-time discount for your first<br/>3 weeks of membership</p>
+      <p class="coupon-amount">GHS 10 OFF</p>
+      <div class="coupon-price-row">
+        <span class="coupon-new">GHS 24.99</span>
+        <span class="coupon-old">GHS 34.99</span>
+      </div>
+    </div>
+
+    <div class="timer-row">
+      <span class="timer-label">Expires in</span>
+      <span class="timer-box">00</span>:<span class="timer-box">59</span>:<span class="timer-box">57</span>
+    </div>
+
+    <button class="subscribe-btn">Subscribe Now</button>
+  </div>
+</div>
+
+</body>
+</html>

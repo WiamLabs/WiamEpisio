@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamStudio — New Series</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); display:flex; flex-direction:column; }
+  .statusbar{ height:44px; flex-shrink:0; }
+
+  .topbar{ padding:2px 20px 16px; flex-shrink:0; }
+  .top-row{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+  .icon-btn{ width:34px; height:34px; border-radius:50%; background:var(--navy-card); display:flex; align-items:center; justify-content:center; }
+  .step-label{ font-size:11px; font-weight:700; color:var(--text-faint); }
+
+  .step-track{ display:flex; gap:6px; margin-bottom:18px; }
+  .step-seg{ flex:1; height:4px; border-radius:99px; background:var(--navy-line); }
+  .step-seg.done{ background:var(--gold); }
+
+  h1{ font-size:20px; font-weight:800; color:#fff; margin:0 0 5px; letter-spacing:-0.3px; }
+  .sub{ font-size:12.5px; color:var(--text-dim); margin:0; }
+
+  .scroll{ flex:1; overflow-y:auto; padding:0 20px 20px; }
+
+  .field-group{ margin-bottom:16px; }
+  .field-label{ font-size:11.5px; font-weight:700; color:#fff; margin:0 0 8px; display:flex; align-items:center; justify-content:space-between; }
+  .field-label .opt{ font-size:10px; color:var(--text-faint); font-weight:600; }
+  .field-box{ background:var(--navy-card); border:1px solid var(--navy-line); border-radius:14px; padding:13px 14px; }
+  .field-box.focus{ border-color:var(--gold); }
+  .field-box input, .field-box textarea{ background:none; border:none; outline:none; color:#fff; font-size:13.5px; font-family:inherit; width:100%; resize:none; }
+  .field-box input::placeholder, .field-box textarea::placeholder{ color:var(--text-faint); }
+  .char-count{ text-align:right; font-size:10px; color:var(--text-faint); margin-top:6px; }
+
+  .genre-chips{ display:flex; gap:8px; flex-wrap:wrap; }
+  .genre-chip{ padding:9px 15px; border-radius:999px; background:var(--navy-card); border:1px solid var(--navy-line); color:#B8B8CC; font-size:12px; font-weight:600; }
+  .genre-chip.active{ background:var(--gold); color:var(--navy); border-color:var(--gold); }
+
+  .stepper-row{ display:flex; align-items:center; justify-content:space-between; }
+  .stepper-btn{ width:38px; height:38px; border-radius:11px; background:var(--navy-soft); border:1px solid var(--navy-line); display:flex; align-items:center; justify-content:center; color:#fff; }
+  .stepper-val{ font-size:22px; font-weight:800; color:#fff; }
+  .stepper-note{ font-size:10px; color:var(--text-faint); margin-top:8px; text-align:center; }
+  .stepper-note b{ color:var(--gold); }
+
+  .lang-select{ display:flex; align-items:center; justify-content:space-between; }
+  .lang-select span{ font-size:13.5px; color:#fff; }
+
+  .lock-note{ display:flex; gap:8px; background:rgba(212,160,23,0.08); border:1px solid rgba(212,160,23,0.25); border-radius:12px; padding:11px 13px; font-size:10.5px; color:#D9C89A; line-height:1.5; margin-top:4px; }
+  .lock-note svg{ flex-shrink:0; color:var(--gold); width:14px; height:14px; margin-top:1px; }
+
+  .footer{ flex-shrink:0; padding:12px 20px 26px; display:flex; gap:10px; }
+  .btn-ghost{ flex:1; padding:15px; border-radius:16px; background:var(--navy-card); border:1px solid var(--navy-line); color:#C9C9DE; font-size:13.5px; font-weight:700; font-family:'Inter',sans-serif; }
+  .btn-primary{ flex:1.4; padding:15px; border-radius:16px; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); border:none; color:var(--navy); font-size:13.5px; font-weight:800; box-shadow:0 14px 30px rgba(212,160,23,0.3); font-family:'Inter',sans-serif; }
+
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"></div>
+  <div class="topbar">
+    <div class="top-row">
+      <div class="icon-btn"><svg viewBox="0 0 24 24" width="15" height="15" color="#fff"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+      <span class="step-label">Step 1 of 4 — Identity</span>
+    </div>
+    <div class="step-track">
+      <div class="step-seg done"></div>
+      <div class="step-seg"></div>
+      <div class="step-seg"></div>
+      <div class="step-seg"></div>
+    </div>
+    <h1>Tell us about the series</h1>
+    <p class="sub">This becomes the public series page once live.</p>
+  </div>
+
+  <div class="scroll">
+
+    <div class="field-group">
+      <p class="field-label">Series title</p>
+      <div class="field-box focus"><input placeholder="e.g. Accra Nights" value="The Chief's Daughter" /></div>
+    </div>
+
+    <div class="field-group">
+      <p class="field-label">Synopsis <span class="opt">min 40 characters</span></p>
+      <div class="field-box">
+        <textarea rows="4" placeholder="What's the story? Hook viewers in 2–3 sentences.">Born into royalty, raised in secrecy — when Adjoa returns to claim her father's throne, the palace she was hidden from becomes the one place she can't escape.</textarea>
+      </div>
+      <p class="char-count">158 / 400</p>
+    </div>
+
+    <div class="field-group">
+      <p class="field-label">Genres <span class="opt">pick up to 3</span></p>
+      <div class="genre-chips">
+        <span class="genre-chip active">Drama</span>
+        <span class="genre-chip active">Royal &amp; Palace</span>
+        <span class="genre-chip">Romance</span>
+        <span class="genre-chip">Revenge</span>
+        <span class="genre-chip">Hidden Identity</span>
+        <span class="genre-chip">Family Feud</span>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <p class="field-label">Planned episode count</p>
+      <div class="field-box">
+        <div class="stepper-row">
+          <div class="stepper-btn">−</div>
+          <span class="stepper-val">20</span>
+          <div class="stepper-btn">+</div>
+        </div>
+      </div>
+      <p class="stepper-note">Minimum <b>20 episodes</b> for first public series</p>
+      <div class="lock-note">
+        <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+        <span>This number locks your completeness gate — you can't go live until every planned episode is uploaded.</span>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <p class="field-label">Language</p>
+      <div class="field-box">
+        <div class="lang-select"><span>English</span><svg viewBox="0 0 24 24" width="14" height="14" color="#7D7D97"><polyline points="6 9 12 15 18 9"/></svg></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <button class="btn-ghost">Save Draft</button>
+    <button class="btn-primary">Next: Cover</button>
+  </div>
+</div>
+
+</body>
+</html>

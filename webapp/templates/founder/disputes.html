@@ -1,0 +1,140 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Disputes & Reports — Control Panel{% endblock %}
+{% block sidebar_title %}Control Panel{% endblock %}
+
+{% block sidebar_nav %}
+<a class="nav-link" href="{{ url_for('founder_dash.overview') }}"><i class="bi bi-speedometer2"></i> Overview</a>
+<a class="nav-link" href="{{ url_for('founder_dash.users') }}"><i class="bi bi-people"></i> Users</a>
+<a class="nav-link" href="{{ url_for('founder_dash.content') }}"><i class="bi bi-book"></i> Content</a>
+<a class="nav-link" href="{{ url_for('founder_dash.revenue') }}"><i class="bi bi-cash-stack"></i> Revenue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.financial_dashboard') }}"><i class="bi bi-bank" style="color:var(--gold);"></i> Financial v5</a>
+<a class="nav-link" href="{{ url_for('founder_dash.premium_analytics') }}"><i class="bi bi-gem" style="color:#c084fc;"></i> Premium Analytics</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payouts') }}"><i class="bi bi-send-check"></i> Payouts</a>
+<a class="nav-link" href="{{ url_for('founder_dash.withdrawals') }}"><i class="bi bi-arrow-up-right-circle" style="color:var(--gold);"></i> Withdrawals</a>
+<a class="nav-link" href="{{ url_for('founder_dash.subscribers') }}"><i class="bi bi-gem" style="color:#9b59b6;"></i> Subscribers</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payroll') }}"><i class="bi bi-wallet2" style="color:#2ecc71;"></i> Team Payroll</a>
+<a class="nav-link" href="{{ url_for('founder_dash.creators') }}"><i class="bi bi-person-badge"></i> Creators</a>
+<a class="nav-link" href="{{ url_for('founder_dash.genres') }}"><i class="bi bi-tags"></i> Genres</a>
+<a class="nav-link" href="{{ url_for('founder_dash.announcements') }}"><i class="bi bi-megaphone"></i> Announcements</a>
+<a class="nav-link" href="{{ url_for('founder_dash.collections') }}"><i class="bi bi-grid"></i> Collections</a>
+<a class="nav-link" href="{{ url_for('founder_dash.moderation') }}"><i class="bi bi-shield-exclamation"></i> Moderation</a>
+<a class="nav-link active" href="{{ url_for('founder_dash.disputes') }}"><i class="bi bi-flag"></i> Disputes</a>
+<a class="nav-link" href="{{ url_for('founder_dash.warnings_list') }}"><i class="bi bi-exclamation-triangle" style="color:#f59e0b;"></i> Warnings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.elite_manage') }}"><span style="color:var(--gold);">?</span> WiamElite</a>
+<a class="nav-link" href="{{ url_for('wiambot.apex_review') }}"><i class="bi bi-trophy-fill" style="color:var(--gold);"></i> Apex Review</a>
+<a class="nav-link" href="{{ url_for('founder_dash.review_queue') }}"><i class="bi bi-robot"></i> Bot Review Queue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.platform_settings') }}"><i class="bi bi-sliders"></i> Platform Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.forms_dashboard') }}"><i class="bi bi-file-earmark-text"></i> Application Forms</a>
+<a class="nav-link" href="{{ url_for('founder_dash.email_studio') }}"><i class="bi bi-envelope-paper" style="color:var(--gold);"></i> Email Studio</a>
+<a class="nav-link" href="{{ url_for('founder_dash.team_management') }}"><i class="bi bi-people-fill"></i> Team</a>
+<a class="nav-link" href="{{ url_for('founder_dash.notification_testing') }}"><i class="bi bi-bell" style="color:#fbbf24;"></i> Notifications</a>
+<a class="nav-link" href="{{ url_for('classics.dashboard') }}"><i class="bi bi-journal-bookmark" style="color:#a78bfa;"></i> Content Seeder</a>
+<a class="nav-link" href="{{ url_for('founder_dash.settings') }}"><i class="bi bi-gear"></i> Settings</a>
+{% endblock %}
+
+{% block dash_content %}
+<div class="dash-header">
+    <h1><i class="bi bi-flag" style="color:#f87171;"></i> Disputes & Reports</h1>
+    <p>User-submitted reports on content, users, comments, and payments</p>
+</div>
+
+<!-- Status Filter Tabs -->
+<div style="display:flex;gap:0.5rem;margin-bottom:1.5rem;flex-wrap:wrap;">
+    <a href="{{ url_for('founder_dash.disputes') }}"
+       style="padding:6px 14px;border-radius:20px;font-size:0.8rem;font-weight:600;text-decoration:none;
+              {% if not status_filter %}background:var(--gold);color:#000;{% else %}background:rgba(255,255,255,0.04);color:var(--text-muted);border:1px solid var(--border-subtle);{% endif %}">
+        All ({{ counts.open + counts.in_review + counts.resolved + counts.dismissed }})
+    </a>
+    <a href="{{ url_for('founder_dash.disputes', status='OPEN') }}"
+       style="padding:6px 14px;border-radius:20px;font-size:0.8rem;font-weight:600;text-decoration:none;
+              {% if status_filter == 'OPEN' %}background:#f87171;color:#000;{% else %}background:rgba(239,68,68,0.1);color:#f87171;border:1px solid rgba(239,68,68,0.2);{% endif %}">
+        Open ({{ counts.open }})
+    </a>
+    <a href="{{ url_for('founder_dash.disputes', status='IN_REVIEW') }}"
+       style="padding:6px 14px;border-radius:20px;font-size:0.8rem;font-weight:600;text-decoration:none;
+              {% if status_filter == 'IN_REVIEW' %}background:#60a5fa;color:#000;{% else %}background:rgba(96,165,250,0.1);color:#60a5fa;border:1px solid rgba(96,165,250,0.2);{% endif %}">
+        In Review ({{ counts.in_review }})
+    </a>
+    <a href="{{ url_for('founder_dash.disputes', status='RESOLVED') }}"
+       style="padding:6px 14px;border-radius:20px;font-size:0.8rem;font-weight:600;text-decoration:none;
+              {% if status_filter == 'RESOLVED' %}background:#4ade80;color:#000;{% else %}background:rgba(34,197,94,0.1);color:#4ade80;border:1px solid rgba(34,197,94,0.2);{% endif %}">
+        Resolved ({{ counts.resolved }})
+    </a>
+    <a href="{{ url_for('founder_dash.disputes', status='DISMISSED') }}"
+       style="padding:6px 14px;border-radius:20px;font-size:0.8rem;font-weight:600;text-decoration:none;
+              {% if status_filter == 'DISMISSED' %}background:#9ca3af;color:#000;{% else %}background:rgba(156,163,175,0.1);color:#9ca3af;border:1px solid rgba(156,163,175,0.2);{% endif %}">
+        Dismissed ({{ counts.dismissed }})
+    </a>
+</div>
+
+<!-- Reports Table -->
+<div class="dash-card">
+    <table class="dash-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Reporter</th>
+                <th>Target</th>
+                <th>Category</th>
+                <th>Description</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for r in reports %}
+        <tr>
+            <td style="color:var(--text-muted);">{{ r.id }}</td>
+            <td>
+                {% if r._reporter %}
+                <strong>{{ r._reporter.display_name }}</strong>
+                {% else %}
+                <span style="color:var(--text-muted);">ID: {{ r.reporter_user_id }}</span>
+                {% endif %}
+            </td>
+            <td>
+                <span style="background:rgba(255,255,255,0.05);padding:2px 8px;border-radius:6px;font-size:0.72rem;font-weight:600;">{{ r.target_type }}</span>
+                <span style="color:var(--text-muted);font-size:0.8rem;margin-left:4px;">#{{ r.target_id }}</span>
+            </td>
+            <td><span style="font-size:0.8rem;">{{ r.category }}</span></td>
+            <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:0.8rem;">{{ r.description[:100] }}</td>
+            <td>
+                <span style="padding:2px 8px;border-radius:10px;font-size:0.72rem;font-weight:600;
+                    {% if r.status == 'OPEN' %}background:rgba(239,68,68,0.15);color:#f87171;
+                    {% elif r.status == 'IN_REVIEW' %}background:rgba(96,165,250,0.15);color:#60a5fa;
+                    {% elif r.status == 'RESOLVED' %}background:rgba(34,197,94,0.15);color:#4ade80;
+                    {% else %}background:rgba(156,163,175,0.15);color:#9ca3af;{% endif %}">{{ r.status }}</span>
+            </td>
+            <td style="color:var(--text-muted);font-size:0.75rem;white-space:nowrap;">{{ r.created_at.strftime('%b %d, %H:%M') if r.created_at else '—' }}</td>
+            <td>
+                {% if r.status == 'OPEN' %}
+                <form method="POST" action="{{ url_for('founder_dash.assign_dispute', report_id=r.id) }}" style="display:inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" style="background:rgba(96,165,250,0.15);color:#60a5fa;border:none;border-radius:6px;padding:4px 10px;font-size:0.72rem;cursor:pointer;">Review</button>
+                </form>
+                <form method="POST" action="{{ url_for('founder_dash.dismiss_dispute', report_id=r.id) }}" style="display:inline;margin-left:4px;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" style="background:rgba(156,163,175,0.1);color:#9ca3af;border:none;border-radius:6px;padding:4px 10px;font-size:0.72rem;cursor:pointer;">Dismiss</button>
+                </form>
+                {% elif r.status == 'IN_REVIEW' %}
+                <form method="POST" action="{{ url_for('founder_dash.resolve_dispute', report_id=r.id) }}" style="display:inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="text" name="notes" placeholder="Resolution notes..." style="width:120px;padding:3px 6px;font-size:0.72rem;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:4px;color:var(--text-primary);">
+                    <button type="submit" style="background:rgba(34,197,94,0.15);color:#4ade80;border:none;border-radius:6px;padding:4px 10px;font-size:0.72rem;cursor:pointer;margin-left:4px;">Resolve</button>
+                </form>
+                {% elif r.resolution_notes %}
+                <span style="font-size:0.7rem;color:var(--text-muted);">{{ r.resolution_notes[:60] }}</span>
+                {% else %}
+                <span style="font-size:0.7rem;color:var(--text-muted);">—</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+        {% if not reports %}
+        <tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:3rem;">No reports found{% if status_filter %} with status "{{ status_filter }}"{% endif %}.</td></tr>
+        {% endif %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

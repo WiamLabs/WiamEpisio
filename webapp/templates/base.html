@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="en" class="{% if wiam_in_app %}wiam-in-app{% endif %}" style="background:#08081a;">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#08081a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>{% block title %}WiamApp — Read Free Stories & Publish Your Novel Online{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}WiamApp is a free storytelling platform where readers discover powerful stories and writers publish novels. Read stories from creators across Africa and beyond.{% endblock %}">
+    <meta name="robots" content="{% block robots %}index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1{% endblock %}">
+    <meta name="author" content="WiamApp">
+    <meta name="application-name" content="WiamApp">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='img/favicon-32.png') }}">
+    <link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='img/icon-192.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='img/apple-touch-icon.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <meta property="og:site_name" content="WiamApp">
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+    <meta property="og:title" content="{% block og_title %}WiamApp — Read Free Stories & Publish Your Novel Online{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}WiamApp is a free storytelling platform where readers discover powerful stories and writers publish novels.{% endblock %}">
+    <meta property="og:locale" content="en_US">
+    <link rel="canonical" href="{% block canonical_url %}https://wiamapp.com{{ request.path }}{% endblock %}">
+    <meta property="og:url" content="{% block og_url %}https://wiamapp.com{{ request.path }}{% endblock %}">
+    <meta property="og:image" content="{% block og_image %}{{ url_for('static', filename='img/og-card.png', _external=True) }}{% endblock %}">
+    <meta property="og:image:width" content="{% block og_image_width %}1200{% endblock %}">
+    <meta property="og:image:height" content="{% block og_image_height %}630{% endblock %}">
+    <meta property="og:image:alt" content="{% block og_image_alt %}WiamApp — Read free stories from creators across Africa and beyond{% endblock %}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@wiamapp">
+    <meta name="twitter:title" content="{% block twitter_title %}{{ self.og_title() }}{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}{{ self.og_description() }}{% endblock %}">
+    <meta name="twitter:image" content="{% block twitter_image %}{{ self.og_image() }}{% endblock %}">
+    {% if config.get('GOOGLE_SITE_VERIFICATION') %}
+    <meta name="google-site-verification" content="{{ config.get('GOOGLE_SITE_VERIFICATION') }}">
+    {% endif %}
+    {% block meta_extra %}{% endblock %}
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "WiamApp",
+      "alternateName": ["Wiam App", "WiamLabs", "Wiam"],
+      "url": "https://wiamapp.com",
+      "description": "Free storytelling platform where readers discover powerful stories and writers publish novels. Stories from creators across Africa and beyond.",
+      "publisher": { "@type": "Organization", "name": "WiamApp" },
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://wiamapp.com/browse/search?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "WiamApp",
+      "alternateName": ["Wiam App", "WiamLabs"],
+      "legalName": "WiamLabs",
+      "url": "https://wiamapp.com",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://wiamapp.com/static/img/WiamLogo.png",
+        "width": 512,
+        "height": 512
+      },
+      "description": "Africa's home for storytelling. Read free stories, support creators, become a writer.",
+      "foundingDate": "2024",
+      "sameAs": [
+        "https://play.google.com/store/apps/details?id=com.wiamapp.mobile",
+        "https://x.com/wiamapp",
+        "https://www.instagram.com/wiamapp",
+        "https://www.facebook.com/wiamapp",
+        "https://www.linkedin.com/company/wiamapp"
+      ],
+      "contactPoint": [{
+        "@type": "ContactPoint",
+        "email": "support@wiamapp.com",
+        "contactType": "customer support",
+        "availableLanguage": ["English"]
+      }]
+    }
+    </script>
+    {% block jsonld_extra %}{% endblock %}
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>html,body{background:#08081a!important;margin:0;padding:0;}.splash-screen{position:fixed;inset:0;z-index:9999;background:#08081a;display:flex;flex-direction:column;align-items:center;justify-content:center;}.splash-logo{width:150px;height:150px;display:flex;align-items:center;justify-content:center;}.splash-logo img{width:100%;height:100%;object-fit:contain;}</style>
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+    /* Gold page-transition loader */
+    .wiam-loader-overlay{position:fixed;inset:0;z-index:99998;background:rgba(8,8,26,0.55);backdrop-filter:blur(2px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s ease;}
+    .wiam-loader-overlay.active{opacity:1;pointer-events:all;}
+    .wiam-spinner{width:44px;height:44px;border:3px solid rgba(212,168,67,0.15);border-top-color:#d4a843;border-radius:50%;animation:wiamSpin .7s linear infinite;}
+    @keyframes wiamSpin{to{transform:rotate(360deg)}}
+    </style>
+    {% if g_ads_enabled and g_ads_client_id %}
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={{ g_ads_client_id }}" crossorigin="anonymous"></script>
+    {% endif %}
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="{% if wiam_in_app %}wiam-in-app{% endif %}" style="background:#08081a;" {% if current_user.is_authenticated %} data-authenticated="1"{% endif %}>
+    <!-- Splash Screen -->
+    <div class="splash-screen" id="splashScreen">
+        <div class="splash-logo">
+            <img src="{{ url_for('static', filename='img/WiamLogo.png') }}" alt="WiamApp">
+        </div>
+        <div class="splash-text">WiamApp</div>
+        <div class="splash-tagline">Stories that move your soul</div>
+        <div class="splash-bar"><div class="splash-bar-fill"></div></div>
+        <div class="splash-powered">Powered by WiamLabs</div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar-wiam navbar navbar-expand-lg sticky-top">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="{% if is_team_or_founder %}{{ url_for('team.dashboard') }}{% else %}{{ url_for('home.index') }}{% endif %}">
+                <img src="{{ url_for('static', filename='img/WiamLogo.png') }}" alt="WiamApp" style="width:44px;height:44px;object-fit:contain;">
+                {% if is_team_or_founder %}WiamLabs{% else %}WiamApp{% endif %}
+            </a>
+
+            {% if current_user.is_authenticated %}
+            {# ═══════ TEAM / FOUNDER — Clean office navbar (no reader UI) ═══════ #}
+            {% if is_team_or_founder %}
+            <ul class="navbar-nav ms-auto d-none d-lg-flex align-items-center">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('team.dashboard') }}" style="color:var(--gold);font-weight:600;font-size:0.88rem;">
+                        <i class="bi bi-speedometer2"></i> My Office
+                    </a>
+                </li>
+                {% if current_user.is_founder %}
+                <li class="nav-item ms-1">
+                    <a class="nav-link" href="{{ url_for('founder_dash.overview') }}" style="font-size:0.88rem;">
+                        <i class="bi bi-gear-wide-connected"></i> Control Panel
+                    </a>
+                </li>
+                {% endif %}
+                <li class="nav-item dropdown ms-2">
+                    <a class="nav-link position-relative dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" title="Notifications" id="bellDropdownToggle" style="cursor:pointer;">
+                        <i class="bi bi-bell"></i>
+                        {% if unread_notif_count > 0 %}
+                        <span id="notifBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill" style="background:var(--gold);color:#000;font-size:0.6rem;min-width:16px;">{{ unread_notif_count }}</span>
+                        {% else %}
+                        <span id="notifBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill" style="background:var(--gold);color:#000;font-size:0.6rem;min-width:16px;display:none;">0</span>
+                        {% endif %}
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-end p-0" id="notifDropdown" style="width:360px;max-height:420px;overflow-y:auto;background:rgba(18,18,26,0.98);border:1px solid rgba(255,255,255,0.06);border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,0.5);backdrop-filter:blur(16px);">
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px 8px;border-bottom:1px solid rgba(255,255,255,0.05);">
+                            <span style="font-weight:700;font-size:0.9rem;color:#fff;">Notifications</span>
+                            <div style="display:flex;gap:6px;">
+                                <button onclick="ndClearAll()" style="font-size:0.68rem;padding:3px 8px;border-radius:6px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:var(--text-muted);cursor:pointer;" title="Mark all read"><i class="bi bi-check-all"></i></button>
+                                <a href="{{ url_for('notifications.list_notifications') }}" style="font-size:0.68rem;padding:3px 8px;border-radius:6px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:var(--gold);cursor:pointer;text-decoration:none;" data-no-loader>View All</a>
+                            </div>
+                        </div>
+                        <div id="ndList" style="padding:4px 0;">
+                            <div style="text-align:center;padding:2rem 1rem;color:var(--text-muted);font-size:0.8rem;"><i class="bi bi-arrow-repeat" style="animation:spin 1s linear infinite;display:inline-block;"></i></div>
+                        </div>
+                    </div>
+                </li>
+                <li class="nav-item dropdown ms-2">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-person-circle"></i>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-wiam">
+                        <li><span class="dropdown-item disabled" style="color: var(--text); font-weight: 500;">{{ current_user.display_name }}</span></li>
+                        <li><span class="dropdown-item disabled" style="color: var(--text-muted); font-size: 0.8rem;">@{{ current_user.username or 'user' }}</span></li>
+                        <li><hr class="dropdown-divider" style="border-color: var(--border-subtle);"></li>
+                        <li><a class="dropdown-item" href="{{ url_for('team.dashboard') }}"><i class="bi bi-speedometer2 me-2" style="color:var(--gold)"></i>My Office</a></li>
+                        {% if current_user.is_founder %}
+                        <li><a class="dropdown-item" href="{{ url_for('founder_dash.overview') }}"><i class="bi bi-gear-wide-connected me-2"></i>Control Panel</a></li>
+                        {% endif %}
+                        <li><a class="dropdown-item" href="{{ url_for('profile.account_safety') }}"><i class="bi bi-shield-check me-2"></i>Account Safety</a></li>
+                        <li><hr class="dropdown-divider" style="border-color: var(--border-subtle);"></li>
+                        <li>
+                            <a class="dropdown-item" href="#" onclick="toggleWiamTheme();return false;" id="themeToggleMenu">
+                                <i class="bi bi-moon-stars me-2" id="themeToggleIcon"></i><span id="themeToggleLabel">Light Mode</span>
+                            </a>
+                        </li>
+                        {% if current_user.is_founder or current_user.is_admin %}
+                        <li><a class="dropdown-item" href="{{ url_for('auth.switch_account') }}"><i class="bi bi-arrow-left-right me-2"></i>Switch Account</a></li>
+                        {% endif %}
+                        <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+                    </ul>
+                </li>
+            </ul>
+            <!-- Mobile top-right icons — team/founder (clean, no reader stuff) -->
+            <div class="d-flex d-lg-none align-items-center gap-2 ms-auto">
+                <a href="{{ url_for('team.dashboard') }}" title="My Office" style="color:var(--gold);font-size:1.15rem;padding:4px;"><i class="bi bi-speedometer2"></i></a>
+                <a href="{{ url_for('notifications.list_notifications') }}" class="position-relative" title="Notifications" style="color:var(--text-secondary);font-size:1.15rem;padding:4px;">
+                    <i class="bi bi-bell"></i>
+                    {% if unread_notif_count > 0 %}
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill" style="background:var(--gold);color:#000;font-size:0.5rem;min-width:14px;">{{ unread_notif_count }}</span>
+                    {% endif %}
+                </a>
+                <button onclick="document.getElementById('mobMenuTeam').classList.add('open')" style="background:none;border:none;color:var(--text-secondary);font-size:1.3rem;padding:4px;cursor:pointer;" title="Menu"><i class="bi bi-list"></i></button>
+            </div>
+            <!-- Mobile slide-out menu — team/founder (office-only links) -->
+            <div id="mobMenuTeam" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.5);" onclick="if(event.target===this)this.classList.remove('open')">
+                <div style="position:absolute;top:0;right:0;bottom:0;width:280px;background:var(--bg-card,#1a1a1e);overflow-y:auto;padding:0;animation:mobSlideIn 0.25s ease;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid rgba(255,255,255,0.06);">
+                        <span style="font-weight:700;font-size:0.95rem;color:var(--text);">{{ current_user.display_name }}</span>
+                        <button onclick="document.getElementById('mobMenuTeam').classList.remove('open')" style="background:none;border:none;color:var(--text-muted);font-size:1.4rem;cursor:pointer;">&times;</button>
+                    </div>
+                    <div style="padding:8px 10px;">
+                        <span style="padding:6px 12px;font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--gold);display:block;">WiamLabs Office</span>
+                        <a href="{{ url_for('team.dashboard') }}" style="display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;text-decoration:none;color:var(--gold);font-size:0.85rem;font-weight:600;"><i class="bi bi-speedometer2" style="width:20px;text-align:center;"></i> My Office</a>
+                        {% if current_user.is_founder %}
+                        <a href="{{ url_for('founder_dash.overview') }}" style="display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;text-decoration:none;color:var(--text);font-size:0.85rem;"><i class="bi bi-gear-wide-connected" style="width:20px;text-align:center;color:var(--gold);"></i> Control Panel</a>
+                        {% endif %}
+                        <a href="{{ url_for('profile.account_safety') }}" style="display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;text-decoration:none;color:var(--text);font-size:0.85rem;"><i class="bi bi-shield-check" style="width:20px;text-align:center;"></i> Account Safety</a>
+                        <a href="{{ url_for('notifications.list_notifications') }}" style="display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;text-decoration:none;color:var(--text);font-size:0.85rem;"><i class="bi bi-bell" style="width:20px;text-align:center;"></i> Notifications{% if unread_notif_count > 0 %} <span style="background:var(--gold);color:#000;font-size:0.65rem;padding:1px 6px;border-radius:10px;font-weight:700;margin-left:auto;">{{ unread_notif_count }}</span>{% endif %}</a>
+                        <div style="border-top:1px solid rgba(255,255,255,0.06);margin:6px 0;"></div>
+                        <a href="#" onclick="toggleWiamTheme();return false;" style="display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;text-decoration:none;color:var(--text);font-size:0.85rem;"><i class="bi bi-moon-stars" style="width:20px;text-align:center;"></i> Toggle Theme</a>
+                        {% if current_user.is_founder or current_user.is_admin %}
+                        <a href="{{ url_for('auth.switch_account') }}" style="display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;text-decoration:none;color:var(--text);font-size:0.85rem;"><i class="bi bi-arrow-left-right" style="width:20px;text-align:center;"></i> Switch Account</a>
+                        {% endif %}
+                        <div style="border-top:1px solid rgba(255,255,255,0.06);margin:6px 0;"></div>
+                        <a href="{{ url_for('auth.logout') }}" style="display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;text-decoration:none;color:#f87171;font-size:0.85rem;"><i class="bi bi-box-arrow-right" style="width:20px;text-align:center;"></i> Logout</a>
+                    </div>
+                </div>
+            </div>
+            <style>
+            #mobMenuTeam{display:none !important;}
+            #mobMenuTeam.open{display:block !important;}
+            @keyframes mobSlideIn{from{transform:translateX(100%);}to{transform:translateX(0);}}
+            </style>
+            {# ═══════ READER / CREATOR — Full consumer navbar ═══════ #}
+            {% else %}
+            <form class="d-none d-lg-flex search-minimal mx-auto" method="get" action="{{ url_for('browse.search') }}">
+                <input class="form-control" type="text" name="q" placeholder="Search stories, authors...">
+            </form>
+            <ul class="navbar-nav ms-auto d-none d-lg-flex align-items-center">
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'home.home' %}active{% endif %}" href="{{ url_for('home.home') }}">
+                        <i class="bi bi-house"></i> Home
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint and 'browse' in request.endpoint %}active{% endif %}" href="{{ url_for('browse.browse_home') }}">
+                        <i class="bi bi-compass"></i> Browse
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint and 'elite' in request.endpoint %}active{% endif %}" href="{{ url_for('elite.elite_page') }}">
+                        <span style="color:var(--gold);font-size:1.1rem;vertical-align:middle;">✦</span> Elite
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'library.my_library' %}active{% endif %}" href="{{ url_for('library.my_library') }}">
+                        <i class="bi bi-collection"></i> Library
+                    </a>
+                </li>
+                <li class="nav-item ms-2">
+                    <a class="nav-link" href="{{ url_for('payment.coins') }}" title="Wiam Coins" style="color: var(--gold); font-weight: 600; font-size: 0.88rem;">
+                        <i class="bi bi-coin"></i> <span id="navCoinBalance">{{ coin_balance }}</span>
+                    </a>
+                </li>
+                <li class="nav-item ms-1">
+                    {% if is_premium %}
+                    <a class="nav-link" href="{{ url_for('premium.manage') }}" style="color:var(--gold);font-size:0.78rem;font-weight:700;letter-spacing:0.03em;" title="WiamPremium Active{% if premium_credits %} — {{ premium_credits }} credits left{% endif %}">
+                        <i class="bi bi-gem"></i> Premium
+                    </a>
+                    {% else %}
+                    <a class="nav-link" href="{{ url_for('premium.premium_page') }}" style="color:rgba(212,168,67,0.5);font-size:0.78rem;font-weight:600;letter-spacing:0.03em;" title="Get WiamPremium">
+                        <i class="bi bi-gem"></i> Premium
+                    </a>
+                    {% endif %}
+                </li>
+                <li class="nav-item dropdown ms-2">
+                    <a class="nav-link position-relative dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" title="Notifications" id="bellDropdownToggle" style="cursor:pointer;">
+                        <i class="bi bi-bell"></i>
+                        {% if unread_notif_count > 0 %}
+                        <span id="notifBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill" style="background:var(--gold);color:#000;font-size:0.6rem;min-width:16px;">{{ unread_notif_count }}</span>
+                        {% else %}
+                        <span id="notifBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill" style="background:var(--gold);color:#000;font-size:0.6rem;min-width:16px;display:none;">0</span>
+                        {% endif %}
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-end p-0" id="notifDropdown" style="width:360px;max-height:420px;overflow-y:auto;background:rgba(18,18,26,0.98);border:1px solid rgba(255,255,255,0.06);border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,0.5);backdrop-filter:blur(16px);">
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px 8px;border-bottom:1px solid rgba(255,255,255,0.05);">
+                            <span style="font-weight:700;font-size:0.9rem;color:#fff;">Notifications</span>
+                            <div style="display:flex;gap:6px;">
+                                <button onclick="ndClearAll()" style="font-size:0.68rem;padding:3px 8px;border-radius:6px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:var(--text-muted);cursor:pointer;" title="Mark all read"><i class="bi bi-check-all"></i></button>
+                                <a href="{{ url_for('notifications.list_notifications') }}" style="font-size:0.68rem;padding:3px 8px;border-radius:6px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:var(--gold);cursor:pointer;text-decoration:none;" data-no-loader>View All</a>
+                            </div>
+                        </div>
+                        <div id="ndList" style="padding:4px 0;">
+                            <div style="text-align:center;padding:2rem 1rem;color:var(--text-muted);font-size:0.8rem;"><i class="bi bi-arrow-repeat" style="animation:spin 1s linear infinite;display:inline-block;"></i></div>
+                        </div>
+                    </div>
+                </li>
+                <li class="nav-item dropdown ms-2">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-person-circle"></i>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-wiam">
+                        <li><span class="dropdown-item disabled" style="color: var(--text); font-weight: 500;">{{ current_user.display_name }}</span></li>
+                        <li><span class="dropdown-item disabled" style="color: var(--text-muted); font-size: 0.8rem;">@{{ current_user.username or 'user' }}</span></li>
+                        <li><hr class="dropdown-divider" style="border-color: var(--border-subtle);"></li>
+                        <li><a class="dropdown-item" href="{{ url_for('dashboard.index') }}"><i class="bi bi-grid-1x2-fill me-2"></i>Dashboard</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('payment.coins') }}"><i class="bi bi-coin me-2" style="color:var(--gold)"></i>Wiam Coins <span style="color:var(--gold);font-weight:600;font-size:0.8rem;margin-left:4px;">{{ coin_balance }}</span></a></li>
+                        {% if is_premium %}
+                        <li><span class="dropdown-item disabled" style="color:var(--gold);font-size:0.8rem;"><i class="bi bi-gem me-2"></i>Premium Active{% if premium_credits %} &middot; {{ premium_credits }} credits{% endif %}</span></li>
+                        {% elif ff_premium_enabled %}
+                        <li><a class="dropdown-item" href="{{ url_for('elite.subscribe') }}"><i class="bi bi-gem me-2" style="color:var(--gold)"></i>Go Premium</a></li>
+                        {% endif %}
+                        <li><a class="dropdown-item" href="{{ url_for('gift.my_gifts') }}"><i class="bi bi-gift me-2" style="color:#e879f9;"></i>My Sticker Gifts</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('gift.sticker_history') }}"><i class="bi bi-emoji-smile me-2" style="color:#fb923c;"></i>Sticker History</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('elite.elite_page') }}"><span style="color:var(--gold);margin-right:8px;">✦</span>WiamElite</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('premium.apex_page') }}"><i class="bi bi-trophy-fill me-2" style="color:var(--gold);"></i>WiamApex</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('programs.hub') }}"><i class="bi bi-stars me-2" style="color:#9b59b6;"></i>Programs</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('bulletin.bulletin_list') }}"><i class="bi bi-megaphone-fill me-2" style="color:#60a5fa;"></i>Bulletin Feed</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('payment.history') }}"><i class="bi bi-clock-history me-2" style="color:#a78bfa;"></i>Coin History</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('payment.tip_history') }}"><i class="bi bi-heart-fill me-2" style="color:#ec4899;"></i>Tip History</a></li>
+                        <li><hr class="dropdown-divider" style="border-color: var(--border-subtle);"></li>
+                        <li><a class="dropdown-item" href="{{ url_for('profile.feedback') }}"><i class="bi bi-chat-dots-fill me-2" style="color:#34d399;"></i>Feedback</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('profile.help_center') }}"><i class="bi bi-question-circle-fill me-2" style="color:#60a5fa;"></i>Help Center</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('profile.wiambot') }}"><i class="bi bi-robot me-2" style="color:#2dd4bf;"></i>WiamBot Chat</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('profile.account_safety') }}"><i class="bi bi-shield-exclamation me-2" style="color:#f87171;"></i>Account Safety</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('team.careers') }}"><i class="bi bi-briefcase-fill me-2" style="color:#38bdf8;"></i>Careers</a></li>
+                        {% if current_user.is_creator %}
+                        <li><hr class="dropdown-divider" style="border-color: var(--border-subtle);"></li>
+                        <li><span class="dropdown-item disabled" style="color:var(--gold);font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;padding-bottom:0;"><i class="bi bi-pen me-1"></i> Creator Tools</span></li>
+                        <li><a class="dropdown-item" href="{{ url_for('dashboard.index', tab='stories') }}"><i class="bi bi-journal-richtext me-2"></i>My Stories</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('dashboard.index', tab='earnings') }}"><i class="bi bi-bar-chart-line me-2"></i>Earnings</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('dashboard.index', tab='followers') }}"><i class="bi bi-people me-2"></i>Followers</a></li>
+                        {% endif %}
+                        {% if current_user.is_team_member or current_user.is_founder %}
+                        <li><hr class="dropdown-divider" style="border-color: var(--border-subtle);"></li>
+                        <li><a class="dropdown-item" href="{{ url_for('team.dashboard') }}"><i class="bi bi-people me-2" style="color:var(--gold)"></i>Team Dashboard</a></li>
+                        {% endif %}
+                        {% if current_user.is_admin and not current_user.is_founder %}
+                        <li><hr class="dropdown-divider" style="border-color: var(--border-subtle);"></li>
+                        <li><a class="dropdown-item" href="{{ url_for('admin_dash.overview') }}"><i class="bi bi-shield-check me-2"></i>Admin Panel</a></li>
+                        {% endif %}
+                        {% if current_user.is_founder %}
+                        <li><a class="dropdown-item" href="{{ url_for('founder_dash.overview') }}"><i class="bi bi-gear-wide-connected me-2"></i>Control Panel</a></li>
+                        {% endif %}
+                        <li><hr class="dropdown-divider" style="border-color: var(--border-subtle);"></li>
+                        <li>
+                            <a class="dropdown-item" href="#" onclick="toggleWiamTheme();return false;" id="themeToggleMenu">
+                                <i class="bi bi-moon-stars me-2" id="themeToggleIcon"></i><span id="themeToggleLabel">Light Mode</span>
+                            </a>
+                        </li>
+                        {% if current_user.is_founder or current_user.is_admin %}
+                        <li><a class="dropdown-item" href="{{ url_for('auth.switch_account') }}"><i class="bi bi-arrow-left-right me-2"></i>Switch Account</a></li>
+                        {% endif %}
+                        <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+                    </ul>
+                </li>
+            </ul>
+            <!-- Mobile top-right icons (visible < 992px only) -->
+            <div class="d-flex d-lg-none align-items-center gap-2 ms-auto">
+                <a href="{{ url_for('elite.elite_page') }}" title="WiamElite" style="color:var(--gold);font-size:1.5rem;padding:4px;line-height:1;">✦</a>
+                <a href="{{ url_for('payment.coins') }}" title="Coins" style="color:var(--gold);font-size:1.15rem;padding:4px;"><i class="bi bi-coin"></i></a>
+                <a href="{{ url_for('notifications.list_notifications') }}" class="position-relative" title="Notifications" style="color:var(--text-secondary);font-size:1.15rem;padding:4px;">
+                    <i class="bi bi-bell"></i>
+                    {% if unread_notif_count > 0 %}
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill" style="background:var(--gold);color:#000;font-size:0.5rem;min-width:14px;">{{ unread_notif_count }}</span>
+                    {% endif %}
+                </a>
+                <button onclick="document.getElementById('mobMenu').classList.add('open')" style="background:none;border:none;color:var(--text-secondary);font-size:1.3rem;padding:4px;cursor:pointer;" title="Menu"><i class="bi bi-list"></i></button>
+            </div>
+            <!-- Mobile slide-out menu -->
+            <div id="mobMenu" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.5);" onclick="if(event.target===this)this.classList.remove('open')">
+                <div style="position:absolute;top:0;right:0;bottom:0;width:280px;background:var(--bg-card,#1a1a1e);overflow-y:auto;padding:0;animation:mobSlideIn 0.25s ease;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid rgba(255,255,255,0.06);">
+                        <span style="font-weight:700;font-size:0.95rem;color:var(--text);">{{ current_user.display_name }}</span>
+                        <button onclick="document.getElementById('mobMenu').classList.remove('open')" style="background:none;border:none;color:var(--text-muted);font-size:1.4rem;cursor:pointer;">&times;</button>
+                    </div>
+                    <div style="padding:8px 10px;">
+                        <a href="{{ url_for('dashboard.index') }}" style="display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;text-decoration:none;color:var(--text);font-size:0.85rem;"><i class="bi bi-grid-1x2-fill" style="width:20px;text-align:center;color:var(--gold);"></i> Dashboard</a>
+                        <a href="{{ url_for('bulletin.bulletin_list') }}" style="display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;text-decoration:none;color:var(--text);font-size:0.85rem;"><i class="bi bi-megaphone-fill" style="width:20px;text-align:center;color:#60a5fa;"></i> Bulletin Feed</a>
+                        <a href="{{ url_for('gift.my_gifts') }}" style="display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;text-decoration:none;color:var(--text);font-size:0.85rem;"><i class="bi bi-gift-fill" style="width:20px;text-align:center;color:#e879f9;"></i> My Sticker Gifts</a>
+                        <a href="{{ url_for('gift.sticker_history') }}" style="display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;text-decoration:none;color:var(--text);font-size:0.85rem;"><i class="bi bi-emoji-smile-fill" style="width:20px;text-align:center;color:#fb923c;"></i> Sticker History</a>
+                        <a href="{{ url_for('payment.history') }}" style="display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;text-decoration:none;color:var(--text);font-size:0.85rem;"><i class="bi bi-clock-history" style="width:20px;text-align:center;color:#a78bfa;"></i> Coin History</a>
+                        <a href="{{ url_for('payment.tip_history') }}" style="display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;text-decoration:none;color:var(--text);font-size:0.85rem;"><i class="bi bi-heart-fill" style="width:20px;text-align:center;color:#ec4899;"></i> Tip History</a>
+                        <a href="{{ url_for('programs.hub') }}" style="display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;text-decoration:none;color:var(--text);font-size:0.85rem;"><i class="bi bi-stars" style="width:20px;text-align:center;color:#9b59b6;"></i> Programs</a>
+                        <a href="{{ url_for('profile.reading_streaks') }}" style="display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;text-decoration:none;color:var(--text);font-size:0.85rem;"><i class="bi bi-fire" style="width:20px;text-align:center;color:#e74c3c;"></i> Reading Streaks</a>
+                        <a href="{{ url_for('programs.magic_box') }}" style="display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;text-decoration:none;color:var(--text);font-size:0.85rem;"><i class="bi bi-box-seam-fill" style="width:20px;text-align:center;color:#d4a843;"></i> Magic Box</a>
+                        <a href="{{ url_for('elite.elite_page') }}" style="display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;text-decoration:none;color:var(--text);font-size:0.85rem;"><span style="width:20px;text-align:center;color:var(--gold);font-size:1.1rem;">✦</span> WiamElite</a>
+                        <a href="{{ url_for('premium.apex_page') }}" style="display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;text-decoration:none;color:var(--text);font-size:0.85rem;"><i class="bi bi-trophy-fill" style="width:20px;text-align:center;color:var(--gold);"></i> WiamApex</a>
+                        <a href="{% if is_premium %}{{ url_for('premium.manage') }}{% else %}{{ url_for('premium.premium_page') }}{% endif %}" style="display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;text-decoration:none;color:var(--text);font-size:0.85rem;"><i class="bi bi-gem" style="width:20px;text-align:center;color:#c084fc;"></i> WiamPremium</a>
+                        <a href="{{ url_for('team.careers') }}" style="display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;text-decoration:none;color:var(--text);font-size:0.85rem;"><i class="bi bi-briefcase-fill" style="width:20px;text-align:center;color:#38bdf8;"></i> Careers</a>
+                        <a href="{{ url_for('profile.feedback') }}" style="display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;text-decoration:none;color:var(--text);font-size:0.85rem;"><i class="bi bi-chat-dots-fill" style="width:20px;text-align:center;color:#34d399;"></i> Feedback</a>
+                        <a href="{{ url_for('profile.account_safety') }}" style="display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;text-decoration:none;color:var(--text);font-size:0.85rem;"><i class="bi bi-shield-exclamation" style="width:20px;text-align:center;color:#f87171;"></i> Account Safety</a>
+                        <a href="{{ url_for('profile.wiambot') }}" style="display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;text-decoration:none;color:var(--text);font-size:0.85rem;"><i class="bi bi-robot" style="width:20px;text-align:center;color:#2dd4bf;"></i> WiamBot Chat</a>
+                        {% if current_user.is_creator %}
+                        <div style="border-top:1px solid rgba(255,255,255,0.06);margin:6px 0;"></div>
+                        <span style="padding:6px 12px;font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--gold);display:block;">Creator Tools</span>
+                        <a href="{{ url_for('studio.dashboard') }}" style="display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;text-decoration:none;color:var(--text);font-size:0.85rem;"><i class="bi bi-pencil-square" style="width:20px;text-align:center;"></i> WiamStudio</a>
+                        <a href="{{ url_for('dashboard.index', tab='stories') }}" style="display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;text-decoration:none;color:var(--text);font-size:0.85rem;"><i class="bi bi-journal-richtext" style="width:20px;text-align:center;"></i> My Stories</a>
+                        <a href="{{ url_for('dashboard.index', tab='earnings') }}" style="display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;text-decoration:none;color:var(--text);font-size:0.85rem;"><i class="bi bi-bar-chart-line" style="width:20px;text-align:center;"></i> Earnings</a>
+                        <a href="{{ url_for('studio.top_readers') }}" style="display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;text-decoration:none;color:var(--text);font-size:0.85rem;"><i class="bi bi-people-fill" style="width:20px;text-align:center;color:#ec4899;"></i> Top Readers</a>
+                        {% endif %}
+                        {% if current_user.is_team_member or current_user.is_founder %}
+                        <div style="border-top:1px solid rgba(255,255,255,0.06);margin:6px 0;"></div>
+                        <a href="{{ url_for('team.dashboard') }}" style="display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;text-decoration:none;color:var(--gold);font-size:0.85rem;"><i class="bi bi-people-fill" style="width:20px;text-align:center;"></i> Team Dashboard</a>
+                        {% endif %}
+                        {% if current_user.is_founder %}
+                        <a href="{{ url_for('founder_dash.overview') }}" style="display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;text-decoration:none;color:#e74c3c;font-size:0.85rem;"><i class="bi bi-gear-wide-connected" style="width:20px;text-align:center;"></i> Control Panel</a>
+                        {% endif %}
+                        <div style="border-top:1px solid rgba(255,255,255,0.06);margin:6px 0;"></div>
+                        <span style="padding:6px 12px;font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);display:block;">Support</span>
+                        <a href="{{ url_for('profile.help_center') }}" style="display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;text-decoration:none;color:var(--text);font-size:0.85rem;"><i class="bi bi-question-circle-fill" style="width:20px;text-align:center;color:#38bdf8;"></i> Help Center</a>
+                        <a href="{{ url_for('profile.community_guidelines') }}" style="display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;text-decoration:none;color:var(--text);font-size:0.85rem;"><i class="bi bi-people-fill" style="width:20px;text-align:center;color:#a78bfa;"></i> Guidelines</a>
+                        <a href="{{ url_for('profile.terms') }}" style="display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;text-decoration:none;color:var(--text);font-size:0.85rem;"><i class="bi bi-file-earmark-text-fill" style="width:20px;text-align:center;color:#facc15;"></i> Terms</a>
+                        <a href="{{ url_for('profile.privacy_policy') }}" style="display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;text-decoration:none;color:var(--text);font-size:0.85rem;"><i class="bi bi-shield-lock-fill" style="width:20px;text-align:center;color:#4ade80;"></i> Privacy</a>
+                        <a href="{{ url_for('profile.about') }}" style="display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;text-decoration:none;color:var(--text);font-size:0.85rem;"><i class="bi bi-info-circle-fill" style="width:20px;text-align:center;color:var(--gold);"></i> About WiamLabs</a>
+                        <div style="border-top:1px solid rgba(255,255,255,0.06);margin:6px 0;"></div>
+                        <a href="{{ url_for('auth.logout') }}" style="display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;text-decoration:none;color:#f87171;font-size:0.85rem;"><i class="bi bi-box-arrow-right" style="width:20px;text-align:center;"></i> Logout</a>
+                    </div>
+                </div>
+            </div>
+            <style>
+            #mobMenu{display:none !important;}
+            #mobMenu.open{display:block !important;}
+            @keyframes mobSlideIn{from{transform:translateX(100%);}to{transform:translateX(0);}}
+            </style>
+            {% endif %}
+            {% else %}
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="btn btn-gold btn-sm px-3" href="{{ url_for('auth.login') }}">
+                        Login
+                    </a>
+                </li>
+            </ul>
+            {% endif %}
+        </div>
+    </nav>
+
+    <!-- Flash messages (toast style) -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-toast">
+        {% for category, message in messages %}
+        <div class="alert alert-{{ 'success' if category == 'success' else 'danger' if category == 'error' else 'warning' if category == 'warning' else 'info' }} mb-2" role="alert">
+            {{ message }}
+            <button type="button" class="flash-close" onclick="this.parentElement.style.transition='opacity 0.3s';this.parentElement.style.opacity='0';setTimeout(function(){this.parentElement.remove()}.bind(this),300);">&times;</button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <!-- Warning modal + escalation banner -->
+    {% include 'partials/_warning_modal.html' ignore missing %}
+
+    <!-- In-app toast notifications -->
+    {% if current_user.is_authenticated %}
+    <div id="toastContainer" style="position:fixed;top:12px;right:12px;z-index:9999;display:flex;flex-direction:column;gap:8px;max-width:380px;width:calc(100% - 24px);pointer-events:none;"></div>
+    <style>
+    .wiam-toast{pointer-events:auto;background:linear-gradient(135deg,rgba(30,20,40,0.97),rgba(20,14,30,0.97));border:1px solid rgba(212,168,67,0.25);border-radius:14px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start;box-shadow:0 8px 32px rgba(0,0,0,0.5);backdrop-filter:blur(20px);animation:toastIn 0.35s ease-out;cursor:pointer;transition:opacity 0.3s,transform 0.3s;}
+    .wiam-toast.removing{opacity:0;transform:translateX(80px);}
+    .wiam-toast-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;}
+    .wiam-toast-icon.new_book,.wiam-toast-icon.new_chapter{background:rgba(59,130,246,0.2);color:#60a5fa;}
+    .wiam-toast-icon.follow{background:rgba(168,85,247,0.2);color:#a855f7;}
+    .wiam-toast-icon.comment{background:rgba(34,197,94,0.2);color:#4ade80;}
+    .wiam-toast-icon.like{background:rgba(239,68,68,0.2);color:#f87171;}
+    .wiam-toast-icon.mention{background:rgba(251,191,36,0.2);color:#fbbf24;}
+    .wiam-toast-icon.coins{background:rgba(212,168,67,0.2);color:#d4a843;}
+    .wiam-toast-icon.order_update{background:rgba(34,197,94,0.2);color:#4ade80;}
+    .wiam-toast-icon.elite{background:rgba(212,168,67,0.2);color:#d4a843;}
+    .wiam-toast-icon.announcement{background:rgba(59,130,246,0.2);color:#60a5fa;}
+    .wiam-toast-icon.system{background:rgba(156,163,175,0.2);color:#9ca3af;}
+    .wiam-toast-body{flex:1;min-width:0;}
+    .wiam-toast-title{font-size:0.82rem;font-weight:700;color:#fff;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .wiam-toast-msg{font-size:0.75rem;color:rgba(255,255,255,0.7);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+    .wiam-toast-close{background:none;border:none;color:rgba(255,255,255,0.4);font-size:1.1rem;cursor:pointer;padding:0 2px;line-height:1;flex-shrink:0;}
+    .wiam-toast-close:hover{color:#fff;}
+    @keyframes toastIn{from{opacity:0;transform:translateX(80px);}to{opacity:1;transform:translateX(0);}}
+    @keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+    </style>
+    {% endif %}
+
+    <!-- Push notification permission banner -->
+    {% if current_user.is_authenticated %}
+    <div id="pushBanner" style="display:none;background:linear-gradient(135deg,var(--wine),var(--wine-deep));padding:12px 16px;position:fixed;bottom:70px;left:12px;right:12px;z-index:1060;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.4);border:1px solid rgba(212,168,67,0.2);max-width:400px;margin:0 auto;">
+        <div style="display:flex;align-items:flex-start;gap:10px;">
+            <div style="font-size:1.5rem;line-height:1;">🔔</div>
+            <div style="flex:1;">
+                <div style="font-weight:600;font-size:0.9rem;color:var(--text);margin-bottom:3px;">Stay in the loop!</div>
+                <div style="font-size:0.78rem;color:var(--text-secondary);line-height:1.4;">Get notified when your favorite creators publish new chapters, when someone follows you, and more.</div>
+                <div style="display:flex;gap:8px;margin-top:10px;">
+                    <button onclick="allowPushNotifications()" style="flex:1;padding:8px 0;border-radius:8px;border:none;background:var(--gold);color:#000;font-weight:600;font-size:0.82rem;cursor:pointer;">Allow Notifications</button>
+                    <button onclick="dismissPushBanner()" style="padding:8px 14px;border-radius:8px;border:1px solid var(--border-subtle);background:transparent;color:var(--text-muted);font-size:0.82rem;cursor:pointer;">Not now</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- C2: Report a Bug floating button + modal -->
+    {% if current_user.is_authenticated %}
+    <button id="bugReportBtn" onclick="document.getElementById('bugModal').classList.add('open')"
+        style="position:fixed;bottom:80px;right:14px;z-index:1050;width:42px;height:42px;border-radius:50%;border:none;background:var(--wine,#722f37);color:#fff;font-size:1.1rem;box-shadow:0 4px 14px rgba(0,0,0,0.3);cursor:pointer;display:flex;align-items:center;justify-content:center;"
+        title="Report a Bug"><i class="bi bi-bug"></i></button>
+    <div id="bugModal" style="display:none;position:fixed;inset:0;z-index:1070;background:rgba(0,0,0,0.5);" onclick="if(event.target===this)this.classList.remove('open')">
+        <div style="position:absolute;bottom:0;left:0;right:0;background:var(--bg-card,#1e1e2e);border-radius:18px 18px 0 0;padding:20px 18px calc(20px + env(safe-area-inset-bottom,0px));max-height:70vh;overflow-y:auto;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                <h3 style="margin:0;font-size:1.05rem;font-weight:700;">Report a Bug</h3>
+                <button onclick="document.getElementById('bugModal').classList.remove('open')" style="background:none;border:none;color:var(--text-muted);font-size:1.3rem;cursor:pointer;">&times;</button>
+            </div>
+            <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:12px;">Help us improve WiamApp. Describe what went wrong.</p>
+            <select id="bugType" style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border-subtle);background:var(--bg-main,#121218);color:var(--text);font-size:0.85rem;margin-bottom:10px;">
+                <option value="bug">Something is broken</option>
+                <option value="ui">UI/Design issue</option>
+                <option value="reading">Reading problem</option>
+                <option value="publishing">Publishing problem</option>
+                <option value="suggestion">Suggestion</option>
+            </select>
+            <textarea id="bugText" rows="4" placeholder="Describe the issue... What happened? What did you expect?" style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border-subtle);background:var(--bg-main,#121218);color:var(--text);font-size:0.85rem;resize:vertical;"></textarea>
+            <button onclick="submitBugReport()" id="bugSubmitBtn" style="width:100%;margin-top:10px;padding:11px;border-radius:10px;border:none;background:var(--gold,#d4a843);color:#000;font-weight:700;font-size:0.9rem;cursor:pointer;">Submit Report</button>
+            <div id="bugSuccess" style="display:none;text-align:center;padding:16px 0;color:#4ade80;font-size:0.9rem;">
+                <i class="bi bi-check-circle" style="font-size:1.5rem;display:block;margin-bottom:6px;"></i>
+                Thank you! We'll look into this.
+            </div>
+        </div>
+    </div>
+    <style>
+        #bugModal{display:none !important;}
+        #bugModal.open{display:block !important;}
+    </style>
+    {% endif %}
+
+    <!-- Gold loading overlay -->
+    <div class="wiam-loader-overlay" id="wiamLoader">
+        <div class="wiam-spinner"></div>
+    </div>
+
+    <!-- Page content -->
+    <div class="page-content">
+        {% set _hide_back = request.endpoint in ('home.index', 'home.home', 'auth.login', 'auth.register', 'auth.onboarding') %}
+        {% if not _hide_back %}
+        <div class="wiam-back-bar" id="wiamGlobalBack">
+            <a href="javascript:void(0)" onclick="window.history.length>1?history.back():location.href='/'" class="wiam-back-btn" data-no-loader>
+                <i class="bi bi-chevron-left"></i> Back
+            </a>
+        </div>
+        {% endif %}
+        {% block content %}{% endblock %}
+    </div>
+    <script>
+    /* Auto-hide global back bar if page has its own VISIBLE back button */
+    (function(){
+        var g=document.getElementById('wiamGlobalBack');
+        if(!g)return;
+        var links=document.querySelectorAll('.page-content a');
+        for(var i=0;i<links.length;i++){
+            var a=links[i];
+            if(a.closest('#wiamGlobalBack'))continue;
+            if(!a.querySelector('.bi-arrow-left,.bi-chevron-left'))continue;
+            // Only hide if this back button is actually visible (not in hidden sidebar etc)
+            var visible=a.offsetParent!==null||a.offsetWidth>0||a.offsetHeight>0;
+            if(!visible){
+                var cs=window.getComputedStyle(a);
+                if(cs.display==='none'||cs.visibility==='hidden')continue;
+                var par=a.closest('.dash-sidebar');
+                if(par){var ps=window.getComputedStyle(par);if(ps.display==='none')continue;}
+            }
+            g.style.display='none';return;
+        }
+    })();
+    </script>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="footer-links">
+            <a href="{{ url_for('profile.about') }}">About</a>
+            <a href="{{ url_for('profile.privacy_policy') }}">Privacy</a>
+            <a href="{{ url_for('profile.terms') }}">Terms</a>
+            <a href="{{ url_for('profile.help_center') }}">Help</a>
+            {% if not current_user.is_authenticated %}
+            <a href="{{ url_for('auth.login') }}">Login</a>
+            {% endif %}
+        </div>
+        <div class="footer-copy">&copy; {{ now().year }} WiamApp &middot; Powered by WiamLabs</div>
+    </footer>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="bottom-nav">
+        <div class="bottom-nav-inner">
+            {% if current_user.is_authenticated %}
+
+            {# ── Team / Founder bottom nav — office-only ── #}
+            {% if is_team_or_founder %}
+            <a href="{{ url_for('team.dashboard') }}" class="bottom-nav-item {% if request.endpoint and 'team' in request.endpoint %}active{% endif %}" style="{% if request.endpoint and 'team' in request.endpoint %}color:var(--gold);{% endif %}">
+                <i class="bi bi-speedometer2"></i><span>Office</span>
+            </a>
+            {% if current_user.is_founder %}
+            <a href="{{ url_for('founder_dash.overview') }}" class="bottom-nav-item {% if request.endpoint and 'founder_dash' in request.endpoint %}active{% endif %}">
+                <i class="bi bi-gear-wide-connected"></i><span>Control</span>
+            </a>
+            {% endif %}
+            <a href="{{ url_for('notifications.list_notifications') }}" class="bottom-nav-item {% if request.endpoint and 'notifications' in request.endpoint %}active{% endif %}">
+                <i class="bi bi-bell"></i><span>Alerts</span>
+            </a>
+            <a href="{{ url_for('profile.account_safety') }}" class="bottom-nav-item {% if request.endpoint == 'profile.account_safety' %}active{% endif %}">
+                {% if user_avatar_url %}
+                <img src="{{ user_avatar_url }}" alt="Me" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1.5px solid {% if request.endpoint == 'profile.account_safety' %}var(--gold){% else %}var(--border-subtle){% endif %};">
+                {% else %}
+                <span class="bottom-nav-avatar">{{ current_user.display_name[0]|upper }}</span>
+                {% endif %}
+                <span>Me</span>
+            </a>
+
+            {# ── Reader / Creator bottom nav — full consumer ── #}
+            {% else %}
+            <a href="{{ url_for('home.home') }}" class="bottom-nav-item {% if request.endpoint == 'home.home' %}active{% endif %}">
+                <i class="bi bi-house-fill"></i><span>Home</span>
+            </a>
+            <a href="{{ url_for('browse.browse_home') }}" class="bottom-nav-item {% if request.endpoint and 'browse' in request.endpoint and request.endpoint != 'browse.search' %}active{% endif %}">
+                <i class="bi bi-compass"></i><span>Browse</span>
+            </a>
+            <a href="{{ url_for('browse.search') }}" class="bottom-nav-item {% if request.endpoint == 'browse.search' %}active{% endif %}">
+                <i class="bi bi-search"></i><span>Search</span>
+            </a>
+            <a href="{{ url_for('library.my_library') }}" class="bottom-nav-item {% if request.endpoint and 'library' in request.endpoint %}active{% endif %}">
+                <i class="bi bi-collection"></i><span>Library</span>
+            </a>
+            <a href="{% if is_premium %}{{ url_for('premium.manage') }}{% else %}{{ url_for('premium.premium_page') }}{% endif %}" class="bottom-nav-item {% if request.endpoint and 'premium' in request.endpoint %}active{% endif %}" style="{% if is_premium %}color:var(--gold);{% endif %}">
+                <i class="bi bi-gem"></i><span>Premium</span>
+            </a>
+            <a href="{{ url_for('dashboard.index') }}" class="bottom-nav-item {% if request.endpoint and 'dashboard' in request.endpoint %}active{% endif %}">
+                {% if user_avatar_url %}
+                <img src="{{ user_avatar_url }}" alt="Me" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1.5px solid {% if request.endpoint and 'dashboard' in request.endpoint %}var(--gold){% else %}var(--border-subtle){% endif %};">
+                {% else %}
+                <span class="bottom-nav-avatar">{{ current_user.display_name[0]|upper }}</span>
+                {% endif %}
+                <span>Me</span>
+            </a>
+            {% endif %}
+
+            {% else %}
+
+            <a href="{{ url_for('home.index') }}" class="bottom-nav-item {% if request.endpoint == 'home.index' %}active{% endif %}">
+                <i class="bi bi-house"></i><span>Home</span>
+            </a>
+            <a href="{{ url_for('browse.browse_home') }}" class="bottom-nav-item {% if request.endpoint and 'browse' in request.endpoint %}active{% endif %}">
+                <i class="bi bi-compass"></i><span>Browse</span>
+            </a>
+            <a href="{{ url_for('browse.search') }}" class="bottom-nav-item">
+                <i class="bi bi-search"></i><span>Search</span>
+            </a>
+            <a href="{{ url_for('auth.login') }}" class="bottom-nav-item">
+                <i class="bi bi-box-arrow-in-right"></i><span>Login</span>
+            </a>
+
+            {% endif %}
+        </div>
+    </nav>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Splash screen — show once per session
+        (function() {
+            var splash = document.getElementById('splashScreen');
+            if (!splash) return;
+            if (sessionStorage.getItem('wiam_splash_shown')) {
+                splash.remove();
+                return;
+            }
+            sessionStorage.setItem('wiam_splash_shown', '1');
+            setTimeout(function() {
+                splash.classList.add('fade-out');
+                setTimeout(function() { splash.remove(); }, 700);
+            }, 2200);
+        })();
+
+        // ── BLOCK ALL ZOOM: pinch, double-tap, Ctrl+scroll ──
+        (function(){
+            // Block pinch zoom (2+ finger touch)
+            document.addEventListener('touchstart', function(e){
+                if(e.touches.length > 1) e.preventDefault();
+            }, {passive:false});
+            // Block gesture zoom (Safari)
+            document.addEventListener('gesturestart', function(e){ e.preventDefault(); }, {passive:false});
+            document.addEventListener('gesturechange', function(e){ e.preventDefault(); }, {passive:false});
+            document.addEventListener('gestureend', function(e){ e.preventDefault(); }, {passive:false});
+            // Block double-tap zoom
+            var lastTap = 0;
+            document.addEventListener('touchend', function(e){
+                var now = Date.now();
+                if(now - lastTap < 300){ e.preventDefault(); }
+                lastTap = now;
+            }, {passive:false});
+            // Block Ctrl+scroll zoom (desktop)
+            document.addEventListener('wheel', function(e){
+                if(e.ctrlKey) e.preventDefault();
+            }, {passive:false});
+            // Block Ctrl+Plus/Minus zoom (desktop)
+            document.addEventListener('keydown', function(e){
+                if((e.ctrlKey || e.metaKey) && (e.key === '+' || e.key === '-' || e.key === '=' || e.key === '0')) e.preventDefault();
+            });
+        })();
+
+        // Auto-dismiss flash toasts after 60 seconds
+        (function() {
+            var toasts = document.querySelectorAll('.flash-toast .alert');
+            toasts.forEach(function(t) {
+                setTimeout(function() {
+                    t.style.transition = 'opacity 0.4s, transform 0.4s';
+                    t.style.opacity = '0';
+                    t.style.transform = 'translateY(-10px)';
+                    setTimeout(function() { t.remove(); }, 400);
+                }, 60000);
+            });
+        })();
+
+        // Lazy image fade-in
+        (function() {
+            document.querySelectorAll('.card-cover, .book-cover-large').forEach(function(img) {
+                if (img.complete) { img.classList.add('loaded'); }
+                else { img.addEventListener('load', function() { img.classList.add('loaded'); }); }
+            });
+        })();
+
+        // Gold loading spinner — INSTANT on all navigation and form submissions
+        (function(){
+            var loader = document.getElementById('wiamLoader');
+            if (!loader) return;
+            var _loaderActive = false, _safetyTimer = null;
+            function showLoader() {
+                if (_loaderActive) return;
+                _loaderActive = true;
+                loader.classList.add('active');
+                clearTimeout(_safetyTimer);
+                _safetyTimer = setTimeout(function(){ hideLoader(); }, 6000);
+            }
+            function hideLoader() {
+                _loaderActive = false;
+                loader.classList.remove('active');
+                clearTimeout(_safetyTimer);
+            }
+            // Show loader on ALL link clicks (instant, no delay)
+            document.addEventListener('click', function(e){
+                var a = e.target.closest('a[href]');
+                if (!a) return;
+                var href = a.getAttribute('href');
+                if (!href || href.startsWith('#') || href.startsWith('javascript:') || a.target === '_blank' || a.hasAttribute('download')) return;
+                if (a.getAttribute('data-bs-toggle') || a.hasAttribute('data-no-loader')) return;
+                // AJAX links — skip
+                if (a.hasAttribute('data-ajax') || a.classList.contains('dropdown-toggle')) return;
+                showLoader();
+            });
+            // Show loader on ALL form submissions (login, register, create story, etc.)
+            document.addEventListener('submit', function(e){
+                if (e.target.closest('[data-no-loader]')) return;
+                showLoader();
+            });
+            // Show loader on button clicks that trigger navigation
+            document.addEventListener('click', function(e){
+                var btn = e.target.closest('button[type="submit"]');
+                if (btn && !btn.closest('[data-no-loader]')) {
+                    showLoader();
+                }
+            });
+            // Hide on page show (back/forward navigation)
+            window.addEventListener('pageshow', function(e){ hideLoader(); });
+            // Also hide when page is fully loaded
+            window.addEventListener('load', function(){ hideLoader(); });
+        })();
+
+        // Save current user to localStorage for account switching
+        {% if current_user.is_authenticated %}
+        (function(){
+            var KEY = 'wiam_accounts';
+            var cur = {
+                id: {{ current_user.id }},
+                name: {{ current_user.display_name|tojson }},
+                username: {{ (current_user.username or '')|tojson }},
+                photo: ''
+            };
+            try {
+                var accts = JSON.parse(localStorage.getItem(KEY)) || [];
+                var found = false;
+                for (var i = 0; i < accts.length; i++) {
+                    if (accts[i].id === cur.id) { accts[i] = cur; found = true; break; }
+                }
+                if (!found) accts.push(cur);
+                localStorage.setItem(KEY, JSON.stringify(accts));
+            } catch(e) {}
+        })();
+        {% endif %}
+    </script>
+    {% block extra_js %}{% endblock %}
+    <script>
+    // PWA Service Worker
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js', {scope: '/'}).catch(function(){});
+    }
+    // Push notification system
+    {% if current_user.is_authenticated %}
+    function _subscribeToPush() {
+        if (!('PushManager' in window) || !('serviceWorker' in navigator)) return;
+        navigator.serviceWorker.ready.then(function(reg){
+            reg.pushManager.getSubscription().then(function(sub){
+                if (sub) {
+                    fetch('/notifications/push/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(sub.toJSON())}).catch(function(){});
+                    return;
+                }
+                fetch('/notifications/push/vapid-key').then(function(r){return r.json()}).then(function(d){
+                    if (!d.publicKey) return;
+                    var raw = d.publicKey.replace(/-/g,'+').replace(/_/g,'/');
+                    while(raw.length % 4) raw += '=';
+                    var k = Uint8Array.from(atob(raw), function(c){return c.charCodeAt(0)});
+                    return reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:k});
+                }).then(function(newSub){
+                    if (!newSub) return;
+                    fetch('/notifications/push/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(newSub.toJSON())});
+                }).catch(function(err){ console.log('Push sub error:', err); });
+            });
+        });
+    }
+    // Check if we should show the push permission banner
+    (function(){
+        if (!('PushManager' in window) || !('Notification' in window)) return;
+        if (Notification.permission === 'granted') { _subscribeToPush(); return; }
+        if (Notification.permission === 'denied') return;
+        // permission is 'default' — show banner if not dismissed recently
+        var dismissed = localStorage.getItem('push_banner_dismissed');
+        if (dismissed && (Date.now() - parseInt(dismissed)) < 7 * 86400000) return;
+        var banner = document.getElementById('pushBanner');
+        if (banner) banner.style.display = 'block';
+    })();
+    window.allowPushNotifications = function() {
+        var banner = document.getElementById('pushBanner');
+        if (banner) banner.style.display = 'none';
+        Notification.requestPermission().then(function(perm){
+            if (perm === 'granted') {
+                localStorage.setItem('push_banner_dismissed', Date.now().toString());
+                _subscribeToPush();
+            }
+        });
+    };
+    window.dismissPushBanner = function() {
+        var banner = document.getElementById('pushBanner');
+        if (banner) banner.style.display = 'none';
+        localStorage.setItem('push_banner_dismissed', Date.now().toString());
+    };
+    {% endif %}
+    // C2: Bug report submission
+    window.submitBugReport = function() {
+        var text = document.getElementById('bugText').value.trim();
+        if (!text || text.length < 5) { alert('Please describe the issue.'); return; }
+        var btn = document.getElementById('bugSubmitBtn');
+        btn.disabled = true; btn.textContent = 'Sending...';
+        fetch('/api/bug-report', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                type: document.getElementById('bugType').value,
+                text: text,
+                url: window.location.href,
+                ua: navigator.userAgent
+            })
+        }).then(function(r){ return r.json(); }).then(function(d){
+            btn.disabled = false; btn.textContent = 'Submit Report';
+            if (d.ok) {
+                document.getElementById('bugText').value = '';
+                document.getElementById('bugSuccess').style.display = 'block';
+                setTimeout(function(){
+                    document.getElementById('bugSuccess').style.display = 'none';
+                    document.getElementById('bugModal').classList.remove('open');
+                }, 2000);
+            }
+        }).catch(function(){
+            btn.disabled = false; btn.textContent = 'Submit Report';
+            alert('Could not send. Please try again.');
+        });
+    };
+    // F9: Dark/Light mode — apply saved theme & toggle function
+    (function(){
+        var saved = localStorage.getItem('wiamapp_theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', saved);
+        // Update toggle button labels on load
+        setTimeout(function(){
+            var icon = document.getElementById('themeToggleIcon');
+            var label = document.getElementById('themeToggleLabel');
+            if (icon && label) {
+                if (saved === 'light') {
+                    icon.className = 'bi bi-sun-fill me-2';
+                    label.textContent = 'Dark Mode';
+                } else {
+                    icon.className = 'bi bi-moon-stars me-2';
+                    label.textContent = 'Light Mode';
+                }
+            }
+        }, 50);
+    })();
+    window.toggleWiamTheme = function(){
+        var current = document.documentElement.getAttribute('data-theme') || 'dark';
+        var next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('wiamapp_theme', next);
+        var icon = document.getElementById('themeToggleIcon');
+        var label = document.getElementById('themeToggleLabel');
+        if (icon && label) {
+            if (next === 'light') {
+                icon.className = 'bi bi-sun-fill me-2';
+                label.textContent = 'Dark Mode';
+            } else {
+                icon.className = 'bi bi-moon-stars me-2';
+                label.textContent = 'Light Mode';
+            }
+        }
+        // Also update dashboard toggle if present
+        var dashToggle = document.getElementById('dashThemeToggle');
+        if (dashToggle) dashToggle.checked = (next === 'light');
+    };
+    </script>
+    <script src="/static/js/notif-sounds.js"></script>
+    {% if current_user.is_authenticated %}
+    <script>
+    // ── In-app toast notification system ─────────────────────────────
+    (function(){
+        var POLL_INTERVAL = 120000; // 120 seconds (reduced from 45s to lower server load)
+        var lastCount = {{ unread_notif_count|default(0) }};
+        var userSound = '{{ current_user.notif_sound or "chime" }}';
+        var typeEmojis = {
+            new_book:'📖', new_chapter:'📝', follow:'👤', comment:'💬',
+            like:'❤️', mention:'📣', coins:'🪙', order_update:'📦',
+            elite:'✦', announcement:'📢', system:'🔔'
+        };
+
+        function showToast(title, message, type, link) {
+            var container = document.getElementById('toastContainer');
+            if (!container) return;
+            var toast = document.createElement('div');
+            toast.className = 'wiam-toast';
+            var emoji = typeEmojis[type] || '🔔';
+            toast.innerHTML =
+                '<div class="wiam-toast-icon ' + type + '">' + emoji + '</div>' +
+                '<div class="wiam-toast-body">' +
+                    '<div class="wiam-toast-title">' + _escHtml(title) + '</div>' +
+                    '<div class="wiam-toast-msg">' + _escHtml(message) + '</div>' +
+                '</div>' +
+                '<button class="wiam-toast-close" onclick="event.stopPropagation();this.parentElement.classList.add(\'removing\');setTimeout(function(){this.parentElement.remove()}.bind(this),300);">&times;</button>';
+            if (link) {
+                toast.onclick = function(){ window.location.href = link; };
+            }
+            container.appendChild(toast);
+            // Play notification sound
+            if (window.WiamNotifSound) {
+                window.WiamNotifSound.play(userSound);
+            }
+            // Auto-remove after 6 seconds
+            setTimeout(function(){
+                if (toast.parentElement) {
+                    toast.classList.add('removing');
+                    setTimeout(function(){ if (toast.parentElement) toast.remove(); }, 300);
+                }
+            }, 6000);
+        }
+
+        function _escHtml(s) {
+            var d = document.createElement('div');
+            d.textContent = s;
+            return d.innerHTML;
+        }
+
+        // Poll for new notifications
+        function pollNotifications() {
+            fetch('/notifications/poll')
+                .then(function(r){ return r.json(); })
+                .then(function(d){
+                    if (d.notifications && d.notifications.length > 0) {
+                        d.notifications.forEach(function(n){
+                            showToast(n.title, n.message, n.type, n.link);
+                        });
+                    }
+                    // Update badge
+                    if (typeof d.unread_count === 'number') {
+                        var badges = document.querySelectorAll('#notifBadge,[data-notif-badge]');
+                        badges.forEach(function(b){
+                            if (d.unread_count > 0) {
+                                b.textContent = d.unread_count > 99 ? '99+' : d.unread_count;
+                                b.style.display = '';
+                            } else {
+                                b.style.display = 'none';
+                            }
+                        });
+                        lastCount = d.unread_count;
+                        // PWA app icon badge count
+                        if ('setAppBadge' in navigator) {
+                            if (d.unread_count > 0) navigator.setAppBadge(d.unread_count).catch(function(){});
+                            else navigator.clearAppBadge().catch(function(){});
+                        }
+                    }
+                })
+                .catch(function(){});
+        }
+
+        // Start polling
+        setInterval(pollNotifications, POLL_INTERVAL);
+        // First poll after 3 seconds (give page time to load)
+        setTimeout(pollNotifications, 3000);
+
+        // Expose for manual testing
+        window._wiamShowToast = showToast;
+    })();
+
+    // ── Notification dropdown (bell icon) ────────────────────────────
+    (function(){
+        var _csrf = document.querySelector('meta[name=csrf-token]')?.content || '';
+        var ndTypeIcons = {
+            new_book:'<i class="bi bi-book"></i>', new_chapter:'<i class="bi bi-file-text"></i>',
+            follow:'<i class="bi bi-person-plus"></i>', comment:'<i class="bi bi-chat-dots"></i>',
+            like:'<i class="bi bi-heart-fill"></i>', mention:'<i class="bi bi-at"></i>',
+            coins:'<i class="bi bi-coin"></i>', elite:'<span>✦</span>',
+            announcement:'<i class="bi bi-megaphone"></i>', system:'<i class="bi bi-bell"></i>',
+            order_update:'<i class="bi bi-receipt"></i>'
+        };
+        var ndTypeColors = {
+            new_book:'rgba(59,130,246,0.12);color:#60a5fa', new_chapter:'rgba(59,130,246,0.12);color:#60a5fa',
+            follow:'rgba(168,85,247,0.12);color:#a855f7', comment:'rgba(34,197,94,0.12);color:#4ade80',
+            like:'rgba(239,68,68,0.12);color:#f87171', mention:'rgba(251,191,36,0.12);color:#fbbf24',
+            coins:'rgba(212,168,67,0.12);color:#d4a843', elite:'rgba(212,168,67,0.12);color:#d4a843',
+            announcement:'rgba(99,102,241,0.12);color:#818cf8', system:'rgba(156,163,175,0.1);color:#9ca3af',
+            order_update:'rgba(34,197,94,0.12);color:#4ade80'
+        };
+
+        window.ndLoad = function() {
+            var list = document.getElementById('ndList');
+            if (!list) return;
+            fetch('/notifications/recent').then(function(r){ return r.json(); }).then(function(d){
+                var notifs = d.notifications || [];
+                if (notifs.length === 0) {
+                    list.innerHTML = '<div style="text-align:center;padding:2rem 1rem;color:var(--text-muted);font-size:0.8rem;"><i class="bi bi-bell-slash" style="font-size:1.5rem;opacity:0.2;display:block;margin-bottom:6px;"></i>No notifications</div>';
+                    return;
+                }
+                var out = '';
+                notifs.forEach(function(n){
+                    var type = n.type || 'system';
+                    var icon = ndTypeIcons[type] || '<i class="bi bi-bell"></i>';
+                    var bg = ndTypeColors[type] || 'rgba(156,163,175,0.1);color:#9ca3af';
+                    var unreadDot = n.is_read ? '' : '<div style="width:6px;height:6px;border-radius:50%;background:var(--gold);flex-shrink:0;margin-top:6px;"></div>';
+                    out += '<div style="display:flex;align-items:flex-start;gap:8px;padding:8px 14px;transition:background 0.15s;cursor:pointer;' + (n.is_read ? '' : 'background:rgba(212,168,67,0.03);') + '" onmouseover="this.style.background=\'rgba(255,255,255,0.04)\'" onmouseout="this.style.background=\'' + (n.is_read ? 'transparent' : 'rgba(212,168,67,0.03)') + '\'" id="nd-' + n.id + '">';
+                    out += '<a href="' + _ndEsc(n.link) + '" style="display:flex;gap:8px;flex:1;text-decoration:none;color:inherit;min-width:0;" data-no-loader>';
+                    out += '<div style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.85rem;flex-shrink:0;background:' + bg + '">' + icon + '</div>';
+                    out += '<div style="flex:1;min-width:0;">';
+                    out += '<div style="font-size:0.78rem;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + _ndEsc(n.title) + '</div>';
+                    if (n.message) out += '<div style="font-size:0.7rem;color:var(--text-muted);line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + _ndEsc(n.message) + '</div>';
+                    if (n.time) out += '<div style="font-size:0.6rem;color:var(--text-muted);opacity:0.5;margin-top:1px;">' + _ndEsc(n.time) + '</div>';
+                    out += '</div></a>';
+                    out += unreadDot;
+                    out += '<button onclick="event.stopPropagation();ndDelete(' + n.id + ')" style="background:none;border:none;color:var(--text-muted);font-size:0.7rem;cursor:pointer;padding:2px;opacity:0.4;flex-shrink:0;" title="Delete"><i class="bi bi-x"></i></button>';
+                    out += '</div>';
+                });
+                if (d.total > 10) {
+                    out += '<a href="/notifications/" style="display:block;text-align:center;padding:8px;font-size:0.72rem;color:var(--gold);text-decoration:none;border-top:1px solid rgba(255,255,255,0.04);">View all ' + d.total + ' notifications</a>';
+                }
+                list.innerHTML = out;
+            }).catch(function(){
+                list.innerHTML = '<div style="text-align:center;padding:1.5rem;color:var(--text-muted);font-size:0.78rem;">Could not load notifications</div>';
+            });
+        };
+
+        function _ndEsc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+        window.ndClearAll = function() {
+            fetch('/notifications/clear', {
+                method: 'POST',
+                headers: { 'X-CSRFToken': _csrf, 'X-Requested-With': 'XMLHttpRequest' }
+            }).then(function(){
+                _ndRefreshBadge();
+                ndLoad();
+            });
+        };
+
+        window.ndDelete = function(id) {
+            var el = document.getElementById('nd-' + id);
+            if (el) { el.style.opacity = '0'; el.style.transition = 'opacity 0.2s'; }
+            fetch('/notifications/delete/' + id, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': _csrf, 'X-Requested-With': 'XMLHttpRequest' }
+            }).then(function(){
+                setTimeout(function(){
+                    if (el) el.remove();
+                    _ndRefreshBadge();
+                    var list = document.getElementById('ndList');
+                    if (list && !list.querySelector('[id^="nd-"]')) ndLoad();
+                }, 200);
+            });
+        };
+
+        function _ndRefreshBadge() {
+            fetch('/notifications/count').then(function(r){ return r.json(); }).then(function(d){
+                var c = d.count || 0;
+                var badges = document.querySelectorAll('#notifBadge,[data-notif-badge]');
+                badges.forEach(function(b){
+                    if (c > 0) { b.textContent = c; b.style.display = ''; }
+                    else { b.style.display = 'none'; }
+                });
+                if (c === 0 && 'clearAppBadge' in navigator) navigator.clearAppBadge().catch(function(){});
+            }).catch(function(){});
+        }
+
+        // Load notifications when bell dropdown opens
+        var bellToggle = document.getElementById('bellDropdownToggle');
+        if (bellToggle) {
+            bellToggle.addEventListener('click', function(){ setTimeout(ndLoad, 50); });
+        }
+    })();
+    </script>
+    {% endif %}
+</body>
+</html>

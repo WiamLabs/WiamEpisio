@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}{{ challenge.title }} — Story Challenge{% endblock %}
+{% block content %}
+<div style="max-width:800px;margin:0 auto;padding:var(--space-xl) var(--space-md);">
+
+    <!-- Challenge Header -->
+    <div style="padding:var(--space-2xl);background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);margin-bottom:var(--space-xl);text-align:center;">
+        <div style="display:flex;justify-content:center;gap:var(--space-sm);margin-bottom:var(--space-md);">
+            <span style="font-size:0.7rem;padding:3px 10px;border-radius:10px;font-weight:600;
+                {% if challenge.challenge_type == 'weekly' %}background:rgba(52,152,219,0.15);color:#3498db;
+                {% elif challenge.challenge_type == 'monthly' %}background:rgba(155,89,182,0.15);color:#9b59b6;
+                {% else %}background:rgba(212,168,67,0.15);color:#d4a843;{% endif %}">
+                {{ challenge.challenge_type|capitalize }}
+            </span>
+            {% if challenge.genre %}
+            <span style="font-size:0.7rem;padding:3px 10px;border-radius:10px;background:var(--bg-elevated);color:var(--text-muted);">{{ challenge.genre }}</span>
+            {% endif %}
+        </div>
+
+        <h1 style="font-size:1.6rem;font-family:var(--font-display);color:var(--text);margin-bottom:var(--space-sm);">{{ challenge.title }}</h1>
+        <p style="color:var(--text-secondary);font-size:0.9rem;line-height:1.6;max-width:600px;margin:0 auto var(--space-lg);">{{ challenge.description }}</p>
+
+        {% if challenge.theme %}
+        <div style="padding:var(--space-md);background:rgba(212,168,67,0.05);border:1px solid rgba(212,168,67,0.15);border-radius:var(--radius-md);margin-bottom:var(--space-lg);">
+            <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px;">Theme</div>
+            <div style="font-size:0.95rem;color:var(--gold);font-weight:600;">{{ challenge.theme }}</div>
+        </div>
+        {% endif %}
+
+        <!-- Stats -->
+        <div style="display:flex;justify-content:center;gap:var(--space-xl);flex-wrap:wrap;margin-bottom:var(--space-lg);">
+            <div>
+                <div style="font-size:1.4rem;font-weight:800;color:var(--gold);">{{ challenge.coin_reward }}</div>
+                <div style="font-size:0.65rem;color:var(--text-muted);text-transform:uppercase;">Coin Reward</div>
+            </div>
+            <div>
+                <div style="font-size:1.4rem;font-weight:800;color:var(--text);">{{ challenge.min_words }}</div>
+                <div style="font-size:0.65rem;color:var(--text-muted);text-transform:uppercase;">Min Words</div>
+            </div>
+            <div>
+                <div style="font-size:1.4rem;font-weight:800;color:var(--text);">{{ entries|length }}</div>
+                <div style="font-size:0.65rem;color:var(--text-muted);text-transform:uppercase;">Participants</div>
+            </div>
+        </div>
+
+        <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:var(--space-lg);">
+            {{ challenge.starts_at.strftime('%b %d') }} — {{ challenge.ends_at.strftime('%b %d, %Y') }}
+        </div>
+
+        <!-- Join Button -->
+        {% if current_user.is_authenticated %}
+            {% if my_entry %}
+                <div style="padding:10px 24px;background:rgba(46,204,113,0.1);color:#2ecc71;border:1px solid rgba(46,204,113,0.25);border-radius:var(--radius-md);display:inline-block;font-weight:600;font-size:0.85rem;">
+                    <i class="bi bi-check-circle-fill"></i> You've Joined! Status: {{ my_entry.status|capitalize }}
+                </div>
+            {% else %}
+                <form method="POST" action="{{ url_for('programs.challenge_join', challenge_id=challenge.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" style="padding:12px 32px;background:linear-gradient(135deg,var(--wine),#a0404a);color:#fff;border:none;border-radius:var(--radius-md);font-weight:700;font-size:0.9rem;cursor:pointer;">
+                        <i class="bi bi-lightning-fill"></i> Join This Challenge
+                    </button>
+                </form>
+            {% endif %}
+        {% else %}
+            <a href="{{ url_for('auth.login') }}" style="display:inline-block;padding:12px 32px;background:var(--wine);color:#fff;border-radius:var(--radius-md);font-weight:700;font-size:0.9rem;text-decoration:none;">
+                Log in to Join
+            </a>
+        {% endif %}
+    </div>
+
+    <!-- Participants -->
+    {% if entries %}
+    <h2 style="font-size:1.1rem;font-family:var(--font-display);color:var(--text);margin-bottom:var(--space-md);">Participants</h2>
+    <div style="display:grid;gap:var(--space-sm);">
+        {% for entry, user in entries %}
+        <div style="padding:var(--space-md);background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);display:flex;align-items:center;gap:var(--space-md);">
+            <div style="width:36px;height:36px;border-radius:50%;overflow:hidden;flex-shrink:0;">
+                {% if user.avatar_url %}
+                <img src="{{ user.avatar_url }}" alt="" style="width:100%;height:100%;object-fit:cover;">
+                {% else %}
+                <div style="width:100%;height:100%;background:var(--wine);color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;">
+                    {{ user.display_name[:1] if user.display_name else '?' }}
+                </div>
+                {% endif %}
+            </div>
+            <div style="flex:1;">
+                <div style="font-size:0.85rem;color:var(--text);font-weight:600;">{{ user.display_name or 'Writer' }}</div>
+                <div style="font-size:0.7rem;color:var(--text-muted);">Joined {{ entry.created_at.strftime('%b %d') }}</div>
+            </div>
+            <span style="font-size:0.65rem;padding:2px 8px;border-radius:10px;font-weight:600;
+                {% if entry.status == 'winner' %}background:rgba(212,168,67,0.15);color:#d4a843;
+                {% elif entry.status == 'completed' %}background:rgba(46,204,113,0.15);color:#2ecc71;
+                {% elif entry.status == 'submitted' %}background:rgba(52,152,219,0.15);color:#3498db;
+                {% else %}background:var(--bg-elevated);color:var(--text-muted);{% endif %}">
+                {{ entry.status|capitalize }}
+            </span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div style="text-align:center;margin-top:var(--space-xl);">
+        <a href="{{ url_for('programs.challenges') }}" style="color:var(--text-muted);font-size:0.8rem;text-decoration:none;">&larr; All Challenges</a>
+    </div>
+</div>
+{% endblock %}

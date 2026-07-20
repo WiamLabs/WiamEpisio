@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+{% block title %}Help Center — WiamApp{% endblock %}
+{% block meta_description %}Get help with WiamApp. Find answers to common questions about reading, creating, coins, payouts, and account settings.{% endblock %}
+
+{% block extra_head %}
+<style>
+.hc-page { max-width: 680px; margin: 0 auto; padding: 1.5rem 1rem 6rem; }
+.hc-back { color: var(--text-muted); font-size: 0.82rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.3rem; margin-bottom: 1rem; }
+.hc-back:hover { color: var(--gold); }
+.hc-title { font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; margin-bottom: 0.3rem; }
+.hc-subtitle { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem; }
+
+/* AI Bot Hero */
+.hc-bot-hero { text-align: center; margin-bottom: 2rem; padding: 1.5rem; background: rgba(212,168,67,0.04); border: 1px solid rgba(212,168,67,0.12); border-radius: 16px; }
+.hc-bot-icon { width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, var(--gold), #e0b84f); display: flex; align-items: center; justify-content: center; margin: 0 auto 0.8rem; font-size: 1.6rem; color: #000; box-shadow: 0 6px 24px rgba(212,168,67,0.3); }
+.hc-bot-title { font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; color: var(--text); margin-bottom: 0.3rem; }
+.hc-bot-desc { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.5; }
+.hc-bot-open { display: inline-flex; align-items: center; gap: 0.5rem; padding: 12px 32px; background: linear-gradient(135deg, var(--gold), #b8860b); color: #000; border: none; border-radius: 12px; font-size: 0.92rem; font-weight: 700; cursor: pointer; transition: all 0.2s; text-decoration: none; }
+.hc-bot-open:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(212,168,67,0.35); }
+.hc-disclaimer { text-align: center; padding: 1.2rem; margin: 2rem 0 0.5rem; font-size: 0.75rem; color: var(--text-muted); line-height: 1.6; border-top: 1px solid var(--border-subtle); }
+.hc-disclaimer strong { color: var(--gold); }
+
+/* Quick links */
+.hc-quick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; margin-bottom: 1.5rem; }
+.hc-quick-item { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 1rem 0.8rem; text-align: center; text-decoration: none; color: var(--text); transition: all 0.15s; }
+.hc-quick-item:hover { border-color: var(--gold); transform: translateY(-2px); }
+.hc-quick-item i { font-size: 1.3rem; color: var(--gold); display: block; margin-bottom: 0.3rem; }
+.hc-quick-item span { font-size: 0.75rem; font-weight: 600; }
+
+/* FAQ */
+.hc-section-title { font-family: var(--font-display); font-size: 1rem; font-weight: 700; margin: 1.2rem 0 0.6rem; display: flex; align-items: center; gap: 0.4rem; }
+.faq-card { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 12px; margin-bottom: 0.5rem; overflow: hidden; }
+.faq-q { width: 100%; background: none; border: none; padding: 0.75rem 1rem; display: flex; align-items: center; justify-content: space-between; color: var(--text); font-size: 0.85rem; font-weight: 600; cursor: pointer; text-align: left; }
+.faq-q i { color: var(--text-muted); transition: transform 0.2s; font-size: 0.7rem; }
+.faq-q.open i { transform: rotate(180deg); }
+.faq-a { max-height: 0; overflow: hidden; transition: max-height 0.3s ease, padding 0.3s; padding: 0 1rem; font-size: 0.82rem; color: var(--text-secondary); line-height: 1.6; }
+.faq-a.open { max-height: 300px; padding: 0 1rem 0.75rem; }
+
+@media(max-width:500px){
+    .hc-quick { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hc-page">
+    <a href="javascript:void(0)" onclick="window.history.length>1?history.back():location.href='/'" class="hc-back" data-no-loader><i class="bi bi-arrow-left"></i> Back</a>
+    <h1 class="hc-title">Help Center</h1>
+    <p class="hc-subtitle">Find answers, get help, and reach our support team.</p>
+
+    <!-- AI Bot Hero -->
+    <div class="hc-bot-hero">
+        <div class="hc-bot-icon"><i class="bi bi-robot"></i></div>
+        <div class="hc-bot-title">Chat with WiamBot</div>
+        <p class="hc-bot-desc">Get instant answers to your questions. Our AI assistant is here to help you navigate WiamApp.</p>
+        <a href="{{ url_for('profile.wiambot') }}" class="hc-bot-open"><i class="bi bi-chat-dots-fill"></i> Talk to WiamBot</a>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="hc-quick">
+        <a href="{{ url_for('profile.community_guidelines') }}" class="hc-quick-item">
+            <i class="bi bi-people"></i>
+            <span>Community</span>
+        </a>
+        <a href="{{ url_for('profile.privacy_center') }}" class="hc-quick-item">
+            <i class="bi bi-shield-check"></i>
+            <span>Privacy</span>
+        </a>
+        <a href="{{ url_for('profile.feedback') }}" class="hc-quick-item">
+            <i class="bi bi-chat-heart"></i>
+            <span>Feedback</span>
+        </a>
+    </div>
+
+    <!-- Getting Started -->
+    <div class="hc-section-title"><i class="bi bi-rocket-takeoff" style="color:var(--gold);"></i> Getting Started</div>
+    <div class="faq-card" data-faq>
+        <button class="faq-q" onclick="toggleFaq(this)">How do I create an account? <i class="bi bi-chevron-down"></i></button>
+        <div class="faq-a">Tap "Get Started" on the landing page. You can register with your email or sign in with Google. After creating your account, you'll go through a quick onboarding to set up your profile, pick your favorite genres, and start discovering stories.</div>
+    </div>
+    <div class="faq-card" data-faq>
+        <button class="faq-q" onclick="toggleFaq(this)">Is WiamApp free to use? <i class="bi bi-chevron-down"></i></button>
+        <div class="faq-a">Yes! Reading on WiamApp is completely free. The first 10 chapters of every story are always unlocked. You can optionally purchase Wiam Coins to unlock premium chapters and support creators with gift stickers.</div>
+    </div>
+    <div class="faq-card" data-faq>
+        <button class="faq-q" onclick="toggleFaq(this)">How do I install WiamApp on my phone? <i class="bi bi-chevron-down"></i></button>
+        <div class="faq-a">WiamApp is a Progressive Web App. On Chrome/Android, tap the menu and select "Install app" or "Add to home screen". On Safari/iOS, tap the Share button and select "Add to Home Screen". Once installed, you'll receive push notifications for new chapters and updates!</div>
+    </div>
+
+    <!-- Reading -->
+    <div class="hc-section-title"><i class="bi bi-book" style="color:var(--gold);"></i> Reading</div>
+    <div class="faq-card" data-faq>
+        <button class="faq-q" onclick="toggleFaq(this)">How do I find stories I'll love? <i class="bi bi-chevron-down"></i></button>
+        <div class="faq-a">Browse by genre, check trending stories, or explore the "We Think You'll Love This Too" section on any book page. During onboarding, you'll pick your favorite genres and we'll recommend stories based on your taste.</div>
+    </div>
+    <div class="faq-card" data-faq>
+        <button class="faq-q" onclick="toggleFaq(this)">Does WiamApp save my reading progress? <i class="bi bi-chevron-down"></i></button>
+        <div class="faq-a">Yes! WiamApp automatically tracks exactly where you stopped reading — down to the paragraph. When you come back, tap "Continue Reading" on the book page and you'll pick up right where you left off.</div>
+    </div>
+    <div class="faq-card" data-faq>
+        <button class="faq-q" onclick="toggleFaq(this)">How do I react to paragraphs while reading? <i class="bi bi-chevron-down"></i></button>
+        <div class="faq-a">While reading, tap the emoji icon next to any paragraph to react with emojis like ❤️, 😂, 😢, 🔥 and more. You can also tap the comment icon to discuss specific paragraphs with other readers.</div>
+    </div>
+    <div class="faq-card" data-faq>
+        <button class="faq-q" onclick="toggleFaq(this)">Can I read offline? <i class="bi bi-chevron-down"></i></button>
+        <div class="faq-a">If you've installed WiamApp as a PWA, chapters you've previously loaded will be cached for offline reading. For the best offline experience, open the chapters you want to read while connected.</div>
+    </div>
+
+    <!-- Wiam Coins -->
+    <div class="hc-section-title"><i class="bi bi-coin" style="color:var(--gold);"></i> Wiam Coins & Payments</div>
+    <div class="faq-card" data-faq>
+        <button class="faq-q" onclick="toggleFaq(this)">What are Wiam Coins? <i class="bi bi-chevron-down"></i></button>
+        <div class="faq-a">Wiam Coins are the in-app currency. Use them to unlock premium chapters and send gift stickers to your favorite creators. Coins never expire and are credited instantly after purchase.</div>
+    </div>
+    <div class="faq-card" data-faq>
+        <button class="faq-q" onclick="toggleFaq(this)">How do I buy Wiam Coins? <i class="bi bi-chevron-down"></i></button>
+        <div class="faq-a">Go to your profile, tap "Coins", and choose a package. We support Mobile Money (MTN MoMo, Vodafone Cash, AirtelTigo), Visa/Mastercard, and Bank Transfer via Paystack.</div>
+    </div>
+    <div class="faq-card" data-faq>
+        <button class="faq-q" onclick="toggleFaq(this)">What are Gift Stickers? <i class="bi bi-chevron-down"></i></button>
+        <div class="faq-a">Gift Stickers are a fun way to support creators! On any book page, tap the Gift button to browse stickers across tiers — Common, Rare, Epic, and Legendary. Each sticker costs Wiam Coins and shows your appreciation to the creator.</div>
+    </div>
+    <div class="faq-card" data-faq>
+        <button class="faq-q" onclick="toggleFaq(this)">Can I get a refund? <i class="bi bi-chevron-down"></i></button>
+        <div class="faq-a">If you experience payment issues, contact us through WiamBot or send feedback from your profile. We'll investigate and resolve it quickly.</div>
+    </div>
+
+    <!-- Account -->
+    <div class="hc-section-title"><i class="bi bi-person-gear" style="color:var(--gold);"></i> Account & Security</div>
+    <div class="faq-card" data-faq>
+        <button class="faq-q" onclick="toggleFaq(this)">How do I change my password? <i class="bi bi-chevron-down"></i></button>
+        <div class="faq-a">Go to Settings & Privacy from your profile menu, then open the Password section. Enter your current password and your new password to update it.</div>
+    </div>
+    <div class="faq-card" data-faq>
+        <button class="faq-q" onclick="toggleFaq(this)">How do I delete my account? <i class="bi bi-chevron-down"></i></button>
+        <div class="faq-a">Go to Settings & Privacy → Danger Zone → Delete Account Permanently. You'll need to confirm by typing "DELETE". This action is irreversible and will remove all your data.</div>
+    </div>
+    <div class="faq-card" data-faq>
+        <button class="faq-q" onclick="toggleFaq(this)">How do I enable 2FA? <i class="bi bi-chevron-down"></i></button>
+        <div class="faq-a">Go to Settings & Privacy → Security → Two-Factor Authentication. Follow the setup instructions to add an extra layer of security to your account.</div>
+    </div>
+
+    <!-- Creators -->
+    <div class="hc-section-title"><i class="bi bi-pen" style="color:var(--gold);"></i> For Creators</div>
+    <div class="faq-card" data-faq>
+        <button class="faq-q" onclick="toggleFaq(this)">How do I become a creator? <i class="bi bi-chevron-down"></i></button>
+        <div class="faq-a">Apply for a creator account through the Creator Program section on your profile. Once approved, you can start publishing stories, set chapter pricing, and earn from your readers.</div>
+    </div>
+    <div class="faq-card" data-faq>
+        <button class="faq-q" onclick="toggleFaq(this)">Do my stories need approval before publishing? <i class="bi bi-chevron-down"></i></button>
+        <div class="faq-a">No! When you publish a story from WiamStudio, it goes live immediately on the platform. No waiting for approval. Our content moderation system automatically scans for prohibited content to keep the platform safe.</div>
+    </div>
+    <div class="faq-card" data-faq>
+        <button class="faq-q" onclick="toggleFaq(this)">How do creators earn money? <i class="bi bi-chevron-down"></i></button>
+        <div class="faq-a">Creators earn 50% of every Wiam Coin spent on their stories. You can set chapters as premium (requiring coins to unlock) and receive gift stickers from readers who love your work.</div>
+    </div>
+
+    <!-- Notifications -->
+    <div class="hc-section-title"><i class="bi bi-bell" style="color:var(--gold);"></i> Notifications</div>
+    <div class="faq-card" data-faq>
+        <button class="faq-q" onclick="toggleFaq(this)">How do push notifications work? <i class="bi bi-chevron-down"></i></button>
+        <div class="faq-a">When you install WiamApp and allow notifications, you'll receive push notifications on your phone even when the app is closed. You'll be notified about new chapters from creators you follow, new followers, coin transactions, and more.</div>
+    </div>
+    <div class="faq-card" data-faq>
+        <button class="faq-q" onclick="toggleFaq(this)">Can I customize my notifications? <i class="bi bi-chevron-down"></i></button>
+        <div class="faq-a">Yes! Go to your Profile → Notification Settings. You can toggle each notification type on or off individually — new chapters, followers, comments, likes, coins, announcements, and more.</div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleFaq(btn) {
+    btn.classList.toggle('open');
+    btn.nextElementSibling.classList.toggle('open');
+}
+</script>
+{% endblock %}

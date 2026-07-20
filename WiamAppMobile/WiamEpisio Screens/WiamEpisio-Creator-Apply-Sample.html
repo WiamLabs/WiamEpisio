@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamEpisio — Apply: Sample</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); display:flex; flex-direction:column; }
+  .statusbar{ height:44px; flex-shrink:0; }
+
+  .topbar{ padding:2px 20px 16px; flex-shrink:0; }
+  .top-row{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+  .icon-btn{ width:34px; height:34px; border-radius:50%; background:var(--navy-card); display:flex; align-items:center; justify-content:center; }
+  .step-label{ font-size:11px; font-weight:700; color:var(--text-faint); }
+  .step-track{ display:flex; gap:6px; margin-bottom:16px; }
+  .step-seg{ flex:1; height:4px; border-radius:99px; background:var(--navy-line); }
+  .step-seg.done{ background:var(--gold); }
+  h1{ font-size:19px; font-weight:800; color:#fff; margin:0 0 5px; letter-spacing:-0.3px; }
+  .sub{ font-size:12px; color:var(--text-dim); margin:0; }
+
+  .scroll{ flex:1; overflow-y:auto; padding:0 20px 20px; }
+
+  .tab-row{ display:flex; gap:8px; margin-bottom:16px; }
+  .tab-btn{ flex:1; padding:11px; border-radius:12px; background:var(--navy-card); border:1px solid var(--navy-line); text-align:center; font-size:12px; font-weight:700; color:var(--text-dim); }
+  .tab-btn.active{ background:rgba(212,160,23,0.14); border-color:var(--gold); color:var(--gold); }
+
+  .drop-zone{ border:1.5px dashed var(--navy-line); border-radius:18px; padding:32px 20px; text-align:center; margin-bottom:16px; background:var(--navy-card); }
+  .drop-icon{ width:50px; height:50px; border-radius:50%; background:var(--navy-soft); display:flex; align-items:center; justify-content:center; margin:0 auto 14px; }
+  .drop-zone b{ display:block; font-size:14px; font-weight:700; color:#fff; margin-bottom:4px; }
+  .drop-zone span{ font-size:11px; color:var(--text-dim); display:block; margin-bottom:16px; }
+  .browse-btn{ padding:11px 24px; border-radius:12px; background:var(--gold); color:var(--navy); font-size:12.5px; font-weight:800; border:none; font-family:'Inter',sans-serif; }
+
+  .preview-card{ display:flex; gap:12px; align-items:center; background:var(--navy-card); border:1px solid var(--navy-line); border-radius:14px; padding:12px; margin-bottom:18px; }
+  .preview-thumb{ width:46px; height:66px; border-radius:8px; background:linear-gradient(160deg,#241a3a,#0d0d24); flex-shrink:0; position:relative; display:flex; align-items:center; justify-content:center; }
+  .preview-thumb svg{ width:14px; height:14px; color:#fff; opacity:0.6; }
+  .preview-body{ flex:1; min-width:0; }
+  .preview-name{ font-size:12px; font-weight:700; color:#fff; margin:0 0 3px; }
+  .preview-meta{ font-size:10.5px; color:var(--text-dim); margin:0; }
+  .preview-check{ width:22px; height:22px; border-radius:50%; background:#3BB273; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+
+  .spec-callout{ display:flex; gap:10px; background:rgba(212,160,23,0.08); border:1px solid rgba(212,160,23,0.28); border-radius:14px; padding:12px 13px; margin-bottom:6px; }
+  .spec-callout svg{ color:var(--gold); flex-shrink:0; width:16px; height:16px; margin-top:1px; }
+  .spec-callout-text{ font-size:11px; color:#E7D9B5; line-height:1.6; }
+  .spec-callout-text b{ color:var(--gold); }
+
+  .footer{ flex-shrink:0; padding:12px 20px 26px; }
+  .btn-primary{ width:100%; padding:16px; border-radius:16px; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); border:none; color:var(--navy); font-size:15px; font-weight:800; box-shadow:0 14px 30px rgba(212,160,23,0.3); font-family:'Inter',sans-serif; }
+
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"></div>
+  <div class="topbar">
+    <div class="top-row">
+      <div class="icon-btn"><svg viewBox="0 0 24 24" width="15" height="15" color="#fff"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></div>
+      <span class="step-label">Step 3 of 4</span>
+    </div>
+    <div class="step-track">
+      <div class="step-seg done"></div>
+      <div class="step-seg done"></div>
+      <div class="step-seg done"></div>
+      <div class="step-seg"></div>
+    </div>
+    <h1>Show us your work</h1>
+    <p class="sub">A sample, a past project, or a trailer draft — 60 to 180 seconds.</p>
+  </div>
+
+  <div class="scroll">
+
+    <div class="tab-row">
+      <div class="tab-btn active">Upload Video</div>
+      <div class="tab-btn">Paste Link</div>
+    </div>
+
+    <div class="preview-card">
+      <div class="preview-thumb"><svg viewBox="0 0 24 24" fill="#fff" stroke="none"><polygon points="6 3 20 12 6 21 6 3"/></svg></div>
+      <div class="preview-body">
+        <p class="preview-name">sample_reel_kwabena.mp4</p>
+        <p class="preview-meta">1080×1920 · 0:58 · 34 MB</p>
+      </div>
+      <div class="preview-check"><svg viewBox="0 0 24 24" width="12" height="12" stroke="#08081A" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+    </div>
+
+    <div class="drop-zone">
+      <div class="drop-icon"><svg viewBox="0 0 24 24" width="22" height="22" color="var(--gold)"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+      <b>Replace with another file</b>
+      <span>MP4 · under 200 MB</span>
+      <button class="browse-btn">Choose Video</button>
+    </div>
+
+    <div class="spec-callout">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <div class="spec-callout-text">Vertical <b>9:16</b>, minimum <b>720×1280</b>, H.264 MP4. This doesn't need to be finished work — we're looking at your eye for story and shot quality.</div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <button class="btn-primary">Next: Rights &amp; Standards</button>
+  </div>
+</div>
+
+</body>
+</html>

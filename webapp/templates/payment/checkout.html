@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}Buy — {{ book.title }} — WiamApp{% endblock %}
+
+{% block extra_head %}
+<style>
+    .checkout-hero { position: relative; padding: var(--space-2xl) 0 var(--space-xl); }
+    .checkout-hero::before { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, var(--wine-glow) 0%, var(--bg) 100%); pointer-events: none; }
+    .price-option { background: var(--bg-card); border: 2px solid var(--border-subtle); border-radius: var(--radius-md); padding: var(--space-lg); cursor: pointer; transition: all var(--duration-fast); }
+    .price-option:hover { border-color: var(--border-hover); }
+    .price-option.selected { border-color: var(--gold); background: rgba(212,168,67,0.05); }
+    .price-option input[type="radio"] { display: none; }
+    .price-label { display: flex; justify-content: space-between; align-items: center; }
+    .price-label .amount { font-family: var(--font-display); font-size: 1.2rem; font-weight: 700; color: var(--gold); }
+    .price-label .desc { color: var(--text-secondary); font-size: 0.88rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="checkout-hero">
+    <div class="container position-relative" style="z-index: 1;">
+        <a href="{{ url_for('book.detail', book_id=book.id) }}" class="btn-ghost" style="margin-bottom: var(--space-md); display: inline-block;">
+            <i class="bi bi-arrow-left me-1"></i> Back to book
+        </a>
+
+        <div class="row g-4">
+            <!-- Book info -->
+            <div class="col-md-4 text-center">
+                {% if book.cover_file_id %}
+                <img src="{{ book.cover_url }}" alt="{{ book.title }}" style="width: 100%; max-width: 200px; border-radius: var(--radius-lg); box-shadow: 0 20px 60px rgba(0,0,0,0.5);" loading="lazy">
+                {% endif %}
+                <h2 class="font-display" style="font-size: 1.3rem; margin-top: var(--space-md);">{{ book.title }}</h2>
+                <p style="color: var(--text-muted); font-size: 0.88rem;">{{ book.author or 'Unknown' }}</p>
+            </div>
+
+            <!-- Pricing options -->
+            <div class="col-md-8">
+                {% if pending_order %}
+                <div style="background: rgba(234,179,8,0.1); border: 1px solid rgba(234,179,8,0.3); border-radius: var(--radius-md); padding: var(--space-lg); margin-bottom: var(--space-xl);">
+                    <h5 style="color: #facc15; margin-bottom: var(--space-sm);"><i class="bi bi-exclamation-triangle me-1"></i> Pending Order</h5>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: var(--space-sm);">
+                        You have an existing order (#{{ pending_order.id }}) for {{ "%.0f"|format(pending_order.price or 0) }} GHS.
+                    </p>
+                    <a href="{{ url_for('payment.instructions', order_id=pending_order.id) }}" class="btn btn-gold">
+                        <i class="bi bi-arrow-right me-1"></i> Continue Payment
+                    </a>
+                </div>
+                {% endif %}
+
+                <h3 class="font-display" style="font-size: 1.1rem; margin-bottom: var(--space-lg);">Choose your access</h3>
+
+                <form method="post" action="{{ url_for('payment.create_order', book_id=book.id) }}" id="checkoutForm">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="payment_method" value="momo">
+
+                    <div style="display: flex; flex-direction: column; gap: var(--space-md); margin-bottom: var(--space-xl);">
+                        <!-- Buy permanent -->
+                        {% if book.price and book.price > 0 %}
+                        <label class="price-option selected" onclick="selectOption(this)">
+                            <input type="radio" name="access_type" value="permanent" checked>
+                            <div class="price-label">
+                                <div>
+                                    <div style="font-weight: 600; margin-bottom: 2px;">Buy (Permanent Access)</div>
+                                    <div class="desc">Read forever + download PDF</div>
+                                </div>
+                                <div class="amount">{{ "%.0f"|format(book.price) }} GHS</div>
+                            </div>
+                        </label>
+                        {% endif %}
+
+                        <!-- Rental options -->
+                        {% set rentals = [
+                            (1, book.price_1_day, '1 Day'),
+                            (2, book.price_2_days, '2 Days'),
+                            (3, book.price_3_days, '3 Days'),
+                            (4, book.price_4_days, '4 Days'),
+                            (5, book.price_5_days, '5 Days'),
+                            (30, book.price_30_days, '30 Days'),
+                        ] %}
+                        {% for days, price, label in rentals %}
+                        {% if price and price > 0 %}
+                        <label class="price-option" onclick="selectOption(this)">
+                            <input type="radio" name="access_type" value="temporary" data-days="{{ days }}">
+                            <input type="hidden" name="rent_days" value="{{ days }}" disabled>
+                            <div class="price-label">
+                                <div>
+                                    <div style="font-weight: 600; margin-bottom: 2px;">Rent — {{ label }}</div>
+                                    <div class="desc">Read online only, no download</div>
+                                </div>
+                                <div class="amount">{{ "%.0f"|format(price) }} GHS</div>
+                            </div>
+                        </label>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+
+                    <button type="submit" class="btn btn-gold" style="width: 100%; padding: 12px; font-size: 1rem;">
+                        <i class="bi bi-lock me-1"></i> Proceed to Payment
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function selectOption(el) {
+    document.querySelectorAll('.price-option').forEach(function(o) { o.classList.remove('selected'); });
+    el.classList.add('selected');
+    var radio = el.querySelector('input[type="radio"]');
+    radio.checked = true;
+    // Enable the right rent_days hidden input
+    document.querySelectorAll('input[name="rent_days"]').forEach(function(h) { h.disabled = true; });
+    var hiddenDays = el.querySelector('input[name="rent_days"]');
+    if (hiddenDays) hiddenDays.disabled = false;
+}
+</script>
+{% endblock %}

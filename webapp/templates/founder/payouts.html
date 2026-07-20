@@ -1,0 +1,167 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Payouts — Control Panel{% endblock %}
+{% block sidebar_title %}Control Panel{% endblock %}
+
+{% block sidebar_nav %}
+<a class="nav-link" href="{{ url_for('founder_dash.overview') }}"><i class="bi bi-speedometer2"></i> Overview</a>
+<a class="nav-link" href="{{ url_for('founder_dash.users') }}"><i class="bi bi-people"></i> Users</a>
+<a class="nav-link" href="{{ url_for('founder_dash.content') }}"><i class="bi bi-book"></i> Content</a>
+<a class="nav-link" href="{{ url_for('founder_dash.revenue') }}"><i class="bi bi-cash-stack"></i> Revenue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.financial_dashboard') }}"><i class="bi bi-bank" style="color:var(--gold);"></i> Financial v5</a>
+<a class="nav-link" href="{{ url_for('founder_dash.premium_analytics') }}"><i class="bi bi-gem" style="color:#c084fc;"></i> Premium Analytics</a>
+<a class="nav-link active" href="{{ url_for('founder_dash.payouts') }}"><i class="bi bi-send-check"></i> Payouts</a>
+<a class="nav-link" href="{{ url_for('founder_dash.subscribers') }}"><i class="bi bi-gem" style="color:#9b59b6;"></i> Subscribers</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payroll') }}"><i class="bi bi-wallet2" style="color:#2ecc71;"></i> Team Payroll</a>
+<a class="nav-link" href="{{ url_for('founder_dash.creators') }}"><i class="bi bi-person-badge"></i> Creators</a>
+<a class="nav-link" href="{{ url_for('founder_dash.genres') }}"><i class="bi bi-tags"></i> Genres</a>
+<a class="nav-link" href="{{ url_for('founder_dash.announcements') }}"><i class="bi bi-megaphone"></i> Announcements</a>
+<a class="nav-link" href="{{ url_for('founder_dash.collections') }}"><i class="bi bi-grid"></i> Collections</a>
+<a class="nav-link" href="{{ url_for('founder_dash.moderation') }}"><i class="bi bi-shield-exclamation"></i> Moderation</a>
+<a class="nav-link" href="{{ url_for('founder_dash.warnings_list') }}"><i class="bi bi-exclamation-triangle" style="color:#f59e0b;"></i> Warnings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.elite_manage') }}"><span style="color:var(--gold);">?</span> WiamElite</a>
+<a class="nav-link" href="{{ url_for('wiambot.apex_review') }}"><i class="bi bi-trophy-fill" style="color:var(--gold);"></i> Apex Review</a>
+<a class="nav-link" href="{{ url_for('founder_dash.review_queue') }}"><i class="bi bi-robot"></i> Bot Review Queue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.platform_settings') }}"><i class="bi bi-sliders"></i> Platform Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.forms_dashboard') }}"><i class="bi bi-file-earmark-text"></i> Application Forms</a>
+<a class="nav-link" href="{{ url_for('founder_dash.email_studio') }}"><i class="bi bi-envelope-paper" style="color:var(--gold);"></i> Email Studio</a>
+<a class="nav-link" href="{{ url_for('founder_dash.team_management') }}"><i class="bi bi-people-fill"></i> Team</a>
+<a class="nav-link" href="{{ url_for('founder_dash.account_management') }}"><i class="bi bi-person-x"></i> Account Management</a>
+<a class="nav-link" href="{{ url_for('founder_dash.notification_testing') }}"><i class="bi bi-bell" style="color:#fbbf24;"></i> Notifications</a>
+<a class="nav-link" href="{{ url_for('classics.dashboard') }}"><i class="bi bi-journal-bookmark" style="color:#a78bfa;"></i> Content Seeder</a>
+<a class="nav-link" href="{{ url_for('founder_dash.settings') }}"><i class="bi bi-gear"></i> Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.admins') }}"><i class="bi bi-shield-check"></i> Admins</a>
+{% endblock %}
+
+{% block dashboard_content %}
+<h2 class="dash-title"><i class="bi bi-send-check me-2"></i>Creator Payouts</h2>
+
+<!-- Stats Cards -->
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:var(--space-md);margin-bottom:var(--space-xl);">
+    <div class="stat-card">
+        <div class="stat-label">Total Sent</div>
+        <div class="stat-value" style="color:#2ecc71;">GH&#8373;{{ '%.2f'|format(stats.total_sent_ghs) }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Sent</div>
+        <div class="stat-value" style="color:#2ecc71;">{{ stats.sent }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Processing</div>
+        <div class="stat-value" style="color:#f39c12;">{{ stats.processing }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Failed</div>
+        <div class="stat-value" style="color:#e74c3c;">{{ stats.failed }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Pending</div>
+        <div class="stat-value">{{ stats.pending }}</div>
+    </div>
+</div>
+
+<!-- Actions -->
+<div style="display:flex;gap:var(--space-md);align-items:center;flex-wrap:wrap;margin-bottom:var(--space-xl);">
+    <form method="POST" action="{{ url_for('founder_dash.run_payouts') }}" onsubmit="return confirm('Run monthly payouts now? This will process all unpaid creator earnings.')">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn-dash btn-dash-primary"><i class="bi bi-play-fill me-1"></i> Run Monthly Payouts</button>
+    </form>
+
+    <!-- Status Filter -->
+    <div style="display:flex;gap:var(--space-xs);margin-left:auto;">
+        <a href="{{ url_for('founder_dash.payouts') }}" class="btn-dash btn-dash-sm {{ 'btn-dash-primary' if not status_filter else '' }}">All</a>
+        <a href="{{ url_for('founder_dash.payouts', status='sent') }}" class="btn-dash btn-dash-sm {{ 'btn-dash-primary' if status_filter == 'sent' else '' }}">Sent</a>
+        <a href="{{ url_for('founder_dash.payouts', status='processing') }}" class="btn-dash btn-dash-sm {{ 'btn-dash-primary' if status_filter == 'processing' else '' }}">Processing</a>
+        <a href="{{ url_for('founder_dash.payouts', status='failed') }}" class="btn-dash btn-dash-sm {{ 'btn-dash-primary' if status_filter == 'failed' else '' }}">Failed</a>
+        <a href="{{ url_for('founder_dash.payouts', status='pending') }}" class="btn-dash btn-dash-sm {{ 'btn-dash-primary' if status_filter == 'pending' else '' }}">Pending</a>
+    </div>
+</div>
+
+<!-- Payouts Table -->
+{% if payouts %}
+<div style="overflow-x:auto;">
+    <table class="dash-table" style="width:100%;">
+        <thead>
+            <tr>
+                <th>Creator</th>
+                <th>Amount</th>
+                <th>Period</th>
+                <th>Provider</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in payouts %}
+            <tr>
+                <td>
+                    {% set creator = creators.get(p.creator_id) %}
+                    {% if creator %}
+                        {{ creator.display_name }}
+                        <div style="font-size:0.7rem;color:var(--text-muted);">ID: {{ p.creator_id }}</div>
+                    {% else %}
+                        ID: {{ p.creator_id }}
+                    {% endif %}
+                </td>
+                <td style="font-weight:600;">GH&#8373;{{ '%.2f'|format(p.amount_ghs) }}</td>
+                <td>{{ p.year }}-{{ '%02d'|format(p.month) }}</td>
+                <td>{{ p.provider or '—' }}</td>
+                <td>
+                    {% if p.status == 'sent' %}
+                        <span style="display:inline-flex;align-items:center;gap:4px;padding:2px 10px;background:rgba(46,204,113,0.15);color:#2ecc71;border-radius:12px;font-size:0.75rem;font-weight:600;">
+                            <i class="bi bi-check-circle-fill"></i> Sent
+                        </span>
+                    {% elif p.status == 'processing' %}
+                        <span style="display:inline-flex;align-items:center;gap:4px;padding:2px 10px;background:rgba(243,156,18,0.15);color:#f39c12;border-radius:12px;font-size:0.75rem;font-weight:600;">
+                            <i class="bi bi-arrow-repeat"></i> Processing
+                        </span>
+                    {% elif p.status == 'failed' %}
+                        <span style="display:inline-flex;align-items:center;gap:4px;padding:2px 10px;background:rgba(231,76,60,0.15);color:#e74c3c;border-radius:12px;font-size:0.75rem;font-weight:600;">
+                            <i class="bi bi-x-circle-fill"></i> Failed
+                        </span>
+                        {% if p.failure_reason %}
+                            <div style="font-size:0.65rem;color:var(--text-muted);margin-top:2px;">{{ p.failure_reason[:80] }}</div>
+                        {% endif %}
+                    {% else %}
+                        <span style="display:inline-flex;align-items:center;gap:4px;padding:2px 10px;background:rgba(150,150,150,0.15);color:var(--text-muted);border-radius:12px;font-size:0.75rem;font-weight:600;">
+                            <i class="bi bi-clock"></i> Pending
+                        </span>
+                    {% endif %}
+                </td>
+                <td style="font-size:0.8rem;">
+                    {{ p.created_at.strftime('%b %d, %Y') if p.created_at else '—' }}
+                    {% if p.completed_at %}
+                        <div style="font-size:0.65rem;color:var(--text-muted);">Completed: {{ p.completed_at.strftime('%b %d') }}</div>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if p.status == 'failed' %}
+                        <form method="POST" action="{{ url_for('founder_dash.retry_payout', payout_id=p.id) }}" style="display:inline;" onsubmit="return confirm('Retry this payout?')">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn-dash btn-dash-sm btn-dash-primary" title="Retry"><i class="bi bi-arrow-clockwise"></i> Retry</button>
+                        </form>
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="dash-card" style="text-align:center;padding:3rem 1.5rem;color:var(--text-muted)">
+    <i class="bi bi-send-check" style="font-size:3rem;display:block;margin-bottom:1rem;color:#3b82f6;opacity:0.6"></i>
+    <h3 style="font-size:1.05rem;margin-bottom:0.5rem;color:var(--text-primary)">No Payouts Yet</h3>
+    <p style="font-size:0.85rem;max-width:420px;margin:0 auto 1rem;line-height:1.6">
+        Creator payouts appear here once creators earn coins from locked chapters and request withdrawal.
+        Payouts are processed monthly via Paystack Transfer to creators' Mobile Money accounts.
+    </p>
+    <div style="display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap;font-size:0.75rem;">
+        <span style="padding:0.3rem 0.7rem;background:rgba(59,130,246,0.1);border-radius:6px;color:#60a5fa"><i class="bi bi-info-circle me-1"></i>Min payout: 10 GHS</span>
+        <span style="padding:0.3rem 0.7rem;background:rgba(34,197,94,0.1);border-radius:6px;color:#4ade80"><i class="bi bi-calendar-check me-1"></i>Monthly cycle</span>
+        <span style="padding:0.3rem 0.7rem;background:rgba(168,139,250,0.1);border-radius:6px;color:#a78bfa"><i class="bi bi-phone me-1"></i>Mobile Money</span>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

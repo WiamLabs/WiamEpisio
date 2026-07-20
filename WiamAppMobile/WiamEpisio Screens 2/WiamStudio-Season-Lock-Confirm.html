@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamStudio — Confirm Complete Season</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75; --red:#E4573D;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); display:flex; flex-direction:column; }
+  .statusbar{ height:44px; flex-shrink:0; }
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+
+  .topbar{ display:flex; align-items:center; gap:12px; padding:2px 20px 14px; flex-shrink:0; }
+  .icon-btn{ width:34px; height:34px; border-radius:50%; background:var(--navy-card); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .topbar h1{ font-size:16px; font-weight:800; color:#fff; margin:0; }
+
+  .scroll{ flex:1; overflow-y:auto; padding:0 20px 20px; }
+
+  .hero{ text-align:center; padding:10px 0 22px; }
+  .lock-icon{ width:66px; height:66px; border-radius:50%; background:rgba(212,160,23,0.14); border:1.5px solid rgba(212,160,23,0.4); display:flex; align-items:center; justify-content:center; margin:0 auto 18px; }
+  .lock-icon svg{ color:var(--gold); width:28px; height:28px; }
+  .hero h2{ font-size:18px; font-weight:800; color:#fff; margin:0 0 8px; }
+  .hero p{ font-size:12px; color:var(--text-dim); line-height:1.65; margin:0; max-width:290px; margin:0 auto; }
+  .hero p b{ color:#fff; }
+
+  .series-card{ display:flex; gap:12px; align-items:center; background:var(--navy-card); border:1px solid var(--navy-line); border-radius:16px; padding:14px; margin-bottom:20px; }
+  .series-poster{ width:48px; height:69px; border-radius:9px; background:linear-gradient(160deg,#1a2a3a,#12122a); flex-shrink:0; }
+  .series-title{ font-size:13.5px; font-weight:800; color:#fff; margin:0 0 4px; }
+  .series-sub{ font-size:11px; color:var(--text-dim); margin:0; }
+  .series-sub b{ color:var(--gold); }
+
+  .warning-card{ background:rgba(228,87,61,0.08); border:1px solid rgba(228,87,61,0.28); border-radius:16px; padding:16px; margin-bottom:16px; }
+  .warning-title{ display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+  .warning-title svg{ color:var(--red); width:16px; height:16px; }
+  .warning-title span{ font-size:12.5px; font-weight:800; color:#fff; }
+  .warning-item{ display:flex; gap:9px; margin-bottom:9px; font-size:11.5px; color:#E0A79A; line-height:1.55; }
+  .warning-item:last-child{ margin-bottom:0; }
+  .warning-item svg{ width:13px; height:13px; flex-shrink:0; margin-top:2px; }
+
+  .after-card{ background:var(--navy-card); border:1px solid var(--navy-line); border-radius:16px; padding:15px 16px; margin-bottom:24px; }
+  .after-title{ font-size:12px; font-weight:800; color:var(--text-dim); letter-spacing:0.4px; text-transform:uppercase; margin:0 0 10px; }
+  .after-item{ display:flex; gap:9px; margin-bottom:9px; font-size:11.5px; color:#D9D9E8; line-height:1.55; }
+  .after-item:last-child{ margin-bottom:0; }
+  .after-item svg{ width:14px; height:14px; color:var(--gold); flex-shrink:0; margin-top:1px; }
+
+  .confirm-field{ background:var(--navy-card); border:1.5px solid var(--navy-line); border-radius:14px; padding:14px 16px; display:flex; align-items:center; gap:12px; margin-bottom:6px; }
+  .confirm-field.checked{ border-color:var(--gold); background:rgba(212,160,23,0.08); }
+  .checkbox{ width:22px; height:22px; border-radius:6px; border:2px solid var(--navy-line); flex-shrink:0; }
+  .confirm-field.checked .checkbox{ background:var(--gold); border-color:var(--gold); display:flex; align-items:center; justify-content:center; }
+  .confirm-field.checked .checkbox svg{ width:13px; height:13px; stroke:var(--navy); stroke-width:3; }
+  .confirm-field span{ font-size:12px; color:#E7E7F2; line-height:1.5; }
+  .confirm-field b{ color:#fff; }
+
+  .footer{ flex-shrink:0; padding:14px 20px 26px; }
+  .btn-lock{ width:100%; padding:16px; border-radius:16px; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); border:none; color:var(--navy); font-size:15px; font-weight:800; box-shadow:0 14px 30px rgba(212,160,23,0.3); font-family:'Inter',sans-serif; margin-bottom:8px; display:flex; align-items:center; justify-content:center; gap:8px; }
+  .btn-cancel{ width:100%; padding:13px; border-radius:16px; background:none; border:none; color:var(--text-dim); font-size:12.5px; font-weight:600; font-family:'Inter',sans-serif; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"></div>
+  <div class="topbar">
+    <div class="icon-btn"><svg viewBox="0 0 24 24" width="15" height="15" color="#fff"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></div>
+    <h1>Confirm Complete Season</h1>
+  </div>
+
+  <div class="scroll">
+
+    <div class="hero">
+      <div class="lock-icon"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
+      <h2>Is this the complete story?</h2>
+      <p>Once you lock this season, <b>you cannot edit or remove episodes</b>. This keeps every promise WiamEpisio makes to viewers — every series here has an ending.</p>
+    </div>
+
+    <div class="series-card">
+      <div class="series-poster"></div>
+      <div>
+        <p class="series-title">The Chief's Daughter</p>
+        <p class="series-sub"><b>20 of 20</b> episodes uploaded · Trailer passed</p>
+      </div>
+    </div>
+
+    <div class="warning-card">
+      <div class="warning-title"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>This cannot be undone</span></div>
+      <div class="warning-item"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>No new episodes can be added to this season after locking</div>
+      <div class="warning-item"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Existing episodes can't be replaced or removed directly</div>
+      <div class="warning-item"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Fixes only happen through a Revision Request, reviewed on just the change</div>
+    </div>
+
+    <div class="after-card">
+      <p class="after-title">After locking</p>
+      <div class="after-item"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span>Your season enters review — WiamEpisio publishes it, not you</span></div>
+      <div class="after-item"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span>Earnings only begin once it's live</span></div>
+    </div>
+
+    <div class="confirm-field checked">
+      <div class="checkbox"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <span>I confirm all <b>20 episodes</b> are uploaded and this is the <b>complete story</b>, start to finish.</span>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <button class="btn-lock"><svg viewBox="0 0 24 24" width="15" height="15" stroke="#08081A"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Lock Season &amp; Continue</button>
+    <button class="btn-cancel">Not yet — I need to add more episodes</button>
+  </div>
+</div>
+
+</body>
+</html>

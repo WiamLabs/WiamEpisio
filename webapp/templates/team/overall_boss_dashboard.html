@@ -1,0 +1,177 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Overall Boss Dashboard — WiamApp{% endblock %}
+{% block sidebar_title %}Overall Boss{% endblock %}
+
+{% block sidebar_nav %}
+<a class="nav-link active" href="{{ url_for('team.dashboard') }}"><i class="bi bi-speedometer2"></i> Overview</a>
+<div class="sidebar-title" style="margin-top:1rem;">Management</div>
+<a class="nav-link" href="{{ url_for('team.admin_user_list') }}"><i class="bi bi-people"></i> All Users</a>
+<a class="nav-link" href="{{ url_for('team.admin_user_list', status='banned') }}"><i class="bi bi-slash-circle" style="color:#f87171;"></i> Banned Users</a>
+<a class="nav-link" href="{{ url_for('admin_dash.creators') }}"><i class="bi bi-person-badge"></i> Creator Apps</a>
+<a class="nav-link" href="{{ url_for('team.careers') }}" target="_blank"><i class="bi bi-globe" style="color:#38bdf8;"></i> Public Careers</a>
+<div class="sidebar-title" style="margin-top:1rem;">Content</div>
+<a class="nav-link" href="{{ url_for('editor_studio.dashboard') }}"><i class="bi bi-journal-richtext"></i> Editor Studio</a>
+<a class="nav-link" href="{{ url_for('editor_studio.content_browse') }}"><i class="bi bi-search"></i> Browse Content</a>
+<a class="nav-link" href="{{ url_for('team.mod_flagged_stories') }}"><i class="bi bi-flag" style="color:#f87171;"></i> Flagged Stories</a>
+<a class="nav-link" href="{{ url_for('admin_dash.content') }}"><i class="bi bi-journal-text"></i> All Content</a>
+<div class="sidebar-title" style="margin-top:1rem;">Operations</div>
+<a class="nav-link" href="{{ url_for('founder_dash.email_studio') }}"><i class="bi bi-envelope-paper" style="color:var(--gold);"></i> Email Studio</a>
+<a class="nav-link" href="{{ url_for('admin_dash.orders') }}"><i class="bi bi-receipt"></i> Orders</a>
+<div class="sidebar-title" style="margin-top:1rem;">Account</div>
+<a class="nav-link" href="{{ url_for('profile.account_safety') }}"><i class="bi bi-shield-check"></i> Account Safety</a>
+{% endblock %}
+
+{% block dash_content %}
+{% include "team/_greeting.html" ignore missing %}
+<div class="dash-header">
+    <h1><i class="bi bi-star-fill" style="color:#d4a843;"></i> {% if role == 'founder' %}Founder{% else %}Overall Boss{% endif %} Dashboard</h1>
+</div>
+
+{% include "team/_dashboard_switcher.html" ignore missing %}
+
+<!-- Stats -->
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="label">Total Users</div>
+        <div class="value gold">{{ total_users }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">New This Week</div>
+        <div class="value" style="color:#60a5fa;">{{ new_users_week }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Active (30d)</div>
+        <div class="value" style="color:#4ade80;">{{ active_users_month|default(0) }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Creators</div>
+        <div class="value">{{ total_creators|default(0) }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Total Stories</div>
+        <div class="value">{{ total_stories }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Published</div>
+        <div class="value" style="color:#4ade80;">{{ total_published }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Flagged</div>
+        <div class="value" style="color:#f87171;">{{ reported_count|default(0) }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Review Queue</div>
+        <div class="value" style="color:#fbbf24;">{{ (stories_pending_review|default([]))|length }}</div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px;">
+    <a href="{{ url_for('team.admin_user_list') }}" class="btn-dash btn-dash-primary" style="padding:0.5rem 1.2rem;border-radius:10px;text-decoration:none;font-size:0.88rem;">
+        <i class="bi bi-people"></i> Manage Users
+    </a>
+    {% if reported_count|default(0) %}
+    <a href="{{ url_for('team.mod_flagged_stories') }}" class="btn-dash" style="padding:0.5rem 1.2rem;border-radius:10px;text-decoration:none;font-size:0.88rem;background:rgba(248,113,113,0.1);color:#f87171;">
+        <i class="bi bi-flag"></i> Review {{ reported_count }} Flagged
+    </a>
+    {% endif %}
+    <a href="{{ url_for('editor_studio.dashboard') }}" class="btn-dash" style="padding:0.5rem 1.2rem;border-radius:10px;text-decoration:none;font-size:0.88rem;background:rgba(96,165,250,0.1);color:#60a5fa;">
+        <i class="bi bi-journal-richtext"></i> Editor Studio
+    </a>
+</div>
+
+<!-- Revenue Overview -->
+{% if total_revenue_ghs is defined %}
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1.5rem;">
+    <div class="dash-card" style="border-left:3px solid var(--gold);">
+        <h3><i class="bi bi-wallet2" style="color:var(--gold);margin-right:6px;"></i> Revenue</h3>
+        <div style="font-size:1.4rem;font-weight:700;color:var(--gold);">GH₵{{ '%.2f'|format(total_revenue_ghs) }}</div>
+        <div style="font-size:0.75rem;color:var(--text-muted);">All time</div>
+    </div>
+    <div class="dash-card" style="border-left:3px solid #4ade80;">
+        <h3><i class="bi bi-send-check" style="color:#4ade80;margin-right:6px;"></i> Payouts</h3>
+        <div style="font-size:1.4rem;font-weight:700;color:#4ade80;">GH₵{{ '%.2f'|format(total_paid_out) }}</div>
+        <div style="font-size:0.75rem;color:var(--text-muted);">{{ total_payouts_count }} sent | {{ pending_payouts }} pending</div>
+    </div>
+    <div class="dash-card" style="border-left:3px solid #60a5fa;">
+        <h3><i class="bi bi-coin" style="color:#60a5fa;margin-right:6px;"></i> Coins</h3>
+        <div style="font-size:1.4rem;font-weight:700;color:#60a5fa;">{{ total_coins_circulation }}</div>
+        <div style="font-size:0.75rem;color:var(--text-muted);">In circulation</div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Review Queue -->
+<div class="dash-card">
+    <h3><i class="bi bi-inbox" style="color:var(--gold);margin-right:6px;"></i> Stories Pending Review</h3>
+    {% if stories_pending_review|default([]) %}
+    <table class="dash-table">
+        <thead>
+            <tr><th>Story</th><th>Author</th><th>Updated</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+            {% for story in (stories_pending_review|default([]))[:10] %}
+            <tr>
+                <td style="font-weight:600;">{{ story.title|truncate(40) }}</td>
+                <td style="color:var(--text-muted);">{{ story.author or 'Unknown' }}</td>
+                <td style="color:var(--text-muted);font-size:0.8rem;">{{ story.created_at.strftime('%b %d, %H:%M') if story.created_at else 'N/A' }}</td>
+                <td>
+                    <a href="{{ url_for('team.editor_review', story_id=story.id) }}" class="btn-dash btn-dash-primary btn-dash-sm">Review</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div style="text-align:center;padding:30px;color:var(--text-muted);">
+        <i class="bi bi-check-circle" style="font-size:1.5rem;opacity:0.3;display:block;margin-bottom:6px;"></i>
+        <p>No stories pending review.</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Recent Users -->
+<div class="dash-card">
+    <h3><i class="bi bi-person-plus" style="color:var(--gold);margin-right:6px;"></i> Newest Users</h3>
+    {% if recent_users|default([]) %}
+    <table class="dash-table">
+        <thead>
+            <tr><th>User</th><th>Role</th><th>Joined</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+            {% for u in (recent_users|default([]))[:10] %}
+            <tr>
+                <td>
+                    <span style="font-weight:600;">{{ u.display_name }}</span>
+                    <div style="font-size:0.75rem;color:var(--text-muted);">{{ u.email or '' }}</div>
+                </td>
+                <td><span class="badge-status badge-{{ u.role }}">{{ u.role }}</span></td>
+                <td style="color:var(--text-muted);font-size:0.8rem;">{{ u.date_joined.strftime('%b %d') if u.date_joined else '' }}</td>
+                <td>
+                    {% if u.status == 'banned' %}<span class="badge-status badge-banned">Banned</span>
+                    {% else %}<span class="badge-status badge-active">Active</span>{% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="color:var(--text-muted);text-align:center;padding:20px;">No recent users.</p>
+    {% endif %}
+</div>
+
+<!-- User Growth -->
+<div class="dash-card" style="border-left:3px solid #f472b6;">
+    <h3><i class="bi bi-graph-up" style="color:#f472b6;margin-right:6px;"></i> New Users — Last 7 Days</h3>
+    <div style="display:flex;align-items:flex-end;gap:12px;height:140px;padding:20px 10px 30px;position:relative;">
+        {% set max_count = (user_growth|default([]))|map(attribute='count')|max or 1 %}
+        {% for d in user_growth|default([]) %}
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;position:relative;">
+            <span style="font-size:0.75rem;font-weight:700;color:var(--gold);margin-bottom:6px;">{{ d.count }}</span>
+            <div style="width:100%;max-width:48px;height:{{ (d.count / max_count * 90 + 6)|int }}px;background:linear-gradient(to top,rgba(212,168,67,0.3),rgba(212,168,67,0.7));border-radius:8px 8px 0 0;"></div>
+            <span style="font-size:0.7rem;color:var(--text-muted);margin-top:8px;position:absolute;bottom:-22px;">{{ d.day }}</span>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

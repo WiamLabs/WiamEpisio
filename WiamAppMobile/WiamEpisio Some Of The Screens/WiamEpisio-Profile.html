@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamEpisio — Profile</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{ --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42; --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75; --error:#EF4444; }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); }
+  .statusbar{ height:44px; }
+  .scrollarea{ height:calc(100% - 44px - 84px); overflow-y:auto; padding:0 20px 20px; }
+
+  .profile-hero{ display:flex; align-items:center; gap:14px; padding:14px 0 20px; }
+  .avatar{ width:64px; height:64px; border-radius:50%; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); display:flex; align-items:center; justify-content:center; color:var(--navy); font-weight:800; font-size:24px; }
+  .profile-name{ font-size:17px; font-weight:700; color:#fff; margin:0; }
+  .profile-sub{ font-size:12px; color:var(--text-faint); margin:2px 0 0; }
+  .member-badge{ display:inline-flex; align-items:center; gap:4px; font-size:10px; font-weight:700; color:var(--gold); background:rgba(212,160,23,0.14); padding:3px 9px; border-radius:999px; margin-top:6px; }
+
+  .wallet-card{ border-radius:20px; padding:16px; margin-bottom:20px; background:linear-gradient(135deg,var(--navy-card),var(--navy-soft)); border:1px solid var(--navy-line); display:flex; align-items:center; }
+  .wallet-item{ flex:1; text-align:center; }
+  .wallet-value{ font-size:17px; font-weight:800; color:#fff; display:flex; align-items:center; justify-content:center; gap:5px; }
+  .wallet-value svg{ color:var(--gold); width:15px; height:15px; }
+  .wallet-label{ font-size:10px; color:var(--text-faint); margin-top:3px; }
+  .wallet-divider{ width:1px; height:32px; background:var(--navy-line); }
+
+  .section-label{ font-size:11px; font-weight:700; letter-spacing:0.8px; color:var(--text-faint); text-transform:uppercase; margin:18px 4px 10px; }
+  .section-label:first-of-type{ margin-top:0; }
+
+  .menu-group{ border-radius:20px; background:var(--navy-card); border:1px solid var(--navy-line); overflow:hidden; }
+  .menu-row{ display:flex; align-items:center; gap:13px; padding:14px 16px; border-bottom:1px solid var(--navy-line); }
+  .menu-row:last-child{ border-bottom:none; }
+  .menu-icon{ width:36px; height:36px; border-radius:11px; background:rgba(212,160,23,0.1); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .menu-icon svg{ width:17px; height:17px; color:var(--gold); }
+  .menu-text{ flex:1; }
+  .menu-title{ font-size:13.5px; font-weight:500; color:#fff; margin:0; }
+  .menu-sub{ font-size:11px; color:var(--text-faint); margin:2px 0 0; }
+  .menu-chevron{ color:var(--text-faint); flex-shrink:0; }
+
+  .signout-btn{ width:100%; margin-top:22px; padding:14px; border-radius:16px; background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.25); color:var(--error); font-size:13.5px; font-weight:600; display:flex; align-items:center; justify-content:center; gap:8px; }
+  .footer-copy{ text-align:center; font-size:10px; color:#3A3A56; padding:18px 0 6px; }
+
+  .bottomnav{ position:absolute; bottom:0; left:0; right:0; height:84px; background:var(--navy-soft); border-top:1px solid #1C1C38; display:flex; align-items:flex-start; justify-content:space-around; padding-top:12px; }
+  .navitem{ display:flex; flex-direction:column; align-items:center; gap:4px; width:60px; }
+  .navitem span{ font-size:9.5px; color:var(--text-faint); }
+  .navitem.active span{ color:var(--gold); }
+  .navitem svg{ width:19px; height:19px; }
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"></div>
+  <div class="scrollarea">
+    <div class="profile-hero">
+      <div class="avatar">M</div>
+      <div>
+        <p class="profile-name">Martin Wiafe</p>
+        <p class="profile-sub">+233 55 000 0000</p>
+        <span class="member-badge"><svg viewBox="0 0 24 24" width="10" height="10" fill="#D4A017" stroke="none"><path d="M12 2l2.4 2.6 3.5-.6.6 3.5L21.1 9l-2 3 2 3-3.6 1.5-.6 3.5-3.5-.6L12 22l-2.4-2.6-3.5.6-.6-3.5L2 15l2-3-2-3 3.6-1.5.6-3.5 3.5.6z"/></svg>Weekly Member</span>
+      </div>
+    </div>
+
+    <div class="wallet-card">
+      <div class="wallet-item">
+        <div class="wallet-value"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="10"/></svg>45</div>
+        <p class="wallet-label">Coins</p>
+      </div>
+      <div class="wallet-divider"></div>
+      <div class="wallet-item">
+        <div class="wallet-value">12</div>
+        <p class="wallet-label">Following</p>
+      </div>
+      <div class="wallet-divider"></div>
+      <div class="wallet-item">
+        <div class="wallet-value">8</div>
+        <p class="wallet-label">In My List</p>
+      </div>
+    </div>
+
+    <p class="section-label">Membership & Wallet</p>
+    <div class="menu-group">
+      <div class="menu-row">
+        <div class="menu-icon"><svg viewBox="0 0 24 24"><path d="M12 2l2.4 2.6 3.5-.6.6 3.5L21.1 9l-2 3 2 3-3.6 1.5-.6 3.5-3.5-.6L12 22l-2.4-2.6-3.5.6-.6-3.5L2 15l2-3-2-3 3.6-1.5.6-3.5 3.5.6z"/></svg></div>
+        <div class="menu-text"><p class="menu-title">Membership</p><p class="menu-sub">Weekly · Renews in 4 days</p></div>
+        <svg class="menu-chevron" viewBox="0 0 24 24" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div class="menu-row">
+        <div class="menu-icon"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="10"/></svg></div>
+        <div class="menu-text"><p class="menu-title">Buy Coins</p></div>
+        <svg class="menu-chevron" viewBox="0 0 24 24" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div class="menu-row">
+        <div class="menu-icon"><svg viewBox="0 0 24 24"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg></div>
+        <div class="menu-text"><p class="menu-title">Transaction History</p></div>
+        <svg class="menu-chevron" viewBox="0 0 24 24" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div class="menu-row">
+        <div class="menu-icon"><svg viewBox="0 0 24 24"><polygon points="12 2 15 9 22 9.5 16.5 14.3 18.2 21 12 17.3 5.8 21 7.5 14.3 2 9.5 9 9"/></svg></div>
+        <div class="menu-text"><p class="menu-title">Daily Rewards & Points</p></div>
+        <svg class="menu-chevron" viewBox="0 0 24 24" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+    </div>
+
+    <p class="section-label">Become a Creator</p>
+    <div class="menu-group">
+      <div class="menu-row">
+        <div class="menu-icon"><svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
+        <div class="menu-text"><p class="menu-title">Upload Your Own Series</p><p class="menu-sub">Apply to become a WiamEpisio Creator</p></div>
+        <svg class="menu-chevron" viewBox="0 0 24 24" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+    </div>
+
+    <p class="section-label">Account</p>
+    <div class="menu-group">
+      <div class="menu-row">
+        <div class="menu-icon"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></div>
+        <div class="menu-text"><p class="menu-title">Notifications</p></div>
+        <svg class="menu-chevron" viewBox="0 0 24 24" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div class="menu-row">
+        <div class="menu-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
+        <div class="menu-text"><p class="menu-title">Settings</p></div>
+        <svg class="menu-chevron" viewBox="0 0 24 24" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div class="menu-row">
+        <div class="menu-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+        <div class="menu-text"><p class="menu-title">Help Center</p></div>
+        <svg class="menu-chevron" viewBox="0 0 24 24" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+    </div>
+
+    <button class="signout-btn">
+      <svg viewBox="0 0 24 24" width="16" height="16"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Sign Out
+    </button>
+
+    <p class="footer-copy">© 2026 WiamEpisio · Powered by WiamLabs</p>
+  </div>
+
+  <div class="bottomnav">
+    <div class="navitem" style="color:#5A5A75"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg><span>Home</span></div>
+    <div class="navitem" style="color:#5A5A75"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span>Discover</span></div>
+    <div class="navitem" style="color:#5A5A75"><svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="3"/></svg><span>Member</span></div>
+    <div class="navitem" style="color:#5A5A75"><svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span>My List</span></div>
+    <div class="navitem active"><svg viewBox="0 0 24 24" fill="#D4A017" stroke="none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span style="color:#D4A017">Profile</span></div>
+  </div>
+</div>
+
+</body>
+</html>

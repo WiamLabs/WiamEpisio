@@ -1,0 +1,108 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Apex Review — Control Panel{% endblock %}
+{% block sidebar_title %}Control Panel{% endblock %}
+
+{% block sidebar_nav %}
+<a class="nav-link" href="{{ url_for('founder_dash.overview') }}"><i class="bi bi-speedometer2"></i> Overview</a>
+<a class="nav-link" href="{{ url_for('founder_dash.users') }}"><i class="bi bi-people"></i> Users</a>
+<a class="nav-link" href="{{ url_for('founder_dash.content') }}"><i class="bi bi-book"></i> Content</a>
+<a class="nav-link" href="{{ url_for('founder_dash.revenue') }}"><i class="bi bi-cash-stack"></i> Revenue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.financial_dashboard') }}"><i class="bi bi-bank" style="color:var(--gold);"></i> Financial v5</a>
+<a class="nav-link" href="{{ url_for('founder_dash.premium_analytics') }}"><i class="bi bi-gem" style="color:#c084fc;"></i> Premium Analytics</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payouts') }}"><i class="bi bi-send-check"></i> Payouts</a>
+<a class="nav-link" href="{{ url_for('founder_dash.withdrawals') }}"><i class="bi bi-arrow-up-right-circle" style="color:var(--gold);"></i> Withdrawals</a>
+<a class="nav-link" href="{{ url_for('founder_dash.subscribers') }}"><i class="bi bi-gem" style="color:#9b59b6;"></i> Subscribers</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payroll') }}"><i class="bi bi-wallet2" style="color:#2ecc71;"></i> Team Payroll</a>
+<a class="nav-link" href="{{ url_for('founder_dash.creators') }}"><i class="bi bi-person-badge"></i> Creators</a>
+<a class="nav-link" href="{{ url_for('founder_dash.genres') }}"><i class="bi bi-tags"></i> Genres</a>
+<a class="nav-link" href="{{ url_for('founder_dash.announcements') }}"><i class="bi bi-megaphone"></i> Announcements</a>
+<a class="nav-link" href="{{ url_for('founder_dash.collections') }}"><i class="bi bi-grid"></i> Collections</a>
+<a class="nav-link" href="{{ url_for('founder_dash.moderation') }}"><i class="bi bi-shield-exclamation"></i> Moderation</a>
+<a class="nav-link" href="{{ url_for('founder_dash.warnings_list') }}"><i class="bi bi-exclamation-triangle" style="color:#f59e0b;"></i> Warnings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.elite_manage') }}"><span style="color:var(--gold);">✦</span> WiamElite</a>
+<a class="nav-link" href="{{ url_for('founder_dash.review_queue') }}"><i class="bi bi-robot"></i> Bot Review Queue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.platform_settings') }}"><i class="bi bi-sliders"></i> Platform Settings</a>
+<a class="nav-link active" href="{{ url_for('wiambot.apex_review') }}"><i class="bi bi-trophy"></i> Apex Review</a>
+<a class="nav-link" href="{{ url_for('founder_dash.forms_dashboard') }}"><i class="bi bi-file-earmark-text"></i> Application Forms</a>
+<a class="nav-link" href="{{ url_for('founder_dash.email_studio') }}"><i class="bi bi-envelope-paper" style="color:var(--gold);"></i> Email Studio</a>
+<a class="nav-link" href="{{ url_for('founder_dash.team_management') }}"><i class="bi bi-people-fill"></i> Team</a>
+<a class="nav-link" href="{{ url_for('founder_dash.account_management') }}"><i class="bi bi-person-x"></i> Account Management</a>
+<a class="nav-link" href="{{ url_for('founder_dash.notification_testing') }}"><i class="bi bi-bell" style="color:#fbbf24;"></i> Notifications</a>
+<a class="nav-link" href="{{ url_for('classics.dashboard') }}"><i class="bi bi-journal-bookmark" style="color:#a78bfa;"></i> Content Seeder</a>
+<a class="nav-link" href="{{ url_for('founder_dash.settings') }}"><i class="bi bi-gear"></i> Settings</a>
+{% endblock %}
+
+{% block dashboard_content %}
+<style>
+    .apex-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;}
+    .as-card{background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:12px;padding:12px;text-align:center;}
+    .as-card .as-val{font-size:1.4rem;font-weight:800;}
+    .as-card .as-label{font-size:0.68rem;color:var(--text-muted);text-transform:uppercase;}
+
+    .sub-card{background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:12px;padding:14px;margin-bottom:10px;display:block;text-decoration:none;transition:border-color 0.2s;}
+    .sub-card:hover{border-color:var(--gold);}
+    .sub-card .sc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+    .sub-card .sc-title{font-size:0.9rem;font-weight:700;color:var(--text);}
+    .sub-card .sc-score{font-size:1.1rem;font-weight:800;}
+    .sub-card .sc-score.pass{color:#4ade80;}
+    .sub-card .sc-score.fail{color:#ef4444;}
+    .sub-card .sc-meta{font-size:0.72rem;color:var(--text-muted);}
+    .status-pill{padding:3px 10px;border-radius:8px;font-size:0.68rem;font-weight:700;text-transform:uppercase;}
+    .status-pill.pending_review{background:rgba(250,204,21,0.15);color:#facc15;}
+    .status-pill.signed{background:rgba(74,222,128,0.15);color:#4ade80;}
+    .status-pill.rejected{background:rgba(239,68,68,0.15);color:#ef4444;}
+    .status-pill.revision_requested{background:rgba(251,146,60,0.15);color:#fb923c;}
+    .empty-apex{text-align:center;padding:40px 0;color:var(--text-muted);}
+</style>
+
+<h2 style="font-size:1.1rem;font-weight:700;margin:0 0 16px;display:flex;align-items:center;gap:8px;">
+    <i class="bi bi-trophy" style="color:var(--gold);"></i> Wiam Apex Review
+</h2>
+
+<div class="apex-stats">
+    <div class="as-card"><div class="as-val" style="color:var(--gold);">{{ stats.total }}</div><div class="as-label">Total</div></div>
+    <div class="as-card"><div class="as-val" style="color:#facc15;">{{ stats.pending }}</div><div class="as-label">Pending</div></div>
+    <div class="as-card"><div class="as-val" style="color:#4ade80;">{{ stats.signed }}</div><div class="as-label">Signed</div></div>
+    <div class="as-card"><div class="as-val" style="color:var(--text-muted);">{{ stats.pass_rate }}</div><div class="as-label">Pass Rate</div></div>
+</div>
+
+{% if pending %}
+<h3 style="font-size:0.9rem;font-weight:700;margin:0 0 12px;">Pending Review ({{ pending|length }})</h3>
+{% for sub in pending %}
+<a href="{{ url_for('wiambot.apex_review_detail', submission_id=sub.id) }}" class="sub-card">
+    <div class="sc-top">
+        <span class="sc-title">{{ sub.title }}</span>
+        <span class="sc-score {{ 'pass' if sub.total_score >= 90 else 'fail' }}">{{ sub.total_score }}/100</span>
+    </div>
+    <div class="sc-meta">{{ sub.pen_name }} · {{ sub.genre }} · {{ sub.created_at.strftime('%b %d, %Y') }}</div>
+</a>
+{% endfor %}
+{% else %}
+<div class="empty-apex" style="padding:2.5rem 1.5rem;">
+    <i class="bi bi-trophy" style="font-size:2.5rem;display:block;margin-bottom:0.8rem;color:var(--gold);opacity:0.6;"></i>
+    <h3 style="font-size:1rem;margin-bottom:0.4rem;color:var(--text-primary);font-weight:600;">No Pending Submissions</h3>
+    <p style="font-size:0.82rem;max-width:400px;margin:0 auto 0.8rem;line-height:1.5;color:var(--text-muted);">
+        Apex Review submissions appear here when stories score 90+ in the bot review system.
+        These are the highest-quality stories on WiamApp, requiring founder sign-off before receiving the Apex badge.
+    </p>
+    <div style="display:flex;gap:0.4rem;justify-content:center;flex-wrap:wrap;font-size:0.72rem;">
+        <span style="padding:0.25rem 0.6rem;background:rgba(250,204,21,0.1);border-radius:6px;color:#facc15;"><i class="bi bi-star-fill me-1"></i>Score 90+</span>
+        <span style="padding:0.25rem 0.6rem;background:rgba(74,222,128,0.1);border-radius:6px;color:#4ade80;"><i class="bi bi-check2-circle me-1"></i>Founder sign-off</span>
+        <span style="padding:0.25rem 0.6rem;background:rgba(168,139,250,0.1);border-radius:6px;color:#a78bfa;"><i class="bi bi-award me-1"></i>Apex badge</span>
+    </div>
+</div>
+{% endif %}
+
+{% if recent %}
+<h3 style="font-size:0.9rem;font-weight:700;margin:20px 0 12px;">Recent Decisions</h3>
+{% for sub in recent %}
+<a href="{{ url_for('wiambot.apex_review_detail', submission_id=sub.id) }}" class="sub-card">
+    <div class="sc-top">
+        <span class="sc-title">{{ sub.title }}</span>
+        <span class="status-pill {{ sub.status }}">{{ sub.status.replace('_',' ') }}</span>
+    </div>
+    <div class="sc-meta">{{ sub.pen_name }} · Score: {{ sub.total_score }} · {{ sub.updated_at.strftime('%b %d') }}</div>
+</a>
+{% endfor %}
+{% endif %}
+{% endblock %}

@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Payment — WiamApp{% endblock %}
+
+{% block extra_head %}
+<style>
+    .pay-card { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: var(--space-xl); max-width: 560px; margin: 0 auto; }
+    .pay-step { display: flex; gap: var(--space-md); margin-bottom: var(--space-lg); }
+    .pay-step .num { width: 32px; height: 32px; border-radius: 50%; background: var(--wine-dark); color: var(--gold); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; flex-shrink: 0; }
+    .pay-step .body { flex: 1; }
+    .pay-step .body h5 { font-size: 0.95rem; margin-bottom: 4px; }
+    .pay-step .body p { color: var(--text-secondary); font-size: 0.88rem; margin: 0; line-height: 1.6; }
+    .ref-code { font-family: monospace; font-size: 1.3rem; font-weight: 700; color: var(--gold); letter-spacing: 0.1em; background: var(--bg-elevated); padding: 8px 16px; border-radius: var(--radius-sm); display: inline-block; }
+    .copy-btn { cursor: pointer; color: var(--text-muted); font-size: 0.85rem; margin-left: 8px; }
+    .copy-btn:hover { color: var(--gold); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: var(--space-2xl); padding-bottom: var(--space-2xl);">
+    <div class="pay-card">
+        <div style="text-align: center; margin-bottom: var(--space-xl);">
+            <i class="bi bi-phone" style="font-size: 2.5rem; color: var(--gold); display: block; margin-bottom: var(--space-sm);"></i>
+            <h2 class="font-display" style="font-size: 1.3rem; margin-bottom: var(--space-xs);">Complete Your Payment</h2>
+            <p style="color: var(--text-muted); font-size: 0.88rem;">
+                {{ book.title }} — <span style="color: var(--gold); font-weight: 600;">{{ "%.0f"|format(order.price or 0) }} GHS</span>
+                {% if order.access_type == 'temporary' %}({{ order.rent_days }}-day rental){% endif %}
+            </p>
+        </div>
+
+        <div style="margin-bottom: var(--space-xl);">
+            <div class="pay-step">
+                <div class="num">1</div>
+                <div class="body">
+                    <h5>Send Mobile Money</h5>
+                    <p>Open your MoMo app and send <strong style="color: var(--gold);">{{ "%.0f"|format(order.price or 0) }} GHS</strong> to the payment number shown in the bot or provided by the creator.</p>
+                </div>
+            </div>
+
+            <div class="pay-step">
+                <div class="num">2</div>
+                <div class="body">
+                    <h5>Use This Reference Code</h5>
+                    <p style="margin-bottom: 8px;">Include this code in the payment message:</p>
+                    <div>
+                        <span class="ref-code" id="refCode">{{ order.reference_code }}</span>
+                        <span class="copy-btn" onclick="copyRef()" title="Copy"><i class="bi bi-clipboard"></i></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pay-step">
+                <div class="num">3</div>
+                <div class="body">
+                    <h5>Confirm Payment</h5>
+                    <p>After sending, click the button below. The creator or admin will verify and activate your access.</p>
+                </div>
+            </div>
+        </div>
+
+        <form method="post" action="{{ url_for('payment.confirm_payment', order_id=order.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-gold" style="width: 100%; padding: 12px; font-size: 1rem;">
+                <i class="bi bi-check-circle me-1"></i> I've Sent the Payment
+            </button>
+        </form>
+
+        <div style="text-align: center; margin-top: var(--space-lg);">
+            <a href="{{ url_for('book.detail', book_id=book.id) }}" style="color: var(--text-muted); font-size: 0.85rem;">Cancel and return to book</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function copyRef() {
+    var code = document.getElementById('refCode').textContent;
+    navigator.clipboard.writeText(code);
+    var btn = document.querySelector('.copy-btn');
+    btn.innerHTML = '<i class="bi bi-check"></i> Copied';
+    setTimeout(function() { btn.innerHTML = '<i class="bi bi-clipboard"></i>'; }, 2000);
+}
+</script>
+{% endblock %}

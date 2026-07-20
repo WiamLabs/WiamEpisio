@@ -1,0 +1,314 @@
+{% extends "base.html" %}
+{% block title %}WiamApp — Read Free Stories & Publish Your Novel Online{% endblock %}
+{% block meta_description %}WiamApp is a free storytelling platform where readers discover powerful stories and writers publish novels. Read stories from talented creators across Africa and beyond.{% endblock %}
+
+{% block extra_head %}
+<style>
+/* ── Landing Page ── */
+.landing { --gold: #d4a843; --dark: #08081a; }
+.landing * { box-sizing: border-box; }
+
+/* Hide default navbar + footer on landing (keep bottom nav visible) */
+.navbar-wiam, .site-footer { display: none !important; }
+/* Landing bottom nav custom styling */
+.bottom-nav { z-index: 120 !important; }
+
+/* Background */
+.l-bg { position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background: radial-gradient(ellipse at 25% 15%, rgba(212,168,67,0.07) 0%, transparent 50%),
+              radial-gradient(ellipse at 75% 85%, rgba(124,58,237,0.05) 0%, transparent 50%), #08081a; }
+.l-grain { position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+
+/* Subtle glow orbs */
+.l-orb { position: fixed; border-radius: 50%; filter: blur(120px); opacity: 0.06; pointer-events: none; z-index: 0; }
+.l-orb-1 { width: 420px; height: 420px; background: var(--gold); top: -8%; left: -3%; animation: orb-drift 25s ease-in-out infinite; }
+.l-orb-2 { width: 350px; height: 350px; background: #7c3aed; bottom: -3%; right: -3%; animation: orb-drift 30s ease-in-out infinite reverse; }
+@keyframes orb-drift { 0%,100%{ transform: translate(0,0); } 50%{ transform: translate(20px,-25px); } }
+
+/* Sections */
+.l-section { position: relative; z-index: 2; padding: 80px 20px; max-width: 1100px; margin: 0 auto; }
+.l-section.narrow { max-width: 800px; }
+
+/* ── TOP NAV ── */
+.l-nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; padding: 12px 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(8,8,26,0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255,255,255,0.06); }
+.l-nav-logo { display: flex; align-items: center; gap: 4px; text-decoration: none; }
+.l-nav-logo img { width: 44px; height: 44px; object-fit: contain; }
+.l-nav-logo span { font-family: 'Playfair Display', Georgia, serif; font-size: 1.15rem; font-weight: 600; color: var(--gold); }
+.l-nav-actions { display: flex; align-items: center; gap: 12px; }
+.l-btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 24px; border-radius: 10px;
+  font-size: 0.88rem; font-weight: 600; text-decoration: none; transition: all 0.2s; cursor: pointer; border: none; }
+.l-btn-ghost { background: transparent; color: #ccc; border: 1px solid rgba(255,255,255,0.1); }
+.l-btn-ghost:hover { background: rgba(255,255,255,0.06); color: #fff; border-color: rgba(255,255,255,0.2); }
+.l-btn-gold { background: linear-gradient(135deg, var(--gold), #b8860b); color: #000; }
+.l-btn-gold:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(212,168,67,0.3); }
+.l-btn-lg { padding: 14px 36px; font-size: 0.95rem; border-radius: 12px; }
+
+/* ── HERO ── */
+.l-hero { padding-top: 200px; padding-bottom: 60px; text-align: center; }
+.l-hero-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 16px;
+  background: rgba(212,168,67,0.08); border: 1px solid rgba(212,168,67,0.15); border-radius: 50px;
+  font-size: 0.78rem; color: var(--gold); font-weight: 500; margin-bottom: 28px; letter-spacing: 0.3px; }
+.l-hero h1 { font-family: 'Playfair Display', Georgia, serif; font-size: clamp(2.2rem, 5vw, 3.8rem);
+  font-weight: 700; color: #fff; line-height: 1.15; margin: 0 0 18px; }
+.l-hero h1 em { font-style: italic; color: var(--gold); }
+.l-hero-brand { color: var(--gold); font-style: normal; letter-spacing: -0.5px; }
+.l-hero-sub { font-size: 1.05rem; color: #a0a0b0; line-height: 1.7; max-width: 540px; margin: 0 auto 36px; }
+.l-hero-ctas { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+
+/* ── BOOK COVERS SCROLL ── */
+.l-covers { overflow: hidden; padding: 40px 0; position: relative; z-index: 2; }
+.l-covers::before, .l-covers::after { content:''; position:absolute; top:0; bottom:0; width:80px; z-index:3; pointer-events:none; }
+.l-covers::before { left:0; background:linear-gradient(90deg, var(--dark), transparent); }
+.l-covers::after { right:0; background:linear-gradient(-90deg, var(--dark), transparent); }
+.l-cover-row { display: flex; gap: 16px; animation: scroll-covers 40s linear infinite; width: max-content; }
+.l-cover-row img { width: 120px; height: 170px; object-fit: cover; border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.06); flex-shrink: 0; transition: transform 0.3s; }
+.l-cover-row img:hover { transform: scale(1.06); }
+@keyframes scroll-covers { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+/* ── SECTION HEADERS ── */
+.l-sh { text-align: center; margin-bottom: 48px; }
+.l-sh-label { display: inline-block; font-size: 0.72rem; font-weight: 600; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--gold); margin-bottom: 12px; }
+.l-sh h2 { font-family: 'Playfair Display', Georgia, serif; font-size: clamp(1.5rem, 3vw, 2.2rem);
+  font-weight: 700; color: #fff; margin: 0 0 12px; }
+.l-sh p { color: #888; font-size: 0.95rem; max-width: 480px; margin: 0 auto; }
+
+/* ── HOW IT WORKS ── */
+.l-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
+.l-step { text-align: center; padding: 36px 24px; background: rgba(20,20,40,0.6);
+  border: 1px solid rgba(255,255,255,0.06); border-radius: 20px; transition: all 0.3s; }
+.l-step:hover { background: rgba(212,168,67,0.04); border-color: rgba(212,168,67,0.12); transform: translateY(-4px); }
+.l-step-icon { width: 64px; height: 64px; border-radius: 16px; margin: 0 auto 20px;
+  display: flex; align-items: center; justify-content: center; font-size: 28px;
+  background: linear-gradient(135deg, rgba(212,168,67,0.1), rgba(212,168,67,0.03));
+  border: 1px solid rgba(212,168,67,0.15); }
+.l-step h3 { font-family: 'Playfair Display', Georgia, serif; font-size: 1.15rem; color: #fff; margin: 0 0 10px; }
+.l-step p { color: #888; font-size: 0.88rem; line-height: 1.6; margin: 0; }
+.l-step-num { font-size: 0.7rem; font-weight: 700; color: var(--gold); letter-spacing: 1px; margin-bottom: 8px; }
+
+/* ── FEATURES ── */
+.l-features { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+.l-feat { padding: 32px 28px; background: rgba(20,20,40,0.6);
+  border: 1px solid rgba(255,255,255,0.06); border-radius: 20px; transition: all 0.3s; }
+.l-feat:hover { border-color: rgba(212,168,67,0.15); background: rgba(212,168,67,0.03); }
+.l-feat-icon { font-size: 2rem; margin-bottom: 16px; }
+.l-feat h3 { font-size: 1.05rem; color: #fff; margin: 0 0 8px; font-weight: 600; }
+.l-feat p { color: #888; font-size: 0.88rem; line-height: 1.6; margin: 0; }
+
+/* ── CREATOR CTA ── */
+.l-creator { text-align: center; padding: 64px 40px;
+  background: rgba(20,20,40,0.7);
+  border: 1px solid rgba(212,168,67,0.1); border-radius: 24px; }
+.l-creator h2 { font-family: 'Playfair Display', Georgia, serif; font-size: clamp(1.4rem, 3vw, 2rem);
+  color: #fff; margin: 0 0 14px; }
+.l-creator p { color: #999; font-size: 0.95rem; max-width: 500px; margin: 0 auto 28px; line-height: 1.7; }
+.l-creator-perks { display: flex; gap: 32px; justify-content: center; flex-wrap: wrap; margin-bottom: 32px; }
+.l-creator-perk { font-size: 0.85rem; color: #ccc; display: flex; align-items: center; gap: 6px; }
+.l-creator-perk i { color: var(--gold); }
+
+/* ── FINAL CTA ── */
+.l-final { text-align: center; padding-top: 40px; padding-bottom: 100px; }
+.l-final h2 { font-family: 'Playfair Display', Georgia, serif; font-size: clamp(1.8rem, 4vw, 2.8rem);
+  color: #fff; margin: 0 0 16px; }
+.l-final p { color: #888; font-size: 1rem; max-width: 480px; margin: 0 auto 32px; }
+
+/* ── FOOTER ── */
+.l-footer { position: relative; z-index: 2; border-top: 1px solid rgba(255,255,255,0.04);
+  padding: 40px 20px 120px; text-align: center; }
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .l-footer { padding-bottom: calc(120px + env(safe-area-inset-bottom)); }
+}
+.l-footer-brand { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 16px; text-decoration: none; }
+.l-footer-brand img { width: 28px; height: 28px; }
+.l-footer-brand span { font-family: 'Playfair Display', Georgia, serif; font-size: 1rem; color: var(--gold); font-weight: 600; }
+.l-footer-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 20px; margin-bottom: 16px; }
+.l-footer-links a { font-size: 0.82rem; color: #666; text-decoration: none; transition: color 0.2s; }
+.l-footer-links a:hover { color: var(--gold); }
+.l-footer-copy { font-size: 0.75rem; color: #444; }
+.l-footer-copy a { color: var(--gold); text-decoration: none; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .l-section { padding: 50px 16px; }
+  .l-hero { padding-top: 130px; }
+  .l-final { padding-bottom: 100px; }
+  .l-footer { padding-bottom: 140px; }
+  .l-steps { grid-template-columns: 1fr; }
+  .l-features { grid-template-columns: 1fr; }
+  .l-creator { padding: 40px 20px; }
+  .l-nav-actions .l-btn-ghost { display: none; }
+  .l-cover-row img { width: 100px; height: 142px; }
+  .l-nav { padding: 10px 16px; }
+  .l-nav-logo img { width: 36px; height: 36px; }
+  .l-nav-logo span { font-size: 1rem; }
+}
+@media (max-width: 480px) {
+  .l-hero h1 { font-size: 1.8rem; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="landing">
+
+<!-- Background -->
+<div class="l-bg"></div>
+<div class="l-orb l-orb-1"></div>
+<div class="l-orb l-orb-2"></div>
+<div class="l-grain"></div>
+
+<!-- ── NAVIGATION ── -->
+<nav class="l-nav">
+    <a href="/" class="l-nav-logo">
+        <img src="{{ url_for('static', filename='img/WiamLogo.png') }}" alt="WiamApp">
+        <span>WiamApp</span>
+    </a>
+    <div class="l-nav-actions">
+        <a href="{{ url_for('auth.login') }}" class="l-btn l-btn-ghost">Sign In</a>
+        <a href="{{ url_for('auth.register') }}" class="l-btn l-btn-gold">Get Started</a>
+    </div>
+</nav>
+
+<!-- ── HERO ── -->
+<section class="l-section l-hero">
+    <div class="l-hero-badge">&#9733; WiamApp &middot; Free Stories, Unlimited Imagination</div>
+    <h1><span class="l-hero-brand">WiamApp</span> &mdash; Stories That<br><em>Move Your Soul</em></h1>
+    <p class="l-hero-sub">
+        WiamApp is a free reading platform where you discover stories from talented creators across Africa and beyond. Beautiful reading experience, completely free.
+    </p>
+    <div class="l-hero-ctas">
+        <a href="{{ url_for('auth.register') }}" class="l-btn l-btn-gold l-btn-lg">Start Reading Free</a>
+        <a href="{{ url_for('browse.browse_home') }}" class="l-btn l-btn-ghost l-btn-lg">Browse Stories</a>
+    </div>
+</section>
+
+<!-- ── BOOK COVERS SCROLL ── -->
+{% if landing_covers %}
+<div class="l-covers">
+    <div class="l-cover-row" id="coversRow"></div>
+</div>
+{% endif %}
+
+<!-- ── HOW IT WORKS ── -->
+<section class="l-section">
+    <div class="l-sh">
+        <div class="l-sh-label">How It Works</div>
+        <h2>Three Simple Steps</h2>
+        <p>Getting started takes less than a minute</p>
+    </div>
+    <div class="l-steps">
+        <div class="l-step">
+            <div class="l-step-num">STEP 01</div>
+            <div class="l-step-icon">&#128100;</div>
+            <h3>Create Your Account</h3>
+            <p>Sign up for free with your email or Google account. No credit card needed.</p>
+        </div>
+        <div class="l-step">
+            <div class="l-step-num">STEP 02</div>
+            <div class="l-step-icon">&#128214;</div>
+            <h3>Discover Stories</h3>
+            <p>Browse by genre, explore trending stories, or check out the WiamElite Hall of Fame.</p>
+        </div>
+        <div class="l-step">
+            <div class="l-step-num">STEP 03</div>
+            <div class="l-step-icon">&#128171;</div>
+            <h3>Support Creators</h3>
+            <p>Use Wiam Coins to unlock premium chapters and support your favourite writers.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ── WHY WIAMAPP ── -->
+<section class="l-section">
+    <div class="l-sh">
+        <div class="l-sh-label">Why WiamApp</div>
+        <h2>Built for Readers & Creators</h2>
+    </div>
+    <div class="l-features">
+        <div class="l-feat">
+            <div class="l-feat-icon">&#128218;</div>
+            <h3>Free Stories</h3>
+            <p>Access a growing library of stories across every genre — romance, fantasy, thriller, poetry, and more. Most content is completely free to read.</p>
+        </div>
+        <div class="l-feat">
+            <div class="l-feat-icon">&#10024;</div>
+            <h3>WiamElite Hall of Fame</h3>
+            <p>Our algorithm highlights the very best stories on the platform. Only the top creators make it into the WiamElite Hall of Fame.</p>
+        </div>
+        <div class="l-feat">
+            <div class="l-feat-icon">&#128176;</div>
+            <h3>Creators Earn Money</h3>
+            <p>Eligible creators earn real money when readers unlock their premium chapters with Wiam Coins. Monthly payouts to Mobile Money.</p>
+        </div>
+        <div class="l-feat">
+            <div class="l-feat-icon">&#127760;</div>
+            <h3>African Stories, Global Reach</h3>
+            <p>We champion African storytelling. Our creators tell stories the world needs to hear — from every corner of the continent.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ── CREATOR INVITATION ── -->
+<section class="l-section narrow">
+    <div class="l-creator">
+        <h2>Are You a Writer?</h2>
+        <p>Join WiamApp as a creator and share your stories with readers. Build your audience, earn from your writing, and be part of something special.</p>
+        <div class="l-creator-perks">
+            <div class="l-creator-perk"><i class="bi bi-check-circle-fill"></i> Free to publish</div>
+            <div class="l-creator-perk"><i class="bi bi-check-circle-fill"></i> Earn with Wiam Coins</div>
+            <div class="l-creator-perk"><i class="bi bi-check-circle-fill"></i> Creator dashboard</div>
+            <div class="l-creator-perk"><i class="bi bi-check-circle-fill"></i> Analytics & insights</div>
+        </div>
+        <a href="{{ url_for('auth.register') }}" class="l-btn l-btn-gold l-btn-lg">Become a Creator</a>
+    </div>
+</section>
+
+<!-- ── FINAL CTA ── -->
+<section class="l-section l-final">
+    <h2>Your Next Great Story<br>Is Waiting</h2>
+    <p>Join WiamApp today. It's free, it's beautiful, and it's yours.</p>
+    <div class="l-hero-ctas">
+        <a href="{{ url_for('auth.register') }}" class="l-btn l-btn-gold l-btn-lg">Join WiamApp Free</a>
+    </div>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer class="l-footer">
+    <a href="/" class="l-footer-brand">
+        <img src="{{ url_for('static', filename='img/WiamLogo.png') }}" alt="WiamApp">
+        <span>WiamApp</span>
+    </a>
+    <div class="l-footer-links">
+        <a href="{{ url_for('team.careers') }}">Careers</a>
+        <a href="{{ url_for('profile.about') }}">About</a>
+        <a href="{{ url_for('profile.privacy_policy') }}">Privacy</a>
+        <a href="{{ url_for('profile.terms') }}">Terms</a>
+        <a href="{{ url_for('profile.help_center') }}">Help</a>
+    </div>
+    <div class="l-footer-copy">&copy; 2026 WiamApp. Powered by <a href="/">WiamLabs</a></div>
+</footer>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ── Book cover scroll ──
+(function(){
+    var covers = {{ landing_covers | tojson }};
+    if (!covers || !covers.length) return;
+    var row = document.getElementById('coversRow');
+    if (!row) return;
+    var html = '';
+    for (var r = 0; r < 4; r++) {
+        covers.forEach(function(c){ html += '<img src="' + c + '" alt="Story" loading="lazy">'; });
+    }
+    row.innerHTML = html;
+})();
+</script>
+{% endblock %}

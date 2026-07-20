@@ -1,0 +1,94 @@
+{% extends "dashboard_base.html" %}
+{% block title %}My Reviews — Editor Studio{% endblock %}
+{% block sidebar_title %}Editor Studio{% endblock %}
+
+{% block sidebar_nav %}
+<a class="nav-link" href="{{ url_for('editor_studio.dashboard') }}"><i class="bi bi-stack"></i> Review Queue</a>
+<a class="nav-link active" href="{{ url_for('editor_studio.my_reviews') }}"><i class="bi bi-clock-history"></i> My Reviews</a>
+<a class="nav-link" href="{{ url_for('team.dashboard') }}"><i class="bi bi-arrow-left-circle"></i> Team Dashboard</a>
+{% endblock %}
+
+{% block dash_content %}
+<div class="dash-header">
+    <h1><i class="bi bi-clock-history" style="color:var(--gold);"></i> My Reviews</h1>
+    <p>Your editorial review history</p>
+</div>
+
+<!-- Stats -->
+<div class="stat-grid" id="myStats">
+    <div class="stat-card">
+        <div class="label">Total Reviews</div>
+        <div class="value gold">{{ reviews|length }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Approved</div>
+        <div class="value" style="color:#4ade80;">{{ reviews|selectattr('queue.status', 'equalto', 'approved')|list|length }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Rejected</div>
+        <div class="value" style="color:#f87171;">{{ reviews|selectattr('queue.status', 'equalto', 'rejected')|list|length }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Revision Req.</div>
+        <div class="value" style="color:#fbbf24;">{{ reviews|selectattr('queue.status', 'equalto', 'revision_requested')|list|length }}</div>
+    </div>
+</div>
+
+{% if reviews %}
+<div class="dash-card">
+    <h3><i class="bi bi-list-ul" style="color:var(--gold);margin-right:6px;"></i> Review History</h3>
+    <table class="dash-table">
+        <thead>
+            <tr>
+                <th>Story</th>
+                <th>Decision</th>
+                <th>Score</th>
+                <th>Date</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in reviews %}
+            {% set q = item.queue %}
+            {% set s = item.story %}
+            <tr>
+                <td>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        {% if s.cover_file_id %}
+                        <img src="{{ s.cover_url }}" alt="" style="width:32px;height:44px;border-radius:6px;object-fit:cover;">
+                        {% endif %}
+                        <div>
+                            <div style="font-weight:600;color:var(--text);">{{ s.title|truncate(40) }}</div>
+                            <div style="font-size:0.72rem;color:var(--text-muted);">{{ s.author or 'Unknown' }}</div>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <span class="badge-status badge-{{ q.status }}">{{ q.status|replace('_', ' ')|title }}</span>
+                </td>
+                <td style="color:var(--text-muted);">{{ q.editor_score if q.editor_score else '—' }}</td>
+                <td style="color:var(--text-muted);font-size:0.8rem;">{{ q.reviewed_at.strftime('%b %d, %Y') if q.reviewed_at else 'N/A' }}</td>
+                <td>
+                    <a href="{{ url_for('editor_studio.review', book_id=s.id) }}" class="btn-dash btn-dash-primary btn-dash-sm" style="text-decoration:none;">View</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="dash-card" style="text-align:center;padding:60px 20px;">
+    <i class="bi bi-inbox" style="font-size:2.5rem;opacity:0.2;display:block;margin-bottom:12px;color:var(--gold);"></i>
+    <p style="color:var(--text-muted);font-size:0.95rem;">You haven't reviewed any stories yet.</p>
+    <a href="{{ url_for('editor_studio.dashboard') }}" style="color:var(--gold);font-size:0.88rem;">Go to Review Queue →</a>
+</div>
+{% endif %}
+
+<style>
+.badge-approved { background:rgba(34,197,94,0.15); color:#4ade80; }
+.badge-rejected { background:rgba(239,68,68,0.15); color:#f87171; }
+.badge-revision_requested { background:rgba(251,191,36,0.15); color:#fbbf24; }
+.badge-in_review { background:rgba(59,130,246,0.15); color:#60a5fa; }
+.badge-pending { background:rgba(234,179,8,0.15); color:#facc15; }
+</style>
+{% endblock %}

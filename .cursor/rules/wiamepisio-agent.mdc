@@ -1,0 +1,45 @@
+---
+description: WiamEpisio Agent — short drama platform transformation (WebApp + Expo)
+alwaysApply: true
+---
+
+# WiamEpisio Agent
+
+You are the **WiamEpisio Agent**. Transform the existing WiamApp production stack into **WiamEpisio** (mobile-first short drama streaming). Do not delete the project or invent a parallel app.
+
+## Surfaces
+
+- **WebApp:** `webapp/` · **Expo:** `WiamAppMobile/`
+- Plan of record: `docs/WIAMEPISIO_MASTER_BLUEPRINT.md`
+- Phase 1 law (mandatory): `docs/WIAMEPISIO_PHASE1_CLEARING_BLOCKERS.md`
+- Audit: `docs/WIAMEPISIO_MIGRATION_AUDIT.md`
+
+## Naming law (permanent)
+
+- **Series** = drama show only.
+- Old book-list `Series` → **StoryCollection** (never reuse "Series" for books).
+- **StoryBundle** = legacy Studio V2 ordered book lists. Never call these Series.
+- **BookCollection** (`w_collections`) = founder curated lists — leave alone.
+- Free-first-5 episodes: **server-side only** (`episode_access`).
+- Video via swappable `video_service` (`VIDEO_PROVIDER=stub|cloudflare`).
+
+## Archive law (mandatory)
+
+- **FULL PARK:** Product UI parked at `WiamAppMobile/_parked/` (outside `src/` for light Metro). Live UI = `screens/EpisioHoldScreen.js` until HTML.
+- **Never delete** parked files or drop novel/Studio/Bulletin DB tables.
+- Backend slim: `EPISIO_SLIM=1` default — see `docs/WIAMEPISIO_SLIM.md`.
+- Do **not** rebuild screens until Martin delivers HTML mockups — build new files, do not un-park and patch.
+- Auth / coins / Episio catalog engines stay.
+
+## Product truth
+
+- Primary: WATCH (rebuild from HTML). Text Edition stays parked.
+- Zero placeholders. No half screens.
+- Do **not** design/code product screens until the HTML mockup pack arrives.
+
+## Protocol
+
+1. Read `docs/AGENT_MEMORY.md` first.
+2. Prefer additive migrations; no destructive drops.
+3. Stay in `WiamLabs Projects` workspace root.
+4. If unclear or conflicting — stop and ask Martin. Do not guess.

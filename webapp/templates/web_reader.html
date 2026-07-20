@@ -1,0 +1,1654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#0a0a0c">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>{{ book.title }} — WiamApp Reader</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    {% if g_ads_enabled and g_ads_client_id %}
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={{ g_ads_client_id }}" crossorigin="anonymous"></script>
+    {% endif %}
+    <style>
+        :root {
+            --reader-bg: #faf8f5;
+            --reader-text: #1a1a1a;
+            --reader-muted: #777;
+            --reader-border: #e5e3df;
+            --reader-accent: #d4a843;
+            --reader-sidebar-bg: #f0ede8;
+            --font-size-small: 0.95rem;
+            --font-size-medium: 1.1rem;
+            --font-size-large: 1.3rem;
+            --font-size-xlarge: 1.5rem;
+
+            --line-height-tight: 1.35;
+            --line-height-normal: 1.6;
+            --line-height-spacious: 1.9;
+            --wm-opacity: 0.14;
+        }
+        [data-theme="dark"] {
+            --reader-bg: #0f0f0f;
+            --reader-text: #d4d0c8;
+            --reader-muted: #888;
+            --reader-border: #2a2a2a;
+            --reader-accent: #d4a843;
+            --reader-sidebar-bg: #151515;
+        }
+        [data-theme="sepia"] {
+            --reader-bg: #f4ecd8;
+            --reader-text: #3d3224;
+            --reader-muted: #8a7d6b;
+            --reader-border: #d4c9b0;
+            --reader-accent: #b8860b;
+            --reader-sidebar-bg: #e8dfc8;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; touch-action: pan-y; -ms-touch-action: pan-y; }
+        html { overflow-x: hidden !important; overscroll-behavior-x: none; }
+        body {
+            font-family: 'Georgia', 'Times New Roman', 'Noto Serif', serif;
+            background: var(--reader-bg); color: var(--reader-text);
+            transition: background 0.3s, color 0.3s;
+            overflow-x: hidden !important; overscroll-behavior-x: none;
+            -webkit-text-size-adjust: 100%;
+        }
+        input, textarea, select, button, a { touch-action: manipulation; }
+
+        /* Top bar */
+        .reader-topbar {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0.5rem 1rem;
+            padding-top: calc(0.5rem + env(safe-area-inset-top, 0px));
+            background: var(--reader-sidebar-bg);
+            border-bottom: 1px solid var(--reader-border);
+            min-height: 48px;
+        }
+        .topbar-left { display: flex; align-items: center; gap: 0.75rem; }
+        .topbar-right { display: flex; align-items: center; gap: 0.5rem; }
+        .topbar-btn {
+            width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+            background: transparent; border: none; color: var(--reader-muted);
+            border-radius: 8px; cursor: pointer; font-size: 1rem; transition: all 0.15s;
+        }
+        .topbar-btn:hover { background: var(--reader-border); color: var(--reader-text); }
+        .topbar-btn.active { color: var(--reader-accent); }
+        .back-link {
+            color: var(--reader-muted); text-decoration: none; font-size: 0.85rem;
+            display: flex; align-items: center; gap: 0.3rem;
+        }
+        .back-link:hover { color: var(--reader-text); }
+        .book-info-topbar {
+            font-size: 0.82rem; color: var(--reader-muted);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 300px;
+        }
+
+        /* TOC sidebar */
+        .toc-overlay {
+            position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.4);
+            display: none; opacity: 0; transition: opacity 0.2s;
+        }
+        .toc-overlay.open { display: block; opacity: 1; }
+        .toc-panel {
+            position: fixed; top: 0; left: 0; bottom: 0; width: 280px; z-index: 201;
+            background: var(--reader-sidebar-bg); border-right: 1px solid var(--reader-border);
+            transform: translateX(-100%); transition: transform 0.25s ease;
+            display: flex; flex-direction: column;
+        }
+        .toc-panel.open { transform: translateX(0); }
+        .toc-header {
+            padding: 1rem; padding-top: calc(1rem + env(safe-area-inset-top, 0px));
+            border-bottom: 1px solid var(--reader-border);
+            display: flex; justify-content: space-between; align-items: center;
+            min-height: 56px;
+        }
+        .toc-header h3 { font-size: 1rem; font-weight: 600; }
+        .toc-list { flex: 1; overflow-y: auto; padding: 0.5rem 0; }
+        .toc-item {
+            display: flex; align-items: center; padding: 0.6rem 1rem;
+            color: var(--reader-muted); text-decoration: none; font-size: 0.88rem;
+            transition: all 0.1s; border-left: 2px solid transparent;
+        }
+        .toc-item:hover { color: var(--reader-text); background: rgba(0,0,0,0.03); }
+        .toc-item.active { color: var(--reader-accent); border-left-color: var(--reader-accent); font-weight: 600; }
+        .toc-item .ch-num { width: 28px; flex-shrink: 0; font-size: 0.75rem; }
+
+        /* Reading area */
+        .reader-content {
+            max-width: 680px; margin: 0 auto;
+            padding: 5rem 2rem 4rem;
+            min-height: 100vh;
+        }
+        .chapter-heading {
+            font-size: 1.8rem; font-weight: 700; margin-bottom: 2rem;
+            color: var(--reader-text); text-align: center;
+            padding-bottom: 1.5rem; border-bottom: 1px solid var(--reader-border);
+        }
+        /* Font family classes — target element AND all text children */
+        .chapter-body.ff-serif, .chapter-body.ff-serif p, .chapter-body.ff-serif span, .chapter-body.ff-serif div, .chapter-body.ff-serif li, .chapter-body.ff-serif blockquote, .chapter-body.ff-serif a, .chapter-body.ff-serif em, .chapter-body.ff-serif strong, .chapter-body.ff-serif b, .chapter-body.ff-serif h1, .chapter-body.ff-serif h2, .chapter-body.ff-serif h3 { font-family: 'Georgia', 'Times New Roman', 'Noto Serif', serif !important; }
+        .chapter-body.ff-sans, .chapter-body.ff-sans p, .chapter-body.ff-sans span, .chapter-body.ff-sans div, .chapter-body.ff-sans li, .chapter-body.ff-sans blockquote, .chapter-body.ff-sans a, .chapter-body.ff-sans em, .chapter-body.ff-sans strong, .chapter-body.ff-sans b, .chapter-body.ff-sans h1, .chapter-body.ff-sans h2, .chapter-body.ff-sans h3 { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important; }
+        .chapter-body.ff-mono, .chapter-body.ff-mono p, .chapter-body.ff-mono span, .chapter-body.ff-mono div, .chapter-body.ff-mono li, .chapter-body.ff-mono blockquote, .chapter-body.ff-mono a, .chapter-body.ff-mono em, .chapter-body.ff-mono strong, .chapter-body.ff-mono b, .chapter-body.ff-mono h1, .chapter-body.ff-mono h2, .chapter-body.ff-mono h3 { font-family: 'Courier New', Courier, monospace !important; }
+        /* Line spacing classes — target element AND paragraph children */
+        .chapter-body.ls-tight, .chapter-body.ls-tight p, .chapter-body.ls-tight li, .chapter-body.ls-tight blockquote { line-height: 1.5 !important; }
+        .chapter-body.ls-normal, .chapter-body.ls-normal p, .chapter-body.ls-normal li, .chapter-body.ls-normal blockquote { line-height: 1.9 !important; }
+        .chapter-body.ls-spacious, .chapter-body.ls-spacious p, .chapter-body.ls-spacious li, .chapter-body.ls-spacious blockquote { line-height: 2.4 !important; }
+
+        .chapter-body {
+            line-height: 1.9; font-size: var(--font-size-medium);
+        }
+        .chapter-body p { margin-bottom: 1.2em; text-indent: 1.5em; }
+        .chapter-body p:first-child { text-indent: 0; }
+        /* Drop-cap ONLY on the very first paragraph — applied via JS class */
+        .chapter-body p.drop-cap-para::first-letter {
+            float: left; font-size: 3.2em; line-height: 0.8;
+            padding-right: 0.08em; margin-top: 0.05em; font-weight: 700;
+            color: var(--reader-accent);
+        }
+        .chapter-body h1, .chapter-body h2, .chapter-body h3 {
+            margin: 1.5em 0 0.6em; font-weight: 700; text-indent: 0;
+        }
+        .chapter-body h1 { font-size: 1.5em; }
+        .chapter-body h2 { font-size: 1.3em; }
+        .chapter-body h3 { font-size: 1.15em; }
+        .chapter-body blockquote {
+            border-left: 3px solid var(--reader-accent); padding-left: 1.2rem;
+            margin: 1.5em 0; font-style: italic; color: var(--reader-muted);
+        }
+        .chapter-body ul, .chapter-body ol { padding-left: 2rem; margin-bottom: 1.2em; text-indent: 0; }
+        .chapter-body hr { border: none; border-top: 1px solid var(--reader-border); margin: 2.5em auto; width: 40%; }
+        .chapter-body a { color: var(--reader-accent); }
+
+        /* Paragraph block wrapper */
+        .para-block { position: relative; }
+        .para-controls {
+            display: flex; flex-direction: row; gap: 4px; align-items: center;
+            margin-top: 4px; opacity: 1;
+        }
+        .para-ctrl-btn {
+            width: 30px; height: 30px; border-radius: 50%; border: none;
+            background: transparent; color: var(--reader-muted); cursor: pointer;
+            font-size: 0.75rem; display: flex; align-items: center; justify-content: center;
+            transition: all 0.15s; position: relative;
+        }
+        .para-ctrl-btn:hover { background: rgba(212,168,67,0.12); color: var(--reader-accent); }
+        .para-ctrl-btn .ctrl-count {
+            position: absolute; top: -2px; right: -2px; font-size: 0.5rem;
+            background: var(--reader-accent); color: #000; border-radius: 8px;
+            min-width: 14px; height: 14px; display: flex; align-items: center;
+            justify-content: center; font-weight: 700; line-height: 1;
+        }
+        /* Reaction badges — small inline between emoji and comment buttons */
+        .para-emoji-row {
+            display: inline-flex; flex-wrap: wrap; gap: 2px; align-items: center;
+        }
+        .para-emoji-badge {
+            display: inline-flex; align-items: center; gap: 1px;
+            padding: 1px 4px; border-radius: 10px;
+            background: rgba(212,168,67,0.06); border: 1px solid rgba(212,168,67,0.12);
+            font-size: 0.6rem; cursor: pointer; transition: all 0.15s;
+            user-select: none; line-height: 1;
+        }
+        .para-emoji-badge:hover { background: rgba(212,168,67,0.12); border-color: rgba(212,168,67,0.25); }
+        .para-emoji-badge.user-reacted { background: rgba(212,168,67,0.15); border-color: rgba(212,168,67,0.35); }
+        .para-emoji-badge .emoji-icon { font-size: 0.65rem; }
+        .para-emoji-badge .emoji-count { font-size: 0.5rem; font-weight: 600; color: var(--reader-muted); }
+        /* Emoji picker mini */
+        .emoji-picker-mini {
+            display: none; z-index: 50;
+            background: var(--reader-sidebar-bg); border: 1px solid var(--reader-border);
+            border-radius: 20px; padding: 3px 5px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2); white-space: nowrap;
+            margin-left: 2px;
+        }
+        .emoji-picker-mini.open { display: inline-flex; gap: 1px; align-items: center; }
+        .emoji-opt {
+            width: 28px; height: 28px; border: none; background: transparent;
+            border-radius: 50%; cursor: pointer; font-size: 0.95rem;
+            display: flex; align-items: center; justify-content: center;
+            transition: transform 0.15s, background 0.15s;
+        }
+        .emoji-opt:hover { transform: scale(1.2); background: rgba(212,168,67,0.1); }
+        .emoji-opt.selected { background: rgba(212,168,67,0.2); transform: scale(1.1); }
+        /* Quick inline comment preview */
+        .para-inline-comments {
+            margin-top: 4px; padding: 6px 10px;
+            background: rgba(212,168,67,0.04); border-radius: 8px;
+            border-left: 2px solid rgba(212,168,67,0.2); font-size: 0.78rem;
+            color: var(--reader-muted); cursor: pointer; transition: background 0.15s;
+        }
+        .para-inline-comments:hover { background: rgba(212,168,67,0.08); }
+        /* Thread panel (slides from right) */
+        .thread-overlay {
+            position: fixed; inset: 0; z-index: 300; background: rgba(0,0,0,0.5);
+            display: none; opacity: 0; transition: opacity 0.2s;
+        }
+        .thread-overlay.open { display: block; opacity: 1; }
+        .thread-panel {
+            position: fixed; top: 0; right: 0; bottom: 0; width: 360px; max-width: 90vw;
+            z-index: 301; background: var(--reader-bg); border-left: 1px solid var(--reader-border);
+            transform: translateX(100%); transition: transform 0.25s ease;
+            display: flex; flex-direction: column;
+        }
+        .thread-panel.open { transform: translateX(0); }
+        .thread-header {
+            padding: 1rem; padding-top: calc(1rem + env(safe-area-inset-top, 0px));
+            border-bottom: 1px solid var(--reader-border);
+            display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;
+        }
+        .thread-header h3 { font-size: 0.95rem; font-weight: 600; margin: 0; }
+        .thread-body { flex: 1; overflow-y: auto; padding: 0.8rem; }
+        .thread-input-area {
+            padding: 0.8rem; border-top: 1px solid var(--reader-border);
+            display: flex; gap: 0.5rem; flex-shrink: 0;
+        }
+        .thread-input-area input {
+            flex: 1; padding: 0.5rem 0.8rem; background: rgba(255,255,255,0.05);
+            border: 1px solid var(--reader-border); border-radius: 20px;
+            color: var(--reader-text); font-size: 0.82rem; outline: none;
+        }
+        .thread-input-area button {
+            padding: 0.5rem 1rem; background: var(--reader-accent); border: none;
+            border-radius: 20px; color: #000; font-weight: 600; font-size: 0.8rem; cursor: pointer;
+        }
+        .thread-comment {
+            padding: 0.6rem 0; border-bottom: 1px solid rgba(128,128,128,0.1);
+        }
+        .thread-comment .tc-header {
+            display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;
+        }
+        .thread-comment .tc-avatar {
+            width: 26px; height: 26px; border-radius: 50%;
+            background: linear-gradient(135deg, rgba(212,168,67,0.2), rgba(212,168,67,0.08));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.65rem; font-weight: 700; color: var(--reader-accent); flex-shrink: 0;
+        }
+        .thread-comment .tc-name { font-size: 0.78rem; font-weight: 600; color: var(--reader-text); }
+        .thread-comment .tc-time { font-size: 0.65rem; color: var(--reader-muted); }
+        .thread-comment .tc-text { font-size: 0.82rem; color: var(--reader-text); line-height: 1.5; margin-left: 34px; }
+        .thread-comment .tc-actions {
+            margin-left: 34px; margin-top: 4px; display: flex; gap: 0.8rem;
+            font-size: 0.7rem; color: var(--reader-muted);
+        }
+        .thread-comment .tc-actions button {
+            background: none; border: none; color: inherit; cursor: pointer; font-size: inherit;
+            padding: 0; transition: color 0.15s;
+        }
+        .thread-comment .tc-actions button:hover { color: var(--reader-accent); }
+        .thread-comment .tc-actions .liked { color: #f472b6; }
+        .thread-reply { margin-left: 34px; padding-left: 10px; border-left: 2px solid rgba(128,128,128,0.15); }
+
+        @media (max-width: 600px) {
+            .para-controls { position: static; opacity: 1; flex-direction: row; margin-top: 4px; }
+            .thread-panel { width: 100vw; max-width: 100vw; }
+        }
+
+        /* Chapter navigation */
+        .chapter-nav {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 2rem 0; padding-bottom: calc(2rem + env(safe-area-inset-bottom, 0px));
+            margin-top: 3rem;
+            border-top: 1px solid var(--reader-border);
+        }
+        .ch-nav-btn {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            padding: 0.6rem 1.2rem; background: var(--reader-sidebar-bg);
+            border: 1px solid var(--reader-border); border-radius: 10px;
+            color: var(--reader-text); text-decoration: none; font-size: 0.88rem;
+            transition: all 0.15s;
+        }
+        .ch-nav-btn:hover { border-color: var(--reader-accent); color: var(--reader-accent); }
+        .ch-nav-btn.disabled { opacity: 0.3; pointer-events: none; }
+
+        /* Progress bar */
+        .progress-bar-reader {
+            position: fixed; bottom: 0; left: 0; right: 0; height: 3px; z-index: 100;
+            background: var(--reader-border);
+            margin-bottom: env(safe-area-inset-bottom, 0px);
+        }
+        .progress-bar-fill {
+            height: 100%; background: var(--reader-accent); transition: width 0.3s;
+        }
+
+        /* Theme quick-toggle buttons in topbar */
+        .theme-quick-btn {
+            width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--reader-border);
+            cursor: pointer; transition: all 0.15s; flex-shrink: 0;
+        }
+        .theme-quick-btn.active { border-color: var(--reader-accent); box-shadow: 0 0 0 2px rgba(212,168,67,0.3); }
+        .theme-quick-btn[data-t="light"] { background: #faf8f5; }
+        .theme-quick-btn[data-t="dark"] { background: #0f0f0f; }
+        .theme-quick-btn[data-t="sepia"] { background: #f4ecd8; }
+        /* Font quick-toggle in topbar */
+        .ff-quick-btn {
+            padding: 0.15rem 0.45rem; font-size: 0.72rem; border-radius: 6px;
+            border: 1px solid var(--reader-border); background: transparent;
+            color: var(--reader-muted); cursor: pointer; transition: all 0.15s;
+        }
+        .ff-quick-btn.active { border-color: var(--reader-accent); color: var(--reader-accent); }
+        .topbar-divider { width: 1px; height: 20px; background: var(--reader-border); margin: 0 0.2rem; }
+        /* Settings dropdown */
+        .settings-dropdown {
+            position: fixed; top: 48px; right: 0.5rem; z-index: 150;
+            background: var(--reader-sidebar-bg); border: 1px solid var(--reader-border);
+            border-radius: 12px; padding: 1rem; width: 220px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            display: none; transform: translateY(-8px); opacity: 0;
+            transition: all 0.15s;
+        }
+        .settings-dropdown.open { display: block; transform: translateY(0); opacity: 1; }
+        .settings-label { font-size: 0.75rem; color: var(--reader-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem; }
+        .settings-row { margin-bottom: 0.75rem; }
+        .theme-buttons { display: flex; gap: 0.4rem; }
+        .theme-btn {
+            width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--reader-border);
+            cursor: pointer; transition: all 0.15s;
+        }
+        .theme-btn.active { border-color: var(--reader-accent); }
+        .theme-btn[data-t="light"] { background: #faf8f5; }
+        .theme-btn[data-t="dark"] { background: #0f0f0f; }
+        .theme-btn[data-t="sepia"] { background: #f4ecd8; }
+        .font-buttons { display: flex; gap: 0.3rem; }
+        .font-btn {
+            flex: 1; padding: 0.3rem; text-align: center; background: transparent;
+            border: 1px solid var(--reader-border); border-radius: 6px;
+            color: var(--reader-text); cursor: pointer; transition: all 0.15s;
+        }
+        .font-btn.active { border-color: var(--reader-accent); color: var(--reader-accent); }
+        .font-btn:hover { border-color: var(--reader-accent); }
+
+        @media (max-width: 600px) {
+            .reader-content { padding: calc(4.5rem + env(safe-area-inset-top, 0px)) 1.2rem 3rem; }
+            .chapter-heading { font-size: 1.4rem; }
+            .book-info-topbar { max-width: 120px; }
+            .topbar-right { gap: 0.15rem; }
+            .theme-quick-btn { width: 24px; height: 24px; }
+            .ff-quick-btn { font-size: 0.65rem; padding: 0.1rem 0.3rem; }
+            .topbar-divider { margin: 0 0.1rem; }
+            .toc-panel { width: 85vw; }
+        }
+        /* Reader skeleton loading */
+        .reader-skeleton { padding: 0 0.5rem; }
+        .reader-skeleton .skel-line {
+            height: 14px; border-radius: 4px; margin-bottom: 12px;
+            background: linear-gradient(90deg, var(--reader-bg) 0%, rgba(128,128,128,0.08) 50%, var(--reader-bg) 100%);
+            background-size: 200px 100%; animation: readerShimmer 1.5s infinite;
+        }
+        .reader-skeleton .skel-line:nth-child(3n) { width: 75%; }
+        .reader-skeleton .skel-line:nth-child(5n) { width: 60%; }
+        .reader-skeleton .skel-heading { height: 22px; width: 45%; margin-bottom: 24px; border-radius: 6px;
+            background: linear-gradient(90deg, var(--reader-bg) 0%, rgba(128,128,128,0.08) 50%, var(--reader-bg) 100%);
+            background-size: 200px 100%; animation: readerShimmer 1.5s infinite;
+        }
+        @keyframes readerShimmer { 0%{background-position:-200px 0} 100%{background-position:calc(200px + 100%) 0} }
+        .reader-skeleton.loaded { display: none; }
+
+        /* Error / offline notice */
+        .reader-notice {
+            position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%); z-index: 500;
+            background: #b91c1c; color: #fff; padding: 8px 18px; border-radius: 10px;
+            font-size: 0.8rem; display: none; align-items: center; gap: 8px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.3); max-width: 90vw;
+        }
+        .reader-notice.show { display: flex; }
+        .reader-notice button {
+            background: rgba(255,255,255,0.2); border: none; color: #fff;
+            padding: 4px 12px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; font-weight: 600;
+        }
+    
+        /* Watermark layer */
+        #wm-layer{
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            filter: blur(0.8px);
+            background-repeat: repeat;
+            background-size: 400px 300px;
+            background-position: 0 0;
+        }
+        /* light theme watermark */
+        [data-theme="light"] #wm-layer{
+            opacity: 0.10;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Ctext x='200' y='100' fill='%23b8922e' font-size='32' font-weight='bold' font-family='Georgia,serif' text-anchor='middle' transform='rotate(-30 200 150)'%3EWiamApp.com%3C/text%3E%3Ctext x='200' y='200' fill='%23b8922e' font-size='24' font-family='Georgia,serif' text-anchor='middle' transform='rotate(-30 200 150)'%3EWiamApp.com%3C/text%3E%3C/svg%3E");
+        }
+        /* sepia theme watermark */
+        [data-theme="sepia"] #wm-layer{
+            opacity: 0.09;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Ctext x='200' y='100' fill='%23a07828' font-size='32' font-weight='bold' font-family='Georgia,serif' text-anchor='middle' transform='rotate(-30 200 150)'%3EWiamApp.com%3C/text%3E%3Ctext x='200' y='200' fill='%23a07828' font-size='24' font-family='Georgia,serif' text-anchor='middle' transform='rotate(-30 200 150)'%3EWiamApp.com%3C/text%3E%3C/svg%3E");
+        }
+        /* dark theme watermark */
+        [data-theme="dark"] #wm-layer{
+            opacity: 0.07;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Ctext x='200' y='100' fill='%23d4a843' font-size='32' font-weight='bold' font-family='Georgia,serif' text-anchor='middle' transform='rotate(-30 200 150)'%3EWiamApp.com%3C/text%3E%3Ctext x='200' y='200' fill='%23d4a843' font-size='24' font-family='Georgia,serif' text-anchor='middle' transform='rotate(-30 200 150)'%3EWiamApp.com%3C/text%3E%3C/svg%3E");
+        }
+        /* Ensure content sits above watermark (do NOT override existing fixed/absolute positioning) */
+        .reader-content{ position: relative; z-index: 1; }
+
+        /* Content protection — prevent text selection/copying */
+        .chapter-body, .chapter-heading {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+    </style>
+</head>
+<body data-theme="{{ prefs.theme if prefs else 'light' }}">
+    <div id="wm-layer" aria-hidden="true"></div>
+
+
+    <!-- Top bar — always visible -->
+    <div class="reader-topbar" id="topbar">
+        <div class="topbar-left">
+            <a href="{{ url_for('book.detail', book_id=book.id) }}" class="back-link" id="backLink" onclick="event.preventDefault(); window.location.replace(this.href);">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
+            <span class="book-info-topbar">{{ book.title }}</span>
+        </div>
+        <div class="topbar-right">
+            <button class="topbar-btn" id="tocBtn" title="Chapters"><i class="bi bi-list"></i></button>
+            <button class="topbar-btn" id="settingsBtn" title="Settings"><i class="bi bi-sliders"></i></button>
+        </div>
+    </div>
+
+    <!-- Settings dropdown -->
+    <div class="settings-dropdown" id="settingsDropdown">
+        <div class="settings-row">
+            <div class="settings-label">Theme</div>
+            <div class="theme-buttons">
+                <button class="theme-btn" data-t="light" title="Light"></button>
+                <button class="theme-btn" data-t="sepia" title="Sepia"></button>
+                <button class="theme-btn" data-t="dark" title="Dark"></button>
+            </div>
+        </div>
+        <div class="settings-row">
+            <div class="settings-label">Font Size</div>
+            <div class="font-buttons">
+                <button class="font-btn" data-fs="small" style="font-size:0.75rem">A</button>
+                <button class="font-btn" data-fs="medium" style="font-size:0.9rem">A</button>
+                <button class="font-btn" data-fs="large" style="font-size:1.1rem">A</button>
+                <button class="font-btn" data-fs="xlarge" style="font-size:1.3rem">A</button>
+            </div>
+        </div>
+        <div class="settings-row">
+            <div class="settings-label">Font</div>
+            <div class="font-buttons">
+                <button class="font-btn ff-btn" data-ff="serif" style="font-family:Georgia,serif;font-size:0.8rem">Serif</button>
+                <button class="font-btn ff-btn" data-ff="sans" style="font-family:-apple-system,sans-serif;font-size:0.8rem">Sans</button>
+                <button class="font-btn ff-btn" data-ff="mono" style="font-family:'Courier New',monospace;font-size:0.8rem">Mono</button>
+            </div>
+        </div>
+        <div class="settings-row">
+            <div class="settings-label">Line Spacing</div>
+            <div class="font-buttons">
+                <button class="font-btn ls-btn" data-ls="tight" style="font-size:0.7rem">Tight</button>
+                <button class="font-btn ls-btn" data-ls="normal" style="font-size:0.7rem">Normal</button>
+                <button class="font-btn ls-btn" data-ls="spacious" style="font-size:0.7rem">Spacious</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOC overlay + panel -->
+    <div class="toc-overlay" id="tocOverlay"></div>
+    <nav class="toc-panel" id="tocPanel">
+        <div class="toc-header">
+            <a href="{{ url_for('book.detail', book_id=book.id) }}" style="color:var(--reader-accent);text-decoration:none;font-size:0.82rem;display:flex;align-items:center;gap:4px;">
+                <i class="bi bi-arrow-left"></i> Back to Book
+            </a>
+            <button class="topbar-btn" id="closeToc" style="width:40px;height:40px;font-size:1.2rem;"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div style="padding:0.5rem 1rem 0;font-weight:600;font-size:0.95rem;color:var(--reader-text);">Chapters</div>
+        <div class="toc-list">
+            {% for ch in chapters %}
+            <a href="{{ url_for('book.read_book', book_id=book.id, ch=ch.chapter_number) }}"
+               class="toc-item {% if ch.chapter_number == current_chapter.chapter_number %}active{% endif %}">
+                <span class="ch-num">{{ ch.chapter_number }}.</span>
+                {{ ch.chapter_title }}
+                {% if ch.is_premium_locked %}
+                    {% if ch.chapter_number in unlocked_chapters %}
+                    <i class="bi bi-unlock-fill" style="color:#4ade80;font-size:0.7rem;margin-left:auto"></i>
+                    {% else %}
+                    <i class="bi bi-gem" style="color:var(--reader-accent,#d4a843);font-size:0.7rem;margin-left:auto" title="Premium"></i>
+                    {% endif %}
+                {% elif ch.is_locked %}
+                    {% if ch.chapter_number in unlocked_chapters %}
+                    <i class="bi bi-unlock-fill" style="color:#4ade80;font-size:0.7rem;margin-left:auto"></i>
+                    {% else %}
+                    <i class="bi bi-lock-fill" style="color:var(--reader-accent,#d4a843);font-size:0.7rem;margin-left:auto"></i>
+                    {% endif %}
+                {% endif %}
+            </a>
+            {% endfor %}
+        </div>
+    </nav>
+
+    <!-- Reading content -->
+    <div class="reader-content">
+        {% if book.introduction and book.introduction.strip() and current_chapter.chapter_number == 1 %}
+        <div id="introSection" style="border-left:3px solid var(--reader-accent);margin-bottom:2rem;background:rgba(212,168,67,0.04);border-radius:0 10px 10px 0;overflow:hidden;">
+            <div onclick="toggleIntro()" style="display:flex;align-items:center;justify-content:space-between;padding:0.7rem 1rem;cursor:pointer;user-select:none;" role="button" aria-expanded="false" aria-controls="introBody">
+                <span style="font-size:0.78rem;font-weight:700;color:var(--reader-accent);text-transform:uppercase;letter-spacing:0.06em;">&#x276E;&#x276F; Author's Note</span>
+                <i id="introChevron" class="bi bi-chevron-down" style="font-size:0.75rem;color:var(--reader-accent);transition:transform 0.25s ease;"></i>
+            </div>
+            <div id="introBody" style="display:none;padding:0 1rem 1rem 1rem;">
+                <div style="font-style:italic;line-height:1.7;white-space:pre-line;font-size:0.95em;color:var(--reader-muted);">{{ book.introduction }}</div>
+            </div>
+        </div>
+        <script>
+        function toggleIntro() {
+            var body = document.getElementById('introBody');
+            var chevron = document.getElementById('introChevron');
+            var header = chevron.closest('[aria-expanded]');
+            if (body.style.display === 'none') {
+                body.style.display = 'block';
+                chevron.className = 'bi bi-chevron-up';
+                chevron.style.transform = '';
+                if (header) header.setAttribute('aria-expanded', 'true');
+            } else {
+                body.style.display = 'none';
+                chevron.className = 'bi bi-chevron-down';
+                if (header) header.setAttribute('aria-expanded', 'false');
+            }
+        }
+        </script>
+        {% endif %}
+        <h1 class="chapter-heading">{{ current_chapter.chapter_title }}</h1>
+        {% if chapter_locked %}
+        <div style="text-align:center;padding:3rem 1rem;">
+            <div style="width:80px;height:80px;margin:0 auto 1.2rem;background:linear-gradient(135deg,rgba(212,168,67,0.12),rgba(212,168,67,0.04));border-radius:50%;display:flex;align-items:center;justify-content:center">
+                {% if premium_chapter_locked %}
+                <i class="bi bi-gem" style="font-size:2rem;color:var(--reader-accent,#d4a843)"></i>
+                {% else %}
+                <i class="bi bi-lock-fill" style="font-size:2rem;color:var(--reader-accent,#d4a843)"></i>
+                {% endif %}
+            </div>
+
+            {% if premium_chapter_locked %}
+            <h3 style="font-size:1.15rem;font-weight:700;margin-bottom:0.4rem">Premium Chapter</h3>
+            <p style="color:var(--reader-muted);font-size:0.9rem;margin-bottom:1.2rem">
+                This chapter requires <strong style="color:var(--reader-accent,#d4a843)">WiamPremium</strong> to unlock.
+            </p>
+
+            {% if is_premium and premium_credits >= (current_chapter.unlock_cost_credits or 1) %}
+            <form method="POST" action="{{ url_for('payment.unlock_chapter_premium') }}" style="display:inline;margin-bottom:0.6rem;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="content_id" value="{{ book.id }}">
+                <input type="hidden" name="chapter_number" value="{{ current_chapter.chapter_number }}">
+                <button type="submit" style="display:inline-block;padding:0.7rem 2rem;background:linear-gradient(135deg,var(--wine,#722f37),var(--gold,#d4a843));color:#fff;border:none;border-radius:10px;font-weight:700;font-size:0.92rem;cursor:pointer;transition:all 0.25s">
+                    <i class="bi bi-gem me-1"></i> Use Monthly Credit ({{ premium_credits }} left)
+                </button>
+            </form>
+            {% elif is_premium %}
+            <p style="color:var(--reader-muted);font-size:0.85rem;margin-bottom:0.8rem">
+                <i class="bi bi-gem me-1" style="color:var(--reader-accent,#d4a843)"></i>You have <strong>{{ premium_credits }}</strong> credits — need {{ current_chapter.unlock_cost_credits or 1 }}.
+            </p>
+            <p style="color:var(--reader-muted);font-size:0.78rem;margin-bottom:1rem">Credits reset on your next billing cycle.</p>
+            {% else %}
+            <a href="{{ url_for('elite.subscribe') }}" style="display:inline-block;padding:0.7rem 2rem;background:linear-gradient(135deg,var(--wine,#722f37),var(--gold,#d4a843));color:#fff;border:none;border-radius:10px;font-weight:700;font-size:0.92rem;text-decoration:none;transition:all 0.25s">
+                <i class="bi bi-gem me-1"></i> Subscribe to WiamPremium
+            </a>
+            <p style="color:var(--reader-muted);font-size:0.75rem;margin-top:0.8rem">GH₵25/month — unlock premium chapters + more</p>
+            {% endif %}
+
+            {% else %}
+            <h3 style="font-size:1.15rem;font-weight:700;margin-bottom:0.4rem">This Chapter is Locked</h3>
+            <p style="color:var(--reader-muted);font-size:0.9rem;margin-bottom:0.3rem">
+                Unlock with <strong style="color:var(--reader-accent,#d4a843)">{{ current_chapter.chapter_price|int }} coins</strong> to continue reading
+            </p>
+            <p style="color:var(--reader-muted);font-size:0.78rem;margin-bottom:1.5rem">
+                Your balance: <strong style="color:var(--reader-accent,#d4a843)">{{ coin_balance }} coins</strong>
+            </p>
+
+            {% if coin_balance >= current_chapter.chapter_price|int %}
+            <form method="POST" action="{{ url_for('payment.unlock_chapter') }}" style="display:inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="content_id" value="{{ book.id }}">
+                <input type="hidden" name="chapter_number" value="{{ current_chapter.chapter_number }}">
+                <button type="submit" style="display:inline-block;padding:0.7rem 2rem;background:linear-gradient(135deg,#d4a843,#f5d98a);color:#000;border:none;border-radius:10px;font-weight:700;font-size:0.92rem;cursor:pointer;transition:all 0.25s">
+                    <i class="bi bi-unlock-fill me-1"></i> Unlock for {{ current_chapter.chapter_price|int }} Coins
+                </button>
+            </form>
+            {% else %}
+            <a href="{{ url_for('payment.coins') }}" style="display:inline-block;padding:0.7rem 2rem;background:linear-gradient(135deg,#d4a843,#f5d98a);color:#000;border:none;border-radius:10px;font-weight:700;font-size:0.92rem;text-decoration:none;transition:all 0.25s">
+                <i class="bi bi-coin me-1"></i> Get More Coins
+            </a>
+            <p style="color:var(--reader-muted);font-size:0.75rem;margin-top:0.8rem">
+                You need {{ current_chapter.chapter_price|int - coin_balance }} more coins
+            </p>
+            {% endif %}
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="reader-skeleton" id="readerSkeleton">
+            <div class="skel-heading"></div>
+            <div class="skel-line" style="width:100%"></div>
+            <div class="skel-line" style="width:92%"></div>
+            <div class="skel-line" style="width:85%"></div>
+            <div class="skel-line" style="width:100%"></div>
+            <div class="skel-line" style="width:70%"></div>
+            <div class="skel-line" style="width:95%"></div>
+            <div class="skel-line" style="width:88%"></div>
+            <div class="skel-line" style="width:60%"></div>
+        </div>
+        <div class="chapter-body" id="chapterBody">
+            {{ current_chapter.body | safe }}
+        </div>
+
+        <!-- Thread panel (right slide) -->
+        <div class="thread-overlay" id="threadOverlay"></div>
+        <div class="thread-panel" id="threadPanel">
+            <div class="thread-header">
+                <h3><i class="bi bi-chat-dots"></i> <span id="threadTitle">Paragraph Discussion</span></h3>
+                <div style="display:flex;gap:0.4rem;align-items:center;">
+                    <select id="threadSort" style="background:transparent;border:1px solid var(--reader-border);border-radius:6px;color:var(--reader-muted);font-size:0.7rem;padding:2px 6px;outline:none;">
+                        <option value="newest">Newest</option>
+                        <option value="top">Top</option>
+                    </select>
+                    <button class="topbar-btn" onclick="closeThread()" style="width:32px;height:32px;"><i class="bi bi-x-lg"></i></button>
+                </div>
+            </div>
+            <div class="thread-body" id="threadBody"></div>
+            <div class="thread-input-area">
+                <input type="text" id="threadInput" placeholder="Add a comment..." maxlength="200" onkeydown="if(event.key==='Enter')submitThreadComment()">
+                <button onclick="submitThreadComment()">Post</button>
+            </div>
+        </div>
+
+        <!-- Tip Creator — under chapter content -->
+        {% if book.creator_wiam_id != current_user.wiam_id %}
+        <div style="text-align:center;padding:1.5rem 1rem;margin-top:2rem;border-top:1px solid var(--reader-border)">
+            <p style="color:var(--reader-muted);font-size:0.82rem;margin-bottom:0.8rem">
+                <i class="bi bi-heart-fill" style="color:#ec4899"></i> Enjoying this chapter? Send a coin tip!
+            </p>
+            <form method="post" action="{{ url_for('payment.tip_creator') }}" style="display:inline-flex;align-items:center;gap:0.5rem;flex-wrap:wrap;justify-content:center;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="creator_id" value="{{ creator.id }}">
+                <input type="hidden" name="content_id" value="{{ book.id }}">
+                <select name="amount" style="background:rgba(255,255,255,0.05);color:var(--reader-text);border:1px solid rgba(236,72,153,0.3);border-radius:10px;padding:0.45rem 0.7rem;font-size:0.82rem;cursor:pointer;">
+                    <option value="5">5 coins</option>
+                    <option value="10" selected>10 coins</option>
+                    <option value="25">25 coins</option>
+                    <option value="50">50 coins</option>
+                    <option value="100">100 coins</option>
+                </select>
+                <button type="submit" style="display:inline-flex;align-items:center;gap:0.35rem;padding:0.5rem 1.5rem;background:linear-gradient(135deg,#ec4899,#f472b6);color:#fff;border:none;border-radius:24px;font-weight:700;font-size:0.85rem;cursor:pointer;transition:transform 0.2s,box-shadow 0.2s;box-shadow:0 3px 12px rgba(236,72,153,0.3);"
+                        onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                    <i class="bi bi-heart-fill"></i> Tip Creator
+                </button>
+            </form>
+            <p style="color:var(--reader-muted);font-size:0.68rem;margin-top:0.5rem">Support <strong style="color:var(--reader-accent)">{{ creator_profile.pen_name if creator_profile else creator.display_name }}</strong> with coins</p>
+        </div>
+        {% endif %}
+
+        {% endif %}
+
+        <!-- Chapter Interactions: Like, Vote, Comments -->
+        {% if not chapter_locked %}
+        <div class="ch-interactions" style="border-top:1px solid var(--reader-border);margin-top:1.5rem;padding-top:1.2rem">
+            <!-- Like & Vote bar -->
+            <div style="display:flex;align-items:center;justify-content:center;gap:1.5rem;flex-wrap:wrap;margin-bottom:1rem">
+                <!-- Like -->
+                <button id="chLikeBtn" onclick="toggleChapterLike()" style="display:flex;align-items:center;gap:0.35rem;background:none;border:1px solid var(--reader-border);border-radius:20px;padding:0.4rem 1rem;color:var(--reader-muted);font-size:0.85rem;cursor:pointer;transition:all 0.2s{% if chapter_liked %};color:#f472b6;border-color:#f472b6{% endif %}">
+                    <i class="bi {{ 'bi-heart-fill' if chapter_liked else 'bi-heart' }}" id="chLikeIcon"></i>
+                    <span id="chLikeCount">{{ chapter_like_count }}</span>
+                </button>
+                <!-- Upvote -->
+                <button id="chUpBtn" onclick="toggleChapterVote(1)" style="display:flex;align-items:center;gap:0.3rem;background:none;border:1px solid var(--reader-border);border-radius:20px;padding:0.4rem 0.8rem;color:var(--reader-muted);font-size:0.85rem;cursor:pointer;transition:all 0.2s{% if user_vote == 1 %};color:#4ade80;border-color:#4ade80{% endif %}">
+                    <i class="bi bi-arrow-up-circle{% if user_vote == 1 %}-fill{% endif %}" id="chUpIcon"></i>
+                    <span id="chUpCount">{{ vote_ups }}</span>
+                </button>
+                <!-- Downvote -->
+                <button id="chDownBtn" onclick="toggleChapterVote(-1)" style="display:flex;align-items:center;gap:0.3rem;background:none;border:1px solid var(--reader-border);border-radius:20px;padding:0.4rem 0.8rem;color:var(--reader-muted);font-size:0.85rem;cursor:pointer;transition:all 0.2s{% if user_vote == -1 %};color:#f87171;border-color:#f87171{% endif %}">
+                    <i class="bi bi-arrow-down-circle{% if user_vote == -1 %}-fill{% endif %}" id="chDownIcon"></i>
+                    <span id="chDownCount">{{ vote_downs }}</span>
+                </button>
+                <!-- Chapter Comments link (opens dedicated page) -->
+                <a href="{{ url_for('book.chapter_comments_page', book_id=book.id, ch_num=current_chapter.chapter_number) }}" style="display:flex;align-items:center;gap:0.35rem;background:none;border:1px solid var(--reader-border);border-radius:20px;padding:0.4rem 1rem;color:var(--reader-muted);font-size:0.85rem;cursor:pointer;transition:all 0.2s;text-decoration:none">
+                    <i class="bi bi-chat-dots"></i>
+                    <span>{{ comment_count }}</span> Comments
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Report button (Phase 4) -->
+        {% if current_user.is_authenticated and book.creator_wiam_id != current_user.wiam_id %}
+        <div style="text-align:center;padding:0.8rem;margin-top:0.5rem">
+            <button onclick="document.getElementById('reportModal').style.display='flex'" style="background:none;border:none;color:var(--reader-muted);font-size:0.72rem;cursor:pointer;opacity:0.6;transition:opacity 0.2s" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">
+                <i class="bi bi-flag"></i> Report this chapter
+            </button>
+        </div>
+        <!-- Report Modal -->
+        <div id="reportModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:center;justify-content:center;padding:1rem">
+            <div style="background:var(--reader-bg,#1a1a2e);border:1px solid var(--reader-border,#333);border-radius:12px;padding:1.5rem;max-width:400px;width:100%">
+                <h4 style="margin:0 0 1rem;color:var(--reader-text,#eee)"><i class="bi bi-flag" style="color:#ef4444"></i> Report Content</h4>
+                <form method="POST" action="{{ url_for('book.report_content', book_id=book.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="chapter_number" value="{{ current_chapter.chapter_number }}">
+                    <div style="margin-bottom:1rem">
+                        <label style="display:block;font-size:0.82rem;color:var(--reader-muted);margin-bottom:0.4rem">Reason</label>
+                        <select name="reason" style="width:100%;padding:0.5rem;background:rgba(255,255,255,0.05);border:1px solid var(--reader-border,#333);border-radius:8px;color:var(--reader-text,#eee);font-size:0.85rem">
+                            <option value="inappropriate">Inappropriate content</option>
+                            <option value="plagiarism">Plagiarism / Stolen work</option>
+                            <option value="spam">Spam / Low quality</option>
+                            <option value="hate">Hate speech / Harassment</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div style="margin-bottom:1rem">
+                        <label style="display:block;font-size:0.82rem;color:var(--reader-muted);margin-bottom:0.4rem">Details (optional)</label>
+                        <textarea name="details" rows="3" maxlength="500" placeholder="Tell us more..." style="width:100%;padding:0.5rem;background:rgba(255,255,255,0.05);border:1px solid var(--reader-border,#333);border-radius:8px;color:var(--reader-text,#eee);font-size:0.82rem;resize:vertical"></textarea>
+                    </div>
+                    <div style="display:flex;gap:0.5rem;justify-content:flex-end">
+                        <button type="button" onclick="document.getElementById('reportModal').style.display='none'" style="padding:0.5rem 1rem;background:rgba(255,255,255,0.1);border:1px solid var(--reader-border,#333);border-radius:8px;color:var(--reader-muted);font-size:0.82rem;cursor:pointer">Cancel</button>
+                        <button type="submit" style="padding:0.5rem 1rem;background:#ef4444;border:none;border-radius:8px;color:#fff;font-weight:600;font-size:0.82rem;cursor:pointer">Submit Report</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Follow Creator Prompt (shows if reader hasn't followed yet) -->
+        {% if creator and not is_following_creator and creator.id != current_user.id %}
+        <div id="followPrompt" style="max-width:420px;margin:1.5rem auto;background:linear-gradient(135deg,rgba(212,168,67,0.08),rgba(212,168,67,0.03));border:1px solid rgba(212,168,67,0.25);border-radius:16px;padding:1.5rem;text-align:center;animation:fadeSlideUp 0.6s ease-out">
+            <style>
+                @keyframes fadeSlideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+            </style>
+            <div style="width:56px;height:56px;border-radius:50%;margin:0 auto 0.8rem;overflow:hidden;border:2px solid rgba(212,168,67,0.4);background:linear-gradient(135deg,#2a1f0e,#1a1208);display:flex;align-items:center;justify-content:center;color:#d4a843;font-size:1.4rem;font-family:Georgia,serif">
+                {% if creator_profile and creator_profile.avatar_url %}
+                <img src="{{ creator_profile.avatar_url }}" style="width:100%;height:100%;object-fit:cover" alt="">
+                {% elif creator and creator.avatar_url %}
+                <img src="{{ creator.avatar_url }}" style="width:100%;height:100%;object-fit:cover" alt="">
+                {% else %}
+                {{ (creator_profile.pen_name if creator_profile else creator.display_name)[0] | upper }}
+                {% endif %}
+            </div>
+            <p style="font-size:0.92rem;color:var(--reader-text);line-height:1.5;margin:0 0 0.3rem">
+                Enjoying the story so far?
+            </p>
+            <p style="font-size:0.82rem;color:var(--reader-muted);line-height:1.4;margin:0 0 1rem">
+                Follow <strong style="color:var(--reader-accent)">{{ creator_profile.pen_name if creator_profile else creator.display_name }}</strong> to get notified when new chapters drop. Your support means the world to creators like them.
+            </p>
+            <button id="readerFollowBtn" onclick="followCreatorFromReader()" style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.55rem 1.8rem;background:linear-gradient(135deg,#d4a843,#b8860b);color:#000;border:none;border-radius:24px;font-weight:700;font-size:0.88rem;cursor:pointer;transition:transform 0.2s,box-shadow 0.2s;box-shadow:0 4px 16px rgba(212,168,67,0.3)">
+                <i class="bi bi-person-plus"></i> <span id="readerFollowText">Follow</span>
+            </button>
+            
+        </div>
+        {% endif %}
+
+        <!-- Ad placement (between content and nav — non-intrusive) -->
+        {% include 'includes/google_ads.html' with context %}
+
+        <!-- Chapter navigation -->
+        <div class="chapter-nav">
+            {% set prev_ch = current_chapter.chapter_number - 1 %}
+            {% set next_ch = current_chapter.chapter_number + 1 %}
+            {% set has_prev = prev_ch >= 1 %}
+            {% set has_next = next_ch <= chapters|length %}
+
+            <a href="{% if has_prev %}{{ url_for('book.read_book', book_id=book.id, ch=prev_ch) }}{% else %}#{% endif %}"
+               class="ch-nav-btn {% if not has_prev %}disabled{% endif %}">
+                <i class="bi bi-chevron-left"></i> Previous
+            </a>
+            <span style="color:var(--reader-muted);font-size:0.82rem">
+                {{ current_chapter.chapter_number }} / {{ chapters|length }}
+            </span>
+            <a href="{% if has_next %}{{ url_for('book.read_book', book_id=book.id, ch=next_ch) }}{% else %}#{% endif %}"
+               class="ch-nav-btn {% if not has_next %}disabled{% endif %}">
+                Next <i class="bi bi-chevron-right"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- Error / offline notice -->
+    <div class="reader-notice" id="readerNotice">
+        <span id="noticeText">Something went wrong.</span>
+        <button onclick="retryLastAction()">Retry</button>
+        <button onclick="dismissNotice()" style="background:none;opacity:0.7;">&times;</button>
+    </div>
+
+    <!-- Progress bar -->
+    <div class="progress-bar-reader">
+        <div class="progress-bar-fill" id="progressFill"></div>
+    </div>
+
+    <script>
+    (function() {
+        const bookId = {{ book.id }};
+        const totalChapters = {{ chapters|length }};
+        const currentCh = {{ current_chapter.chapter_number }};
+        const theme = '{{ prefs.theme if prefs else "light" }}';
+        const fontSize = '{{ prefs.font_size if prefs else "medium" }}';
+        const userId = {{ current_user.wiam_id }};
+
+        // ─── Resilient fetch with retry ───
+        var _lastRetryFn = null;
+        function showNotice(msg) {
+            var el = document.getElementById('readerNotice');
+            var txt = document.getElementById('noticeText');
+            if (el && txt) { txt.textContent = msg; el.classList.add('show'); }
+            setTimeout(function() { dismissNotice(); }, 6000);
+        }
+        window.dismissNotice = function() {
+            var el = document.getElementById('readerNotice');
+            if (el) el.classList.remove('show');
+        };
+        window.retryLastAction = function() {
+            dismissNotice();
+            if (_lastRetryFn) _lastRetryFn();
+        };
+        function safeFetch(url, opts) {
+            if (!navigator.onLine) {
+                showNotice('You are offline. Check your connection.');
+                return Promise.resolve(null);
+            }
+            return fetch(url, opts).then(function(r) {
+                if (!r.ok) throw new Error('Server error ' + r.status);
+                return r.json();
+            }).catch(function(err) {
+                showNotice('Connection error. Tap Retry.');
+                return null;
+            });
+        }
+
+        // Detect offline/online
+        window.addEventListener('offline', function() { showNotice('You are offline.'); });
+        window.addEventListener('online', function() { dismissNotice(); });
+
+        // Progress bar
+        function updateProgress() {
+            const scrollTop = window.scrollY;
+            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const pageProgress = docHeight > 0 ? scrollTop / docHeight : 1;
+            const chapterProgress = (currentCh - 1 + pageProgress) / totalChapters;
+            document.getElementById('progressFill').style.width = (chapterProgress * 100) + '%';
+        }
+        window.addEventListener('scroll', updateProgress);
+        updateProgress();
+
+        // Drop-cap: only the FIRST paragraph of the chapter gets the big letter
+        (function() {
+            var body = document.querySelector('.chapter-body');
+            if (body) {
+                var firstP = body.querySelector('p');
+                if (firstP) firstP.classList.add('drop-cap-para');
+            }
+        })();
+
+        // TOC
+        document.getElementById('tocBtn').addEventListener('click', function() {
+            document.getElementById('tocPanel').classList.add('open');
+            document.getElementById('tocOverlay').classList.add('open');
+        });
+        function closeToc() {
+            document.getElementById('tocPanel').classList.remove('open');
+            document.getElementById('tocOverlay').classList.remove('open');
+        }
+        document.getElementById('closeToc').addEventListener('click', closeToc);
+        document.getElementById('tocOverlay').addEventListener('click', closeToc);
+
+        // Settings
+        document.getElementById('settingsBtn').addEventListener('click', function() {
+            document.getElementById('settingsDropdown').classList.toggle('open');
+        });
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('#settingsDropdown') && !e.target.closest('#settingsBtn')) {
+                document.getElementById('settingsDropdown').classList.remove('open');
+            }
+        });
+
+        // Theme
+        function setTheme(t) {
+            document.body.setAttribute('data-theme', t);
+            document.querySelectorAll('.theme-btn').forEach(function(b) {
+                b.classList.toggle('active', b.dataset.t === t);
+            });
+            savePref('theme', t);
+        }
+        document.querySelectorAll('.theme-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() { setTheme(this.dataset.t); });
+        });
+        setTheme(theme);
+
+        // Font size
+        var _fsSizes = {small:'0.95rem', medium:'1.1rem', large:'1.3rem', xlarge:'1.5rem'};
+        function setFontSize(fs) {
+            var cb = document.querySelector('.chapter-body');
+            if (cb) {
+                var val = _fsSizes[fs] || '1.1rem';
+                cb.style.setProperty('font-size', val, 'important');
+                cb.querySelectorAll('p,span,div,li,blockquote').forEach(function(el) {
+                    el.style.setProperty('font-size', val, 'important');
+                });
+            }
+            document.querySelectorAll('[data-fs]').forEach(function(b) {
+                b.classList.toggle('active', b.dataset.fs === fs);
+            });
+            savePref('font_size', fs);
+        }
+        document.querySelectorAll('[data-fs]').forEach(function(btn) {
+            btn.addEventListener('click', function() { setFontSize(this.dataset.fs); });
+        });
+        setFontSize(fontSize);
+
+        // Font family
+        var _ffFonts = {
+            serif: "Georgia, 'Times New Roman', 'Noto Serif', serif",
+            sans: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+            mono: "'Courier New', Courier, monospace"
+        };
+        const fontFamily = '{{ prefs.font_family if prefs and prefs.font_family else "serif" }}';
+        function setFontFamily(ff) {
+            var cb = document.querySelector('.chapter-body');
+            if (cb) {
+                cb.classList.remove('ff-serif','ff-sans','ff-mono');
+                cb.classList.add('ff-' + ff);
+                var val = _ffFonts[ff] || _ffFonts.serif;
+                cb.style.setProperty('font-family', val, 'important');
+                cb.querySelectorAll('p,span,div,li,blockquote,a,em,strong,b,u,h1,h2,h3').forEach(function(el) {
+                    el.style.setProperty('font-family', val, 'important');
+                });
+            }
+            document.querySelectorAll('.ff-btn').forEach(function(b) {
+                b.classList.toggle('active', b.dataset.ff === ff);
+            });
+            savePref('font_family', ff);
+        }
+        document.querySelectorAll('.ff-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() { setFontFamily(this.dataset.ff); });
+        });
+        setFontFamily(fontFamily);
+
+        // Line spacing
+        var _lsValues = {tight: '1.5', normal: '1.9', spacious: '2.4'};
+        const lineSpacing = '{{ prefs.line_spacing if prefs and prefs.line_spacing else "normal" }}';
+        function setLineSpacing(ls) {
+            var cb = document.querySelector('.chapter-body');
+            if (cb) {
+                cb.classList.remove('ls-tight','ls-normal','ls-spacious');
+                cb.classList.add('ls-' + ls);
+                var val = _lsValues[ls] || '1.9';
+                cb.style.setProperty('line-height', val, 'important');
+                cb.querySelectorAll('p,li,blockquote,div').forEach(function(el) {
+                    el.style.setProperty('line-height', val, 'important');
+                });
+            }
+            document.querySelectorAll('.ls-btn').forEach(function(b) {
+                b.classList.toggle('active', b.dataset.ls === ls);
+            });
+            savePref('line_spacing', ls);
+        }
+        document.querySelectorAll('.ls-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() { setLineSpacing(this.dataset.ls); });
+        });
+        setLineSpacing(lineSpacing);
+
+        // ─── Paragraph Interaction System ───
+        const EMOJIS = ['❤️','😂','😭','😡','😮','🔥'];
+        let _paraReactions = {};   // {paraIdx: {emoji: count}}
+        let _userReactions = {};   // {paraIdx: emoji}
+        let _commentCounts = {};   // {paraIdx: count}
+        let _openPicker = null;
+        let _threadParaIdx = null;
+
+        // Wrap each paragraph-like element in chapter body with a .para-block
+        function initParagraphs() {
+            var body = document.getElementById('chapterBody');
+            if (!body) return;
+            // Guard: don't run twice
+            if (body.dataset.paraInit) return;
+            body.dataset.paraInit = '1';
+            var paras = body.querySelectorAll('p');
+            // If no <p> tags, wrap top-level block elements or create wrappers
+            if (paras.length === 0) {
+                paras = body.querySelectorAll('div, blockquote, li');
+            }
+            if (paras.length === 0) {
+                // Raw text — wrap all direct children or the body itself
+                var children = Array.from(body.childNodes).filter(function(n) {
+                    return n.nodeType === 1 || (n.nodeType === 3 && n.textContent.trim().length > 10);
+                });
+                children.forEach(function(n) {
+                    if (n.nodeType === 3) {
+                        var p = document.createElement('p');
+                        n.parentNode.insertBefore(p, n);
+                        p.appendChild(n);
+                    }
+                });
+                paras = body.querySelectorAll('p, div, blockquote');
+            }
+            if (paras.length === 0) return;
+            // Filter to only paragraphs with real text content (skip empty/whitespace/br-only)
+            var realParas = Array.from(paras).filter(function(p) {
+                var txt = p.textContent.trim();
+                return txt.length > 0;
+            });
+            if (realParas.length === 0) return;
+            realParas.forEach(function(p, idx) {
+                var wrap = document.createElement('div');
+                wrap.className = 'para-block';
+                wrap.dataset.pi = idx;
+                p.parentNode.insertBefore(wrap, p);
+                wrap.appendChild(p);
+
+                // Controls (below paragraph)
+                var ctrl = document.createElement('div');
+                ctrl.className = 'para-controls';
+                ctrl.innerHTML =
+                    '<button class="para-ctrl-btn" onclick="toggleEmojiPicker(' + idx + ',this)" title="React">' +
+                        '<i class="bi bi-emoji-smile"></i>' +
+                    '</button>' +
+                    '<div class="emoji-picker-mini" id="picker-' + idx + '"></div>' +
+                    '<button class="para-ctrl-btn" onclick="openThread(' + idx + ')" title="Comment">' +
+                        '<i class="bi bi-chat-left-text"></i>' +
+                        '<span class="ctrl-count" id="commentCount-' + idx + '" style="display:none"></span>' +
+                    '</button>';
+                wrap.appendChild(ctrl);
+            });
+
+            // Build pickers
+            realParas.forEach(function(p, idx) {
+                var picker = document.getElementById('picker-' + idx);
+                if (!picker) return;
+                EMOJIS.forEach(function(em) {
+                    var btn = document.createElement('button');
+                    btn.className = 'emoji-opt';
+                    btn.textContent = em;
+                    btn.onclick = function(e) {
+                        e.stopPropagation();
+                        sendReaction(idx, em);
+                    };
+                    picker.appendChild(btn);
+                });
+            });
+
+            // Load reaction and comment data
+            loadReactions();
+            loadCommentCounts();
+        }
+
+        // Close pickers when clicking elsewhere
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.emoji-picker-mini') && !e.target.closest('.para-ctrl-btn')) {
+                document.querySelectorAll('.emoji-picker-mini.open').forEach(function(p) { p.classList.remove('open'); });
+            }
+        });
+
+        window.toggleEmojiPicker = function(idx, btn) {
+            var picker = document.getElementById('picker-' + idx);
+            if (!picker) return;
+            // Close others
+            document.querySelectorAll('.emoji-picker-mini.open').forEach(function(p) {
+                if (p.id !== 'picker-' + idx) p.classList.remove('open');
+            });
+            picker.classList.toggle('open');
+            // Highlight user's current reaction
+            var userEmoji = _userReactions[idx] || null;
+            picker.querySelectorAll('.emoji-opt').forEach(function(b) {
+                b.classList.toggle('selected', b.textContent === userEmoji);
+            });
+        };
+
+        function sendReaction(paraIdx, emoji) {
+            _lastRetryFn = function() { sendReaction(paraIdx, emoji); };
+            safeFetch('/api/reader/react', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    content_id: bookId,
+                    chapter_number: currentCh,
+                    paragraph_index: paraIdx,
+                    emoji: emoji
+                })
+            }).then(function(d) {
+                if (!d || !d.ok) return;
+                // Close picker
+                var picker = document.getElementById('picker-' + paraIdx);
+                if (picker) picker.classList.remove('open');
+
+                if (d.removed) {
+                    // Remove user reaction
+                    var old = _userReactions[paraIdx];
+                    if (old && _paraReactions[paraIdx] && _paraReactions[paraIdx][old]) {
+                        _paraReactions[paraIdx][old]--;
+                        if (_paraReactions[paraIdx][old] <= 0) delete _paraReactions[paraIdx][old];
+                    }
+                    delete _userReactions[paraIdx];
+                } else {
+                    // Update
+                    var prev = _userReactions[paraIdx];
+                    if (prev && _paraReactions[paraIdx] && _paraReactions[paraIdx][prev]) {
+                        _paraReactions[paraIdx][prev]--;
+                        if (_paraReactions[paraIdx][prev] <= 0) delete _paraReactions[paraIdx][prev];
+                    }
+                    if (!_paraReactions[paraIdx]) _paraReactions[paraIdx] = {};
+                    _paraReactions[paraIdx][d.emoji] = (_paraReactions[paraIdx][d.emoji] || 0) + 1;
+                    _userReactions[paraIdx] = d.emoji;
+                }
+                renderReactionBadge(paraIdx);
+            });
+        }
+
+        function loadReactions() {
+            _lastRetryFn = loadReactions;
+            safeFetch('/api/reader/reactions?content_id=' + bookId + '&chapter_number=' + currentCh)
+            .then(function(d) {
+                if (!d || !d.ok) return;
+                _paraReactions = d.reactions || {};
+                _userReactions = d.user_reactions || {};
+                // Convert string keys
+                var pr = {}, ur = {};
+                Object.keys(_paraReactions).forEach(function(k) { pr[parseInt(k)] = _paraReactions[k]; });
+                Object.keys(_userReactions).forEach(function(k) { ur[parseInt(k)] = _userReactions[k]; });
+                _paraReactions = pr;
+                _userReactions = ur;
+                // Render badges
+                Object.keys(pr).forEach(function(idx) { renderReactionBadge(parseInt(idx)); });
+            });
+        }
+
+        function renderReactionBadge(idx) {
+            var data = _paraReactions[idx] || {};
+            var entries = Object.entries(data).filter(function(e) { return e[1] > 0; });
+
+            // Render small emoji badges INLINE between emoji btn and comment btn
+            var block = document.querySelector('.para-block[data-pi="' + idx + '"]');
+            if (!block) return;
+            var existingRow = block.querySelector('.para-emoji-row');
+            if (existingRow) existingRow.remove();
+            if (entries.length === 0) return;
+
+            entries.sort(function(a, b) { return b[1] - a[1]; });
+            var row = document.createElement('span');
+            row.className = 'para-emoji-row';
+            var userEmoji = _userReactions[idx] || null;
+            entries.forEach(function(e) {
+                var badge = document.createElement('span');
+                badge.className = 'para-emoji-badge' + (e[0] === userEmoji ? ' user-reacted' : '');
+                badge.innerHTML = '<span class="emoji-icon">' + e[0] + '</span><span class="emoji-count">' + e[1] + '</span>';
+                badge.onclick = function() { sendReaction(idx, e[0]); };
+                row.appendChild(badge);
+            });
+            // Insert inside .para-controls, between emoji picker and comment button
+            var controls = block.querySelector('.para-controls');
+            if (controls) {
+                var commentBtn = controls.querySelectorAll('.para-ctrl-btn')[1];
+                if (commentBtn) controls.insertBefore(row, commentBtn);
+                else controls.appendChild(row);
+            }
+        }
+
+        function loadCommentCounts() {
+            _lastRetryFn = loadCommentCounts;
+            safeFetch('/api/reader/comment-counts?content_id=' + bookId + '&chapter_number=' + currentCh)
+            .then(function(d) {
+                if (!d || !d.ok) return;
+                _commentCounts = {};
+                Object.keys(d.counts).forEach(function(k) { _commentCounts[parseInt(k)] = d.counts[k]; });
+                Object.keys(_commentCounts).forEach(function(idx) {
+                    var cnt = _commentCounts[idx];
+                    var el = document.getElementById('commentCount-' + idx);
+                    if (el && cnt > 0) { el.textContent = cnt; el.style.display = ''; }
+                });
+            });
+        }
+
+        // ─── Navigate to paragraph comments page ───
+        window.openThread = function(paraIdx) {
+            // Save scroll position before navigating
+            try { sessionStorage.setItem('wiam_reader_scroll_' + userId + '_' + bookId + '_' + currentCh, window.scrollY); } catch(e){}
+            window.location.href = '/book/' + bookId + '/read/' + currentCh + '/paragraph/' + paraIdx + '/comments';
+        };
+
+        window.closeThread = function() {
+            document.getElementById('threadOverlay').classList.remove('open');
+            document.getElementById('threadPanel').classList.remove('open');
+            document.body.style.overflow = '';
+            _threadParaIdx = null;
+        };
+        document.getElementById('threadOverlay').addEventListener('click', closeThread);
+        document.getElementById('threadSort').addEventListener('change', function() {
+            if (_threadParaIdx !== null) loadThreadComments(_threadParaIdx);
+        });
+
+        function loadThreadComments(paraIdx) {
+            var sort = document.getElementById('threadSort').value;
+            fetch('/api/reader/comments?content_id=' + bookId + '&chapter_number=' + currentCh + '&paragraph_index=' + paraIdx + '&sort=' + sort)
+            .then(function(r) { return r.json(); }).then(function(d) {
+                var body = document.getElementById('threadBody');
+                body.innerHTML = '';
+                if (!d.comments || !d.comments.length) {
+                    body.innerHTML = '<div style="text-align:center;color:var(--reader-muted);font-size:0.82rem;padding:2rem">No comments yet. Be the first!</div>';
+                    return;
+                }
+                d.comments.forEach(function(c) { body.appendChild(renderThreadComment(c, paraIdx)); });
+            });
+        }
+
+        function renderThreadComment(c, paraIdx) {
+            var div = document.createElement('div');
+            div.className = 'thread-comment';
+            div.id = 'tc-' + c.id;
+            div.innerHTML =
+                '<div class="tc-header">' +
+                    '<div class="tc-avatar">' + escHtml(c.user_initial) + '</div>' +
+                    '<span class="tc-name">' + escHtml(c.user_name) + '</span>' +
+                    '<span class="tc-time">' + c.created_at + '</span>' +
+                '</div>' +
+                '<div class="tc-text">' + escHtml(c.text) + '</div>' +
+                '<div class="tc-actions">' +
+                    '<button onclick="likeThreadComment(' + c.id + ')" id="tcLike-' + c.id + '" class="' + (c.liked ? 'liked' : '') + '">' +
+                        '<i class="bi ' + (c.liked ? 'bi-heart-fill' : 'bi-heart') + '"></i> ' + c.like_count +
+                    '</button>' +
+                    '<button onclick="replyToComment(' + c.id + ',' + paraIdx + ')"><i class="bi bi-reply"></i> Reply</button>' +
+                    (c.is_own ? '<button onclick="deleteThreadComment(' + c.id + ')"><i class="bi bi-trash"></i></button>' : '') +
+                '</div>';
+            // Replies
+            if (c.replies && c.replies.length) {
+                var repliesDiv = document.createElement('div');
+                repliesDiv.className = 'thread-reply';
+                c.replies.forEach(function(r) {
+                    repliesDiv.appendChild(renderThreadComment(r, paraIdx));
+                });
+                div.appendChild(repliesDiv);
+            }
+            return div;
+        }
+
+        window.submitThreadComment = function() {
+            var inp = document.getElementById('threadInput');
+            var text = inp.value.trim();
+            if (!text || _threadParaIdx === null) return;
+            inp.value = '';
+            var parentId = inp.dataset.replyTo || null;
+            fetch('/api/reader/comment', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    content_id: bookId,
+                    chapter_number: currentCh,
+                    paragraph_index: _threadParaIdx,
+                    text: text,
+                    parent_id: parentId ? parseInt(parentId) : null
+                })
+            }).then(function(r) { return r.json(); }).then(function(d) {
+                if (!d.ok) return;
+                inp.dataset.replyTo = '';
+                inp.placeholder = 'Add a comment...';
+                loadThreadComments(_threadParaIdx);
+                // Update count
+                _commentCounts[_threadParaIdx] = (_commentCounts[_threadParaIdx] || 0) + 1;
+                var cnt = _commentCounts[_threadParaIdx];
+                var el = document.getElementById('commentCount-' + _threadParaIdx);
+                if (el) { el.textContent = cnt; el.style.display = ''; }
+            });
+        };
+
+        window.replyToComment = function(commentId, paraIdx) {
+            var inp = document.getElementById('threadInput');
+            inp.dataset.replyTo = commentId;
+            inp.placeholder = 'Replying...';
+            inp.focus();
+        };
+
+        window.likeThreadComment = function(cid) {
+            fetch('/api/reader/comment/' + cid + '/like', {
+                method: 'POST', headers: {'Content-Type': 'application/json'}
+            }).then(function(r) { return r.json(); }).then(function(d) {
+                var btn = document.getElementById('tcLike-' + cid);
+                if (!btn) return;
+                btn.className = d.liked ? 'liked' : '';
+                btn.innerHTML = '<i class="bi ' + (d.liked ? 'bi-heart-fill' : 'bi-heart') + '"></i> ' + d.count;
+            });
+        };
+
+        window.deleteThreadComment = function(cid) {
+            if (!confirm('Delete this comment?')) return;
+            fetch('/api/reader/comment/' + cid + '/delete', {
+                method: 'POST', headers: {'Content-Type': 'application/json'}
+            }).then(function(r) { return r.json(); }).then(function(d) {
+                if (!d.ok) return;
+                var el = document.getElementById('tc-' + cid);
+                if (el) el.remove();
+            });
+        };
+
+        // Init paragraphs after DOM ready
+        initParagraphs();
+        // Hide skeleton once content is painted
+        var _skel = document.getElementById('readerSkeleton');
+        if (_skel) _skel.classList.add('loaded');
+
+        // Restore scroll position — try paragraph-level first, then pixel fallback
+        (function(){
+            try {
+                // 1) Check sessionStorage (returning from paragraph comments page)
+                var sessionKey = 'wiam_reader_scroll_' + userId + '_' + bookId + '_' + currentCh;
+                var savedScroll = sessionStorage.getItem(sessionKey);
+                if (savedScroll) {
+                    window.scrollTo(0, parseInt(savedScroll));
+                    sessionStorage.removeItem(sessionKey);
+                    return;
+                }
+                // 2) Check localStorage for paragraph-level restore (Pick Up Where You Left Off)
+                var paraKey = 'wiam_para_' + userId + '_' + bookId + '_' + currentCh;
+                var savedPara = localStorage.getItem(paraKey);
+                if (savedPara !== null) {
+                    var paraIdx = parseInt(savedPara);
+                    var blocks = document.querySelectorAll('.para-block');
+                    if (paraIdx > 0 && paraIdx < blocks.length) {
+                        setTimeout(function() {
+                            blocks[paraIdx].scrollIntoView({behavior: 'auto', block: 'start'});
+                            window.scrollBy(0, -60); // offset for top bar
+                        }, 100);
+                    }
+                }
+            } catch(e){}
+        })();
+
+        // Save scroll position periodically — tracks paragraph index + scroll %
+        var _scrollSaveTimer = null;
+        function getTopVisibleParagraph() {
+            var blocks = document.querySelectorAll('.para-block');
+            var topPara = 0;
+            for (var i = 0; i < blocks.length; i++) {
+                var rect = blocks[i].getBoundingClientRect();
+                if (rect.top >= -50) { topPara = i; break; }
+                topPara = i;
+            }
+            return topPara;
+        }
+        window.addEventListener('scroll', function() {
+            clearTimeout(_scrollSaveTimer);
+            _scrollSaveTimer = setTimeout(function() {
+                var scrollPct = Math.round((window.scrollY / Math.max(1, document.documentElement.scrollHeight - window.innerHeight)) * 100);
+                var paraIdx = getTopVisibleParagraph();
+                fetch('/api/reader/save-position', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({content_id: bookId, chapter_number: currentCh, position: scrollPct, paragraph_index: paraIdx})
+                }).catch(function(){});
+                // Also save to localStorage for instant restore (per-user key)
+                try { localStorage.setItem('wiam_para_' + userId + '_' + bookId + '_' + currentCh, paraIdx); } catch(e){}
+            }, 3000);
+        });
+
+        // Fullscreen (only if button exists)
+        var _fsBtn = document.getElementById('fullscreenBtn');
+        if (_fsBtn) {
+            _fsBtn.addEventListener('click', function() {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(function() {});
+                    this.querySelector('i').className = 'bi bi-fullscreen-exit';
+                } else {
+                    document.exitFullscreen();
+                    this.querySelector('i').className = 'bi bi-arrows-fullscreen';
+                }
+            });
+        }
+
+        // Save preferences
+        function savePref(key, val) {
+            fetch('/api/reader/pref', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ [key]: val })
+            }).catch(function() {});
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft' && currentCh > 1) {
+                window.location.href = '?ch=' + (currentCh - 1);
+            } else if (e.key === 'ArrowRight' && currentCh < totalChapters) {
+                window.location.href = '?ch=' + (currentCh + 1);
+            }
+        });
+
+        // ─── Chapter Interactions ───
+        let _chLiked = {{ 'true' if chapter_liked else 'false' }};
+        let _userVote = {{ user_vote }};
+
+        window.toggleChapterLike = function() {
+            fetch('/book/' + bookId + '/chapter/' + currentCh + '/like', {
+                method: 'POST', headers: {'Content-Type': 'application/json'}
+            }).then(r => r.json()).then(d => {
+                _chLiked = d.liked;
+                const btn = document.getElementById('chLikeBtn');
+                const icon = document.getElementById('chLikeIcon');
+                document.getElementById('chLikeCount').textContent = d.count;
+                icon.className = d.liked ? 'bi bi-heart-fill' : 'bi bi-heart';
+                btn.style.color = d.liked ? '#f472b6' : 'var(--reader-muted)';
+                btn.style.borderColor = d.liked ? '#f472b6' : 'var(--reader-border)';
+            });
+        };
+
+        window.toggleChapterVote = function(val) {
+            fetch('/book/' + bookId + '/chapter/' + currentCh + '/vote', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({value: val})
+            }).then(r => r.json()).then(d => {
+                _userVote = d.user_vote;
+                document.getElementById('chUpCount').textContent = d.ups;
+                document.getElementById('chDownCount').textContent = d.downs;
+                const upBtn = document.getElementById('chUpBtn');
+                const downBtn = document.getElementById('chDownBtn');
+                const upIcon = document.getElementById('chUpIcon');
+                const downIcon = document.getElementById('chDownIcon');
+                upIcon.className = d.user_vote === 1 ? 'bi bi-arrow-up-circle-fill' : 'bi bi-arrow-up-circle';
+                downIcon.className = d.user_vote === -1 ? 'bi bi-arrow-down-circle-fill' : 'bi bi-arrow-down-circle';
+                upBtn.style.color = d.user_vote === 1 ? '#4ade80' : 'var(--reader-muted)';
+                upBtn.style.borderColor = d.user_vote === 1 ? '#4ade80' : 'var(--reader-border)';
+                downBtn.style.color = d.user_vote === -1 ? '#f87171' : 'var(--reader-muted)';
+                downBtn.style.borderColor = d.user_vote === -1 ? '#f87171' : 'var(--reader-border)';
+            });
+        };
+
+        let _commentsLoaded = false;
+        window.toggleComments = function() {
+            const sec = document.getElementById('commentsSection');
+            const isHidden = sec.style.display === 'none';
+            sec.style.display = isHidden ? 'block' : 'none';
+            if (isHidden && !_commentsLoaded) { loadComments(); _commentsLoaded = true; }
+        };
+
+        function loadComments() {
+            fetch('/book/' + bookId + '/chapter/' + currentCh + '/comments')
+            .then(r => r.json()).then(d => {
+                renderComments(d.comments);
+            });
+        }
+
+        function renderComments(comments) {
+            const list = document.getElementById('commentsList');
+            const empty = document.getElementById('commentsEmpty');
+            list.innerHTML = '';
+            if (!comments.length) { empty.style.display = 'block'; return; }
+            empty.style.display = 'none';
+            comments.forEach(c => {
+                const div = document.createElement('div');
+                div.id = 'comment-' + c.id;
+                div.style.cssText = 'padding:0.6rem 0.8rem;background:rgba(255,255,255,0.03);border:1px solid var(--reader-border);border-radius:12px';
+                div.innerHTML =
+                    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.3rem">' +
+                        '<span style="font-weight:600;font-size:0.82rem;color:var(--reader-text)">' + escHtml(c.user_name) + '</span>' +
+                        '<span style="font-size:0.7rem;color:var(--reader-muted)">' + c.created_at + '</span>' +
+                    '</div>' +
+                    '<p style="font-size:0.85rem;margin:0 0 0.4rem;color:var(--reader-text);line-height:1.4">' + escHtml(c.text) + '</p>' +
+                    '<div style="display:flex;gap:0.8rem;align-items:center">' +
+                        '<button onclick="likeComment(' + c.id + ')" style="background:none;border:none;color:' + (c.user_liked ? '#f472b6' : 'var(--reader-muted)') + ';font-size:0.78rem;cursor:pointer;display:flex;align-items:center;gap:0.2rem" id="cmtLike-' + c.id + '">' +
+                            '<i class="bi ' + (c.user_liked ? 'bi-heart-fill' : 'bi-heart') + '"></i> <span>' + c.like_count + '</span>' +
+                        '</button>' +
+                        (c.is_own ? '<button onclick="deleteComment(' + c.id + ')" style="background:none;border:none;color:var(--reader-muted);font-size:0.72rem;cursor:pointer"><i class="bi bi-trash"></i></button>' : '') +
+                    '</div>';
+                list.appendChild(div);
+            });
+        }
+
+        window.submitComment = function() {
+            const inp = document.getElementById('commentInput');
+            const text = inp.value.trim();
+            if (!text) return;
+            inp.value = '';
+            fetch('/book/' + bookId + '/chapter/' + currentCh + '/comment', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({text: text})
+            }).then(r => r.json()).then(c => {
+                if (c.error) return;
+                document.getElementById('commentsEmpty').style.display = 'none';
+                const count = document.getElementById('chCommentCount');
+                count.textContent = parseInt(count.textContent) + 1;
+                const list = document.getElementById('commentsList');
+                const div = document.createElement('div');
+                div.id = 'comment-' + c.id;
+                div.style.cssText = 'padding:0.6rem 0.8rem;background:rgba(255,255,255,0.03);border:1px solid var(--reader-border);border-radius:12px';
+                div.innerHTML =
+                    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.3rem">' +
+                        '<span style="font-weight:600;font-size:0.82rem;color:var(--reader-text)">' + escHtml(c.user_name) + '</span>' +
+                        '<span style="font-size:0.7rem;color:var(--reader-muted)">' + c.created_at + '</span>' +
+                    '</div>' +
+                    '<p style="font-size:0.85rem;margin:0 0 0.4rem;color:var(--reader-text);line-height:1.4">' + escHtml(c.text) + '</p>' +
+                    '<div style="display:flex;gap:0.8rem;align-items:center">' +
+                        '<button onclick="likeComment(' + c.id + ')" style="background:none;border:none;color:var(--reader-muted);font-size:0.78rem;cursor:pointer;display:flex;align-items:center;gap:0.2rem" id="cmtLike-' + c.id + '">' +
+                            '<i class="bi bi-heart"></i> <span>0</span>' +
+                        '</button>' +
+                        '<button onclick="deleteComment(' + c.id + ')" style="background:none;border:none;color:var(--reader-muted);font-size:0.72rem;cursor:pointer"><i class="bi bi-trash"></i></button>' +
+                    '</div>';
+                list.prepend(div);
+            });
+        };
+
+        window.likeComment = function(cid) {
+            fetch('/book/comment/' + cid + '/like', {
+                method: 'POST', headers: {'Content-Type': 'application/json'}
+            }).then(r => r.json()).then(d => {
+                const btn = document.getElementById('cmtLike-' + cid);
+                if (!btn) return;
+                btn.style.color = d.liked ? '#f472b6' : 'var(--reader-muted)';
+                btn.innerHTML = '<i class="bi ' + (d.liked ? 'bi-heart-fill' : 'bi-heart') + '"></i> <span>' + d.count + '</span>';
+            });
+        };
+
+        window.deleteComment = function(cid) {
+            if (!confirm('Delete this comment?')) return;
+            fetch('/book/comment/' + cid + '/delete', {
+                method: 'POST', headers: {'Content-Type': 'application/json'}
+            }).then(r => r.json()).then(d => {
+                if (!d.ok) return;
+                const el = document.getElementById('comment-' + cid);
+                if (el) el.remove();
+                const count = document.getElementById('chCommentCount');
+                count.textContent = Math.max(0, parseInt(count.textContent) - 1);
+            });
+        };
+
+        function escHtml(s) {
+            const d = document.createElement('div');
+            d.textContent = s;
+            return d.innerHTML;
+        }
+
+        // Follow creator from reader
+        window.followCreatorFromReader = function() {
+            const creatorId = {{ creator.id if creator else 0 }};
+            var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+            var csrfVal = csrfMeta ? csrfMeta.getAttribute('content') : '';
+            fetch('/creator/' + creatorId + '/follow', {
+                method: 'POST', headers: {'Content-Type': 'application/json', 'X-CSRFToken': csrfVal}
+            }).then(r => r.json()).then(d => {
+                if (d.following) {
+                    // Hide the entire follow prompt — user has followed
+                    var prompt = document.getElementById('followPrompt');
+                    if (prompt) {
+                        prompt.style.transition = 'opacity 0.4s, transform 0.4s';
+                        prompt.style.opacity = '0';
+                        prompt.style.transform = 'translateY(10px)';
+                        setTimeout(function() { prompt.remove(); }, 500);
+                    }
+                }
+            });
+        };
+    })();
+    
+        // Basic copy protection (not bulletproof, but reduces easy copying)
+        document.addEventListener('copy', (e)=>{ e.preventDefault(); });
+        document.addEventListener('cut', (e)=>{ e.preventDefault(); });
+        document.addEventListener('contextmenu', (e)=>{
+            // Allow context menu inside settings only
+            if(!e.target.closest('.settings-dropdown')){ e.preventDefault(); }
+        });
+        document.addEventListener('keydown', (e)=>{
+            const key = (e.key || '').toLowerCase();
+            const ctrl = e.ctrlKey || e.metaKey;
+            if(ctrl && ['c','x','a','s','p','u'].includes(key)){
+                e.preventDefault();
+            }
+        });
+
+    // ── TIME-BASED VIEW COUNTING — only after 30s of reading ──
+    (function(){
+        var viewRecorded = false;
+        var bookId = {{ book.id }};
+        setTimeout(function(){
+            if(viewRecorded) return;
+            viewRecorded = true;
+            fetch('/book/' + bookId + '/record-view', {
+                method: 'POST',
+                headers: {'X-Requested-With': 'XMLHttpRequest'}
+            }).catch(function(){});
+        }, 30000);
+    })();
+
+    // ── BLOCK ALL ZOOM in reader ──
+    document.addEventListener('touchstart', function(e){ if(e.touches.length > 1) e.preventDefault(); }, {passive:false});
+    document.addEventListener('gesturestart', function(e){ e.preventDefault(); }, {passive:false});
+    document.addEventListener('gesturechange', function(e){ e.preventDefault(); }, {passive:false});
+    document.addEventListener('gestureend', function(e){ e.preventDefault(); }, {passive:false});
+    var _lastTap = 0;
+    document.addEventListener('touchend', function(e){ var n=Date.now(); if(n-_lastTap<300){e.preventDefault();} _lastTap=n; }, {passive:false});
+    document.addEventListener('wheel', function(e){ if(e.ctrlKey) e.preventDefault(); }, {passive:false});
+
+    </script>
+<!-- Content protection: block copy/cut/print -->
+<script>
+(function(){
+    var cb = document.querySelector('.chapter-body');
+    var ch = document.querySelector('.chapter-heading');
+    function blockCopy(e){ e.preventDefault(); return false; }
+    if(cb){
+        cb.addEventListener('copy', blockCopy);
+        cb.addEventListener('cut', blockCopy);
+        cb.addEventListener('contextmenu', blockCopy);
+    }
+    if(ch){
+        ch.addEventListener('copy', blockCopy);
+        ch.addEventListener('cut', blockCopy);
+        ch.addEventListener('contextmenu', blockCopy);
+    }
+    // Block Ctrl+C / Ctrl+A on the whole page when focus is in reader
+    document.addEventListener('keydown', function(e){
+        if((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'a' || e.key === 'p' || e.key === 'u')){
+            // Allow in input/textarea
+            var tag = (e.target.tagName || '').toLowerCase();
+            if(tag === 'input' || tag === 'textarea') return;
+            e.preventDefault();
+            return false;
+        }
+    });
+    // Block print
+    window.addEventListener('beforeprint', function(e){
+        if(cb) cb.style.display = 'none';
+    });
+    window.addEventListener('afterprint', function(e){
+        if(cb) cb.style.display = '';
+    });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Verify Switch — WiamApp{% endblock %}
+
+{% block extra_head %}
+<style>
+    .verify-page {
+        max-width: 420px; margin: 0 auto; padding: 2rem 1rem 6rem; text-align: center;
+    }
+    .verify-page h1 { font-size: 1.3rem; font-weight: 700; color: var(--text); margin-bottom: 0.3rem; }
+    .verify-page .subtitle { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem; }
+    .verify-form { text-align: left; margin-bottom: 1.5rem; }
+    .verify-form label {
+        display: block; font-size: 0.78rem; font-weight: 600; color: var(--text-muted);
+        margin-bottom: 0.3rem; text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .verify-form input {
+        width: 100%; background: var(--bg-card, #111); border: 1px solid var(--border-subtle);
+        color: var(--text); padding: 0.7rem 0.75rem; border-radius: 8px; font-size: 1.1rem;
+        text-align: center; letter-spacing: 8px; font-weight: 700;
+    }
+    .verify-form input:focus { outline: none; border-color: var(--gold); }
+    .verify-form .hint { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.3rem; text-align: center; }
+    .btn-verify {
+        width: 100%; padding: 0.65rem; background: var(--gold); color: #000; border: none;
+        border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; margin-top: 1rem;
+    }
+    .btn-verify:hover { background: #e0b84f; }
+    .phone-code-box {
+        background: rgba(212,168,67,0.08); border: 1px solid var(--gold-dim); border-radius: 12px;
+        padding: 1rem; margin-bottom: 1.2rem; text-align: center;
+    }
+    .phone-code-box .label { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.3rem; }
+    .phone-code-box .code {
+        font-size: 2rem; font-weight: 700; color: var(--gold); letter-spacing: 10px;
+        font-family: var(--font-display);
+    }
+    .phone-code-box .note { font-size: 0.7rem; color: var(--text-muted); margin-top: 0.3rem; }
+    .back-link { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.82rem; color: var(--text-muted); text-decoration: none; margin-top: 1rem; }
+    .back-link:hover { color: var(--gold); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="verify-page">
+    <h1><i class="bi bi-shield-lock me-2"></i>Verify Identity</h1>
+    {% if method == 'email' %}
+    <p class="subtitle">Enter the 6-digit code sent to your email</p>
+    {% else %}
+    <p class="subtitle">Enter the verification code to switch accounts</p>
+    {% endif %}
+
+    {% if method == 'phone' and phone_code %}
+    <div class="phone-code-box">
+        <div class="label">Your verification code</div>
+        <div class="code">{{ phone_code }}</div>
+        <div class="note">SMS is not available yet. Please use this code below.</div>
+    </div>
+    {% endif %}
+
+    <form method="post" class="verify-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label>Verification Code</label>
+        <input type="text" name="code" placeholder="000000" maxlength="6" required autofocus autocomplete="one-time-code" inputmode="numeric" pattern="[0-9]{6}">
+        {% if method == 'email' %}
+        <div class="hint">Check your inbox for the code. It expires in 15 minutes.</div>
+        {% else %}
+        <div class="hint">Enter the code shown above. It expires in 10 minutes.</div>
+        {% endif %}
+        <button type="submit" class="btn-verify">Switch Account</button>
+    </form>
+
+    <a href="{{ url_for('auth.switch_account') }}" class="back-link">
+        <i class="bi bi-arrow-left"></i> Try a different account
+    </a>
+</div>
+{% endblock %}

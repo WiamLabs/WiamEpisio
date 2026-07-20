@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#08081a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Join Our Team — WiamApp</title>
+<meta name="description" content="Join the WiamApp team. Help build the future of storytelling in Africa. Browse open roles and apply today.">
+<link rel="canonical" href="https://wiamapp.com/careers">
+<link rel="icon" href="{{ url_for('static', filename='img/WiamLogo.png') }}">
+<meta property="og:title" content="Join Our Team — WiamApp">
+<meta property="og:description" content="Help build the future of storytelling in Africa. Browse open roles at WiamApp.">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{overflow-x:hidden;width:100%;-webkit-text-size-adjust:100%;touch-action:pan-y;}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#08081a;color:#e0e0e0;min-height:100vh;}
+.bg{position:fixed;top:0;left:0;right:0;bottom:0;z-index:0;
+    background:radial-gradient(ellipse at 25% 15%,rgba(212,168,67,0.07) 0%,transparent 50%),
+               radial-gradient(ellipse at 75% 85%,rgba(124,58,237,0.05) 0%,transparent 50%),#08081a;}
+
+/* Top nav */
+.top-nav{
+    position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;
+    padding:12px 20px;padding-top:calc(12px + env(safe-area-inset-top, 0px));background:rgba(8,8,26,0.95);backdrop-filter:blur(12px);
+    border-bottom:1px solid rgba(255,255,255,0.06);
+}
+.top-nav a{color:#e0e0e0;text-decoration:none;display:flex;align-items:center;gap:8px;font-size:0.9rem;font-weight:600;}
+.top-nav a:hover{color:#d4a843;}
+.top-nav .logo-link img{width:36px;height:36px;object-fit:contain;}
+.top-nav .back-link i{font-size:1.1rem;}
+
+.container{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:10px 20px 80px;}
+
+/* Hero */
+.hero{text-align:center;padding:40px 0 36px;}
+.hero img{width:72px;height:72px;object-fit:contain;margin-bottom:16px;filter:drop-shadow(0 4px 20px rgba(212,168,67,0.3));}
+.hero h1{font-size:2rem;font-weight:800;letter-spacing:-0.5px;margin-bottom:8px;
+    background:linear-gradient(135deg,#d4a843,#f0d078,#d4a843);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hero p{color:#888;font-size:0.95rem;max-width:520px;margin:0 auto;line-height:1.6;}
+.hero .tagline{color:#555;font-size:0.75rem;text-transform:uppercase;letter-spacing:2px;margin-top:10px;}
+
+/* Stats strip */
+.stats{display:flex;justify-content:center;gap:32px;margin-bottom:40px;flex-wrap:wrap;}
+.stat{text-align:center;}
+.stat .num{font-size:1.5rem;font-weight:800;color:#d4a843;}
+.stat .lbl{font-size:0.72rem;color:#666;text-transform:uppercase;letter-spacing:0.5px;margin-top:2px;}
+
+/* Roles grid */
+.roles-title{text-align:center;font-size:1.15rem;font-weight:700;margin-bottom:24px;color:#e0e0e0;}
+.roles-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:40px;}
+.role-card{
+    background:rgba(20,20,40,0.8);border:1px solid rgba(255,255,255,0.06);
+    border-radius:16px;padding:24px 20px;backdrop-filter:blur(12px);
+    transition:transform 0.2s,border-color 0.2s,box-shadow 0.2s;position:relative;overflow:hidden;
+}
+.role-card:hover{transform:translateY(-2px);border-color:rgba(212,168,67,0.25);box-shadow:0 8px 32px rgba(0,0,0,0.3);}
+.role-card .icon{
+    width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;
+    font-size:1.2rem;margin-bottom:14px;
+}
+.role-card h3{font-size:1.02rem;font-weight:700;margin-bottom:6px;color:#e0e0e0;}
+.role-card .desc{font-size:0.82rem;color:#888;line-height:1.6;margin-bottom:14px;min-height:50px;}
+.role-card .tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;}
+.role-card .tag{padding:3px 10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:6px;font-size:0.7rem;color:#999;}
+.role-card .status-badge{
+    display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:8px;
+    font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.3px;margin-bottom:14px;
+}
+.status-open{background:rgba(74,222,128,0.12);color:#4ade80;}
+.status-closed{background:rgba(156,163,175,0.12);color:#9ca3af;}
+.apply-btn{
+    display:block;width:100%;text-align:center;padding:12px;
+    background:linear-gradient(135deg,#d4a843,#b8860b);color:#000;
+    border:none;border-radius:12px;font-weight:700;font-size:0.88rem;
+    text-decoration:none;cursor:pointer;transition:opacity 0.15s;
+}
+.apply-btn:hover{opacity:0.9;}
+.apply-btn.disabled{background:rgba(156,163,175,0.15);color:#666;cursor:not-allowed;pointer-events:none;}
+
+/* Values section */
+.values{margin-bottom:40px;}
+.values h2{text-align:center;font-size:1.15rem;font-weight:700;margin-bottom:20px;}
+.values-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;}
+.value-card{
+    background:rgba(20,20,40,0.6);border:1px solid rgba(255,255,255,0.05);
+    border-radius:14px;padding:18px;text-align:center;
+}
+.value-card i{font-size:1.5rem;color:#d4a843;margin-bottom:8px;display:block;}
+.value-card h4{font-size:0.85rem;font-weight:700;margin-bottom:4px;}
+.value-card p{font-size:0.78rem;color:#888;line-height:1.5;}
+
+/* CTA */
+.cta{text-align:center;padding:32px 20px;background:rgba(212,168,67,0.04);border:1px solid rgba(212,168,67,0.1);border-radius:18px;}
+.cta h2{font-size:1.15rem;font-weight:700;margin-bottom:8px;color:#d4a843;}
+.cta p{font-size:0.85rem;color:#888;margin-bottom:18px;line-height:1.5;}
+.cta a{display:inline-block;padding:12px 32px;background:linear-gradient(135deg,#d4a843,#b8860b);color:#000;border-radius:12px;font-weight:700;text-decoration:none;transition:transform 0.15s;}
+.cta a:hover{transform:translateY(-1px);}
+
+.footer{text-align:center;padding:32px 0;border-top:1px solid rgba(255,255,255,0.04);margin-top:40px;}
+.footer p{color:#444;font-size:0.78rem;}
+.footer a{color:#d4a843;text-decoration:none;}
+
+@media(max-width:600px){
+    .hero{padding:28px 0 24px;}
+    .hero h1{font-size:1.5rem;}
+    .stats{gap:20px;}
+    .stat .num{font-size:1.3rem;}
+    .roles-grid{grid-template-columns:1fr;}
+    .values-grid{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+<div class="bg"></div>
+
+<!-- Navigation bar -->
+<div class="top-nav">
+    <a href="{{ url_for('home.index') }}" class="back-link"><i class="bi bi-arrow-left"></i> Home</a>
+    <a href="{{ url_for('home.index') }}" class="logo-link"><img src="{{ url_for('static', filename='img/WiamLogo.png') }}" alt="WiamApp"> WiamApp</a>
+</div>
+
+<div class="container">
+
+    <!-- Hero -->
+    <div class="hero">
+        <a href="{{ url_for('home.index') }}"><img src="{{ url_for('static', filename='img/WiamLogo.png') }}" alt="WiamApp"></a>
+        <h1>Join the WiamApp Team</h1>
+        <p>Help build the future of storytelling in Africa and beyond. We're looking for passionate people to join us on this journey.</p>
+        <div class="tagline">WiamApp — Where Stories Come Alive</div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats">
+        <div class="stat"><div class="num">{{ total_users or '1K+' }}</div><div class="lbl">Readers</div></div>
+        <div class="stat"><div class="num">{{ total_stories or '500+' }}</div><div class="lbl">Stories</div></div>
+        <div class="stat"><div class="num">{{ total_creators or '50+' }}</div><div class="lbl">Creators</div></div>
+        <div class="stat"><div class="num">{{ open_roles }}</div><div class="lbl">Open Roles</div></div>
+    </div>
+
+    <!-- Open Roles -->
+    <h2 class="roles-title">Open Positions</h2>
+    <div class="roles-grid">
+        {% for role in roles %}
+        <div class="role-card">
+            <div class="icon" style="background:{{ role.color }}22;color:{{ role.color }};"><i class="bi {{ role.icon }}"></i></div>
+            <span class="status-badge {{ 'status-open' if role.is_open else 'status-closed' }}">
+                {{ '● Accepting Applications' if role.is_open else '● Closed' }}
+            </span>
+            <h3>{{ role.title }}</h3>
+            <p class="desc">{{ role.description }}</p>
+            <div class="tags">
+                {% for tag in role.tags %}
+                <span class="tag">{{ tag }}</span>
+                {% endfor %}
+            </div>
+            {% if role.is_open %}
+            <a href="{{ url_for('team.apply_role', role_type=role.type) }}" class="apply-btn">Apply Now</a>
+            {% else %}
+            <span class="apply-btn disabled">Applications Closed</span>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Why Join -->
+    <div class="values">
+        <h2>Why Join WiamApp?</h2>
+        <div class="values-grid">
+            <div class="value-card">
+                <i class="bi bi-globe-americas"></i>
+                <h4>Impact Africa</h4>
+                <p>Help bring world-class storytelling technology to millions of readers across the continent.</p>
+            </div>
+            <div class="value-card">
+                <i class="bi bi-rocket-takeoff"></i>
+                <h4>Early Stage</h4>
+                <p>Join at the ground floor. Your work shapes the product, the culture, and the future.</p>
+            </div>
+            <div class="value-card">
+                <i class="bi bi-laptop"></i>
+                <h4>Work Remotely</h4>
+                <p>Work from anywhere. We value results over presence. Flexible hours, async communication.</p>
+            </div>
+            <div class="value-card">
+                <i class="bi bi-people-fill"></i>
+                <h4>Small Team</h4>
+                <p>No bureaucracy. Your voice matters. Ship features, not meetings.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta">
+        <h2>Don't see a perfect fit?</h2>
+        <p>We're always looking for talented people. Send us an email with your story and what you'd bring to WiamApp.</p>
+        <a href="mailto:support@wiamapp.com">Email support@wiamapp.com</a>
+    </div>
+
+    <div class="footer">
+        <p>&copy; WiamApp</p>
+        <p><a href="{{ url_for('home.index') }}">wiamapp.com</a></p>
+    </div>
+</div>
+</body>
+</html>

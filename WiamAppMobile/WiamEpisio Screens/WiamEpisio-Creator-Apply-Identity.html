@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamEpisio — Apply: Identity</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); display:flex; flex-direction:column; }
+  .statusbar{ height:44px; flex-shrink:0; }
+
+  .topbar{ padding:2px 20px 16px; flex-shrink:0; }
+  .top-row{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+  .icon-btn{ width:34px; height:34px; border-radius:50%; background:var(--navy-card); display:flex; align-items:center; justify-content:center; }
+  .step-label{ font-size:11px; font-weight:700; color:var(--text-faint); }
+  .step-track{ display:flex; gap:6px; margin-bottom:16px; }
+  .step-seg{ flex:1; height:4px; border-radius:99px; background:var(--navy-line); }
+  .step-seg.done{ background:var(--gold); }
+  h1{ font-size:19px; font-weight:800; color:#fff; margin:0; letter-spacing:-0.3px; }
+
+  .scroll{ flex:1; overflow-y:auto; padding:0 20px 20px; }
+
+  .field-group{ margin-bottom:15px; }
+  .field-label{ font-size:11.5px; font-weight:700; color:#fff; margin:0 0 8px; }
+  .field-box{ background:var(--navy-card); border:1px solid var(--navy-line); border-radius:14px; padding:13px 14px; display:flex; align-items:center; gap:10px; }
+  .field-box.focus{ border-color:var(--gold); }
+  .field-box input{ background:none; border:none; outline:none; color:#fff; font-size:13.5px; font-family:inherit; width:100%; }
+  .field-box input::placeholder{ color:var(--text-faint); }
+  .field-box svg{ color:var(--text-faint); flex-shrink:0; width:15px; height:15px; }
+
+  .country-row{ display:flex; align-items:center; justify-content:space-between; }
+  .country-row span{ font-size:13.5px; color:#fff; }
+  .flag-chip{ display:flex; align-items:center; gap:8px; }
+  .flag-dot{ width:18px; height:18px; border-radius:50%; background:linear-gradient(90deg,#CE1126 33%,#FCD116 33% 66%,#006B3F 66%); }
+
+  .two-col{ display:flex; gap:10px; }
+  .two-col .field-box{ flex:1; }
+
+  .note{ font-size:10.5px; color:var(--text-faint); margin-top:7px; }
+
+  .footer{ flex-shrink:0; padding:12px 20px 26px; }
+  .btn-primary{ width:100%; padding:16px; border-radius:16px; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); border:none; color:var(--navy); font-size:15px; font-weight:800; box-shadow:0 14px 30px rgba(212,160,23,0.3); font-family:'Inter',sans-serif; }
+
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"></div>
+  <div class="topbar">
+    <div class="top-row">
+      <div class="icon-btn"><svg viewBox="0 0 24 24" width="15" height="15" color="#fff"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></div>
+      <span class="step-label">Step 1 of 4</span>
+    </div>
+    <div class="step-track">
+      <div class="step-seg done"></div>
+      <div class="step-seg"></div>
+      <div class="step-seg"></div>
+      <div class="step-seg"></div>
+    </div>
+    <h1>Who's applying?</h1>
+  </div>
+
+  <div class="scroll">
+
+    <div class="field-group">
+      <p class="field-label">Legal name</p>
+      <div class="field-box focus"><input placeholder="Full legal name" value="Kwabena Mensah" /></div>
+    </div>
+
+    <div class="field-group">
+      <p class="field-label">Country</p>
+      <div class="field-box">
+        <div class="country-row" style="width:100%;">
+          <div class="flag-chip"><span class="flag-dot"></span><span>Ghana</span></div>
+          <svg viewBox="0 0 24 24" width="14" height="14" color="#7D7D97"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <p class="field-label">Phone number</p>
+      <div class="field-box">
+        <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        <input placeholder="+233 ..." value="+233 24 555 0187" />
+      </div>
+    </div>
+
+    <div class="field-group">
+      <p class="field-label">Channel name <span style="color:var(--text-faint); font-weight:600;">— public, shown to viewers</span></p>
+      <div class="field-box"><input placeholder="e.g. Kwabena Studios" value="Kwabena Studios" /></div>
+    </div>
+
+    <div class="field-group">
+      <p class="field-label">Short bio</p>
+      <div class="field-box"><input placeholder="One line about you or your studio" value="Storyteller from Kumasi. 6 years making short film." /></div>
+      <p class="note">Shown on your public creator profile once live</p>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <button class="btn-primary">Next: Your Story</button>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,681 @@
+{% extends "base.html" %}
+{% block title %}Review: {{ story.title }} — Editor Studio{% endblock %}
+
+{% block extra_head %}
+<style>
+/* ═══ Editor Studio Review — 3-Panel Layout ═══ */
+.es-layout { display:flex; height:calc(100vh - 56px); overflow:hidden; }
+
+/* ── Left: Chapter Sidebar ── */
+.es-sidebar {
+    width:240px; background:var(--card-bg,#111); border-right:1px solid var(--border-subtle,#222);
+    display:flex; flex-direction:column; flex-shrink:0;
+}
+.es-sidebar-header {
+    padding:1rem 1rem 0.75rem; border-bottom:1px solid var(--border-subtle,#222);
+}
+.es-back { display:inline-flex; align-items:center; gap:5px; color:var(--text-muted); font-size:0.78rem; text-decoration:none; margin-bottom:8px; }
+.es-back:hover { color:var(--gold); }
+.es-book-title { font-size:0.88rem; font-weight:700; color:var(--text); margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.es-book-author { font-size:0.75rem; color:var(--text-muted); }
+.es-chapter-list { flex:1; overflow-y:auto; padding:0.5rem 0; }
+.es-ch-item {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0.5rem 1rem; cursor:pointer; color:var(--text-muted);
+    font-size:0.84rem; transition:all 0.12s; border:none; background:none; width:100%; text-align:left;
+}
+.es-ch-item:hover { background:rgba(255,255,255,0.04); color:var(--text); }
+.es-ch-item.active { color:var(--gold); background:rgba(212,168,67,0.08); border-right:2px solid var(--gold); }
+.es-ch-title { flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.es-ch-words { font-size:0.68rem; color:var(--text-muted); margin-left:6px; flex-shrink:0; }
+.es-ch-badge { width:8px; height:8px; border-radius:50%; flex-shrink:0; margin-right:8px; }
+.es-ch-badge.draft { background:#9ca3af; }
+.es-ch-badge.published { background:#4ade80; }
+.es-sidebar-stats {
+    padding:0.6rem 1rem; border-top:1px solid var(--border-subtle,#222);
+    font-size:0.72rem; color:var(--text-muted);
+}
+.es-review-badge {
+    display:inline-block; padding:3px 10px; border-radius:6px; font-size:0.7rem;
+    font-weight:700; text-transform:uppercase; letter-spacing:0.3px; margin-top:6px;
+}
+.es-rb-unreviewed { background:rgba(156,163,175,0.15); color:#9ca3af; }
+.es-rb-under_review { background:rgba(59,130,246,0.15); color:#60a5fa; }
+.es-rb-approved { background:rgba(34,197,94,0.15); color:#4ade80; }
+.es-rb-rejected { background:rgba(239,68,68,0.15); color:#f87171; }
+.es-rb-revision_requested { background:rgba(251,191,36,0.15); color:#fbbf24; }
+
+/* ── Center: Chapter Reader / Editor ── */
+.es-center { flex:1; display:flex; flex-direction:column; overflow:hidden; min-width:0; }
+.es-center-toolbar {
+    display:flex; align-items:center; gap:8px; padding:8px 16px;
+    background:var(--card-bg,#111); border-bottom:1px solid var(--border-subtle,#222);
+    flex-wrap:wrap;
+}
+.es-mode-toggle {
+    display:flex; background:rgba(255,255,255,0.06); border-radius:8px; overflow:hidden;
+}
+.es-mode-btn {
+    padding:6px 14px; font-size:0.78rem; font-weight:600; cursor:pointer;
+    border:none; background:none; color:var(--text-muted); transition:all 0.15s;
+}
+.es-mode-btn.active { background:var(--gold); color:#000; }
+.es-mode-btn:hover:not(.active) { color:var(--text); background:rgba(255,255,255,0.08); }
+.es-ch-nav-label { font-size:0.82rem; color:var(--text); font-weight:600; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.es-save-status { font-size:0.75rem; color:var(--text-muted); }
+.es-save-status.saving { color:#facc15; }
+.es-save-status.saved { color:#4ade80; }
+.es-center-scroll { flex:1; overflow-y:auto; background:var(--bg,#0a0a0c); }
+.es-reader-container {
+    max-width:720px; margin:0 auto; padding:2rem 2.5rem; min-height:100%;
+}
+.es-reader-container h2 {
+    font-family:'Georgia','Times New Roman',serif; font-size:1.5rem; font-weight:700;
+    color:var(--text); margin-bottom:1.5rem; border:none;
+}
+.es-chapter-body {
+    font-family:'Georgia','Times New Roman',serif; font-size:1.08rem; line-height:1.85;
+    color:var(--text,#e0e0e0); word-wrap:break-word;
+}
+.es-chapter-body p { margin-bottom:1.2em; }
+/* Edit mode */
+.es-edit-title {
+    width:100%; background:transparent; border:none; color:var(--text);
+    font-size:1.5rem; font-weight:700; margin-bottom:1rem; padding:0;
+    font-family:'Georgia','Times New Roman',serif;
+}
+.es-edit-title:focus { outline:none; border-bottom:2px solid var(--gold); }
+.es-edit-body {
+    width:100%; min-height:400px; background:transparent; border:none;
+    color:var(--text,#e0e0e0); font-family:'Georgia','Times New Roman',serif;
+    font-size:1.08rem; line-height:1.85; resize:vertical; padding:0;
+}
+.es-edit-body:focus { outline:none; }
+.es-empty-state {
+    text-align:center; padding:80px 20px; color:var(--text-muted);
+}
+.es-empty-state i { font-size:3rem; opacity:0.2; display:block; margin-bottom:12px; }
+
+/* ── Right: Notes & Actions Panel ── */
+.es-right {
+    width:320px; background:var(--card-bg,#111); border-left:1px solid var(--border-subtle,#222);
+    display:flex; flex-direction:column; flex-shrink:0; overflow:hidden;
+}
+.es-right-tabs {
+    display:flex; border-bottom:1px solid var(--border-subtle,#222);
+}
+.es-right-tab {
+    flex:1; padding:10px 8px; text-align:center; font-size:0.78rem; font-weight:600;
+    color:var(--text-muted); cursor:pointer; border:none; background:none; transition:all 0.12s;
+}
+.es-right-tab.active { color:var(--gold); border-bottom:2px solid var(--gold); }
+.es-right-tab:hover:not(.active) { color:var(--text); }
+.es-right-panel { flex:1; overflow-y:auto; display:none; }
+.es-right-panel.active { display:flex; flex-direction:column; }
+
+/* Actions Panel */
+.es-actions { padding:16px; }
+.es-actions h4 { font-size:0.85rem; font-weight:700; color:var(--text); margin:0 0 12px; }
+.es-action-btn {
+    display:flex; align-items:center; gap:8px; width:100%; padding:10px 16px;
+    border:none; border-radius:10px; font-weight:700; font-size:0.84rem; cursor:pointer;
+    transition:all 0.15s; margin-bottom:8px;
+}
+.es-action-btn:hover { opacity:0.85; }
+.es-btn-approve { background:linear-gradient(135deg,#22c55e,#4ade80); color:#000; }
+.es-btn-revision { background:rgba(251,191,36,0.15); color:#fbbf24; border:1px solid rgba(251,191,36,0.2); }
+.es-btn-reject { background:rgba(239,68,68,0.15); color:#f87171; border:1px solid rgba(239,68,68,0.2); }
+.es-action-input {
+    width:100%; padding:8px 12px; background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.1); border-radius:8px; color:#e0e0e0;
+    font-size:0.82rem; font-family:inherit; resize:vertical; min-height:50px; margin-bottom:8px;
+}
+.es-action-input:focus { border-color:rgba(212,168,67,0.4); outline:none; }
+.es-score-input {
+    width:80px; padding:6px 10px; background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.1); border-radius:8px; color:#e0e0e0;
+    font-size:0.82rem; text-align:center;
+}
+
+/* Quality Checklist */
+.es-checklist { padding:16px; }
+.es-checklist h4 { font-size:0.85rem; font-weight:700; color:var(--text); margin:0 0 12px; }
+.es-check-item {
+    display:flex; align-items:center; gap:8px; padding:6px 0;
+    font-size:0.82rem; color:var(--text-muted);
+}
+.es-check-icon { font-size:0.9rem; flex-shrink:0; }
+.es-check-icon.pass { color:#4ade80; }
+.es-check-icon.fail { color:#f87171; }
+.es-quality-score {
+    display:flex; align-items:center; gap:8px; margin-top:12px; padding:10px 14px;
+    background:rgba(212,168,67,0.08); border-radius:10px;
+}
+.es-qs-num { font-size:1.4rem; font-weight:800; }
+.es-qs-num.high { color:#4ade80; }
+.es-qs-num.mid { color:#facc15; }
+.es-qs-num.low { color:#f87171; }
+
+/* Notes Panel */
+.es-notes-panel { padding:0; }
+.es-notes-list { flex:1; overflow-y:auto; padding:12px; }
+.es-note-card {
+    background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06);
+    border-radius:10px; padding:10px 12px; margin-bottom:8px;
+}
+.es-note-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
+.es-note-editor { font-size:0.75rem; font-weight:600; color:var(--gold); }
+.es-note-date { font-size:0.68rem; color:var(--text-muted); }
+.es-note-type {
+    display:inline-block; font-size:0.65rem; font-weight:700; text-transform:uppercase;
+    padding:2px 6px; border-radius:4px; margin-bottom:4px;
+}
+.es-note-type-feedback { background:rgba(59,130,246,0.15); color:#60a5fa; }
+.es-note-type-internal { background:rgba(156,163,175,0.15); color:#9ca3af; }
+.es-note-type-revision_request { background:rgba(251,191,36,0.15); color:#fbbf24; }
+.es-note-text { font-size:0.82rem; color:var(--text-muted); line-height:1.5; }
+.es-add-note {
+    padding:12px; border-top:1px solid var(--border-subtle,#222);
+}
+.es-note-type-select {
+    padding:5px 8px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1);
+    border-radius:6px; color:var(--text-muted); font-size:0.78rem; margin-bottom:6px;
+}
+.es-add-note-btn {
+    padding:7px 16px; background:var(--gold); color:#000; border:none; border-radius:8px;
+    font-weight:700; font-size:0.8rem; cursor:pointer; transition:opacity 0.15s;
+}
+.es-add-note-btn:hover { opacity:0.85; }
+
+/* Edit Story Panel */
+.es-edit-panel { padding:16px; }
+.es-edit-panel h4 { font-size:0.85rem; font-weight:700; color:var(--text); margin:0 0 12px; }
+.es-edit-field { margin-bottom:12px; }
+.es-edit-label { display:block; font-size:0.75rem; font-weight:600; color:var(--text-muted); margin-bottom:4px; text-transform:uppercase; letter-spacing:0.3px; }
+.es-edit-input {
+    width:100%; padding:8px 12px; background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.1); border-radius:8px; color:#e0e0e0;
+    font-size:0.84rem; font-family:inherit;
+}
+.es-edit-input:focus { border-color:rgba(212,168,67,0.4); outline:none; }
+.es-edit-textarea { min-height:80px; resize:vertical; }
+.es-edit-select {
+    width:100%; padding:8px 12px; background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.1); border-radius:8px; color:#e0e0e0;
+    font-size:0.84rem; font-family:inherit;
+}
+.es-edit-select:focus { border-color:rgba(212,168,67,0.4); outline:none; }
+.es-save-meta-btn {
+    width:100%; padding:10px 16px; background:linear-gradient(135deg,var(--gold),#c49a38);
+    color:#000; border:none; border-radius:10px; font-weight:700; font-size:0.84rem;
+    cursor:pointer; transition:opacity 0.15s; margin-top:8px;
+}
+.es-save-meta-btn:hover { opacity:0.85; }
+.es-cover-preview { width:80px; height:112px; border-radius:8px; overflow:hidden; background:rgba(212,168,67,0.08); margin-bottom:8px; }
+.es-cover-preview img { width:100%; height:100%; object-fit:cover; }
+.es-cover-preview-ph { width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:var(--text-muted); font-size:1.5rem; }
+.es-cover-upload-btn {
+    display:inline-flex; align-items:center; gap:4px; padding:7px 14px;
+    background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1);
+    border-radius:8px; color:var(--text-muted); font-size:0.78rem; cursor:pointer; transition:all 0.12s;
+}
+.es-cover-upload-btn:hover { color:var(--gold); border-color:rgba(212,168,67,0.3); }
+.es-meta-saved {
+    display:none; padding:8px 14px; background:rgba(34,197,94,0.1); border-radius:8px;
+    font-size:0.82rem; color:#4ade80; font-weight:600; text-align:center; margin-top:8px;
+}
+
+/* ── Mobile ── */
+@media(max-width:900px) {
+    .es-layout { flex-direction:column; height:auto; min-height:100vh; }
+    .es-sidebar { width:100%; height:auto; max-height:none; border-right:none; border-bottom:1px solid var(--border-subtle,#222); }
+    .es-chapter-list { max-height:200px; }
+    .es-right { width:100%; border-left:none; border-top:1px solid var(--border-subtle,#222); }
+    .es-center-scroll { min-height:50vh; }
+    .es-reader-container { padding:1.5rem 1rem; }
+}
+@media(max-width:600px) {
+    .es-sidebar { display:none; }
+    .es-mob-ch-select { display:block !important; }
+}
+.es-mob-ch-select { display:none; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="es-layout">
+    <!-- ═══ LEFT: Chapter Sidebar ═══ -->
+    <aside class="es-sidebar">
+        <div class="es-sidebar-header">
+            <a href="{{ url_for('editor_studio.dashboard') }}" class="es-back"><i class="bi bi-arrow-left"></i> Back to Queue</a>
+            <div class="es-book-title" title="{{ story.title }}">{{ story.title }}</div>
+            <div class="es-book-author">{{ author.display_name if author else 'Unknown' }}</div>
+            <div class="es-review-badge es-rb-{{ story.review_status }}">{{ story.review_status|replace('_', ' ')|title }}</div>
+        </div>
+        <div class="es-chapter-list" id="chapterList">
+            {% for ch in chapters %}
+            <button class="es-ch-item{% if current_chapter and ch.chapter_number == current_chapter.chapter_number %} active{% endif %}"
+                    data-ch="{{ ch.chapter_number }}" onclick="loadChapter({{ ch.chapter_number }})">
+                <span class="es-ch-badge {{ ch.status }}"></span>
+                <span class="es-ch-title">{{ ch.chapter_title or ('Ch ' ~ ch.chapter_number) }}</span>
+                <span class="es-ch-words">{{ '{:,}'.format(ch.word_count or 0) }}w</span>
+            </button>
+            {% endfor %}
+        </div>
+        <div class="es-sidebar-stats">
+            {{ chapters|length }} chapters · {{ '{:,}'.format(chapters|sum(attribute='word_count')) }} words total
+        </div>
+    </aside>
+
+    <!-- ═══ CENTER: Reader / Editor ═══ -->
+    <div class="es-center">
+        <div class="es-center-toolbar">
+            <!-- Mobile chapter select -->
+            <select class="es-mob-ch-select" id="mobChSelect" onchange="loadChapter(this.value)" style="padding:6px 10px;background:var(--card-bg);border:1px solid var(--border-subtle);color:var(--text);border-radius:8px;font-size:0.82rem;">
+                {% for ch in chapters %}
+                <option value="{{ ch.chapter_number }}" {{ 'selected' if current_chapter and ch.chapter_number == current_chapter.chapter_number }}>
+                    Ch {{ ch.chapter_number }}: {{ ch.chapter_title or 'Untitled' }}
+                </option>
+                {% endfor %}
+            </select>
+            <div class="es-mode-toggle">
+                <button class="es-mode-btn active" id="modeRead" onclick="setMode('read')"><i class="bi bi-eye me-1"></i>Read</button>
+                <button class="es-mode-btn" id="modeEdit" onclick="setMode('edit')"><i class="bi bi-pencil me-1"></i>Edit</button>
+            </div>
+            <span class="es-ch-nav-label" id="chNavLabel">
+                {% if current_chapter %}Ch {{ current_chapter.chapter_number }}: {{ current_chapter.chapter_title }}{% else %}Select a chapter{% endif %}
+            </span>
+            <span class="es-save-status" id="saveStatus"></span>
+        </div>
+        <div class="es-center-scroll">
+            <div class="es-reader-container" id="readerContainer">
+                {% if current_chapter %}
+                <!-- Read Mode -->
+                <div id="readView">
+                    <h2 id="readTitle">{{ current_chapter.chapter_title }}</h2>
+                    <div class="es-chapter-body" id="readBody">{{ current_chapter.body|safe if current_chapter.body else '<p style="color:var(--text-muted);">This chapter is empty.</p>' }}</div>
+                </div>
+                <!-- Edit Mode (hidden by default) -->
+                <div id="editView" style="display:none;">
+                    <input type="text" class="es-edit-title" id="editTitle" value="{{ current_chapter.chapter_title }}" placeholder="Chapter title...">
+                    <textarea class="es-edit-body" id="editBody" placeholder="Chapter content...">{{ current_chapter.body or '' }}</textarea>
+                </div>
+                {% else %}
+                <div class="es-empty-state">
+                    <i class="bi bi-book"></i>
+                    <p>No chapters in this story yet.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ RIGHT: Notes & Actions ═══ -->
+    <aside class="es-right">
+        <div class="es-right-tabs">
+            <button class="es-right-tab active" onclick="showRightPanel('actions')"><i class="bi bi-lightning-charge me-1"></i>Actions</button>
+            <button class="es-right-tab" onclick="showRightPanel('editstory')"><i class="bi bi-pencil-square me-1"></i>Edit</button>
+            <button class="es-right-tab" onclick="showRightPanel('checklist')"><i class="bi bi-list-check me-1"></i>Quality</button>
+            <button class="es-right-tab" onclick="showRightPanel('notes')"><i class="bi bi-chat-left-text me-1"></i>Notes</button>
+        </div>
+
+        <!-- Actions Panel -->
+        <div class="es-right-panel active" id="panelActions">
+            <div class="es-actions">
+                <h4><i class="bi bi-lightning-charge" style="color:var(--gold);margin-right:4px;"></i> Editorial Actions</h4>
+
+                {% if story.review_status != 'approved' %}
+                <!-- Approve -->
+                <form method="POST" action="{{ url_for('editor_studio.approve', book_id=story.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <textarea class="es-action-input" name="feedback" placeholder="Optional: approval notes..."></textarea>
+                    <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+                        <label style="font-size:0.78rem;color:var(--text-muted);">Score (0-100):</label>
+                        <input type="number" name="score" min="0" max="100" class="es-score-input" placeholder="—">
+                    </div>
+                    <button type="submit" class="es-action-btn es-btn-approve"><i class="bi bi-check-lg"></i> Approve Story</button>
+                </form>
+                {% else %}
+                <div style="padding:12px;background:rgba(34,197,94,0.08);border-radius:10px;margin-bottom:12px;">
+                    <div style="font-size:0.85rem;font-weight:700;color:#4ade80;margin-bottom:4px;"><i class="bi bi-check-circle-fill"></i> Approved</div>
+                    <div style="font-size:0.75rem;color:var(--text-muted);">
+                        {% if story.reviewed_by %}Reviewed by editor{% endif %}
+                        {% if story.last_reviewed_at %} on {{ story.last_reviewed_at.strftime('%b %d, %Y') }}{% endif %}
+                        {% if story.review_score %} · Score: {{ story.review_score }}/100{% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <hr style="border-color:var(--border-subtle);margin:16px 0;">
+
+                <!-- Request Revision -->
+                <form method="POST" action="{{ url_for('editor_studio.request_revision', book_id=story.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <textarea class="es-action-input" name="feedback" placeholder="What needs to be changed..." required></textarea>
+                    <button type="submit" class="es-action-btn es-btn-revision"><i class="bi bi-pencil"></i> Request Revision</button>
+                </form>
+
+                <hr style="border-color:var(--border-subtle);margin:16px 0;">
+
+                <!-- Reject -->
+                <form method="POST" action="{{ url_for('editor_studio.reject', book_id=story.id) }}" onsubmit="return confirm('Reject this story? This marks it as rejected.');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <textarea class="es-action-input" name="reason" placeholder="Reason for rejection (required)..." required></textarea>
+                    <button type="submit" class="es-action-btn es-btn-reject"><i class="bi bi-x-lg"></i> Reject Story</button>
+                </form>
+
+                {% if queue_entry %}
+                <hr style="border-color:var(--border-subtle);margin:16px 0;">
+                <div style="font-size:0.75rem;color:var(--text-muted);">
+                    <div><strong>Queue ID:</strong> #{{ queue_entry.id }}</div>
+                    <div><strong>Type:</strong> {{ queue_entry.submission_type }}</div>
+                    <div><strong>Submitted:</strong> {{ queue_entry.created_at.strftime('%b %d, %Y %H:%M') }}</div>
+                    {% if queue_entry.assigned_editor %}
+                    <div><strong>Assigned to:</strong> {{ queue_entry.assigned_editor.display_name }}</div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Edit Story Panel -->
+        <div class="es-right-panel" id="panelEditstory">
+            <div class="es-edit-panel">
+                <h4><i class="bi bi-pencil-square" style="color:var(--gold);margin-right:4px;"></i> Edit Story Details</h4>
+
+                <!-- Cover -->
+                <div class="es-edit-field">
+                    <label class="es-edit-label">Cover Image</label>
+                    <div style="display:flex;gap:12px;align-items:flex-start;">
+                        <div class="es-cover-preview">
+                            {% if story.cover_file_id %}
+                            <img src="{{ story.cover_url }}" alt="Cover" id="coverPreviewImg">
+                            {% else %}
+                            <div class="es-cover-preview-ph" id="coverPreviewPh"><i class="bi bi-image"></i></div>
+                            {% endif %}
+                        </div>
+                        <form method="POST" action="{{ url_for('editor_studio.replace_cover', book_id=story.id) }}" enctype="multipart/form-data" style="flex:1;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="file" name="cover" accept="image/png,image/jpeg,image/gif,image/webp" id="coverFileInput" style="display:none;" onchange="this.form.submit();">
+                            <label for="coverFileInput" class="es-cover-upload-btn"><i class="bi bi-upload"></i> Replace Cover</label>
+                            <div style="font-size:0.68rem;color:var(--text-muted);margin-top:4px;">PNG, JPG, GIF, or WebP. Auto-resized to 600x900.</div>
+                        </form>
+                    </div>
+                </div>
+
+                <hr style="border-color:var(--border-subtle);margin:12px 0;">
+
+                <!-- Metadata fields -->
+                <div class="es-edit-field">
+                    <label class="es-edit-label">Title</label>
+                    <input type="text" class="es-edit-input" id="metaTitle" value="{{ story.title or '' }}" placeholder="Book title...">
+                </div>
+                <div class="es-edit-field">
+                    <label class="es-edit-label">Author / Pen Name</label>
+                    <input type="text" class="es-edit-input" id="metaAuthor" value="{{ story.author or '' }}" placeholder="Author name...">
+                </div>
+                <div class="es-edit-field">
+                    <label class="es-edit-label">Synopsis</label>
+                    <textarea class="es-edit-input es-edit-textarea" id="metaDescription" placeholder="Book synopsis / description...">{{ story.description or '' }}</textarea>
+                </div>
+                <div class="es-edit-field">
+                    <label class="es-edit-label">Genre</label>
+                    <input type="text" class="es-edit-input" id="metaGenre" value="{{ story.genre or '' }}" placeholder="Genre...">
+                </div>
+                <div class="es-edit-field">
+                    <label class="es-edit-label">Status</label>
+                    <select class="es-edit-select" id="metaStatus">
+                        {% for st in ['draft','ongoing','complete','published','hidden','flagged'] %}
+                        <option value="{{ st }}" {{ 'selected' if story.status == st }}>{{ st|title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <button class="es-save-meta-btn" onclick="saveMetadata()"><i class="bi bi-check-lg me-1"></i> Save Changes</button>
+                <div class="es-meta-saved" id="metaSavedMsg"><i class="bi bi-check-circle-fill me-1"></i> Story details saved!</div>
+            </div>
+        </div>
+
+        <!-- Quality Checklist Panel -->
+        <div class="es-right-panel" id="panelChecklist">
+            <div class="es-checklist">
+                <h4><i class="bi bi-list-check" style="color:var(--gold);margin-right:4px;"></i> Quality Checklist</h4>
+                {% for check in checks %}
+                <div class="es-check-item">
+                    <i class="bi {{ 'bi-check-circle-fill' if check.passed else 'bi-x-circle-fill' }} es-check-icon {{ 'pass' if check.passed else 'fail' }}"></i>
+                    <span>{{ check.label }}</span>
+                </div>
+                {% endfor %}
+                <div class="es-quality-score">
+                    <span class="es-qs-num {{ 'high' if quality_score >= 70 else 'mid' if quality_score >= 40 else 'low' }}">{{ quality_score }}</span>
+                    <span style="font-size:0.82rem;color:var(--text-muted);">/100 quality score</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notes Panel -->
+        <div class="es-right-panel" id="panelNotes">
+            <div class="es-notes-list" id="notesList">
+                {% if notes %}
+                {% for note in notes %}
+                <div class="es-note-card">
+                    <div class="es-note-header">
+                        <span class="es-note-editor">{{ note.editor.display_name if note.editor else 'Unknown' }}</span>
+                        <span class="es-note-date">{{ note.created_at.strftime('%b %d, %H:%M') }}</span>
+                    </div>
+                    <span class="es-note-type es-note-type-{{ note.note_type }}">{{ note.note_type|replace('_', ' ') }}</span>
+                    {% if note.chapter_number %}
+                    <span style="font-size:0.68rem;color:var(--text-muted);margin-left:4px;">Ch {{ note.chapter_number }}</span>
+                    {% endif %}
+                    <div class="es-note-text">{{ note.note_text }}</div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div style="text-align:center;padding:40px 16px;color:var(--text-muted);">
+                    <i class="bi bi-chat-left" style="font-size:1.5rem;opacity:0.2;display:block;margin-bottom:8px;"></i>
+                    <p style="font-size:0.85rem;">No notes yet. Add the first note below.</p>
+                </div>
+                {% endif %}
+            </div>
+            <div class="es-add-note">
+                <select class="es-note-type-select" id="noteType">
+                    <option value="feedback">Feedback</option>
+                    <option value="internal">Internal</option>
+                    <option value="revision_request">Revision Request</option>
+                </select>
+                <textarea class="es-action-input" id="noteText" placeholder="Add a note..." style="min-height:40px;"></textarea>
+                <div style="display:flex;gap:6px;align-items:center;">
+                    <label style="font-size:0.72rem;color:var(--text-muted);">
+                        <input type="checkbox" id="noteChapterScope"> Chapter-specific
+                    </label>
+                    <div style="flex:1;"></div>
+                    <button class="es-add-note-btn" onclick="addNote()">Add Note</button>
+                </div>
+            </div>
+        </div>
+    </aside>
+</div>
+
+<script>
+(function(){
+    var bookId = {{ story.id }};
+    var currentCh = {{ current_chapter.chapter_number if current_chapter else 0 }};
+    var mode = 'read';
+    var saveTimer = null;
+    var csrfToken = document.querySelector('meta[name="csrf-token"]');
+    csrfToken = csrfToken ? csrfToken.getAttribute('content') : '';
+
+    // ── Load Chapter via AJAX ──
+    window.loadChapter = function(chNum) {
+        chNum = parseInt(chNum);
+        if (!chNum) return;
+        currentCh = chNum;
+
+        // Update sidebar active state
+        document.querySelectorAll('.es-ch-item').forEach(function(el) {
+            el.classList.toggle('active', parseInt(el.dataset.ch) === chNum);
+        });
+        // Update mobile select
+        var mobSel = document.getElementById('mobChSelect');
+        if (mobSel) mobSel.value = chNum;
+
+        fetch('/team/editor-studio/' + bookId + '/chapter/' + chNum)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            document.getElementById('chNavLabel').textContent = 'Ch ' + d.chapter_number + ': ' + d.chapter_title;
+            // Read view
+            document.getElementById('readTitle').textContent = d.chapter_title;
+            document.getElementById('readBody').innerHTML = d.body || '<p style="color:var(--text-muted);">This chapter is empty.</p>';
+            // Edit view
+            document.getElementById('editTitle').value = d.chapter_title;
+            document.getElementById('editBody').value = d.body || '';
+            // Update save status
+            document.getElementById('saveStatus').textContent = '';
+        })
+        .catch(function(err) { console.error('Failed to load chapter:', err); });
+    };
+
+    // ── Mode Toggle (Read / Edit) ──
+    window.setMode = function(m) {
+        mode = m;
+        document.getElementById('modeRead').classList.toggle('active', m === 'read');
+        document.getElementById('modeEdit').classList.toggle('active', m === 'edit');
+        document.getElementById('readView').style.display = m === 'read' ? '' : 'none';
+        document.getElementById('editView').style.display = m === 'edit' ? '' : 'none';
+    };
+
+    // ── Auto-save in Edit Mode ──
+    function setupAutoSave() {
+        var titleInput = document.getElementById('editTitle');
+        var bodyInput = document.getElementById('editBody');
+        if (!titleInput || !bodyInput) return;
+
+        function triggerSave() {
+            clearTimeout(saveTimer);
+            saveTimer = setTimeout(function() { saveChapter(); }, 2000);
+        }
+        titleInput.addEventListener('input', triggerSave);
+        bodyInput.addEventListener('input', triggerSave);
+    }
+
+    function saveChapter() {
+        var title = document.getElementById('editTitle').value.trim();
+        var body = document.getElementById('editBody').value;
+        var wordCount = body.replace(/<[^>]*>/g, '').split(/\s+/).filter(function(w){ return w.length > 0; }).length;
+        var statusEl = document.getElementById('saveStatus');
+        statusEl.textContent = 'Saving...';
+        statusEl.className = 'es-save-status saving';
+
+        fetch('/team/editor-studio/' + bookId + '/chapter/' + currentCh + '/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+            body: JSON.stringify({ chapter_title: title, body: body, word_count: wordCount })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            if (d.saved) {
+                statusEl.textContent = 'Saved ✓';
+                statusEl.className = 'es-save-status saved';
+                // Update read view
+                document.getElementById('readTitle').textContent = title;
+                document.getElementById('readBody').innerHTML = body || '<p style="color:var(--text-muted);">This chapter is empty.</p>';
+                document.getElementById('chNavLabel').textContent = 'Ch ' + currentCh + ': ' + title;
+                setTimeout(function(){ statusEl.textContent = ''; }, 3000);
+            } else {
+                statusEl.textContent = 'Save failed';
+                statusEl.className = 'es-save-status';
+            }
+        })
+        .catch(function() {
+            statusEl.textContent = 'Save failed';
+            statusEl.className = 'es-save-status';
+        });
+    }
+
+    // ── Right Panel Tabs ──
+    window.showRightPanel = function(panel) {
+        var panels = ['actions', 'editstory', 'checklist', 'notes'];
+        document.querySelectorAll('.es-right-tab').forEach(function(t, i) {
+            t.classList.toggle('active', panels[i] === panel);
+        });
+        document.querySelectorAll('.es-right-panel').forEach(function(p) {
+            var panelId = 'panel' + panel.charAt(0).toUpperCase() + panel.slice(1);
+            p.classList.toggle('active', p.id === panelId);
+        });
+    };
+
+    // ── Save Metadata via AJAX ──
+    window.saveMetadata = function() {
+        var payload = {
+            title: document.getElementById('metaTitle').value.trim(),
+            author: document.getElementById('metaAuthor').value.trim(),
+            description: document.getElementById('metaDescription').value.trim(),
+            genre: document.getElementById('metaGenre').value.trim(),
+            status: document.getElementById('metaStatus').value,
+        };
+        fetch('/team/editor-studio/' + bookId + '/edit-metadata', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+            body: JSON.stringify(payload)
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            if (d.ok) {
+                var msg = document.getElementById('metaSavedMsg');
+                msg.style.display = 'block';
+                setTimeout(function(){ msg.style.display = 'none'; }, 3000);
+                // Update sidebar title
+                if (d.changes && d.changes.new_title) {
+                    document.querySelector('.es-book-title').textContent = d.changes.new_title;
+                }
+            } else {
+                alert(d.error || 'Failed to save.');
+            }
+        })
+        .catch(function(err) { alert('Save failed: ' + err.message); });
+    };
+
+    // ── Add Note via AJAX ──
+    window.addNote = function() {
+        var text = document.getElementById('noteText').value.trim();
+        if (!text) return;
+        var noteType = document.getElementById('noteType').value;
+        var chScope = document.getElementById('noteChapterScope').checked ? currentCh : null;
+
+        fetch('/team/editor-studio/' + bookId + '/note', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+            body: JSON.stringify({ note_text: text, note_type: noteType, chapter_number: chScope })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            if (d.error) { alert(d.error); return; }
+            // Prepend note to list
+            var list = document.getElementById('notesList');
+            var emptyMsg = list.querySelector('div[style*="text-align:center"]');
+            if (emptyMsg) emptyMsg.remove();
+
+            var card = document.createElement('div');
+            card.className = 'es-note-card';
+            card.innerHTML = '<div class="es-note-header"><span class="es-note-editor">' + d.editor + '</span><span class="es-note-date">' + d.created_at + '</span></div>' +
+                '<span class="es-note-type es-note-type-' + d.type + '">' + d.type.replace('_', ' ') + '</span>' +
+                (chScope ? '<span style="font-size:0.68rem;color:var(--text-muted);margin-left:4px;">Ch ' + chScope + '</span>' : '') +
+                '<div class="es-note-text">' + d.text + '</div>';
+            list.insertBefore(card, list.firstChild);
+            document.getElementById('noteText').value = '';
+        })
+        .catch(function(err) { console.error('Failed to add note:', err); });
+    };
+
+    // ── Keyboard Shortcut: Ctrl+S to save in edit mode ──
+    document.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 's' && mode === 'edit') {
+            e.preventDefault();
+            saveChapter();
+        }
+    });
+
+    setupAutoSave();
+})();
+</script>
+{% endblock %}

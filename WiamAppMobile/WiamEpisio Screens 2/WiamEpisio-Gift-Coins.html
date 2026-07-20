@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamEpisio — Gift Coins</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{ --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42; --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75; }
+  *{box-sizing:border-box;} body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); display:flex; flex-direction:column; }
+  .statusbar{ height:44px; flex-shrink:0; } svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+  .topbar{ display:flex; align-items:center; gap:12px; padding:2px 20px 14px; flex-shrink:0; }
+  .icon-btn{ width:34px; height:34px; border-radius:50%; background:var(--navy-card); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .topbar h1{ font-size:16px; font-weight:800; color:#fff; margin:0; }
+  .scroll{ flex:1; overflow-y:auto; padding:0 20px 20px; }
+  .search-field{ display:flex; align-items:center; gap:9px; background:var(--navy-card); border:1px solid var(--navy-line); border-radius:13px; padding:11px 14px; margin-bottom:16px; }
+  .search-field svg{ color:var(--text-faint); width:15px; height:15px; flex-shrink:0; }
+  .search-field input{ background:none; border:none; outline:none; color:#fff; font-size:12.5px; font-family:inherit; width:100%; }
+  .search-field input::placeholder{ color:var(--text-faint); }
+  .recipient-card{ display:flex; align-items:center; gap:12px; background:rgba(212,160,23,0.08); border:1px solid rgba(212,160,23,0.28); border-radius:14px; padding:12px 14px; margin-bottom:22px; }
+  .recipient-avatar{ width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); display:flex; align-items:center; justify-content:center; color:var(--navy); font-weight:800; font-size:16px; flex-shrink:0; }
+  .recipient-name{ font-size:13px; font-weight:700; color:#fff; margin:0 0 2px; }
+  .recipient-sub{ font-size:10.5px; color:var(--text-dim); margin:0; }
+  .change-link{ margin-left:auto; font-size:11px; color:var(--gold); font-weight:700; flex-shrink:0; }
+  .amount-title{ font-size:12px; font-weight:800; color:var(--text-dim); letter-spacing:0.4px; text-transform:uppercase; margin:0 0 12px; }
+  .amount-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:20px; }
+  .amount-chip{ text-align:center; padding:14px 8px; border-radius:13px; background:var(--navy-card); border:1.5px solid var(--navy-line); }
+  .amount-chip.active{ border-color:var(--gold); background:rgba(212,160,23,0.1); }
+  .amount-chip b{ display:block; font-size:16px; color:#fff; font-weight:800; }
+  .amount-chip span{ font-size:9.5px; color:var(--text-faint); }
+  .message-box{ background:var(--navy-card); border:1px solid var(--navy-line); border-radius:14px; padding:13px 14px; margin-bottom:20px; }
+  .message-box textarea{ background:none; border:none; outline:none; color:#fff; font-size:12.5px; font-family:inherit; width:100%; resize:none; }
+  .message-box textarea::placeholder{ color:var(--text-faint); }
+  .balance-note{ display:flex; justify-content:space-between; padding:0 2px; margin-bottom:22px; font-size:11px; }
+  .balance-note span{ color:var(--text-faint); } .balance-note b{ color:#fff; font-weight:700; }
+  .footer{ flex-shrink:0; padding:12px 20px 26px; }
+  .btn-primary{ width:100%; padding:16px; border-radius:16px; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); border:none; color:var(--navy); font-size:15px; font-weight:800; box-shadow:0 14px 30px rgba(212,160,23,0.3); font-family:'Inter',sans-serif; }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="statusbar"></div>
+  <div class="topbar"><div class="icon-btn"><svg viewBox="0 0 24 24" width="15" height="15" color="#fff"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></div><h1>Gift Coins</h1></div>
+
+  <div class="scroll">
+    <div class="search-field"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input placeholder="Search by username" value="efua_b" /></div>
+
+    <div class="recipient-card">
+      <div class="recipient-avatar">E</div>
+      <div><p class="recipient-name">Efua Boateng</p><p class="recipient-sub">@efua_b</p></div>
+      <span class="change-link">Change</span>
+    </div>
+
+    <p class="amount-title">Select amount</p>
+    <div class="amount-grid">
+      <div class="amount-chip"><b>50</b><span>coins</span></div>
+      <div class="amount-chip active"><b>150</b><span>coins</span></div>
+      <div class="amount-chip"><b>500</b><span>coins</span></div>
+    </div>
+
+    <div class="message-box"><textarea rows="3" placeholder="Add a message (optional)">Happy birthday! Enjoy the new series 🎉</textarea></div>
+
+    <div class="balance-note"><span>Your balance</span><b>934 coins</b></div>
+    <div class="balance-note"><span>After gifting</span><b>784 coins</b></div>
+  </div>
+
+  <div class="footer"><button class="btn-primary">Send 150 Coins</button></div>
+</div>
+</body>
+</html>

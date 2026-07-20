@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamStudio — Specs Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75;
+    --green:#3BB273; --red:#E4573D;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); display:flex; flex-direction:column; }
+  .statusbar{ height:44px; flex-shrink:0; }
+
+  .topbar{ display:flex; align-items:center; gap:12px; padding:2px 20px 16px; flex-shrink:0; }
+  .icon-btn{ width:34px; height:34px; border-radius:50%; background:var(--navy-card); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .topbar h1{ font-size:16.5px; font-weight:800; color:#fff; margin:0; }
+  .topbar span{ display:block; font-size:10.5px; color:var(--text-faint); font-weight:600; margin-top:1px; }
+
+  .scroll{ flex:1; overflow-y:auto; padding:0 20px 22px; }
+
+  .intro-card{ background:linear-gradient(135deg, rgba(212,160,23,0.14), rgba(18,18,42,0.9)); border:1px solid rgba(212,160,23,0.3); border-radius:16px; padding:14px 15px; margin-bottom:20px; font-size:11.5px; line-height:1.6; color:#E7E7F2; }
+  .intro-card b{ color:var(--gold); }
+
+  .spec-block{ margin-bottom:20px; }
+  .spec-head{ display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+  .spec-head .ic{ width:26px; height:26px; border-radius:8px; background:var(--navy-card); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .spec-head span{ font-size:13px; font-weight:800; color:#fff; }
+
+  .spec-table{ background:var(--navy-card); border:1px solid var(--navy-line); border-radius:14px; overflow:hidden; }
+  .spec-row{ display:flex; justify-content:space-between; padding:10px 14px; border-bottom:1px solid var(--navy-line); gap:10px; }
+  .spec-row:last-child{ border-bottom:none; }
+  .spec-row .k{ font-size:11px; color:var(--text-dim); font-weight:600; flex-shrink:0; }
+  .spec-row .v{ font-size:11px; color:#fff; font-weight:700; text-align:right; }
+  .spec-row .v.gold{ color:var(--gold); }
+
+  .forbidden{ background:rgba(228,87,61,0.08); border:1px solid rgba(228,87,61,0.25); border-radius:14px; padding:12px 14px; margin-top:8px; }
+  .forbidden-title{ font-size:10.5px; font-weight:800; color:var(--red); margin:0 0 6px; display:flex; align-items:center; gap:6px; }
+  .forbidden-item{ font-size:10.5px; color:#E0A79A; margin:0 0 4px; padding-left:18px; position:relative; }
+  .forbidden-item::before{ content:'✕'; position:absolute; left:0; color:var(--red); font-weight:800; font-size:9px; top:1px; }
+  .forbidden-item:last-child{ margin-bottom:0; }
+
+  .quote{ text-align:center; font-size:11.5px; font-style:italic; color:var(--text-dim); line-height:1.6; margin:22px 0 4px; padding:0 8px; }
+  .quote b{ color:#fff; font-style:normal; }
+
+  .footer{ flex-shrink:0; padding:14px 20px 26px; }
+  .btn-primary{ width:100%; padding:16px; border-radius:16px; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); border:none; color:var(--navy); font-size:15px; font-weight:800; box-shadow:0 14px 30px rgba(212,160,23,0.3); font-family:'Inter',sans-serif; }
+
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"></div>
+  <div class="topbar">
+    <div class="icon-btn"><svg viewBox="0 0 24 24" width="15" height="15" color="#fff"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+    <div>
+      <h1>Video &amp; Image Specs</h1>
+      <span>Match these exactly — every time</span>
+    </div>
+  </div>
+
+  <div class="scroll">
+    <div class="intro-card">We reject <b>soft, blurry, wrong-size, or incomplete</b> series. Finish the show. Match the frame. Then we go live.</div>
+
+    <div class="spec-block">
+      <div class="spec-head">
+        <div class="ic"><svg viewBox="0 0 24 24" width="13" height="13" color="var(--gold)"><rect x="7" y="2" width="10" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></svg></div>
+        <span>Episode Video</span>
+      </div>
+      <div class="spec-table">
+        <div class="spec-row"><span class="k">Orientation</span><span class="v gold">Vertical only</span></div>
+        <div class="spec-row"><span class="k">Aspect ratio</span><span class="v gold">9:16 exact</span></div>
+        <div class="spec-row"><span class="k">Preferred res.</span><span class="v">1080 × 1920</span></div>
+        <div class="spec-row"><span class="k">Minimum res.</span><span class="v">720 × 1280</span></div>
+        <div class="spec-row"><span class="k">Codec</span><span class="v">H.264 + AAC (MP4)</span></div>
+        <div class="spec-row"><span class="k">Target length</span><span class="v gold">4–5 minutes</span></div>
+        <div class="spec-row"><span class="k">Accept band</span><span class="v">3:00 – 6:00</span></div>
+        <div class="spec-row"><span class="k">Max file size</span><span class="v">500 MB</span></div>
+      </div>
+    </div>
+
+    <div class="spec-block">
+      <div class="spec-head">
+        <div class="ic"><svg viewBox="0 0 24 24" width="13" height="13" color="var(--gold)"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+        <span>Trailer Video</span>
+      </div>
+      <div class="spec-table">
+        <div class="spec-row"><span class="k">Aspect</span><span class="v gold">9:16</span></div>
+        <div class="spec-row"><span class="k">Duration</span><span class="v gold">15–60 seconds</span></div>
+        <div class="spec-row"><span class="k">Purpose</span><span class="v">Hook only — quality gate</span></div>
+        <div class="spec-row"><span class="k">Codec</span><span class="v">H.264 MP4</span></div>
+      </div>
+    </div>
+
+    <div class="spec-block">
+      <div class="spec-head">
+        <div class="ic"><svg viewBox="0 0 24 24" width="13" height="13" color="var(--gold)"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></div>
+        <span>Cover / Poster</span>
+      </div>
+      <div class="spec-table">
+        <div class="spec-row"><span class="k">Role</span><span class="v">Thumbnail on Home rails</span></div>
+        <div class="spec-row"><span class="k">Aspect</span><span class="v gold">2:3 portrait</span></div>
+        <div class="spec-row"><span class="k">Min size</span><span class="v">600 × 900</span></div>
+        <div class="spec-row"><span class="k">Preferred</span><span class="v">1080 × 1620</span></div>
+        <div class="spec-row"><span class="k">Formats</span><span class="v">JPG · PNG · WebP</span></div>
+        <div class="spec-row"><span class="k">Max size</span><span class="v">5 MB</span></div>
+      </div>
+    </div>
+
+    <div class="forbidden">
+      <p class="forbidden-title"><svg viewBox="0 0 24 24" width="12" height="12"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Automatic rejection</p>
+      <p class="forbidden-item">Horizontal or square video — vertical only</p>
+      <p class="forbidden-item">Watermarked exports used as the final file</p>
+      <p class="forbidden-item">Black bars that break the 9:16 frame</p>
+    </div>
+
+    <p class="quote"><b>Finish the show. Match the frame.</b> Then we go live.</p>
+  </div>
+
+  <div class="footer">
+    <button class="btn-primary">Got it — start uploading</button>
+  </div>
+</div>
+
+</body>
+</html>

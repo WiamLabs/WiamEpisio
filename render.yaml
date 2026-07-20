@@ -1,0 +1,102 @@
+# WiamApp — Render.com Deployment Blueprint
+# Docs: https://docs.render.com/blueprint-spec
+
+services:
+  - type: web
+    name: wiamapp
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      # --- Database (Supabase Postgres) ---
+      - key: DATABASE_URL
+        sync: false
+      # --- Telegram Bot ---
+      - key: BOT_TOKEN
+        sync: false
+      - key: BOT_USERNAME
+        sync: false
+      - key: FOUNDER_TELEGRAM_ID
+        sync: false
+      - key: CHANNEL_ID
+        sync: false
+      - key: TRAINING_CHAT_ID
+        sync: false
+      - key: NOTIFY_CHAT_ID
+        sync: false
+      # --- Web App ---
+      - key: APP_URL
+        sync: false
+      - key: FLASK_SECRET_KEY
+        sync: false
+      # --- Google OAuth ---
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      # --- Paystack Payments ---
+      - key: PAYSTACK_SECRET_KEY
+        sync: false
+      - key: PAYSTACK_PUBLIC_KEY
+        sync: false
+      - key: PAYSTACK_ELITE_PLAN_CODE
+        sync: false
+      # --- Founder Account Seeding ---
+      - key: FOUNDER_EMAIL_1
+        sync: false
+      - key: FOUNDER_PASS_1
+        sync: false
+      - key: FOUNDER_NAME_1
+        sync: false
+      - key: FOUNDER_USER_1
+        sync: false
+      # --- Founder Notifications ---
+      - key: FOUNDER_EMAIL
+        sync: false
+      # --- QA Automation Webhook (must match GitHub repo secret QA_WEBHOOK_SECRET) ---
+      - key: QA_AUTOMATION_WEBHOOK_SECRET
+        sync: false
+      # --- Email (Resend HTTP API — recommended for Render) ---
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESEND_FROM
+        sync: false
+      # --- SMTP Email (fallback — ports 587/465 may be blocked on Render) ---
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: SMTP_FROM
+        sync: false
+      # --- Web Push (VAPID) ---
+      - key: VAPID_PUBLIC_KEY
+        sync: false
+      - key: VAPID_PRIVATE_KEY
+        sync: false
+      - key: VAPID_CLAIMS_EMAIL
+        sync: false
+      # --- Payment Details ---
+      - key: MOMO_NUMBER
+        sync: false
+      - key: BANK_DETAILS
+        sync: false
+      # --- Cloudinary (free tier image CDN) ---
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      # --- AI Providers (free tier) ---
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: CEREBRAS_API_KEY
+        sync: false
+      # --- Redis (optional, for rate limiting) ---
+      - key: REDIS_URL
+        sync: false

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Favorites — WiamApp{% endblock %}
+{% block meta_description %}Your saved stories on WiamApp. Quickly access the stories you love and pick up right where you left off.{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: var(--space-xl); padding-bottom: var(--space-xl);">
+    <div style="margin-bottom: var(--space-xl);">
+        <h1 class="greeting">Favorites</h1>
+        <p class="greeting-sub">Stories you've saved for later.</p>
+    </div>
+
+    {% if books %}
+    <div class="row g-3">
+        {% for book in books %}
+        <div class="col-6 col-md-4 col-lg-3">
+            <a href="{{ url_for('book.detail', book_id=book.id) }}" class="book-card d-block" style="text-decoration: none;">
+                {% if book.cover_file_id %}
+                <img src="{{ book.cover_url }}" class="card-cover" alt="{{ book.title }}" loading="lazy">
+                {% else %}
+                <div class="cover-placeholder"><i class="bi bi-book"></i></div>
+                {% endif %}
+                <div class="card-body">
+                    <div class="card-title">{{ book.title }}</div>
+                    <div class="card-author">{{ book.author or 'Unknown' }}</div>
+                    <div class="card-stats"><span>👁 {{ book.views or 0 }}</span><span>❤️ {{ book.favorite_count }}</span><span>⭐ {{ book.rating_count }}</span></div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="icon"><i class="bi bi-heart"></i></div>
+        <h3>Save the stories that move you.</h3>
+        <p>Tap the heart on any story to keep it close.</p>
+        <a href="{{ url_for('browse.browse_home') }}" class="btn btn-outline-gold mt-3">Discover Stories</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

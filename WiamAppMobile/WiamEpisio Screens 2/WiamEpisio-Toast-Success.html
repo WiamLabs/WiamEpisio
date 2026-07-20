@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamEpisio — Toast: Success</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75; --green:#3BB273;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); }
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+
+  /* Dimmed background context (Home-like) */
+  .bg-context{ position:absolute; inset:0; opacity:0.5; }
+  .statusbar{ height:44px; }
+  .bg-topbar{ padding:2px 20px; display:flex; align-items:center; justify-content:space-between; }
+  .bg-logo{ display:flex; align-items:center; gap:8px; }
+  .bg-badge{ width:28px; height:28px; border-radius:9px; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); }
+  .bg-title{ width:90px; height:14px; border-radius:4px; background:var(--navy-card); }
+  .bg-rail{ display:flex; gap:10px; padding:24px 20px; }
+  .bg-poster{ width:90px; height:130px; border-radius:12px; flex-shrink:0; }
+  .bg-poster.p1{ background:linear-gradient(160deg,#3a1420,#12122a); }
+  .bg-poster.p2{ background:linear-gradient(160deg,#1a2a3a,#12122a); }
+  .bg-poster.p3{ background:linear-gradient(160deg,#241a3a,#0d0d24); }
+
+  /* Toast stack — showing 3 variants stacked to demonstrate the pattern */
+  .toast-stack{ position:absolute; top:70px; left:20px; right:20px; z-index:5; display:flex; flex-direction:column; gap:10px; }
+  .toast{ display:flex; align-items:center; gap:10px; background:rgba(18,18,42,0.94); backdrop-filter:blur(10px); border-radius:14px; padding:12px 15px; box-shadow:0 14px 30px rgba(0,0,0,0.4); }
+  .toast.success{ border:1px solid rgba(59,178,115,0.35); }
+  .toast-icon{ width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .toast.success .toast-icon{ background:var(--green); }
+  .toast-icon svg{ color:#08081A; width:14px; height:14px; stroke-width:3; }
+  .toast-text{ flex:1; }
+  .toast-text b{ display:block; font-size:12px; font-weight:700; color:#fff; }
+  .toast-text span{ font-size:10.5px; color:var(--text-dim); }
+  .toast-close{ color:var(--text-faint); flex-shrink:0; }
+
+  .label-tag{ position:absolute; bottom:24px; left:20px; right:20px; text-align:center; font-size:10px; color:var(--text-faint); background:var(--navy-card); border:1px solid var(--navy-line); border-radius:10px; padding:8px; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="bg-context">
+    <div class="statusbar"></div>
+    <div class="bg-topbar"><div class="bg-logo"><div class="bg-badge"></div><div class="bg-title"></div></div></div>
+    <div class="bg-rail"><div class="bg-poster p1"></div><div class="bg-poster p2"></div><div class="bg-poster p3"></div></div>
+    <div class="bg-rail"><div class="bg-poster p3"></div><div class="bg-poster p1"></div><div class="bg-poster p2"></div></div>
+  </div>
+
+  <div class="toast-stack">
+    <div class="toast success">
+      <div class="toast-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <div class="toast-text"><b>Added to My List</b><span>The Chief's Daughter</span></div>
+      <svg class="toast-close" viewBox="0 0 24 24" width="13" height="13"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </div>
+
+    <div class="toast success">
+      <div class="toast-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <div class="toast-text"><b>Coins purchased</b><span>+715 coins added to your wallet</span></div>
+      <svg class="toast-close" viewBox="0 0 24 24" width="13" height="13"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </div>
+
+    <div class="toast success">
+      <div class="toast-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <div class="toast-text"><b>Saved</b><span>Profile changes updated</span></div>
+      <svg class="toast-close" viewBox="0 0 24 24" width="13" height="13"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </div>
+  </div>
+
+  <div class="label-tag">Toast pattern — auto-dismisses after ~3s, tappable to close early</div>
+</div>
+
+</body>
+</html>

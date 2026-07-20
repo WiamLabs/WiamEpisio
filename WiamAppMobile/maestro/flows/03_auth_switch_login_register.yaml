@@ -1,0 +1,7 @@
+appId: com.wiamapp.mobile
+---
+- launchApp
+- tapOn: "Sign Up"
+- assertVisible: "Create your account"
+- tapOn: "Sign In"
+- assertVisible: "Welcome Back"

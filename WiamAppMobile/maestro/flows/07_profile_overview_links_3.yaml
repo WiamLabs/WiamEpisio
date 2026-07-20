@@ -1,0 +1,11 @@
+appId: com.wiamapp.mobile
+---
+# Requires logged-in test session
+- launchApp
+- tapOn: "Profile"
+- tapOn: "Gifts"
+- back
+- tapOn: "Tips"
+- back
+- tapOn: "Premium"
+- back

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamEpisio — Choose Genres</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); display:flex; flex-direction:column; }
+  .statusbar{ height:44px; flex-shrink:0; }
+
+  .topbar{ padding:6px 24px 18px; flex-shrink:0; }
+  .back-row{ display:flex; align-items:center; justify-content:space-between; margin-bottom:22px; }
+  .back-btn{ width:34px; height:34px; border-radius:50%; background:var(--navy-card); display:flex; align-items:center; justify-content:center; }
+  .skip-link{ font-size:12.5px; font-weight:600; color:var(--text-dim); }
+
+  .dots{ display:flex; gap:6px; margin-bottom:22px; }
+  .dot{ width:6px; height:6px; border-radius:50%; background:var(--navy-line); }
+  .dot.active{ width:20px; border-radius:4px; background:var(--gold); }
+
+  h1{ font-size:23px; font-weight:800; color:#fff; margin:0 0 8px; letter-spacing:-0.3px; }
+  .sub{ font-size:13px; color:var(--text-dim); margin:0; line-height:1.5; }
+  .sub b{ color:var(--gold); font-weight:700; }
+
+  .scroll{ flex:1; overflow-y:auto; padding:4px 24px 10px; }
+  .grid{ display:grid; grid-template-columns:1fr 1fr; gap:11px; padding-bottom:16px; }
+
+  .chip{ position:relative; border-radius:16px; padding:16px 14px; background:var(--navy-card); border:1.5px solid var(--navy-line); overflow:hidden; }
+  .chip .icon{ width:32px; height:32px; border-radius:10px; display:flex; align-items:center; justify-content:center; margin-bottom:20px; background:var(--navy-soft); }
+  .chip .icon svg{ width:16px; height:16px; }
+  .chip .name{ font-size:13.5px; font-weight:700; color:#fff; }
+  .chip .count{ font-size:10px; color:var(--text-faint); margin-top:2px; }
+  .chip .check{ position:absolute; top:12px; right:12px; width:20px; height:20px; border-radius:50%; border:1.5px solid var(--navy-line); }
+
+  .chip.sel{ background:linear-gradient(160deg, rgba(212,160,23,0.16), rgba(18,18,42,0.9)); border-color:var(--gold); }
+  .chip.sel .icon{ background:var(--gold); }
+  .chip.sel .icon svg{ stroke:var(--navy); }
+  .chip.sel .check{ background:var(--gold); border-color:var(--gold); display:flex; align-items:center; justify-content:center; }
+  .chip.sel .check svg{ width:11px; height:11px; stroke:var(--navy); stroke-width:3; }
+
+  .footer{ flex-shrink:0; padding:14px 24px 26px; background:linear-gradient(0deg, var(--navy) 60%, transparent); }
+  .counter-row{ display:flex; align-items:center; justify-content:center; gap:6px; margin-bottom:12px; }
+  .counter-row span{ font-size:12px; color:var(--text-dim); font-weight:600; }
+  .counter-row b{ color:var(--gold); }
+
+  .btn-primary{ width:100%; padding:16px; border-radius:16px; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); border:none; color:var(--navy); font-size:15px; font-weight:800; box-shadow:0 14px 30px rgba(212,160,23,0.3); font-family:'Inter',sans-serif; }
+  .btn-primary.disabled{ opacity:0.35; box-shadow:none; }
+
+  svg{ stroke:#C9C9DE; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"></div>
+
+  <div class="topbar">
+    <div class="back-row">
+      <div class="back-btn"><svg viewBox="0 0 24 24" width="15" height="15"><polyline points="15 18 9 12 15 6"/></svg></div>
+      <span class="skip-link">Skip</span>
+    </div>
+    <div class="dots">
+      <span class="dot active"></span>
+      <span class="dot active"></span>
+      <span class="dot"></span>
+    </div>
+    <h1>What do you love watching?</h1>
+    <p class="sub">Pick at least <b>3 genres</b> — we'll build your Home around them.</p>
+  </div>
+
+  <div class="scroll">
+    <div class="grid">
+
+      <div class="chip sel">
+        <div class="check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="icon"><svg viewBox="0 0 24 24"><path d="M12 2 3 7l9 5 9-5-9-5z"/><path d="M3 12l9 5 9-5"/></svg></div>
+        <div class="name">Drama</div>
+        <div class="count">1,204 series</div>
+      </div>
+
+      <div class="chip sel">
+        <div class="check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="icon"><svg viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg></div>
+        <div class="name">Romance</div>
+        <div class="count">980 series</div>
+      </div>
+
+      <div class="chip">
+        <div class="check"></div>
+        <div class="icon"><svg viewBox="0 0 24 24"><path d="M12 2l2.4 6.8L21 11l-6.6 2.2L12 20l-2.4-6.8L3 11l6.6-2.2z"/></svg></div>
+        <div class="name">Revenge</div>
+        <div class="count">640 series</div>
+      </div>
+
+      <div class="chip">
+        <div class="check"></div>
+        <div class="icon"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+        <div class="name">Hidden Identity</div>
+        <div class="count">512 series</div>
+      </div>
+
+      <div class="chip sel">
+        <div class="check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="icon"><svg viewBox="0 0 24 24"><path d="M12 2l1.9 4.6 5 .4-3.8 3.2 1.2 4.9L12 12.6 7.7 15.1l1.2-4.9-3.8-3.2 5-.4z"/></svg></div>
+        <div class="name">Royal &amp; Palace</div>
+        <div class="count">388 series</div>
+      </div>
+
+      <div class="chip">
+        <div class="check"></div>
+        <div class="icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 10h.01M15 10h.01M8 15c1.5 1.5 6.5 1.5 8 0"/></svg></div>
+        <div class="name">Comedy</div>
+        <div class="count">276 series</div>
+      </div>
+
+      <div class="chip">
+        <div class="check"></div>
+        <div class="icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4.5 8-11V5l-8-3-8 3v6c0 6.5 8 11 8 11z"/></svg></div>
+        <div class="name">Thriller</div>
+        <div class="count">341 series</div>
+      </div>
+
+      <div class="chip">
+        <div class="check"></div>
+        <div class="icon"><svg viewBox="0 0 24 24"><path d="M5 3l14 9-14 9V3z"/></svg></div>
+        <div class="name">Action</div>
+        <div class="count">299 series</div>
+      </div>
+
+      <div class="chip">
+        <div class="check"></div>
+        <div class="icon"><svg viewBox="0 0 24 24"><path d="M3 21c3-1 5-3 5-6V9a4 4 0 0 1 8 0v6c0 3 2 5 5 6"/></svg></div>
+        <div class="name">Family Feud</div>
+        <div class="count">204 series</div>
+      </div>
+
+      <div class="chip">
+        <div class="check"></div>
+        <div class="icon"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 9h.01M15 9h.01M9 15c1 1 5 1 6 0"/></svg></div>
+        <div class="name">Anime</div>
+        <div class="count">150 series</div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="counter-row"><span><b>3</b> of 3 selected — you're good to go</span></div>
+    <button class="btn-primary">Continue</button>
+  </div>
+</div>
+
+</body>
+</html>

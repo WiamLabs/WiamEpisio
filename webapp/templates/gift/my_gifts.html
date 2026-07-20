@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}My Gifts — WiamApp{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width:700px;padding:var(--space-2xl) var(--space-md);">
+    <h1 class="font-display" style="font-size:1.6rem;margin-bottom:var(--space-xl);"><i class="bi bi-gift me-2" style="color:var(--gold);"></i>My Gifts</h1>
+
+    <h3 style="font-size:1rem;margin-bottom:var(--space-md);color:var(--text-secondary);">Sent ({{ sent|length }})</h3>
+    {% if sent %}
+    <div style="display:flex;flex-direction:column;gap:var(--space-sm);margin-bottom:var(--space-2xl);">
+        {% for gift, book in sent %}
+        <div style="background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:var(--space-md);display:flex;align-items:center;gap:var(--space-md);flex-wrap:wrap;">
+            {% if book.cover_file_id %}
+            <img src="{{ book.cover_url }}" style="width:48px;height:68px;object-fit:cover;border-radius:var(--radius-sm);flex-shrink:0;">
+            {% endif %}
+            <div style="flex:1;min-width:150px;">
+                <strong>{{ book.title }}</strong>
+                <div style="font-size:0.8rem;color:var(--text-muted);">
+                    {{ gift.created_at.strftime('%b %d, %Y') }}
+                    · {% if gift.is_claimed %}<span style="color:#22c55e;">Claimed</span>{% else %}<span style="color:var(--gold);">Pending</span>{% endif %}
+                </div>
+            </div>
+            {% if not gift.is_claimed %}
+            <button onclick="navigator.clipboard.writeText('{{ request.host_url }}gift/claim/{{ gift.recipient_code }}');this.textContent='Copied!';" class="btn btn-sm btn-outline-gold" style="font-size:0.8rem;">Copy Link</button>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p style="color:var(--text-muted);margin-bottom:var(--space-2xl);">You haven't sent any gifts yet.</p>
+    {% endif %}
+
+    <h3 style="font-size:1rem;margin-bottom:var(--space-md);color:var(--text-secondary);">Received ({{ received|length }})</h3>
+    {% if received %}
+    <div style="display:flex;flex-direction:column;gap:var(--space-sm);">
+        {% for gift, book in received %}
+        <div style="background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:var(--space-md);display:flex;align-items:center;gap:var(--space-md);flex-wrap:wrap;">
+            {% if book.cover_file_id %}
+            <img src="{{ book.cover_url }}" style="width:48px;height:68px;object-fit:cover;border-radius:var(--radius-sm);flex-shrink:0;">
+            {% endif %}
+            <div style="flex:1;min-width:150px;">
+                <strong>{{ book.title }}</strong>
+                <div style="font-size:0.8rem;color:var(--text-muted);">Received {{ gift.claimed_at.strftime('%b %d, %Y') if gift.claimed_at else '' }}</div>
+            </div>
+            <a href="{{ url_for('book.read_book', book_id=book.id) }}" class="btn btn-sm btn-gold" style="font-size:0.8rem;">Read</a>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p style="color:var(--text-muted);">No gifts received yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

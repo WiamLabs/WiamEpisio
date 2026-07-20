@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamEpisio — Rate Series</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); }
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+
+  .backdrop{ position:absolute; inset:0; background:linear-gradient(160deg,#1a1030,#0d0d24,#000); filter:brightness(0.3); }
+
+  .sheet{ position:absolute; left:0; right:0; bottom:0; background:var(--navy-soft); border-radius:26px 26px 0 0; padding:14px 24px 34px; box-shadow:0 -20px 50px rgba(0,0,0,0.5); }
+  .sheet-handle{ width:36px; height:4px; background:var(--navy-line); border-radius:99px; margin:0 auto 22px; }
+
+  .series-row{ display:flex; gap:13px; align-items:center; margin-bottom:24px; }
+  .series-poster{ width:52px; height:75px; border-radius:10px; background:linear-gradient(160deg,#241a3a,#0d0d24); flex-shrink:0; }
+  .series-title{ font-size:14.5px; font-weight:800; color:#fff; margin:0 0 4px; }
+  .series-meta{ font-size:11px; color:var(--text-dim); margin:0; }
+
+  .prompt{ text-align:center; margin-bottom:20px; }
+  .prompt h2{ font-size:16px; font-weight:800; color:#fff; margin:0 0 6px; }
+  .prompt p{ font-size:12px; color:var(--text-dim); margin:0; }
+
+  .stars{ display:flex; justify-content:center; gap:10px; margin-bottom:10px; }
+  .star{ width:38px; height:38px; }
+  .star.filled{ color:var(--gold); }
+  .star.empty{ color:var(--navy-line); }
+
+  .rating-label{ text-align:center; font-size:13px; font-weight:700; color:var(--gold); margin-bottom:24px; }
+
+  .comment-box{ background:var(--navy-card); border:1px solid var(--navy-line); border-radius:14px; padding:13px 14px; margin-bottom:20px; }
+  .comment-box textarea{ background:none; border:none; outline:none; color:#fff; font-size:12.5px; font-family:inherit; width:100%; resize:none; }
+  .comment-box textarea::placeholder{ color:var(--text-faint); }
+
+  .btn-row{ display:flex; gap:10px; }
+  .btn-skip{ flex:1; padding:15px; border-radius:15px; background:var(--navy-card); border:1px solid var(--navy-line); color:#C9C9DE; font-size:13.5px; font-weight:700; font-family:'Inter',sans-serif; }
+  .btn-submit{ flex:1.4; padding:15px; border-radius:15px; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); border:none; color:var(--navy); font-size:13.5px; font-weight:800; box-shadow:0 14px 30px rgba(212,160,23,0.3); font-family:'Inter',sans-serif; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="backdrop"></div>
+
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+
+    <div class="series-row">
+      <div class="series-poster"></div>
+      <div>
+        <p class="series-title">The Chief's Daughter</p>
+        <p class="series-meta">You've watched 14 of 20 episodes</p>
+      </div>
+    </div>
+
+    <div class="prompt">
+      <h2>How are you enjoying it?</h2>
+      <p>Your rating helps other viewers discover great series</p>
+    </div>
+
+    <div class="stars">
+      <svg class="star filled" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15 9 22 9.5 17 14.5 18.5 22 12 18 5.5 22 7 14.5 2 9.5 9 9 12 2"/></svg>
+      <svg class="star filled" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15 9 22 9.5 17 14.5 18.5 22 12 18 5.5 22 7 14.5 2 9.5 9 9 12 2"/></svg>
+      <svg class="star filled" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15 9 22 9.5 17 14.5 18.5 22 12 18 5.5 22 7 14.5 2 9.5 9 9 12 2"/></svg>
+      <svg class="star filled" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15 9 22 9.5 17 14.5 18.5 22 12 18 5.5 22 7 14.5 2 9.5 9 9 12 2"/></svg>
+      <svg class="star empty" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15 9 22 9.5 17 14.5 18.5 22 12 18 5.5 22 7 14.5 2 9.5 9 9 12 2"/></svg>
+    </div>
+    <p class="rating-label">Really good — 4 stars</p>
+
+    <div class="comment-box">
+      <textarea rows="3" placeholder="Add a quick comment (optional)">The palace politics twist in EP 12 was unexpected!</textarea>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-skip">Skip</button>
+      <button class="btn-submit">Submit Rating</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

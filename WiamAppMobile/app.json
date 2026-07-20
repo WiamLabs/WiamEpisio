@@ -1,0 +1,79 @@
+{
+  "expo": {
+    "name": "WiamEpisio",
+    "slug": "WiamAppMobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#08081a",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#08081a"
+    },
+    "scheme": "wiamapp",
+    "ios": {
+      "supportsTablet": true,
+      "backgroundColor": "#08081a",
+      "bundleIdentifier": "com.wiamapp.mobile",
+      "associatedDomains": ["applinks:wiamapp.com"],
+      "infoPlist": {
+        "UIBackgroundModes": ["remote-notification"]
+      }
+    },
+    "android": {
+      "package": "com.wiamapp.mobile",
+      "backgroundColor": "#08081a",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            { "scheme": "https", "host": "wiamapp.com", "pathPrefix": "/book" },
+            { "scheme": "https", "host": "wiamapp.com", "pathPrefix": "/creator" }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ],
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "apiUrl": "https://episio.wiamlabs.com/api/v1",
+      "eas": {
+        "projectId": "wiamapp-mobile"
+      }
+    },
+    "plugins": [
+      "expo-font",
+      "expo-secure-store",
+      "expo-web-browser",
+      "expo-image-picker",
+      "expo-video",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#d4a843",
+          "defaultChannel": "default",
+          "sounds": []
+        }
+      ],
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-7267152032047381~3180094073",
+          "iosAppId": "ca-app-pub-7267152032047381~8731803653"
+        }
+      ]
+    ]
+  }
+}

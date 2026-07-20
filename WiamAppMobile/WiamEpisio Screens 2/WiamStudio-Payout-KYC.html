@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamStudio — Verify Identity</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75; --green:#3BB273;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); display:flex; flex-direction:column; }
+  .statusbar{ height:44px; flex-shrink:0; }
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+
+  .topbar{ padding:2px 20px 16px; flex-shrink:0; }
+  .top-row{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+  .icon-btn{ width:34px; height:34px; border-radius:50%; background:var(--navy-card); display:flex; align-items:center; justify-content:center; }
+  .step-label{ font-size:11px; font-weight:700; color:var(--text-faint); }
+  .step-track{ display:flex; gap:6px; margin-bottom:16px; }
+  .step-seg{ flex:1; height:4px; border-radius:99px; background:var(--navy-line); }
+  .step-seg.done{ background:var(--gold); }
+  h1{ font-size:19px; font-weight:800; color:#fff; margin:0 0 5px; letter-spacing:-0.3px; }
+  .sub{ font-size:12px; color:var(--text-dim); margin:0; }
+
+  .scroll{ flex:1; overflow-y:auto; padding:0 20px 20px; }
+
+  .why-card{ display:flex; gap:10px; background:rgba(212,160,23,0.08); border:1px solid rgba(212,160,23,0.25); border-radius:14px; padding:12px 14px; margin-bottom:18px; }
+  .why-card svg{ color:var(--gold); width:15px; height:15px; flex-shrink:0; margin-top:1px; }
+  .why-card span{ font-size:11px; color:#D9C89A; line-height:1.6; }
+
+  .field-group{ margin-bottom:14px; }
+  .field-label{ font-size:11.5px; font-weight:700; color:#fff; margin:0 0 8px; }
+  .field-box{ background:var(--navy-card); border:1px solid var(--navy-line); border-radius:14px; padding:13px 14px; }
+  .field-box.focus{ border-color:var(--gold); }
+  .field-box input{ background:none; border:none; outline:none; color:#fff; font-size:13.5px; font-family:inherit; width:100%; }
+  .field-box input::placeholder{ color:var(--text-faint); }
+
+  .doc-select{ display:flex; gap:10px; margin-bottom:14px; }
+  .doc-opt{ flex:1; text-align:center; padding:12px 8px; border-radius:12px; background:var(--navy-card); border:1.5px solid var(--navy-line); }
+  .doc-opt.active{ border-color:var(--gold); background:rgba(212,160,23,0.1); }
+  .doc-opt span{ display:block; font-size:10.5px; font-weight:700; color:#C9C9DE; margin-top:6px; }
+  .doc-opt.active span{ color:var(--gold); }
+
+  .upload-slot{ border:1.5px dashed var(--navy-line); border-radius:14px; padding:22px; text-align:center; margin-bottom:14px; background:var(--navy-card); }
+  .upload-slot svg{ color:var(--text-faint); width:22px; height:22px; margin-bottom:8px; }
+  .upload-slot b{ display:block; font-size:12px; font-weight:700; color:#fff; margin-bottom:3px; }
+  .upload-slot span{ font-size:10px; color:var(--text-faint); }
+
+  .verified-doc{ display:flex; align-items:center; gap:10px; background:rgba(59,178,115,0.08); border:1px solid rgba(59,178,115,0.3); border-radius:14px; padding:12px 14px; margin-bottom:14px; }
+  .verified-doc svg{ color:var(--green); width:18px; height:18px; flex-shrink:0; }
+  .verified-doc b{ display:block; font-size:11.5px; font-weight:700; color:#fff; }
+  .verified-doc span{ font-size:10px; color:var(--text-faint); }
+
+  .footer{ flex-shrink:0; padding:12px 20px 26px; }
+  .btn-primary{ width:100%; padding:16px; border-radius:16px; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); border:none; color:var(--navy); font-size:15px; font-weight:800; box-shadow:0 14px 30px rgba(212,160,23,0.3); font-family:'Inter',sans-serif; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"></div>
+  <div class="topbar">
+    <div class="top-row">
+      <div class="icon-btn"><svg viewBox="0 0 24 24" width="15" height="15" color="#fff"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></div>
+      <span class="step-label">Step 1 of 2</span>
+    </div>
+    <div class="step-track">
+      <div class="step-seg done"></div>
+      <div class="step-seg"></div>
+    </div>
+    <h1>Verify your identity</h1>
+    <p class="sub">Required once before your first payout.</p>
+  </div>
+
+  <div class="scroll">
+
+    <div class="why-card">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span>This confirms you're a real person being paid — it's a one-time check, not repeated for future payouts.</span>
+    </div>
+
+    <div class="field-group">
+      <p class="field-label">Full legal name</p>
+      <div class="field-box focus"><input value="Kwabena Mensah" /></div>
+    </div>
+
+    <div class="field-group">
+      <p class="field-label">Date of birth</p>
+      <div class="field-box"><input placeholder="DD / MM / YYYY" value="14 / 03 / 1996" /></div>
+    </div>
+
+    <div class="field-group">
+      <p class="field-label">ID document type</p>
+      <div class="doc-select">
+        <div class="doc-opt active">🪪<span>Ghana Card</span></div>
+        <div class="doc-opt">📔<span>Passport</span></div>
+        <div class="doc-opt">🚗<span>License</span></div>
+      </div>
+    </div>
+
+    <div class="verified-doc">
+      <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      <div><b>ghana_card_front.jpg</b><span>Uploaded · 2.1 MB</span></div>
+    </div>
+
+    <div class="upload-slot">
+      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      <b>Upload back of ID</b>
+      <span>JPG or PNG, under 10 MB</span>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <button class="btn-primary">Continue to Bank Details</button>
+  </div>
+</div>
+
+</body>
+</html>

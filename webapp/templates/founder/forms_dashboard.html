@@ -1,0 +1,102 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Application Forms — WiamApp{% endblock %}
+{% block sidebar_title %}Control Panel{% endblock %}
+
+{% block sidebar_nav %}
+<a class="nav-link" href="{{ url_for('founder_dash.overview') }}"><i class="bi bi-speedometer2"></i> Overview</a>
+<a class="nav-link" href="{{ url_for('founder_dash.users') }}"><i class="bi bi-people"></i> Users</a>
+<a class="nav-link" href="{{ url_for('founder_dash.content') }}"><i class="bi bi-book"></i> Content</a>
+
+<a class="nav-link" href="{{ url_for('founder_dash.revenue') }}"><i class="bi bi-cash-stack"></i> Revenue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.financial_dashboard') }}"><i class="bi bi-bank" style="color:var(--gold);"></i> Financial v5</a>
+<a class="nav-link" href="{{ url_for('founder_dash.premium_analytics') }}"><i class="bi bi-gem" style="color:#c084fc;"></i> Premium Analytics</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payouts') }}"><i class="bi bi-send-check"></i> Payouts</a>
+<a class="nav-link" href="{{ url_for('founder_dash.withdrawals') }}"><i class="bi bi-arrow-up-right-circle" style="color:var(--gold);"></i> Withdrawals</a>
+<a class="nav-link" href="{{ url_for('founder_dash.subscribers') }}"><i class="bi bi-gem" style="color:#9b59b6;"></i> Subscribers</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payroll') }}"><i class="bi bi-wallet2" style="color:#2ecc71;"></i> Team Payroll</a>
+<a class="nav-link" href="{{ url_for('founder_dash.creators') }}"><i class="bi bi-person-badge"></i> Creators</a>
+<a class="nav-link" href="{{ url_for('founder_dash.genres') }}"><i class="bi bi-tags"></i> Genres</a>
+<a class="nav-link" href="{{ url_for('founder_dash.announcements') }}"><i class="bi bi-megaphone"></i> Announcements</a>
+<a class="nav-link" href="{{ url_for('founder_dash.collections') }}"><i class="bi bi-grid"></i> Collections</a>
+<a class="nav-link" href="{{ url_for('founder_dash.moderation') }}"><i class="bi bi-shield-exclamation"></i> Moderation</a>
+<a class="nav-link" href="{{ url_for('founder_dash.warnings_list') }}"><i class="bi bi-exclamation-triangle" style="color:#f59e0b;"></i> Warnings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.elite_manage') }}"><span style="color:var(--gold);">&#10022;</span> WiamElite</a>
+<a class="nav-link" href="{{ url_for('wiambot.apex_review') }}"><i class="bi bi-trophy-fill" style="color:var(--gold);"></i> Apex Review</a>
+<a class="nav-link" href="{{ url_for('founder_dash.review_queue') }}"><i class="bi bi-robot"></i> Bot Review Queue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.analytics_content') }}"><i class="bi bi-graph-up"></i> Content Analytics</a>
+<a class="nav-link" href="{{ url_for('founder_dash.analytics_users') }}"><i class="bi bi-people"></i> User Analytics</a>
+<a class="nav-link" href="{{ url_for('founder_dash.analytics_platform') }}"><i class="bi bi-heart-pulse"></i> Platform Health</a>
+<a class="nav-link" href="{{ url_for('founder_dash.ai_content_review') }}"><i class="bi bi-robot"></i> AI Content Review</a>
+<a class="nav-link" href="{{ url_for('founder_dash.platform_settings') }}"><i class="bi bi-sliders"></i> Platform Settings</a>
+<a class="nav-link active" href="{{ url_for('founder_dash.forms_dashboard') }}"><i class="bi bi-file-earmark-text"></i> Application Forms</a>
+<a class="nav-link" href="{{ url_for('founder_dash.email_studio') }}"><i class="bi bi-envelope-paper" style="color:var(--gold);"></i> Email Studio</a>
+<a class="nav-link" href="{{ url_for('founder_dash.team_management') }}"><i class="bi bi-people-fill"></i> Team</a>
+<a class="nav-link" href="{{ url_for('founder_dash.account_management') }}"><i class="bi bi-person-x"></i> Account Management</a>
+<a class="nav-link" href="{{ url_for('founder_dash.notification_testing') }}"><i class="bi bi-bell" style="color:#fbbf24;"></i> Notifications</a>
+<a class="nav-link" href="{{ url_for('classics.dashboard') }}"><i class="bi bi-journal-bookmark" style="color:#a78bfa;"></i> Content Seeder</a>
+<a class="nav-link" href="{{ url_for('founder_dash.settings') }}"><i class="bi bi-gear"></i> Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.admins') }}"><i class="bi bi-shield-check"></i> Admins</a>
+{% endblock %}
+
+{% block dash_content %}
+<div class="dash-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+    <div>
+        <h1><i class="bi bi-file-earmark-text" style="color:var(--gold);"></i> Application Forms</h1>
+        <p style="color:var(--text-muted);">Send application forms to candidates via email and review their responses</p>
+    </div>
+    {% if not forms %}
+    <form method="POST" action="{{ url_for('founder_dash.seed_forms') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-primary" style="background:linear-gradient(135deg,#d4a843,#b8860b);border:none;padding:10px 24px;border-radius:10px;font-weight:600;color:#000;">
+            <i class="bi bi-magic"></i> Create Default Forms
+        </button>
+    </form>
+    {% endif %}
+</div>
+
+{% if not forms %}
+<div style="text-align:center;padding:60px 20px;">
+    <i class="bi bi-file-earmark-plus" style="font-size:3rem;color:var(--text-muted);opacity:0.4;"></i>
+    <p style="color:var(--text-muted);margin-top:12px;">No application forms yet. Click <strong>"Create Default Forms"</strong> to get started.</p>
+    <p style="color:var(--text-muted);font-size:0.85rem;">This will create forms for: Creator, Engineer, Admin, Editor, Moderator, Marketing, and Translator roles.</p>
+</div>
+{% else %}
+
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px;margin-top:24px;">
+{% for form in forms %}
+{% set stats = form_stats.get(form.id, {'total':0,'pending':0,'sent':0}) %}
+<div style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:14px;padding:24px;position:relative;overflow:hidden;">
+    <div style="position:absolute;top:0;right:0;padding:6px 14px;background:linear-gradient(135deg,#d4a843,#b8860b);border-radius:0 14px 0 14px;font-size:0.72rem;font-weight:700;color:#000;text-transform:uppercase;letter-spacing:0.5px;">
+        {{ form.form_type }}
+    </div>
+
+    <h3 style="font-size:1.05rem;margin:0 0 8px;padding-right:80px;color:var(--text-primary);">{{ form.title }}</h3>
+    <p style="font-size:0.82rem;color:var(--text-muted);line-height:1.5;margin:0 0 18px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
+        {{ form.description }}
+    </p>
+
+    <div style="display:flex;gap:16px;margin-bottom:18px;">
+        <div style="text-align:center;">
+            <div style="font-size:1.3rem;font-weight:700;color:var(--gold);">{{ stats.total }}</div>
+            <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;">Total</div>
+        </div>
+        <div style="text-align:center;">
+            <div style="font-size:1.3rem;font-weight:700;color:#facc15;">{{ stats.pending }}</div>
+            <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;">Pending</div>
+        </div>
+        <div style="text-align:center;">
+            <div style="font-size:1.3rem;font-weight:700;color:#60a5fa;">{{ stats.sent }}</div>
+            <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;">Awaiting</div>
+        </div>
+    </div>
+
+    <a href="{{ url_for('founder_dash.form_responses', form_id=form.id) }}"
+       style="display:block;text-align:center;padding:10px;background:rgba(212,168,67,0.1);border:1px solid rgba(212,168,67,0.2);border-radius:10px;color:#d4a843;font-weight:600;font-size:0.88rem;text-decoration:none;transition:background 0.2s;">
+        <i class="bi bi-arrow-right-circle"></i> Manage & Send
+    </a>
+</div>
+{% endfor %}
+</div>
+
+{% endif %}
+{% endblock %}

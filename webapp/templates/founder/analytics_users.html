@@ -1,0 +1,100 @@
+{% extends "founder/dashboard.html" %}
+
+{% block title %}User Analytics — Founder Dashboard{% endblock %}
+{% block content %}
+<div class="dashboard-container">
+    {% include 'founder/_dashboard_switcher.html' %}
+    
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-people"></i> User Behavior Analysis</h5>
+                    <div class="text-muted">AI-powered insights for {{ users.items|length }} users</div>
+                </div>
+                <div class="card-body">
+                    {% if search %}
+                        <div class="alert alert-info">
+                            Showing results for "{{ search }}"
+                        </div>
+                    {% endif %}
+                    
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Behavior Score</th>
+                                    <th>Trust Score</th>
+                                    <th>Recent Activity</th>
+                                    <th>Insights</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in user_insights %}
+                                    <tr>
+                                        <td>
+                                            <a href="{{ url_for('founder.users', user_id=item.user.id) }}">
+                                                {{ item.user.username }}
+                                                {% if item.user.is_founder %}
+                                                    <span class="badge bg-warning">Founder</span>
+                                                {% endif %}
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <span class="badge {{ 'bg-success' if item.behavior_score > 0 else 'bg-warning' if item.behavior_score < 0 else 'bg-secondary' }}">
+                                                {{ item.behavior_score }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge {{ 'bg-success' if item.trust_score > 50 else 'bg-warning' if item.trust_score < 30 else 'bg-secondary' }}">
+                                                {{ item.trust_score }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info">{{ item.recent_ratings }} ratings</span><br>
+                                            <span class="badge bg-info">{{ item.recent_comments }} comments</span>
+                                        </td>
+                                        <td>
+                                            {% for insight in item.analysis.insights %}
+                                                <div class="small">{{ insight }}</div>
+                                            {% endfor %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        
+                        {% if users.has_prev or users.has_next %}
+                            <div class="pagination-controls mt-3">
+                                {% if users.has_prev %}
+                                    <a href="{{ url_for(request.endpoint, page=users.prev_num) }}" class="btn btn-outline-secondary">← Previous</a>
+                                {% endif %}
+                                {% if users.has_next %}
+                                    <a href="{{ url_for(request.endpoint, page=users.next_num) }}" class="btn btn-outline-secondary">Next →</a>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-graph-down"></i> Behavior Patterns</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <strong>Behavior Score Guide:</strong><br>
+                        <span class="badge bg-success">Positive (1+)</span> = Highly engaged, constructive<br>
+                        <span class="badge bg-warning">Neutral (0)</span> = Average activity<br>
+                        <span class="badge bg-danger">Negative (-1)</span> = Problematic behavior
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

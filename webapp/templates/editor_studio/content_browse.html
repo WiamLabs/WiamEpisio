@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+{% block title %}Content Browser — Editor Studio{% endblock %}
+
+{% block extra_head %}
+<style>
+.es-cb-header { padding:1.5rem 2rem 1rem; max-width:1200px; margin:0 auto; }
+.es-cb-header h1 { font-size:1.5rem; font-weight:800; color:var(--text); margin:0 0 4px; }
+.es-cb-header p { font-size:0.85rem; color:var(--text-muted); margin:0; }
+.es-cb-nav { display:flex; gap:12px; margin-top:12px; flex-wrap:wrap; }
+.es-cb-nav a {
+    font-size:0.82rem; color:var(--text-muted); text-decoration:none; padding:6px 14px;
+    border-radius:8px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06);
+    transition:all 0.12s;
+}
+.es-cb-nav a:hover { color:var(--gold); border-color:rgba(212,168,67,0.2); }
+.es-cb-nav a.active { color:var(--gold); background:rgba(212,168,67,0.1); border-color:rgba(212,168,67,0.3); }
+
+.es-cb-filters {
+    display:flex; gap:10px; padding:0 2rem 1rem; max-width:1200px; margin:0 auto; flex-wrap:wrap; align-items:center;
+}
+.es-cb-filter-input {
+    padding:8px 14px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1);
+    border-radius:8px; color:var(--text); font-size:0.84rem; font-family:inherit;
+}
+.es-cb-filter-input:focus { border-color:rgba(212,168,67,0.4); outline:none; }
+.es-cb-filter-btn {
+    padding:8px 18px; background:var(--gold,#d4a843); color:#000; border:none; border-radius:8px;
+    font-weight:700; font-size:0.84rem; cursor:pointer;
+}
+.es-cb-count { font-size:0.82rem; color:var(--text-muted); margin-left:auto; }
+
+.es-cb-grid { max-width:1200px; margin:0 auto; padding:0 2rem 2rem; }
+.es-cb-table { width:100%; border-collapse:collapse; }
+.es-cb-table th {
+    text-align:left; font-size:0.75rem; font-weight:700; color:var(--text-muted);
+    text-transform:uppercase; letter-spacing:0.5px; padding:10px 12px;
+    border-bottom:1px solid rgba(255,255,255,0.08);
+}
+.es-cb-table td {
+    padding:12px; border-bottom:1px solid rgba(255,255,255,0.04);
+    font-size:0.88rem; color:var(--text); vertical-align:middle;
+}
+.es-cb-table tr:hover td { background:rgba(255,255,255,0.02); }
+.es-cb-cover { width:40px; height:56px; border-radius:6px; overflow:hidden; background:rgba(212,168,67,0.08); flex-shrink:0; }
+.es-cb-cover img { width:100%; height:100%; object-fit:cover; }
+.es-cb-cover-ph { width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:var(--text-muted); font-size:1rem; }
+.es-cb-title-cell { display:flex; align-items:center; gap:10px; }
+.es-cb-title { font-weight:700; color:var(--text); }
+.es-cb-author { font-size:0.78rem; color:var(--text-muted); }
+.es-cb-badge {
+    display:inline-block; padding:3px 8px; border-radius:6px; font-size:0.68rem;
+    font-weight:700; text-transform:uppercase; letter-spacing:0.3px;
+}
+.es-cb-badge-ongoing { background:rgba(59,130,246,0.15); color:#60a5fa; }
+.es-cb-badge-complete { background:rgba(34,197,94,0.15); color:#4ade80; }
+.es-cb-badge-published { background:rgba(34,197,94,0.15); color:#4ade80; }
+.es-cb-badge-draft { background:rgba(156,163,175,0.15); color:#9ca3af; }
+.es-cb-badge-hidden { background:rgba(251,191,36,0.15); color:#fbbf24; }
+.es-cb-badge-flagged { background:rgba(239,68,68,0.15); color:#f87171; }
+.es-cb-badge-rejected { background:rgba(239,68,68,0.15); color:#f87171; }
+.es-cb-edit-btn {
+    padding:6px 14px; background:rgba(212,168,67,0.12); color:var(--gold); border:1px solid rgba(212,168,67,0.2);
+    border-radius:8px; font-size:0.78rem; font-weight:700; text-decoration:none; transition:all 0.12s;
+    white-space:nowrap;
+}
+.es-cb-edit-btn:hover { background:rgba(212,168,67,0.2); color:var(--gold); }
+.es-cb-meta { font-size:0.78rem; color:var(--text-muted); }
+.es-cb-pagination { display:flex; justify-content:center; gap:6px; padding:1rem 0; }
+.es-cb-pagination a, .es-cb-pagination span {
+    padding:6px 12px; border-radius:6px; font-size:0.82rem; text-decoration:none;
+    border:1px solid rgba(255,255,255,0.08);
+}
+.es-cb-pagination a { color:var(--text-muted); }
+.es-cb-pagination a:hover { color:var(--gold); border-color:rgba(212,168,67,0.2); }
+.es-cb-pagination span.current { background:var(--gold); color:#000; font-weight:700; border-color:var(--gold); }
+@media(max-width:768px) {
+    .es-cb-header, .es-cb-filters, .es-cb-grid { padding-left:1rem; padding-right:1rem; }
+    .es-cb-table th:nth-child(4), .es-cb-table td:nth-child(4),
+    .es-cb-table th:nth-child(5), .es-cb-table td:nth-child(5) { display:none; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="es-cb-header">
+    <h1><i class="bi bi-pencil-square" style="color:var(--gold);margin-right:6px;"></i> Content Browser</h1>
+    <p>Browse, search, and edit any book on the platform</p>
+    <div class="es-cb-nav">
+        <a href="{{ url_for('editor_studio.dashboard') }}">Review Queue</a>
+        <a href="{{ url_for('editor_studio.content_browse') }}" class="active">All Content</a>
+        <a href="{{ url_for('editor_studio.my_reviews') }}">My Reviews</a>
+    </div>
+</div>
+
+<form class="es-cb-filters" method="GET" action="{{ url_for('editor_studio.content_browse') }}">
+    <input type="text" name="q" class="es-cb-filter-input" placeholder="Search by title or author..." value="{{ search_q }}" style="min-width:200px;">
+    <select name="status" class="es-cb-filter-input">
+        <option value="">All Statuses</option>
+        {% for st in ['draft','ongoing','complete','published','hidden','flagged','rejected'] %}
+        <option value="{{ st }}" {{ 'selected' if status_filter == st }}>{{ st|title }}</option>
+        {% endfor %}
+    </select>
+    <select name="genre" class="es-cb-filter-input">
+        <option value="">All Genres</option>
+        {% for g in genres %}
+        <option value="{{ g.name }}" {{ 'selected' if genre_filter == g.name }}>{{ g.name }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit" class="es-cb-filter-btn"><i class="bi bi-search me-1"></i> Search</button>
+    <span class="es-cb-count">{{ total }} book{{ 's' if total != 1 }}</span>
+</form>
+
+<div class="es-cb-grid">
+    {% if items %}
+    <table class="es-cb-table">
+        <thead>
+            <tr>
+                <th>Book</th>
+                <th>Status</th>
+                <th>Genre</th>
+                <th>Chapters</th>
+                <th>Words</th>
+                <th>Creator</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            {% set b = item.book %}
+            <tr>
+                <td>
+                    <div class="es-cb-title-cell">
+                        <div class="es-cb-cover">
+                            {% if b.cover_file_id %}
+                            <img src="{{ b.cover_url }}" alt="{{ b.title }}">
+                            {% else %}
+                            <div class="es-cb-cover-ph"><i class="bi bi-book"></i></div>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <div class="es-cb-title">{{ b.title or 'Untitled' }}</div>
+                            <div class="es-cb-author">{{ b.author or '—' }}</div>
+                        </div>
+                    </div>
+                </td>
+                <td><span class="es-cb-badge es-cb-badge-{{ b.status }}">{{ b.status }}</span></td>
+                <td class="es-cb-meta">{{ b.genre or '—' }}</td>
+                <td class="es-cb-meta">{{ item.ch_count }}</td>
+                <td class="es-cb-meta">{{ '{:,}'.format(item.total_words) }}</td>
+                <td class="es-cb-meta">{{ item.creator.display_name if item.creator else '—' }}</td>
+                <td><a href="{{ url_for('editor_studio.review', book_id=b.id) }}" class="es-cb-edit-btn"><i class="bi bi-pencil me-1"></i>Edit</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if total_pages > 1 %}
+    <div class="es-cb-pagination">
+        {% if page > 1 %}
+        <a href="?page={{ page-1 }}&q={{ search_q }}&status={{ status_filter }}&genre={{ genre_filter }}">&laquo; Prev</a>
+        {% endif %}
+        {% for p in range(1, total_pages+1) %}
+            {% if p == page %}
+            <span class="current">{{ p }}</span>
+            {% elif p <= 3 or p >= total_pages-1 or (p >= page-1 and p <= page+1) %}
+            <a href="?page={{ p }}&q={{ search_q }}&status={{ status_filter }}&genre={{ genre_filter }}">{{ p }}</a>
+            {% elif p == 4 or p == total_pages-2 %}
+            <span style="color:var(--text-muted);">...</span>
+            {% endif %}
+        {% endfor %}
+        {% if page < total_pages %}
+        <a href="?page={{ page+1 }}&q={{ search_q }}&status={{ status_filter }}&genre={{ genre_filter }}">Next &raquo;</a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div style="text-align:center;padding:60px 20px;color:var(--text-muted);">
+        <i class="bi bi-inbox" style="font-size:2.5rem;opacity:0.2;display:block;margin-bottom:12px;"></i>
+        <p style="font-size:0.95rem;">No books found matching your search.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

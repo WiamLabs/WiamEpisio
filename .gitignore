@@ -1,0 +1,56 @@
+# Environment secrets
+.env
+WiamApp.env
+*.env.local
+
+# Expo
+.expo/
+WiamAppMobile/.expo/
+
+# Build artifacts
+dist/
+web-build/
+node_modules/
+WiamAppMobile/node_modules/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+*.egg
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Sensitive files
+Email.txt
+
+# Play Console service account JSON (used by `eas submit` and CI to upload AABs).
+# Never commit — anyone with this file can publish releases on your behalf.
+WiamAppMobile/play-service-account.json
+play-service-account.json
+
+# Frontend (unused Next.js project — removed)
+frontend/
+
+# Fly.io (deprecated — migrated to Render)
+fly.toml
+Fly.io.txt
+
+# Plan/notes files (old ones we don't need in git)
+WiamLight_Plan.txt
+WiamVault_Final_Master_Plan.txt
+WiamVault_Full_Features.txt
+
+# Google Cloud service account keys (contain private keys — never commit)
+wiamapp-487109-*.json

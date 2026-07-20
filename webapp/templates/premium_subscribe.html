@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+{% block title %}WiamPremium — Unlock Everything{% endblock %}
+{% block meta_description %}Subscribe to WiamPremium for ad-free reading, monthly chapter credits, premium badge, and unlimited access to all content on WiamApp.{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:var(--space-xl);padding-bottom:var(--space-2xl);max-width:720px;margin:0 auto;">
+
+    <!-- Back link -->
+    <a href="{{ url_for('home.home') }}" style="display:inline-flex;align-items:center;gap:4px;font-size:0.85rem;color:var(--gold);text-decoration:none;margin-bottom:var(--space-xl);">
+        <i class="bi bi-arrow-left"></i> Back to Home
+    </a>
+
+    <!-- Hero -->
+    <div style="text-align:center;margin-bottom:var(--space-2xl);">
+        <div style="display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#9b59b6,#8e44ad);color:#fff;font-size:0.7rem;font-weight:700;padding:5px 16px;border-radius:20px;text-transform:uppercase;letter-spacing:2px;margin-bottom:var(--space-md);">
+            <i class="bi bi-gem"></i> WiamPremium
+        </div>
+        <h1 style="font-size:1.8rem;font-family:var(--font-display);color:var(--text);margin:0 0 var(--space-sm);">
+            The Ultimate Reading Experience
+        </h1>
+        <p style="font-size:0.95rem;color:var(--text-secondary);margin:0;max-width:500px;display:inline-block;line-height:1.6;">
+            Unlock every premium chapter, read ad-free, earn monthly credits, and get the exclusive Premium badge.
+        </p>
+    </div>
+
+    {% if is_subscribed and current_sub %}
+    <!-- ═══ ACTIVE SUBSCRIPTION ═══ -->
+    <div style="padding:var(--space-xl);background:linear-gradient(135deg,rgba(155,89,182,0.12),rgba(142,68,173,0.08));border:2px solid rgba(155,89,182,0.3);border-radius:var(--radius-lg);text-align:center;margin-bottom:var(--space-xl);">
+        <div style="font-size:2rem;margin-bottom:var(--space-sm);"><i class="bi bi-gem"></i></div>
+        {% if current_sub.status == 'cancelled' %}
+        <h2 style="font-size:1.2rem;color:#9b59b6;margin:0 0 var(--space-sm);">Subscription Cancelled</h2>
+        <p style="font-size:0.85rem;color:var(--text-secondary);margin:0 0 var(--space-md);">
+            You still have access until {{ current_sub.expires_at.strftime('%b %d, %Y') if current_sub.expires_at else 'your period ends' }}.
+        </p>
+        {% else %}
+        <h2 style="font-size:1.2rem;color:#9b59b6;margin:0 0 var(--space-sm);">You're Premium!</h2>
+        <p style="font-size:0.85rem;color:var(--text-secondary);margin:0 0 var(--space-md);">
+            You have full access to all premium features.
+        </p>
+        {% endif %}
+
+        <div style="display:flex;justify-content:center;gap:var(--space-xl);margin-bottom:var(--space-lg);flex-wrap:wrap;">
+            <div>
+                <div style="font-size:0.7rem;color:var(--text-muted);">Plan</div>
+                <div style="font-size:0.9rem;font-weight:600;color:var(--text);text-transform:capitalize;">{{ current_sub.plan }}</div>
+            </div>
+            <div>
+                <div style="font-size:0.7rem;color:var(--text-muted);">Started</div>
+                <div style="font-size:0.9rem;font-weight:600;color:var(--text);">{{ current_sub.started_at.strftime('%b %d, %Y') if current_sub.started_at else '—' }}</div>
+            </div>
+            <div>
+                <div style="font-size:0.7rem;color:var(--text-muted);">{{ 'Access Until' if current_sub.status == 'cancelled' else 'Renews' }}</div>
+                <div style="font-size:0.9rem;font-weight:600;color:var(--text);">{{ current_sub.expires_at.strftime('%b %d, %Y') if current_sub.expires_at else '—' }}</div>
+            </div>
+        </div>
+
+        <div style="display:flex;gap:var(--space-md);justify-content:center;flex-wrap:wrap;">
+            <a href="{{ url_for('premium.manage') }}" style="display:inline-flex;align-items:center;gap:6px;padding:10px 24px;background:linear-gradient(135deg,#9b59b6,#8e44ad);color:#fff;border-radius:var(--radius-md);font-weight:700;font-size:0.85rem;text-decoration:none;">
+                <i class="bi bi-gear"></i> Manage Subscription
+            </a>
+            {% if current_sub.status == 'active' %}
+            <form method="POST" action="{{ url_for('premium.cancel') }}" onsubmit="return confirm('Are you sure? You will keep access until your current period ends.');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" style="display:inline-flex;align-items:center;gap:6px;padding:10px 18px;background:transparent;border:1px solid var(--border-subtle);border-radius:var(--radius-md);font-size:0.8rem;color:var(--text-muted);cursor:pointer;">
+                    Cancel Subscription
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    {% else %}
+    <!-- ═══ FREE VS PREMIUM COMPARISON ═══ -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-md);margin-bottom:var(--space-2xl);">
+        <!-- Free Card -->
+        <div style="padding:var(--space-lg);background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);text-align:center;">
+            <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:var(--space-sm);">Free Reader</div>
+            <div style="margin-bottom:var(--space-md);">
+                <span style="font-size:2rem;font-weight:800;color:var(--text);">GH₵0</span>
+                <span style="font-size:0.8rem;color:var(--text-muted);">/forever</span>
+            </div>
+            <div style="text-align:left;font-size:0.8rem;color:var(--text-secondary);line-height:2;">
+                <div><i class="bi bi-check" style="color:var(--text-muted);"></i> Read free chapters</div>
+                <div><i class="bi bi-check" style="color:var(--text-muted);"></i> Browse all stories</div>
+                <div><i class="bi bi-check" style="color:var(--text-muted);"></i> Follow creators</div>
+                <div style="color:var(--text-muted);"><i class="bi bi-x" style="color:#e74c3c;"></i> Ads between chapters</div>
+                <div style="color:var(--text-muted);"><i class="bi bi-x" style="color:#e74c3c;"></i> No monthly credits</div>
+                <div style="color:var(--text-muted);"><i class="bi bi-x" style="color:#e74c3c;"></i> No premium badge</div>
+                <div style="color:var(--text-muted);"><i class="bi bi-x" style="color:#e74c3c;"></i> No premium chapters</div>
+            </div>
+        </div>
+
+        <!-- Premium Card -->
+        <div style="padding:var(--space-lg);background:linear-gradient(135deg,rgba(155,89,182,0.08),rgba(142,68,173,0.05));border:2px solid rgba(155,89,182,0.4);border-radius:var(--radius-lg);text-align:center;position:relative;">
+            <div style="position:absolute;top:-10px;right:16px;background:linear-gradient(135deg,#9b59b6,#8e44ad);color:#fff;font-size:0.6rem;font-weight:700;padding:3px 10px;border-radius:10px;text-transform:uppercase;letter-spacing:1px;">Best Value</div>
+            <div style="font-size:0.7rem;color:#9b59b6;text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:var(--space-sm);">WiamPremium</div>
+            <div style="margin-bottom:var(--space-md);">
+                <span style="font-size:2rem;font-weight:800;color:#9b59b6;">GH₵{{ '%.0f'|format(price_ghs) }}</span>
+                <span style="font-size:0.8rem;color:var(--text-muted);">/month</span>
+            </div>
+            <div style="text-align:left;font-size:0.8rem;color:var(--text);line-height:2;">
+                <div><i class="bi bi-check-circle-fill" style="color:#9b59b6;"></i> Everything in Free</div>
+                <div><i class="bi bi-check-circle-fill" style="color:#9b59b6;"></i> <b>Ad-free</b> reading</div>
+                <div><i class="bi bi-check-circle-fill" style="color:#9b59b6;"></i> <b>{{ credits_per_month }} monthly credits</b></div>
+                <div><i class="bi bi-check-circle-fill" style="color:#9b59b6;"></i> <b>Premium badge</b></div>
+                <div><i class="bi bi-check-circle-fill" style="color:#9b59b6;"></i> Premium chapters access</div>
+                <div><i class="bi bi-check-circle-fill" style="color:#9b59b6;"></i> Apex stories access</div>
+                <div><i class="bi bi-check-circle-fill" style="color:#9b59b6;"></i> Support creators more</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ SUBSCRIBE BUTTON ═══ -->
+    <div style="text-align:center;margin-bottom:var(--space-2xl);">
+        {% if current_user.is_authenticated %}
+        <form method="POST" action="{{ url_for('premium.activate') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" style="padding:16px 48px;background:linear-gradient(135deg,#9b59b6,#8e44ad);color:#fff;border:none;border-radius:var(--radius-md);font-weight:700;font-size:1.1rem;cursor:pointer;letter-spacing:0.5px;box-shadow:0 4px 20px rgba(155,89,182,0.3);transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                <i class="bi bi-gem"></i> Subscribe — GH₵{{ '%.0f'|format(price_ghs) }}/mo
+            </button>
+        </form>
+        {% else %}
+        <a href="{{ url_for('auth.login') }}?next={{ url_for('premium.premium_page') }}" style="display:inline-block;padding:16px 48px;background:linear-gradient(135deg,#9b59b6,#8e44ad);color:#fff;border-radius:var(--radius-md);font-weight:700;font-size:1.1rem;text-decoration:none;box-shadow:0 4px 20px rgba(155,89,182,0.3);">
+            <i class="bi bi-gem"></i> Login to Subscribe
+        </a>
+        {% endif %}
+        <p style="font-size:0.7rem;color:var(--text-muted);margin-top:var(--space-sm);">
+            Secure payment via Paystack (Mobile Money + Card). Cancel anytime.
+        </p>
+    </div>
+    {% endif %}
+
+    <!-- ═══ BENEFITS DETAIL ═══ -->
+    <div style="margin-bottom:var(--space-2xl);">
+        <h2 style="font-size:1.2rem;font-family:var(--font-display);text-align:center;margin-bottom:var(--space-xl);color:var(--text);">What You Get</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-md);">
+            <div style="padding:var(--space-lg);background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);text-align:center;">
+                <div style="font-size:1.5rem;margin-bottom:var(--space-xs);"><i class="bi bi-ban" style="color:#e74c3c;"></i></div>
+                <div style="font-size:0.85rem;font-weight:600;color:var(--text);margin-bottom:4px;">Ad-Free Reading</div>
+                <div style="font-size:0.75rem;color:var(--text-secondary);line-height:1.5;">No interruptions. Pure immersive story experience.</div>
+            </div>
+            <div style="padding:var(--space-lg);background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);text-align:center;">
+                <div style="font-size:1.5rem;margin-bottom:var(--space-xs);"><i class="bi bi-unlock" style="color:#2ecc71;"></i></div>
+                <div style="font-size:0.85rem;font-weight:600;color:var(--text);margin-bottom:4px;">{{ credits_per_month }} Monthly Credits</div>
+                <div style="font-size:0.75rem;color:var(--text-secondary);line-height:1.5;">Unlock premium chapters every month without spending coins.</div>
+            </div>
+            <div style="padding:var(--space-lg);background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);text-align:center;">
+                <div style="font-size:1.5rem;margin-bottom:var(--space-xs);"><i class="bi bi-gem" style="color:#9b59b6;"></i></div>
+                <div style="font-size:0.85rem;font-weight:600;color:var(--text);margin-bottom:4px;">Premium Badge</div>
+                <div style="font-size:0.75rem;color:var(--text-secondary);line-height:1.5;">Show off your support with an exclusive badge on your profile.</div>
+            </div>
+            <div style="padding:var(--space-lg);background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);text-align:center;">
+                <div style="font-size:1.5rem;margin-bottom:var(--space-xs);"><i class="bi bi-heart" style="color:#e74c3c;"></i></div>
+                <div style="font-size:0.85rem;font-weight:600;color:var(--text);margin-bottom:4px;">Support Creators</div>
+                <div style="font-size:0.75rem;color:var(--text-secondary);line-height:1.5;">Your subscription directly funds the creators you love.</div>
+            </div>
+            <div style="padding:var(--space-lg);background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);text-align:center;">
+                <div style="font-size:1.5rem;margin-bottom:var(--space-xs);">✦</div>
+                <div style="font-size:0.85rem;font-weight:600;color:var(--text);margin-bottom:4px;">Elite Access</div>
+                <div style="font-size:0.75rem;color:var(--text-secondary);line-height:1.5;">Read all WiamElite Hall of Fame stories when paywall is active.</div>
+            </div>
+            <div style="padding:var(--space-lg);background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);text-align:center;">
+                <div style="font-size:1.5rem;margin-bottom:var(--space-xs);"><i class="bi bi-trophy" style="color:var(--gold);"></i></div>
+                <div style="font-size:0.85rem;font-weight:600;color:var(--text);margin-bottom:4px;">Apex Stories</div>
+                <div style="font-size:0.75rem;color:var(--text-secondary);line-height:1.5;">Access WiamApex contracted stories — the absolute best content.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ FAQ ═══ -->
+    <div>
+        <h3 style="font-size:1rem;font-family:var(--font-display);margin-bottom:var(--space-md);text-align:center;">Frequently Asked Questions</h3>
+        <div style="background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);overflow:hidden;">
+            <div style="padding:var(--space-md);border-bottom:1px solid var(--border-subtle);">
+                <div style="font-size:0.85rem;font-weight:600;color:var(--text);margin-bottom:4px;">What is WiamPremium?</div>
+                <div style="font-size:0.8rem;color:var(--text-secondary);line-height:1.5;">WiamPremium is the ultimate subscription for serious readers. Ad-free reading, monthly chapter credits, premium badge, and access to all premium, Elite, and Apex content.</div>
+            </div>
+            <div style="padding:var(--space-md);border-bottom:1px solid var(--border-subtle);">
+                <div style="font-size:0.85rem;font-weight:600;color:var(--text);margin-bottom:4px;">Can I still read stories for free?</div>
+                <div style="font-size:0.8rem;color:var(--text-secondary);line-height:1.5;">Absolutely! All regular stories remain free. The first 10 chapters of any story are always free. Premium adds extra perks on top.</div>
+            </div>
+            <div style="padding:var(--space-md);border-bottom:1px solid var(--border-subtle);">
+                <div style="font-size:0.85rem;font-weight:600;color:var(--text);margin-bottom:4px;">What are monthly credits?</div>
+                <div style="font-size:0.8rem;color:var(--text-secondary);line-height:1.5;">Each month you get {{ credits_per_month }} credits to unlock premium-locked chapters without spending coins. Credits reset each billing cycle.</div>
+            </div>
+            <div style="padding:var(--space-md);border-bottom:1px solid var(--border-subtle);">
+                <div style="font-size:0.85rem;font-weight:600;color:var(--text);margin-bottom:4px;">How do I pay?</div>
+                <div style="font-size:0.8rem;color:var(--text-secondary);line-height:1.5;">We use Paystack (backed by Stripe). Pay with MTN Mobile Money, Vodafone Cash, AirtelTigo Money, or any Visa/Mastercard.</div>
+            </div>
+            <div style="padding:var(--space-md);">
+                <div style="font-size:0.85rem;font-weight:600;color:var(--text);margin-bottom:4px;">What happens when I cancel?</div>
+                <div style="font-size:0.8rem;color:var(--text-secondary);line-height:1.5;">You keep full access until the end of your current billing period. After that, you return to Free status. Re-subscribe anytime.</div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

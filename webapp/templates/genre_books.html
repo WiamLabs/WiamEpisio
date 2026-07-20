@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}{{ genre_name }} Stories — Read Free on WiamApp{% endblock %}
+{% block meta_description %}Read the best {{ genre_name }} stories on WiamApp. Discover talented creators, explore captivating plots, and dive into {{ genre_name }} novels — all completely free.{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: var(--space-xl); padding-bottom: var(--space-xl);">
+    <div style="margin-bottom: var(--space-lg); display: flex; align-items: center; gap: var(--space-md);">
+        <a href="{{ url_for('browse.browse_home') }}" class="btn-ghost"><i class="bi bi-arrow-left"></i></a>
+        <div>
+            <h1 class="greeting" style="margin-bottom: 0;">{{ genre_name }}</h1>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div style="display: flex; gap: var(--space-sm); flex-wrap: wrap; margin-bottom: var(--space-xl); align-items: center;">
+        <a href="?sort=newest" class="genre-chip {{ 'active' if sort == 'newest' else '' }}">Newest</a>
+        <a href="?sort=popular" class="genre-chip {{ 'active' if sort == 'popular' else '' }}">Popular</a>
+    </div>
+
+    {% if books.items %}
+    <div class="row g-3">
+        {% for book in books.items %}
+        <div class="col-6 col-md-4 col-lg-3">
+            <a href="{{ url_for('book.detail', book_id=book.id) }}" class="book-card d-block" style="text-decoration: none;">
+                {% if book.cover_file_id %}
+                <img src="{{ book.cover_url }}" class="card-cover" alt="{{ book.title }}" loading="lazy">
+                {% else %}
+                <div class="cover-placeholder"><i class="bi bi-book"></i></div>
+                {% endif %}
+                <div class="card-body">
+                    <div class="card-title">{{ book.title }}</div>
+                    <div class="card-author">{{ book.author or 'Unknown' }}</div>
+                    <div class="card-stats"><span>👁 {{ book.views or 0 }}</span><span>❤️ {{ book.favorite_count }}</span><span>⭐ {{ book.rating_count }}</span></div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if books.pages > 1 %}
+    <div class="d-flex justify-content-center gap-2" style="margin-top: var(--space-xl);">
+        {% if books.has_prev %}
+        <a href="?page={{ books.prev_num }}" class="btn btn-ghost">&larr; Previous</a>
+        {% endif %}
+        <span style="color: var(--text-muted); font-size: 0.85rem; padding: 8px 16px;">{{ books.page }} of {{ books.pages }}</span>
+        {% if books.has_next %}
+        <a href="?page={{ books.next_num }}" class="btn btn-ghost">Next &rarr;</a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="empty-state">
+        <div class="icon"><i class="bi bi-book"></i></div>
+        <h3>This shelf is waiting for stories...</h3>
+        <p>Stories in this genre will appear as creators publish them.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

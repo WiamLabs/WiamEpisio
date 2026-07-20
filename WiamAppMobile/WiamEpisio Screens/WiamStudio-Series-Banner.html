@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamStudio — Series Banner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75; --green:#3BB273;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); display:flex; flex-direction:column; }
+  .statusbar{ height:44px; flex-shrink:0; }
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+
+  .topbar{ display:flex; align-items:center; gap:12px; padding:2px 20px 14px; flex-shrink:0; }
+  .icon-btn{ width:34px; height:34px; border-radius:50%; background:var(--navy-card); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .topbar h1{ font-size:16px; font-weight:800; color:#fff; margin:0; }
+  .topbar span{ display:block; font-size:10.5px; color:var(--text-faint); font-weight:600; margin-top:1px; }
+
+  .scroll{ flex:1; overflow-y:auto; padding:0 20px 20px; }
+
+  .optional-tag{ display:inline-block; font-size:9.5px; font-weight:800; color:var(--gold); background:rgba(212,160,23,0.14); padding:3px 9px; border-radius:6px; margin-bottom:14px; }
+
+  .banner-preview{ width:100%; aspect-ratio:16/9; border-radius:16px; background:linear-gradient(120deg,#241a3a,#12122a 60%,#3a2a14); position:relative; overflow:hidden; margin-bottom:8px; border:1px solid var(--navy-line); }
+  .banner-glow{ position:absolute; inset:0; background:radial-gradient(circle at 75% 30%, rgba(212,160,23,0.2), transparent 55%); }
+  .banner-overlay{ position:absolute; bottom:0; left:0; right:0; padding:14px; background:linear-gradient(0deg, rgba(0,0,0,0.8), transparent); }
+  .banner-overlay b{ font-size:15px; color:#fff; font-weight:800; display:block; }
+  .banner-overlay span{ font-size:10px; color:#D9D9E8; }
+
+  .dim-note{ text-align:center; font-size:10.5px; color:var(--text-faint); margin:8px 0 18px; }
+  .dim-note b{ color:var(--green); }
+
+  .where-used{ background:var(--navy-card); border:1px solid var(--navy-line); border-radius:16px; padding:15px; margin-bottom:14px; }
+  .where-title{ font-size:12.5px; font-weight:700; color:#fff; margin:0 0 10px; }
+  .where-row{ display:flex; gap:10px; align-items:flex-start; margin-bottom:10px; }
+  .where-row:last-child{ margin-bottom:0; }
+  .where-row svg{ width:15px; height:15px; color:var(--gold); flex-shrink:0; margin-top:1px; }
+  .where-row span{ font-size:11px; color:var(--text-dim); line-height:1.5; }
+
+  .upload-row{ display:flex; gap:10px; }
+  .browse-btn{ flex:1; padding:12px; border-radius:12px; background:var(--gold); color:var(--navy); font-size:12.5px; font-weight:800; border:none; font-family:'Inter',sans-serif; }
+  .skip-btn{ padding:12px 18px; border-radius:12px; background:var(--navy-card); border:1px solid var(--navy-line); color:#C9C9DE; font-size:12.5px; font-weight:700; font-family:'Inter',sans-serif; }
+
+  .footer{ flex-shrink:0; padding:12px 20px 26px; }
+  .btn-primary{ width:100%; padding:16px; border-radius:16px; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); border:none; color:var(--navy); font-size:15px; font-weight:800; box-shadow:0 14px 30px rgba(212,160,23,0.3); font-family:'Inter',sans-serif; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"></div>
+  <div class="topbar">
+    <div class="icon-btn"><svg viewBox="0 0 24 24" width="15" height="15" color="#fff"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></div>
+    <div>
+      <h1>Featured Banner</h1>
+      <span>The Chief's Daughter</span>
+    </div>
+  </div>
+
+  <div class="scroll">
+
+    <span class="optional-tag">OPTIONAL</span>
+
+    <div class="banner-preview">
+      <div class="banner-glow"></div>
+      <div class="banner-overlay"><b>The Chief's Daughter</b><span>Drama · Royal &amp; Palace</span></div>
+    </div>
+    <p class="dim-note">1920 × 1080 · <b>Pass</b></p>
+
+    <div class="where-used">
+      <p class="where-title">Where this appears</p>
+      <div class="where-row"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15l4-6 4 3 5-8"/></svg><span>Home page hero carousel, when your series is featured by the team</span></div>
+      <div class="where-row"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 22h8"/></svg><span>Top of your Series Detail page (wide screens)</span></div>
+    </div>
+
+    <div class="upload-row">
+      <button class="browse-btn">Upload Banner</button>
+      <button class="skip-btn">Skip for now</button>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <button class="btn-primary">Save &amp; Continue</button>
+  </div>
+</div>
+
+</body>
+</html>

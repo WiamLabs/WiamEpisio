@@ -1,0 +1,1052 @@
+{% extends "base.html" %}
+{% block title %}{{ book.title }} — WiamStudio{% endblock %}
+
+{% block extra_head %}
+<style>
+    .studio-layout { display: flex; height: calc(100vh - 56px); overflow: hidden; }
+
+    /* ── Chapter Sidebar ── */
+    .chapter-sidebar {
+        width: 250px;
+        background: linear-gradient(180deg, rgba(18,18,32,0.98) 0%, rgba(12,12,24,0.99) 100%);
+        border-right: 1px solid rgba(255,255,255,0.05);
+        display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto;
+    }
+    .sidebar-header {
+        padding: 1.1rem 1.1rem 0.7rem;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        background: linear-gradient(135deg, rgba(212,168,67,0.04), transparent);
+    }
+    .sidebar-header .book-title {
+        font-size: 0.92rem; font-weight: 700; color: var(--text); margin-bottom: 0.25rem;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        letter-spacing: -0.01em;
+    }
+    .sidebar-header .book-meta { font-size: 0.75rem; color: var(--text-muted); }
+    .chapter-list { flex: 1; padding: 0.5rem 0.4rem; overflow-y: auto; }
+    .chapter-item {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 0.5rem 0.75rem; cursor: pointer; color: var(--text-muted);
+        font-size: 0.84rem; transition: all 0.2s; text-decoration: none;
+        border-radius: 10px; margin-bottom: 1px;
+    }
+    .chapter-item:hover { background: rgba(255,255,255,0.04); color: var(--text); }
+    .chapter-item.active {
+        color: var(--gold); background: linear-gradient(135deg, rgba(212,168,67,0.1), rgba(114,47,55,0.05));
+        border-left: 2px solid var(--gold); font-weight: 600;
+    }
+    .chapter-item .ch-title { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .chapter-item .ch-words { font-size: 0.68rem; color: var(--text-muted); margin-left: 0.5rem; flex-shrink: 0; }
+    .chapter-item .ch-delete { opacity: 0; color: var(--text-muted); font-size: 0.72rem; margin-left: 0.3rem; flex-shrink: 0; transition: opacity 0.15s, color 0.15s; cursor: pointer; padding: 2px 4px; border-radius: 4px; }
+    .chapter-item:hover .ch-delete { opacity: 0.7; }
+    .chapter-item .ch-delete:hover { opacity: 1; color: #f87171; background: rgba(248,113,113,0.1); }
+    .sidebar-footer { padding: 0.75rem 0.65rem; border-top: 1px solid rgba(255,255,255,0.04); }
+    .btn-add-chapter {
+        display: flex; align-items: center; justify-content: center; gap: 0.4rem; width: 100%;
+        padding: 0.5rem 0.75rem; background: rgba(212,168,67,0.06); color: var(--gold);
+        border: 1px dashed rgba(212,168,67,0.25); border-radius: 10px; cursor: pointer;
+        font-size: 0.82rem; font-weight: 600; transition: all 0.2s;
+    }
+    .btn-add-chapter:hover { background: rgba(212,168,67,0.14); border-color: rgba(212,168,67,0.4); }
+    .sidebar-stats {
+        padding: 0.55rem 0.9rem; font-size: 0.72rem; color: var(--text-muted);
+        border-top: 1px solid rgba(255,255,255,0.04);
+        display: flex; justify-content: space-between;
+    }
+
+    /* ── Editor Main Area ── */
+    .editor-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .editor-toolbar {
+        display: flex; align-items: center; gap: 0.2rem; padding: 0.45rem 0.9rem;
+        background: linear-gradient(180deg, rgba(18,18,32,0.95), rgba(14,14,28,0.98));
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        flex-wrap: wrap;
+    }
+    .toolbar-btn {
+        width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+        background: transparent; border: none; color: rgba(255,255,255,0.4); border-radius: 8px;
+        cursor: pointer; font-size: 0.88rem; transition: all 0.15s;
+    }
+    .toolbar-btn:hover { background: rgba(255,255,255,0.06); color: var(--text); }
+    .toolbar-btn.is-active { background: rgba(212,168,67,0.12); color: var(--gold); }
+    .toolbar-sep { width: 1px; height: 18px; background: rgba(255,255,255,0.06); margin: 0 0.3rem; }
+    .toolbar-spacer { flex: 1; }
+    .save-status { font-size: 0.73rem; color: var(--text-muted); margin-left: 0.4rem; }
+    .save-status.saving { color: #facc15; }
+    .save-status.saved { color: #4ade80; }
+
+    /* ── Writing Canvas ── */
+    .editor-scroll { flex: 1; overflow-y: auto; background: var(--bg, #0a0a0c); }
+    .editor-container {
+        max-width: 720px; margin: 0 auto; padding: 2.5rem 3rem; min-height: 100%;
+    }
+    .chapter-title-input {
+        width: 100%; background: transparent; border: none; color: var(--text);
+        font-size: 1.65rem; font-weight: 800; margin-bottom: 1.5rem; padding: 0;
+        font-family: 'Georgia', 'Times New Roman', serif; letter-spacing: -0.02em;
+    }
+    .chapter-title-input:focus { outline: none; }
+    .chapter-title-input::placeholder { color: rgba(255,255,255,0.15); }
+
+    .ProseMirror {
+        font-family: 'Georgia', 'Times New Roman', serif;
+        font-size: 1.1rem; line-height: 1.85; color: rgba(255,255,255,0.85) !important;
+        min-height: 400px; outline: none; caret-color: var(--gold);
+        position: relative;
+    }
+    /* Force text color on ALL children — prevents black text from paste/execCommand */
+    .ProseMirror *, .ProseMirror span, .ProseMirror font, .ProseMirror div {
+        color: inherit !important;
+    }
+    .ProseMirror p { margin-bottom: 1.1em; }
+    .ProseMirror h1 { font-size: 1.8rem; font-weight: 700; margin: 1.5em 0 0.5em; color: var(--text); }
+    .ProseMirror h2 { font-size: 1.4rem; font-weight: 600; margin: 1.3em 0 0.4em; color: var(--text); }
+    .ProseMirror h3 { font-size: 1.15rem; font-weight: 600; margin: 1.2em 0 0.4em; color: var(--text); }
+    .ProseMirror blockquote {
+        border-left: 3px solid rgba(212,168,67,0.4); padding-left: 1.25rem;
+        margin: 1.25em 0; color: rgba(255,255,255,0.55) !important; font-style: italic;
+    }
+    .ProseMirror blockquote * { color: rgba(255,255,255,0.55) !important; }
+    .ProseMirror ul, .ProseMirror ol { padding-left: 1.5rem; margin-bottom: 1em; }
+    .ProseMirror hr { border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 2em 0; }
+    .ProseMirror a { color: var(--gold) !important; }
+    /* Placeholder overlay */
+    .editor-placeholder {
+        position: absolute; top: 0; left: 0; pointer-events: none;
+        color: rgba(255,255,255,0.15); font-style: italic;
+        font-family: 'Georgia', 'Times New Roman', serif; font-size: 1.1rem;
+        line-height: 1.85; display: none;
+    }
+    .editor-placeholder.visible { display: block; }
+
+    /* ── Live Stats Bar ── */
+    .editor-stats-bar {
+        display: flex; align-items: center; gap: 1.1rem; padding: 0.4rem 1rem;
+        background: linear-gradient(180deg, rgba(14,14,28,0.95), rgba(18,18,32,0.98));
+        border-top: 1px solid rgba(255,255,255,0.04);
+        font-size: 0.73rem; color: var(--text-muted); flex-wrap: wrap;
+    }
+    .editor-stats-bar .stat-item { display: flex; align-items: center; gap: 0.3rem; }
+    .editor-stats-bar .stat-item i { font-size: 0.68rem; opacity: 0.6; }
+
+    /* ── Right Settings Panel ── */
+    .settings-panel {
+        width: 290px;
+        background: linear-gradient(180deg, rgba(18,18,32,0.98), rgba(12,12,24,0.99));
+        border-left: 1px solid rgba(255,255,255,0.05);
+        overflow-y: auto; flex-shrink: 0; display: none;
+    }
+    .settings-panel.open { display: block; }
+    .settings-panel .panel-header {
+        padding: 1rem 1.1rem; border-bottom: 1px solid rgba(255,255,255,0.05);
+        display: flex; justify-content: space-between; align-items: center;
+        background: linear-gradient(135deg, rgba(212,168,67,0.03), transparent);
+    }
+    .settings-panel .panel-header h3 {
+        font-size: 0.92rem; font-weight: 700; color: var(--text); margin: 0;
+        display: flex; align-items: center; gap: 0.4rem;
+    }
+    .settings-panel .panel-body { padding: 1.1rem; }
+    .settings-panel .form-group { margin-bottom: 1rem; }
+    .settings-panel .form-group label {
+        display: block; color: var(--text-muted); font-size: 0.78rem;
+        margin-bottom: 0.25rem; font-weight: 600;
+    }
+    .settings-panel .form-group input,
+    .settings-panel .form-group select,
+    .settings-panel .form-group textarea {
+        width: 100%; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+        color: var(--text); padding: 0.5rem 0.7rem; border-radius: 10px; font-size: 0.85rem;
+        transition: all 0.2s; font-family: inherit;
+    }
+    .settings-panel .form-group input:focus,
+    .settings-panel .form-group select:focus,
+    .settings-panel .form-group textarea:focus {
+        outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(212,168,67,0.06);
+    }
+    .settings-panel .form-group select option { background: #111; color: var(--text); }
+
+    .btn-publish {
+        width: 100%; padding: 0.6rem;
+        background: linear-gradient(135deg, var(--gold), #e8c55a); color: #0a0a0c;
+        border: none; border-radius: 10px; font-weight: 700; font-size: 0.88rem;
+        cursor: pointer; transition: all 0.2s;
+    }
+    .btn-publish:hover { box-shadow: 0 4px 16px rgba(212,168,67,0.2); transform: translateY(-1px); }
+    .btn-unpublish {
+        width: 100%; padding: 0.55rem; background: rgba(239,68,68,0.08); color: #f87171;
+        border: 1px solid rgba(239,68,68,0.12); border-radius: 10px; font-weight: 600;
+        font-size: 0.82rem; cursor: pointer; transition: all 0.2s; margin-top: 0.5rem;
+    }
+    .btn-unpublish:hover { background: rgba(239,68,68,0.18); }
+
+    .badge-status {
+        padding: 0.15rem 0.55rem; border-radius: 20px; font-size: 0.68rem;
+        font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em;
+    }
+    .badge-ongoing { background: rgba(59,130,246,0.12); color: #60a5fa; }
+    .badge-complete { background: rgba(34,197,94,0.12); color: #4ade80; }
+    .badge-draft { background: rgba(156,163,175,0.1); color: #9ca3af; }
+    .badge-approved { background: rgba(34,197,94,0.12); color: #4ade80; }
+
+    /* ── Section dividers in settings ── */
+    .sp-section {
+        font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+        color: var(--gold); margin-bottom: 0.65rem; margin-top: 0.25rem;
+        display: flex; align-items: center; gap: 0.4rem;
+    }
+    .sp-divider {
+        height: 1px; background: rgba(255,255,255,0.04); margin: 0.85rem 0;
+    }
+    .sp-info {
+        font-size: 0.72rem; color: var(--text-muted); line-height: 1.45; margin-bottom: 0.5rem;
+    }
+
+    /* ── Lock cards in settings ── */
+    .sp-lock-card {
+        background: rgba(212,168,67,0.04); border: 1px solid rgba(212,168,67,0.1);
+        border-radius: 12px; padding: 0.7rem; margin-bottom: 0.65rem;
+    }
+    .sp-lock-card.premium {
+        background: rgba(114,47,55,0.06); border-color: rgba(114,47,55,0.15);
+    }
+    .sp-lock-title {
+        font-size: 0.78rem; font-weight: 700; color: var(--gold); margin-bottom: 0.35rem;
+        display: flex; align-items: center; gap: 0.3rem;
+    }
+    .sp-lock-row { display: flex; gap: 0.4rem; align-items: center; }
+    .sp-lock-hint { font-size: 0.68rem; color: var(--text-muted); margin-top: 0.3rem; line-height: 1.4; }
+
+    /* ── Review badges ── */
+    .sp-review-badge {
+        display: inline-flex; align-items: center; gap: 0.3rem;
+        padding: 0.3rem 0.7rem; border-radius: 8px;
+        font-size: 0.75rem; font-weight: 700;
+    }
+
+    /* ── Mobile drawer overlay ── */
+    .drawer-overlay {
+        display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+        z-index: 99; opacity: 0; transition: opacity 0.25s; backdrop-filter: blur(4px);
+    }
+    .drawer-overlay.show { display: block; opacity: 1; }
+
+    @media (max-width: 768px) {
+        .chapter-sidebar {
+            position: fixed; left: 0; top: 0; bottom: 0; z-index: 100;
+            transform: translateX(-100%); transition: transform 0.25s ease;
+            width: 270px;
+        }
+        .chapter-sidebar.open { transform: translateX(0); }
+        .settings-panel {
+            position: fixed; right: 0; top: 0; bottom: 0; z-index: 100;
+            width: 88vw; max-width: 340px;
+            transform: translateX(100%); transition: transform 0.25s ease;
+        }
+        .settings-panel.open { transform: translateX(0); display: block; }
+        .editor-container { padding: 1.5rem 1rem; }
+        .chapter-title-input { font-size: 1.3rem; }
+        .ProseMirror { font-size: 1rem; line-height: 1.75; }
+        .toolbar-mobile-only { display: inline-flex !important; }
+        .toolbar-btn { width: 30px; height: 30px; font-size: 0.84rem; }
+        .editor-stats-bar { gap: 0.7rem; font-size: 0.7rem; padding: 0.35rem 0.75rem; }
+    }
+    @media (min-width: 769px) {
+        .toolbar-mobile-only { display: none !important; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="drawer-overlay" id="drawerOverlay"></div>
+<div class="studio-layout">
+    <!-- Chapter Sidebar -->
+    <aside class="chapter-sidebar">
+        <div class="sidebar-header">
+            <div class="book-title">{{ book.title }}</div>
+            <div class="book-meta">
+                <span class="badge-status badge-{{ book.status }}">{{ book.status }}</span>
+            </div>
+        </div>
+        <div class="chapter-list" id="chapterList">
+            {% for ch in chapters %}
+            <a href="{{ url_for('studio.editor', book_id=book.id, ch=ch.chapter_number) }}"
+               class="chapter-item {% if ch.chapter_number == current_chapter.chapter_number %}active{% endif %}"
+               data-ch="{{ ch.chapter_number }}">
+                <span class="ch-title">
+                    {% if ch.is_premium_locked %}<i class="bi bi-gem" style="color:var(--gold);font-size:0.7rem;margin-right:2px" title="Premium Locked"></i>{% elif ch.is_locked %}<i class="bi bi-lock-fill" style="color:var(--gold);font-size:0.7rem;margin-right:2px" title="Locked/Paid"></i>{% endif %}
+                    {{ ch.chapter_title }}
+                </span>
+                <span class="ch-words">
+                    {% if ch.status == 'published' %}<i class="bi bi-circle-fill" style="color:#4ade80;font-size:0.4rem;vertical-align:middle;margin-right:2px" title="Published"></i>{% else %}<i class="bi bi-circle" style="color:var(--text-muted);font-size:0.4rem;vertical-align:middle;margin-right:2px" title="Draft"></i>{% endif %}
+                    {{ ch.word_count or 0 }}w
+                </span>
+                {% if chapters|length > 1 %}
+                <span class="ch-delete" data-ch="{{ ch.chapter_number }}" title="Delete chapter" onclick="event.preventDefault();event.stopPropagation();deleteChapter({{ ch.chapter_number }},'{{ ch.chapter_title|e }}');"><i class="bi bi-trash3"></i></span>
+                {% endif %}
+            </a>
+            {% endfor %}
+        </div>
+        <div class="sidebar-footer">
+            <button class="btn-add-chapter" id="addChapterBtn">
+                <i class="bi bi-plus"></i> Add Chapter
+            </button>
+        </div>
+        <div class="sidebar-stats">
+            <div>Total: {{ chapters|map(attribute='word_count')|sum }} words</div>
+            <div>{{ chapters|length }} chapter{{ 's' if chapters|length != 1 else '' }}</div>
+        </div>
+    </aside>
+
+    <!-- Editor Main -->
+    <div class="editor-main">
+        <div class="editor-toolbar">
+            <a href="{{ url_for('studio.dashboard') }}" class="toolbar-btn" title="Back to Dashboard" style="color:var(--text);margin-right:0.25rem"><i class="bi bi-arrow-left"></i></a>
+            <div class="toolbar-sep"></div>
+            <button class="toolbar-btn" data-cmd="bold" title="Bold (Ctrl+B)"><i class="bi bi-type-bold"></i></button>
+            <button class="toolbar-btn" data-cmd="italic" title="Italic (Ctrl+I)"><i class="bi bi-type-italic"></i></button>
+            <button class="toolbar-btn" data-cmd="underline" title="Underline (Ctrl+U)"><i class="bi bi-type-underline"></i></button>
+            <button class="toolbar-btn" data-cmd="strike" title="Strikethrough"><i class="bi bi-type-strikethrough"></i></button>
+            <div class="toolbar-sep"></div>
+            <button class="toolbar-btn" data-cmd="h1" title="Heading 1"><b>H1</b></button>
+            <button class="toolbar-btn" data-cmd="h2" title="Heading 2"><b>H2</b></button>
+            <button class="toolbar-btn" data-cmd="h3" title="Heading 3"><b>H3</b></button>
+            <div class="toolbar-sep"></div>
+            <button class="toolbar-btn" data-cmd="bulletList" title="Bullet List"><i class="bi bi-list-ul"></i></button>
+            <button class="toolbar-btn" data-cmd="orderedList" title="Numbered List"><i class="bi bi-list-ol"></i></button>
+            <button class="toolbar-btn" data-cmd="blockquote" title="Blockquote"><i class="bi bi-quote"></i></button>
+            <button class="toolbar-btn" data-cmd="horizontalRule" title="Divider"><i class="bi bi-dash-lg"></i></button>
+            <div class="toolbar-sep"></div>
+            <button class="toolbar-btn" data-cmd="undo" title="Undo (Ctrl+Z)"><i class="bi bi-arrow-counterclockwise"></i></button>
+            <button class="toolbar-btn" data-cmd="redo" title="Redo (Ctrl+Y)"><i class="bi bi-arrow-clockwise"></i></button>
+            <div class="toolbar-spacer"></div>
+            <button class="toolbar-btn toolbar-mobile-only" id="toggleChapters" title="Chapters"><i class="bi bi-journal-text"></i></button>
+            <button class="toolbar-btn toolbar-mobile-only" id="addChapterMobileBtn" title="Add Chapter"><i class="bi bi-plus-lg"></i></button>
+            <button class="toolbar-btn" id="manualSaveBtn" title="Save Draft (Ctrl+S)" style="font-size:0.75rem;width:auto;padding:0 0.5rem;gap:0.25rem;display:inline-flex;align-items:center"><i class="bi bi-floppy"></i> <span class="save-status" id="saveStatus">Saved</span></button>
+            <button class="toolbar-btn" id="toggleSettings" title="Story Settings"><i class="bi bi-gear"></i></button>
+        </div>
+
+        <div class="editor-scroll">
+            <div class="editor-container">
+                <input type="text" class="chapter-title-input" id="chapterTitle"
+                       value="{{ current_chapter.chapter_title }}" placeholder="Chapter title...">
+                <div style="position:relative;">
+                    <div id="editor"></div>
+                    <div class="editor-placeholder" id="editorPlaceholder">Start writing your story...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live stats bar -->
+        <div class="editor-stats-bar">
+            <span class="stat-item"><i class="bi bi-text-paragraph"></i> <span id="statWords">0</span> Words</span>
+            <span class="stat-item"><i class="bi bi-fonts"></i> <span id="statChars">0</span> Characters</span>
+            <span class="stat-item"><i class="bi bi-body-text"></i> <span id="statCharsNoSpace">0</span> Chars (no spaces)</span>
+            <span class="stat-item"><i class="bi bi-clock"></i> <span id="statReadTime">0</span> min read</span>
+        </div>
+    </div>
+
+    <!-- Settings Panel -->
+    <aside class="settings-panel" id="settingsPanel">
+        <div class="panel-header">
+            <h3><i class="bi bi-sliders2" style="font-size:0.8rem;opacity:0.6"></i> Settings</h3>
+            <button class="toolbar-btn" id="closeSettings"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="panel-body">
+
+            {% set published_ch = chapters|selectattr('status', 'equalto', 'published')|list|length %}
+            {% set draft_ch = chapters|length - published_ch %}
+            {% set total_words = chapters|map(attribute='word_count')|select('integer')|sum %}
+            {% set rs = book.review_status or 'unreviewed' %}
+            {% set monetization_ok = rs in ('approved', 'elite_approved', 'apex_approved') %}
+
+            <!-- ═══ 1. THIS CHAPTER ═══ -->
+            <div class="sp-section"><i class="bi bi-file-earmark-text"></i> This Chapter</div>
+            <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.6rem;padding:0.5rem 0.6rem;background:rgba(255,255,255,0.02);border-radius:10px;border:1px solid rgba(255,255,255,0.04);">
+                <div style="flex:1;min-width:0;">
+                    <div style="font-size:0.82rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ current_chapter.chapter_title }}</div>
+                    <div style="font-size:0.68rem;color:var(--text-muted);margin-top:2px;">
+                        Ch {{ current_chapter.chapter_number }} · {{ current_chapter.word_count or 0 }} words
+                    </div>
+                </div>
+                {% if current_chapter.status == 'published' %}
+                <span style="padding:0.15rem 0.5rem;border-radius:20px;font-size:0.65rem;font-weight:700;background:rgba(34,197,94,0.1);color:#4ade80;">Published</span>
+                {% else %}
+                <span style="padding:0.15rem 0.5rem;border-radius:20px;font-size:0.65rem;font-weight:700;background:rgba(156,163,175,0.1);color:#9ca3af;">Draft</span>
+                {% endif %}
+            </div>
+
+            {% if current_chapter.status == 'draft' %}
+            <form method="post" action="{{ url_for('studio.publish_chapter', book_id=book.id, ch_num=current_chapter.chapter_number) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn-publish" style="font-size:0.8rem;padding:0.5rem;margin-bottom:0.35rem;">
+                    <i class="bi bi-send me-1"></i> Publish This Chapter
+                </button>
+            </form>
+            {% else %}
+            <form method="post" action="{{ url_for('studio.unpublish_chapter', book_id=book.id, ch_num=current_chapter.chapter_number) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn-unpublish" style="font-size:0.78rem;padding:0.45rem;margin-top:0;">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i> Unpublish
+                </button>
+            </form>
+            {% endif %}
+
+            <!-- Chapter Locking — only if monetization is approved -->
+            {% if monetization_ok and current_chapter.chapter_number > 10 %}
+            <div class="sp-lock-card" style="margin-top:0.5rem;">
+                <div class="sp-lock-title"><i class="bi bi-lock"></i> Lock Chapter (Coins)</div>
+                <div class="sp-lock-row">
+                    <input type="number" id="chapterPriceInput" step="1" min="3" max="10" value="{{ current_chapter.chapter_price|int or 5 }}" placeholder="3–10" style="flex:1;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);color:var(--text);padding:0.35rem 0.5rem;border-radius:8px;font-size:0.82rem">
+                    {% if current_chapter.is_locked %}
+                    <button onclick="toggleLock(false)" class="btn-unpublish" style="padding:0.35rem 0.6rem;font-size:0.78rem;margin:0;width:auto">Unlock</button>
+                    {% else %}
+                    <button onclick="toggleLock(true)" class="btn-publish" style="padding:0.35rem 0.6rem;font-size:0.78rem;margin:0;width:auto">Lock</button>
+                    {% endif %}
+                </div>
+                <div class="sp-lock-hint">3–10 coins. First 10 chapters are always free.</div>
+            </div>
+            <div class="sp-lock-card premium" style="margin-top:0.4rem;">
+                <div class="sp-lock-title"><i class="bi bi-gem"></i> Premium Lock</div>
+                <div class="sp-lock-row">
+                    {% if current_chapter.is_premium_locked %}
+                    <button onclick="togglePremiumLock(false)" class="btn-unpublish" style="padding:0.35rem 0.6rem;font-size:0.78rem;margin:0;width:auto">Remove Premium</button>
+                    {% else %}
+                    <button onclick="togglePremiumLock(true)" class="btn-publish" style="padding:0.35rem 0.6rem;font-size:0.78rem;margin:0;width:auto;background:linear-gradient(135deg,#722f37,#d4a843);color:#fff"><i class="bi bi-gem me-1"></i>Premium Lock</button>
+                    {% endif %}
+                </div>
+                <div class="sp-lock-hint">Readers unlock with premium credits.</div>
+            </div>
+            {% endif %}
+
+            <div class="sp-divider"></div>
+
+            <!-- ═══ 2. STORY STATUS ═══ -->
+            <div class="sp-section"><i class="bi bi-book"></i> Story Status</div>
+            <div style="display:flex;gap:0.5rem;margin-bottom:0.6rem;flex-wrap:wrap;">
+                <div style="flex:1;min-width:80px;padding:0.45rem 0.6rem;background:rgba(255,255,255,0.02);border-radius:8px;border:1px solid rgba(255,255,255,0.04);text-align:center;">
+                    <div style="font-size:1rem;font-weight:700;color:var(--text);">{{ chapters|length }}</div>
+                    <div style="font-size:0.62rem;color:var(--text-muted);text-transform:uppercase;">Chapters</div>
+                </div>
+                <div style="flex:1;min-width:80px;padding:0.45rem 0.6rem;background:rgba(255,255,255,0.02);border-radius:8px;border:1px solid rgba(255,255,255,0.04);text-align:center;">
+                    <div style="font-size:1rem;font-weight:700;color:var(--text);">{{ published_ch }}</div>
+                    <div style="font-size:0.62rem;color:var(--text-muted);text-transform:uppercase;">Published</div>
+                </div>
+                <div style="flex:1;min-width:80px;padding:0.45rem 0.6rem;background:rgba(255,255,255,0.02);border-radius:8px;border:1px solid rgba(255,255,255,0.04);text-align:center;">
+                    <div style="font-size:1rem;font-weight:700;color:var(--text);">{{ '{:,}'.format(total_words) }}</div>
+                    <div style="font-size:0.62rem;color:var(--text-muted);text-transform:uppercase;">Words</div>
+                </div>
+            </div>
+
+            <form id="publishForm" method="post" action="{{ url_for('studio.publish', book_id=book.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="genre" id="pub_genre" value="">
+                <input type="hidden" name="synopsis" id="pub_synopsis" value="">
+                <input type="hidden" name="title" id="pub_title" value="">
+                <div class="form-group" style="margin-bottom:0.5rem;">
+                    <label>Book Status</label>
+                    <select name="publish_type">
+                        <option value="draft" {% if book.status == 'draft' %}selected{% endif %}>Draft (private)</option>
+                        <option value="ongoing" {% if book.status == 'ongoing' %}selected{% endif %}>Ongoing (public)</option>
+                        <option value="complete" {% if book.status in ('complete','approved') %}selected{% endif %}>Complete (public)</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-publish" style="font-size:0.8rem;padding:0.5rem;margin-bottom:0.35rem;">
+                    Update Status
+                </button>
+            </form>
+
+            {% if draft_ch > 0 and published_ch > 0 %}
+            <form method="post" action="{{ url_for('studio.publish_all_chapters', book_id=book.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn-publish" style="font-size:0.78rem;padding:0.45rem;background:linear-gradient(135deg,rgba(59,130,246,0.7),rgba(99,102,241,0.7));margin-bottom:0.25rem;">
+                    <i class="bi bi-send-fill me-1"></i> Publish {{ draft_ch }} Draft{{ 's' if draft_ch != 1 else '' }}
+                </button>
+            </form>
+            {% endif %}
+
+            <div class="sp-divider"></div>
+
+            <!-- ═══ 3. STORY DETAILS ═══ -->
+            <div class="sp-section"><i class="bi bi-pen"></i> Story Details</div>
+            <form method="post" action="{{ url_for('studio.update_settings', book_id=book.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="form-group">
+                    <label>Title</label>
+                    <input type="text" name="title" value="{{ book.title }}">
+                </div>
+                <div class="form-group">
+                    <label>Author / Pen Name</label>
+                    <input type="text" name="author" value="{{ book.author or '' }}">
+                </div>
+                <div class="form-group">
+                    <label>Genre</label>
+                    <select name="genre">
+                        <option value="">Select genre</option>
+                        {% for g in genres %}
+                        <option value="{{ g.name }}" {% if book.genre == g.name %}selected{% endif %}>{{ g.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Synopsis <span style="font-weight:400;font-size:0.68rem;opacity:0.45">(max 500)</span></label>
+                    <textarea name="synopsis" rows="3" maxlength="500" oninput="document.getElementById('synCount').textContent=this.value.length">{{ book.description or '' }}</textarea>
+                    <div style="text-align:right;font-size:0.65rem;color:var(--text-muted);margin-top:2px;"><span id="synCount">{{ (book.description or '')|length }}</span>/500</div>
+                </div>
+                <div class="form-group">
+                    <label>Introduction <span style="font-weight:400;font-size:0.68rem;opacity:0.45">(optional · max 2000)</span></label>
+                    <textarea name="introduction" rows="3" maxlength="2000" placeholder="Author's note shown before Chapter 1..." oninput="document.getElementById('introCount').textContent=this.value.length">{{ book.introduction or '' }}</textarea>
+                    <div style="text-align:right;font-size:0.65rem;color:var(--text-muted);margin-top:2px;"><span id="introCount">{{ (book.introduction or '')|length }}</span>/2000</div>
+                </div>
+                <button type="submit" class="btn-publish" style="font-size:0.8rem;padding:0.5rem;">Save Details</button>
+            </form>
+
+            <div class="sp-divider"></div>
+
+            <!-- ═══ 4. COVER IMAGE ═══ -->
+            <div class="sp-section"><i class="bi bi-image"></i> Cover Image</div>
+            <div style="margin-bottom:0.6rem;">
+                {% if book.cover_file_id %}
+                <div style="display:flex;align-items:flex-start;gap:0.75rem;margin-bottom:0.5rem;">
+                    <img src="{{ book.cover_url }}" alt="Cover" style="width:64px;height:96px;border-radius:8px;object-fit:cover;box-shadow:0 4px 16px rgba(0,0,0,0.4);flex-shrink:0;">
+                    <div style="font-size:0.72rem;color:var(--text-muted);line-height:1.5;">Cover uploaded.<br>Replace below if needed.</div>
+                </div>
+                {% else %}
+                <div style="font-size:0.72rem;color:var(--text-muted);opacity:0.6;margin-bottom:0.4rem;">No cover uploaded yet</div>
+                {% endif %}
+                <div class="sp-info" style="margin-bottom:0.35rem;">Required: <strong>600×900px</strong> (2:3). Min 400×600.</div>
+                <div id="edCoverErr" style="display:none;color:#f87171;font-size:0.72rem;padding:0.35rem 0.6rem;background:rgba(248,113,113,0.08);border-radius:8px;margin-bottom:0.35rem"></div>
+                <div id="edCoverOk" style="display:none;color:#4ade80;font-size:0.72rem;padding:0.35rem 0.6rem;background:rgba(74,222,128,0.06);border-radius:8px;margin-bottom:0.35rem"></div>
+                <form method="post" action="{{ url_for('studio.upload_cover', book_id=book.id) }}" enctype="multipart/form-data" id="edCoverForm">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="file" name="cover" id="edCoverInput" accept="image/png,image/jpeg,image/gif,image/webp"
+                           style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.3rem;width:100%;">
+                    <button type="submit" class="btn-publish" id="edCoverBtn" style="font-size:0.78rem;padding:0.4rem 0.6rem;">Upload Cover</button>
+                </form>
+            </div>
+
+            <div class="sp-divider"></div>
+
+            <!-- ═══ 5. PREVIEW & GUIDE ═══ -->
+            <div style="display:flex;flex-direction:column;gap:0.35rem;margin-bottom:0.75rem;">
+                <a href="{{ url_for('studio.preview', book_id=book.id) }}" style="display:flex;align-items:center;gap:0.4rem;padding:0.5rem 0.65rem;background:rgba(99,102,241,0.06);border:1px solid rgba(99,102,241,0.1);border-radius:10px;text-decoration:none;color:#a78bfa;font-size:0.78rem;font-weight:600;transition:all 0.2s;" onmouseover="this.style.background='rgba(99,102,241,0.14)'" onmouseout="this.style.background='rgba(99,102,241,0.06)'">
+                    <i class="bi bi-eye"></i> Preview Story <i class="bi bi-arrow-right" style="margin-left:auto;opacity:0.5;font-size:0.7rem;"></i>
+                </a>
+                <a href="{{ url_for('studio.monetization_guide') }}" style="display:flex;align-items:center;gap:0.4rem;padding:0.5rem 0.65rem;background:rgba(212,168,67,0.04);border:1px solid rgba(212,168,67,0.08);border-radius:10px;text-decoration:none;color:var(--gold);font-size:0.78rem;font-weight:600;transition:all 0.2s;" onmouseover="this.style.background='rgba(212,168,67,0.1)'" onmouseout="this.style.background='rgba(212,168,67,0.04)'">
+                    <i class="bi bi-book"></i> Monetization Guide <i class="bi bi-arrow-right" style="margin-left:auto;opacity:0.5;font-size:0.7rem;"></i>
+                </a>
+            </div>
+
+            <!-- ═══ 6. MONETIZATION REVIEW ═══ -->
+            {% if book.is_published %}
+            <div class="sp-section"><i class="bi bi-shield-check"></i> Monetization Review</div>
+
+            <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
+                {% if monetization_ok %}
+                <span class="sp-review-badge" style="background:rgba(34,197,94,0.1);color:#4ade80"><i class="bi bi-check-circle-fill"></i> Approved</span>
+                {% elif rs == 'under_review' %}
+                <span class="sp-review-badge" style="background:rgba(59,130,246,0.1);color:#60a5fa"><i class="bi bi-hourglass-split"></i> Under Review</span>
+                {% elif rs == 'rejected' %}
+                <span class="sp-review-badge" style="background:rgba(239,68,68,0.1);color:#f87171"><i class="bi bi-x-circle-fill"></i> Not Approved</span>
+                {% elif rs == 'revision_requested' %}
+                <span class="sp-review-badge" style="background:rgba(251,191,36,0.1);color:#fbbf24"><i class="bi bi-pencil"></i> Revision Needed</span>
+                {% else %}
+                <span class="sp-review-badge" style="background:rgba(156,163,175,0.08);color:#9ca3af"><i class="bi bi-circle"></i> Not Submitted</span>
+                {% endif %}
+                {% if book.review_score is not none %}
+                <span style="font-size:0.72rem;font-weight:700;color:{% if book.review_score >= 75 %}#4ade80{% elif book.review_score >= 40 %}#facc15{% else %}#f87171{% endif %};">{{ book.review_score }}/100</span>
+                {% endif %}
+            </div>
+
+            {% if monetization_ok %}
+            <div style="font-size:0.75rem;color:#4ade80;padding:0.45rem 0.65rem;background:rgba(34,197,94,0.05);border:1px solid rgba(34,197,94,0.1);border-radius:8px;margin-bottom:0.5rem;line-height:1.5;">
+                <i class="bi bi-check-circle-fill me-1"></i> This story is monetization-approved. Lock chapters above 10 to earn coins.
+            </div>
+            {% elif rs in ('unreviewed', 'rejected', 'revision_requested') %}
+            <div style="font-size:0.73rem;color:#f59e0b;background:rgba(245,158,11,0.05);border:1px solid rgba(245,158,11,0.12);border-radius:8px;padding:0.5rem 0.65rem;margin-bottom:0.5rem;line-height:1.55;">
+                <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                <strong>Requirements:</strong> 10+ published chapters with 1,000+ words each.
+                Review takes up to 24 hours.
+            </div>
+                {% if rs == 'unreviewed' %}
+            <form method="post" action="{{ url_for('studio.request_review', book_id=book.id) }}" id="reviewForm" onsubmit="return confirmReview(this);">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="type" value="monetization">
+                <button type="submit" id="reviewBtn" class="btn-publish" style="font-size:0.8rem;padding:0.5rem;margin-bottom:0.35rem;background:linear-gradient(135deg,#22c55e,#4ade80);color:#000;">
+                    <i class="bi bi-send-check me-1"></i> Request Review
+                </button>
+            </form>
+                {% else %}
+            <div style="font-size:0.7rem;color:#999;margin-bottom:0.35rem;">
+                <i class="bi bi-info-circle me-1"></i> Resubmit after 24h from last review.
+            </div>
+            <form method="post" action="{{ url_for('studio.resubmit_review', book_id=book.id) }}" id="reviewForm" onsubmit="return confirmReview(this);">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" id="reviewBtn" class="btn-publish" style="font-size:0.8rem;padding:0.5rem;margin-bottom:0.35rem;background:linear-gradient(135deg,#f59e0b,#fbbf24);color:#000;">
+                    <i class="bi bi-arrow-repeat me-1"></i> Resubmit for Review
+                </button>
+            </form>
+                {% endif %}
+            <script>
+            function confirmReview(form) {
+                var btn = form.querySelector('#reviewBtn');
+                if (btn.disabled) return false;
+                var ok = confirm(
+                    'Submit for monetization review?\n\n' +
+                    '\u2022 10+ published chapters with 1,000+ words each required.\n' +
+                    '\u2022 Review takes up to 24 hours. You cannot resubmit until it completes.\n\n' +
+                    'Read the Monetization Guide for full details.\n\nPress OK to submit.'
+                );
+                if (ok) { btn.disabled = true; btn.style.opacity = '0.5'; btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Submitting...'; return true; }
+                return false;
+            }
+            </script>
+            {% endif %}
+
+            <div class="sp-divider"></div>
+            {% endif %}
+
+            <!-- ═══ 7. DANGER ZONE ═══ -->
+            <div class="sp-section" style="color:#f87171;"><i class="bi bi-exclamation-triangle"></i> Danger Zone</div>
+            <form method="post" action="{{ url_for('studio.delete_book', book_id=book.id) }}"
+                  onsubmit="return confirm('PERMANENTLY DELETE &quot;{{ book.title }}&quot; and ALL its chapters, comments, reactions, and reviews? This cannot be undone!');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn-unpublish" style="font-size:0.75rem;padding:0.4rem;margin-top:0;">
+                    <i class="bi bi-trash3 me-1"></i> Delete Story Permanently
+                </button>
+            </form>
+        </div>
+    </aside>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    var BOOK_ID = {{ book.id }};
+    var CH_NUM = {{ current_chapter.chapter_number }};
+    var SAVE_URL = '{{ url_for("studio.save_chapter", book_id=book.id) }}';
+    var ADD_CH_URL = '{{ url_for("studio.add_chapter", book_id=book.id) }}';
+    var CSRF = '{{ csrf_token() }}';
+    var LOCK_URL = '{{ url_for("studio.toggle_chapter_lock", book_id=book.id, ch_num=current_chapter.chapter_number) }}';
+    var PREMIUM_LOCK_URL = '{{ url_for("studio.toggle_premium_lock", book_id=book.id, ch_num=current_chapter.chapter_number) }}';
+    var initialContent = {{ current_chapter.body | tojson }};
+
+    // Chapter lock/unlock
+    window.toggleLock = function(lock) {
+        var price = document.getElementById('chapterPriceInput').value || 0;
+        fetch(LOCK_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ lock: lock, price: parseFloat(price) })
+        }).then(function(r) { if (r.ok) location.reload(); });
+    };
+
+    // Premium lock/unlock
+    window.togglePremiumLock = function(lock) {
+        fetch(PREMIUM_LOCK_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ lock: lock, cost: 1 })
+        }).then(function(r) { if (r.ok) location.reload(); else r.json().then(function(d) { alert(d.error || 'Error'); }); });
+    };
+
+    // ─── Rich contenteditable editor ───
+    var editorEl = document.getElementById('editor');
+    var placeholderEl = document.getElementById('editorPlaceholder');
+    editorEl.contentEditable = 'true';
+    editorEl.className = 'ProseMirror';
+    editorEl.innerHTML = initialContent || '<p><br></p>';
+    editorEl.setAttribute('spellcheck', 'true');
+
+    // ─── Paste handler: strip inline color styles to prevent black text ───
+    editorEl.addEventListener('paste', function(e) {
+        e.preventDefault();
+        var html = e.clipboardData.getData('text/html');
+        var text = e.clipboardData.getData('text/plain');
+        if (html) {
+            // Strip all color and background-color inline styles
+            html = html.replace(/\s*color\s*:\s*[^;\"']+(;?)/gi, '$1');
+            html = html.replace(/\s*background-color\s*:\s*[^;\"']+(;?)/gi, '$1');
+            html = html.replace(/\s*background\s*:\s*[^;\"']+(;?)/gi, '$1');
+            html = html.replace(/<font[^>]*>/gi, '<span>').replace(/<\/font>/gi, '</span>');
+            // Remove empty style attributes
+            html = html.replace(/\s*style\s*=\s*["']\s*["']/gi, '');
+            document.execCommand('insertHTML', false, html);
+        } else if (text) {
+            document.execCommand('insertText', false, text);
+        }
+        updateStats();
+        scheduleAutoSave();
+    });
+
+    // ─── Placeholder ───
+    function checkPlaceholder() {
+        var text = editorEl.innerText.trim();
+        var isEmpty = text.length === 0 || text === '\n' || text === '';
+        placeholderEl.classList.toggle('visible', isEmpty);
+    }
+    checkPlaceholder();
+
+    function getContent() { return editorEl.innerHTML; }
+
+    // ─── Stats calculations ───
+    function getTextContent() { return editorEl.innerText || ''; }
+
+    function getWordCount() {
+        var text = getTextContent().trim();
+        return text ? text.split(/\s+/).length : 0;
+    }
+
+    function getCharCount() { return getTextContent().length; }
+
+    function getCharCountNoSpaces() { return getTextContent().replace(/\s/g, '').length; }
+
+    var statWords = document.getElementById('statWords');
+    var statChars = document.getElementById('statChars');
+    var statCharsNoSpace = document.getElementById('statCharsNoSpace');
+    var statReadTime = document.getElementById('statReadTime');
+
+    function updateStats() {
+        var wc = getWordCount();
+        var cc = getCharCount();
+        var ccns = getCharCountNoSpaces();
+        var readMin = Math.max(1, Math.round(wc / 200));
+        statWords.textContent = wc.toLocaleString();
+        statChars.textContent = cc.toLocaleString();
+        statCharsNoSpace.textContent = ccns.toLocaleString();
+        statReadTime.textContent = wc > 0 ? readMin : '0';
+        checkPlaceholder();
+    }
+    updateStats();
+
+    // ─── Toolbar commands via execCommand ───
+    function execCmd(cmd, val) {
+        editorEl.focus();
+        document.execCommand(cmd, false, val || null);
+        updateToolbar();
+        updateStats();
+        scheduleAutoSave();
+    }
+
+    var cmdMap = {
+        'bold': function() { execCmd('bold'); },
+        'italic': function() { execCmd('italic'); },
+        'underline': function() { execCmd('underline'); },
+        'strike': function() { execCmd('strikeThrough'); },
+        'h1': function() { execCmd('formatBlock', '<h1>'); },
+        'h2': function() { execCmd('formatBlock', '<h2>'); },
+        'h3': function() { execCmd('formatBlock', '<h3>'); },
+        'bulletList': function() { execCmd('insertUnorderedList'); },
+        'orderedList': function() { execCmd('insertOrderedList'); },
+        'blockquote': function() { execCmd('formatBlock', '<blockquote>'); },
+        'horizontalRule': function() { execCmd('insertHorizontalRule'); },
+        'undo': function() { execCmd('undo'); },
+        'redo': function() { execCmd('redo'); }
+    };
+
+    document.querySelectorAll('.toolbar-btn[data-cmd]').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            var fn = cmdMap[this.dataset.cmd];
+            if (fn) fn();
+        });
+    });
+
+    function updateToolbar() {
+        document.querySelectorAll('.toolbar-btn[data-cmd]').forEach(function(btn) {
+            var cmd = btn.dataset.cmd;
+            var active = false;
+            try {
+                if (cmd === 'bold') active = document.queryCommandState('bold');
+                else if (cmd === 'italic') active = document.queryCommandState('italic');
+                else if (cmd === 'underline') active = document.queryCommandState('underline');
+                else if (cmd === 'strike') active = document.queryCommandState('strikeThrough');
+                else if (cmd === 'bulletList') active = document.queryCommandState('insertUnorderedList');
+                else if (cmd === 'orderedList') active = document.queryCommandState('insertOrderedList');
+            } catch(e) {}
+            btn.classList.toggle('is-active', active);
+        });
+    }
+    document.addEventListener('selectionchange', updateToolbar);
+
+    // ─── Save ───
+    var statusEl = document.getElementById('saveStatus');
+    var saveTimeout = null;
+    var lastSavedContent = initialContent || '';
+    var lastSavedTitle = document.getElementById('chapterTitle').value;
+
+    function saveChapter() {
+        var body = getContent();
+        var title = document.getElementById('chapterTitle').value;
+        var wc = getWordCount();
+        if (body === lastSavedContent && title === lastSavedTitle) return Promise.resolve();
+
+        statusEl.textContent = 'Saving...';
+        statusEl.className = 'save-status saving';
+
+        return fetch(SAVE_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chapter_number: CH_NUM,
+                body: body,
+                chapter_title: title,
+                word_count: wc,
+            })
+        }).then(function(resp) {
+            if (resp.ok) {
+                lastSavedContent = body;
+                lastSavedTitle = title;
+                statusEl.textContent = 'Saved';
+                statusEl.className = 'save-status saved';
+            } else {
+                statusEl.textContent = 'Save failed';
+                statusEl.className = 'save-status';
+            }
+        }).catch(function() {
+            statusEl.textContent = 'Offline';
+            statusEl.className = 'save-status';
+        });
+    }
+
+    function scheduleAutoSave() {
+        if (saveTimeout) clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(saveChapter, 5000);
+    }
+
+    editorEl.addEventListener('input', function() {
+        updateStats();
+        scheduleAutoSave();
+    });
+
+    // Chapter title also triggers auto-save
+    document.getElementById('chapterTitle').addEventListener('input', scheduleAutoSave);
+
+    // Manual save button
+    var manualSaveBtn = document.getElementById('manualSaveBtn');
+    if (manualSaveBtn) {
+        manualSaveBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            saveChapter();
+        });
+    }
+
+    // Ctrl+S manual save
+    document.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+            e.preventDefault();
+            saveChapter();
+        }
+    });
+
+    // Save before leaving page
+    window.addEventListener('beforeunload', function(e) {
+        var body = getContent();
+        var title = document.getElementById('chapterTitle').value;
+        if (body !== lastSavedContent || title !== lastSavedTitle) {
+            navigator.sendBeacon(SAVE_URL, new Blob([JSON.stringify({
+                chapter_number: CH_NUM,
+                body: body,
+                chapter_title: title,
+                word_count: getWordCount(),
+            })], { type: 'application/json' }));
+        }
+    });
+
+    // ─── Drawer helpers (mobile) ───
+    var overlay = document.getElementById('drawerOverlay');
+    var chSidebar = document.querySelector('.chapter-sidebar');
+    var setPanel = document.getElementById('settingsPanel');
+
+    function closeAllDrawers() {
+        chSidebar.classList.remove('open');
+        setPanel.classList.remove('open');
+        overlay.classList.remove('show');
+    }
+    overlay.addEventListener('click', closeAllDrawers);
+
+    var toggleCh = document.getElementById('toggleChapters');
+    if (toggleCh) {
+        toggleCh.addEventListener('click', function() {
+            var isOpen = chSidebar.classList.contains('open');
+            closeAllDrawers();
+            if (!isOpen) { chSidebar.classList.add('open'); overlay.classList.add('show'); }
+        });
+    }
+
+    document.getElementById('toggleSettings').addEventListener('click', function() {
+        var isOpen = setPanel.classList.contains('open');
+        closeAllDrawers();
+        if (!isOpen) { setPanel.classList.add('open'); overlay.classList.add('show'); }
+    });
+    document.getElementById('closeSettings').addEventListener('click', closeAllDrawers);
+
+    // ─── Add chapter ───
+    document.getElementById('addChapterBtn').addEventListener('click', function() {
+        saveChapter().then(function() {
+            return fetch(ADD_CH_URL, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+        }).then(function(resp) {
+            if (resp.ok) return resp.json();
+            return resp.json().then(function(d) { alert(d.error || 'Cannot add chapter'); return null; });
+        }).then(function(data) {
+            if (data) {
+                window.location.href = '{{ url_for("studio.editor", book_id=book.id) }}?ch=' + data.chapter_number;
+            }
+        }).catch(function(e) { console.error('Add chapter failed', e); });
+    });
+
+    // Mobile: add chapter button (always visible)
+    var addChapterMobileBtn = document.getElementById('addChapterMobileBtn');
+    var addChapterBtn = document.getElementById('addChapterBtn');
+    if (addChapterMobileBtn && addChapterBtn) {
+        addChapterMobileBtn.addEventListener('click', function() {
+            addChapterBtn.click();
+        });
+    }
+
+    // ─── Keyboard shortcuts ───
+    editorEl.addEventListener('keydown', function(e) {
+        if (e.ctrlKey || e.metaKey) {
+            if (e.key === 'b') { e.preventDefault(); cmdMap.bold(); }
+            else if (e.key === 'i') { e.preventDefault(); cmdMap.italic(); }
+            else if (e.key === 'u') { e.preventDefault(); cmdMap.underline(); }
+        }
+    });
+
+    // ─── Delete chapter from sidebar ───
+    var DELETE_BASE = '{{ url_for("studio.delete_chapter", book_id=book.id, ch_num=0) }}';
+    window.deleteChapter = function(chNum, chTitle) {
+        if (!confirm('Delete "' + chTitle + '" (Chapter ' + chNum + ')?\n\nAll remaining chapters will be renumbered automatically. This cannot be undone.')) return;
+        var url = DELETE_BASE.replace('/0/delete', '/' + chNum + '/delete');
+        fetch(url, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': CSRF, 'Content-Type': 'application/json' }
+        }).then(function(r) {
+            if (r.ok) { window.location.href = '{{ url_for("studio.editor", book_id=book.id) }}'; }
+            else r.json().then(function(d) { alert(d.error || 'Delete failed'); });
+        }).catch(function() { alert('Network error'); });
+    };
+
+    // ─── Sync story details into publish form before submit ───
+    var pubForm = document.getElementById('publishForm');
+    if (pubForm) {
+        pubForm.addEventListener('submit', function() {
+            var genreSel = document.querySelector('select[name="genre"]:not([id^="pub_"])');
+            var synTa = document.querySelector('textarea[name="synopsis"]');
+            var titleIn = document.querySelector('input[type="text"][name="title"]');
+            if (genreSel) document.getElementById('pub_genre').value = genreSel.value;
+            if (synTa) document.getElementById('pub_synopsis').value = synTa.value;
+            if (titleIn) document.getElementById('pub_title').value = titleIn.value;
+        });
+    }
+
+    // Focus editor on load
+    editorEl.focus();
+
+    // ─── Cover dimension validation ───
+    var edCoverInput = document.getElementById('edCoverInput');
+    if (edCoverInput) {
+        edCoverInput.addEventListener('change', function() {
+            var errEl = document.getElementById('edCoverErr');
+            var okEl = document.getElementById('edCoverOk');
+            errEl.style.display = 'none'; okEl.style.display = 'none';
+            if (!this.files || !this.files[0]) return;
+            var file = this.files[0];
+            if (file.size > 5 * 1024 * 1024) {
+                errEl.textContent = 'Image too large. Max 5MB.';
+                errEl.style.display = 'block'; this.value = ''; return;
+            }
+            var inp = this;
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                var img = new Image();
+                img.onload = function() {
+                    var w = img.width, h = img.height;
+                    var ratio = w / h, target = 2/3;
+                    if (w < 400 || h < 600) {
+                        errEl.innerHTML = 'Too small (' + w + '\u00d7' + h + '). Min 400\u00d7600. Use Canva at 600\u00d7900.';
+                        errEl.style.display = 'block'; inp.value = ''; return;
+                    }
+                    if (Math.abs(ratio - target) > 0.15) {
+                        errEl.innerHTML = 'Wrong ratio (' + w + '\u00d7' + h + '). Must be portrait 2:3. Use 600\u00d7900.';
+                        errEl.style.display = 'block'; inp.value = ''; return;
+                    }
+                    okEl.innerHTML = 'Cover OK \u2014 ' + w + '\u00d7' + h;
+                    okEl.style.display = 'block';
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    // ─── Bulletin share prompt (after publish) ───
+    {% if request.args.get('bulletin_prompt') %}
+    (function() {
+        var modal = document.getElementById('bulletinModal');
+        if (modal) modal.classList.add('show');
+    })();
+    {% endif %}
+})();
+
+function closeBulletinModal() {
+    var m = document.getElementById('bulletinModal');
+    if (m) m.classList.remove('show');
+    // Clean URL
+    var url = new URL(window.location);
+    url.searchParams.delete('bulletin_prompt');
+    window.history.replaceState({}, '', url);
+}
+
+function shareToBulletin() {
+    var msg = document.getElementById('bulletinMsg').value || '';
+    var btn = document.getElementById('bulletinShareBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Sharing...';
+    fetch('{{ url_for("bulletin.share_book") }}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': '{{ csrf_token() }}' },
+        body: 'content_id={{ book.id }}&text=' + encodeURIComponent(msg)
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        btn.innerHTML = '<i class="bi bi-check-circle me-1"></i> Shared!';
+        btn.style.background = '#4ade80';
+        setTimeout(closeBulletinModal, 1200);
+    })
+    .catch(function() {
+        btn.innerHTML = '<i class="bi bi-x-circle me-1"></i> Failed';
+        btn.disabled = false;
+        setTimeout(function() { btn.innerHTML = '<i class="bi bi-send me-1"></i> Share to Bulletin'; }, 2000);
+    });
+}
+</script>
+
+<!-- Bulletin Share Modal -->
+<div id="bulletinModal" style="display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);backdrop-filter:blur(6px)">
+    <div style="background:linear-gradient(180deg,rgba(22,22,40,0.98),rgba(14,14,28,0.99));border:1px solid rgba(255,255,255,0.06);border-radius:18px;padding:1.75rem;max-width:420px;width:90%;margin:auto;position:relative;top:50%;transform:translateY(-50%);box-shadow:0 20px 60px rgba(0,0,0,0.5)">
+        <div style="text-align:center;margin-bottom:1.1rem">
+            <i class="bi bi-megaphone" style="font-size:2rem;color:var(--gold);display:block;margin-bottom:0.5rem"></i>
+            <h3 style="font-size:1.1rem;font-weight:700;margin-bottom:0.3rem">Share to Your Bulletin?</h3>
+            <p style="color:var(--text-muted);font-size:0.85rem">Let your followers know about "{{ book.title }}"</p>
+        </div>
+        <textarea id="bulletinMsg" placeholder="Add a message (optional)..." maxlength="500"
+                  style="width:100%;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px 14px;color:var(--text);font-size:0.9rem;resize:none;height:70px;font-family:inherit;margin-bottom:0.8rem"></textarea>
+        <div style="display:flex;gap:0.5rem">
+            <button onclick="closeBulletinModal()" style="flex:1;background:transparent;border:1px solid rgba(255,255,255,0.08);color:var(--text-muted);padding:10px;border-radius:12px;cursor:pointer;font-size:0.88rem">
+                Skip
+            </button>
+            <button id="bulletinShareBtn" onclick="shareToBulletin()" style="flex:1;background:linear-gradient(135deg,var(--gold),#e8c55a);color:#0a0a0c;border:none;padding:10px;border-radius:12px;cursor:pointer;font-weight:700;font-size:0.88rem">
+                <i class="bi bi-send me-1"></i> Share to Bulletin
+            </button>
+        </div>
+    </div>
+</div>
+<style>
+#bulletinModal.show { display:flex !important; }
+</style>
+{% endblock %}

@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block title %}Review: {{ story.title }} — WiamApp Team{% endblock %}
+
+{% block extra_head %}
+<style>
+.review-wrap{max-width:900px;margin:0 auto;padding:24px 16px 60px;}
+.back-link{display:inline-flex;align-items:center;gap:6px;color:var(--text-muted,#888);font-size:0.85rem;text-decoration:none;margin-bottom:20px;}
+.back-link:hover{color:var(--gold,#d4a843);}
+.story-header{display:flex;gap:20px;align-items:flex-start;margin-bottom:28px;flex-wrap:wrap;}
+.story-header .cover{width:120px;height:170px;border-radius:12px;object-fit:cover;flex-shrink:0;background:rgba(212,168,67,0.1);}
+.story-header .info{flex:1;min-width:200px;}
+.story-header .info h1{font-size:1.4rem;font-weight:700;margin:0 0 8px;color:var(--text-primary,#fff);}
+.story-header .info .meta{font-size:0.82rem;color:var(--text-muted,#888);line-height:1.8;}
+.story-header .info .meta span{color:var(--gold,#d4a843);font-weight:600;}
+.status-tag{display:inline-block;padding:4px 12px;border-radius:8px;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;margin-bottom:8px;}
+.status-draft{background:rgba(156,163,175,0.15);color:#9ca3af;}
+.status-published{background:rgba(74,222,128,0.15);color:#4ade80;}
+.status-flagged{background:rgba(248,113,113,0.15);color:#f87171;}
+.status-revision_requested{background:rgba(251,191,36,0.15);color:#fbbf24;}
+.action-bar{display:flex;gap:10px;flex-wrap:wrap;margin:20px 0 28px;}
+.act-btn{padding:10px 24px;border:none;border-radius:10px;font-weight:700;font-size:0.85rem;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:opacity 0.15s;}
+.act-btn:hover{opacity:0.85;}
+.act-approve{background:linear-gradient(135deg,#22c55e,#4ade80);color:#000;}
+.act-revision{background:rgba(251,191,36,0.15);color:#fbbf24;border:1px solid rgba(251,191,36,0.3);}
+.act-flag{background:rgba(248,113,113,0.15);color:#f87171;border:1px solid rgba(248,113,113,0.3);}
+.section-title{font-size:1.05rem;font-weight:700;color:var(--text-primary,#fff);margin:28px 0 14px;display:flex;align-items:center;gap:8px;}
+.section-title i{color:var(--gold,#d4a843);}
+.chapter-list{list-style:none;padding:0;}
+.chapter-item{display:flex;align-items:center;gap:14px;padding:14px 18px;background:var(--card-bg,#111);border:1px solid var(--border-color,#222);border-radius:12px;margin-bottom:8px;transition:background 0.15s;}
+.chapter-item:hover{background:rgba(255,255,255,0.03);}
+.ch-num{width:36px;height:36px;border-radius:8px;background:rgba(212,168,67,0.1);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--gold,#d4a843);font-size:0.85rem;flex-shrink:0;}
+.ch-info{flex:1;min-width:0;}
+.ch-info .ch-title{font-size:0.88rem;font-weight:600;color:var(--text-primary,#fff);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ch-info .ch-meta{font-size:0.75rem;color:var(--text-muted,#888);margin-top:2px;}
+.ch-link{color:var(--gold,#d4a843);font-size:0.82rem;text-decoration:none;font-weight:600;flex-shrink:0;}
+.ch-link:hover{text-decoration:underline;}
+.synopsis{background:var(--card-bg,#111);border:1px solid var(--border-color,#222);border-radius:14px;padding:20px;font-size:0.88rem;color:var(--text-muted,#888);line-height:1.7;}
+.note-input{width:100%;padding:10px 14px;background:rgba(255,255,255,0.04);border:1.5px solid rgba(255,255,255,0.1);border-radius:10px;color:#e0e0e0;font-size:0.88rem;font-family:inherit;resize:vertical;min-height:60px;margin-bottom:10px;}
+.note-input:focus{border-color:rgba(212,168,67,0.4);outline:none;}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="review-wrap">
+    <a href="{{ url_for('team.dashboard') }}" class="back-link"><i class="bi bi-arrow-left"></i> Back to Dashboard</a>
+
+    <div class="story-header">
+        {% if story.cover_url %}
+        <img src="{{ story.cover_url }}" alt="{{ story.title }}" class="cover">
+        {% else %}
+        <div class="cover" style="display:flex;align-items:center;justify-content:center;color:var(--text-muted);">
+            <i class="bi bi-book" style="font-size:2rem;"></i>
+        </div>
+        {% endif %}
+        <div class="info">
+            <span class="status-tag status-{{ story.status }}">{{ story.status|replace('_',' ') }}</span>
+            <h1>{{ story.title }}</h1>
+            <div class="meta">
+                <div><span>Author:</span> {{ author.display_name if author else 'Unknown' }}</div>
+                <div><span>Genre:</span> {{ story.genre or 'N/A' }}</div>
+                <div><span>Chapters:</span> {{ chapters|length }}</div>
+                <div><span>Views:</span> {{ story.views or 0 }}</div>
+                <div><span>Created:</span> {{ story.created_at.strftime('%b %d, %Y') if story.created_at else 'N/A' }}</div>
+                {% if story.published_at %}
+                <div><span>Published:</span> {{ story.published_at.strftime('%b %d, %Y') }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="action-bar">
+        {% if story.status == 'draft' %}
+        <form method="POST" action="{{ url_for('team.editor_approve', story_id=story.id) }}" style="display:inline;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="act-btn act-approve"><i class="bi bi-check-lg"></i> Approve & Publish</button>
+        </form>
+        {% endif %}
+
+        {% if story.status in ('draft', 'published') %}
+        <form method="POST" action="{{ url_for('team.editor_request_revision', story_id=story.id) }}" style="display:inline;" onsubmit="this.querySelector('[name=note]').value=document.getElementById('revNote').value;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="note" value="">
+            <button type="submit" class="act-btn act-revision"><i class="bi bi-pencil"></i> Request Revision</button>
+        </form>
+        {% endif %}
+
+        {% if story.status != 'flagged' %}
+        <form method="POST" action="{{ url_for('team.mod_flag_story', story_id=story.id) }}" style="display:inline;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="reason" value="Flagged during editor review">
+            <button type="submit" class="act-btn act-flag" onclick="return confirm('Flag this story?');"><i class="bi bi-flag"></i> Flag Story</button>
+        </form>
+        {% endif %}
+    </div>
+
+    <!-- Revision note -->
+    <textarea id="revNote" class="note-input" placeholder="Optional: Add a note for the creator about what needs revision..."></textarea>
+
+    <!-- Synopsis -->
+    {% if story.description %}
+    <h3 class="section-title"><i class="bi bi-card-text"></i> Synopsis</h3>
+    <div class="synopsis">{{ story.description }}</div>
+    {% endif %}
+
+    <!-- Chapters -->
+    <h3 class="section-title"><i class="bi bi-list-ol"></i> Chapters ({{ chapters|length }})</h3>
+    {% if chapters %}
+    <ul class="chapter-list">
+        {% for ch in chapters %}
+        <li class="chapter-item">
+            <div class="ch-num">{{ ch.chapter_number }}</div>
+            <div class="ch-info">
+                <div class="ch-title">{{ ch.chapter_title or ('Chapter ' ~ ch.chapter_number) }}</div>
+                <div class="ch-meta">{{ ch.word_count or 0 }} words</div>
+            </div>
+            <a href="{{ url_for('book.read_book', book_id=story.id, chapter=ch.chapter_number) }}" target="_blank" class="ch-link">Read <i class="bi bi-box-arrow-up-right"></i></a>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p style="color:var(--text-muted);padding:20px;text-align:center;">No chapters yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

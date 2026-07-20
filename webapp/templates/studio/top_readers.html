@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Top Readers — WiamStudio{% endblock %}
+
+{% block extra_head %}
+<style>
+    .tr-page { max-width: 600px; margin: 0 auto; padding: var(--space-xl) var(--space-md) var(--space-2xl); }
+    .tr-header { display: flex; align-items: center; gap: var(--space-md); margin-bottom: var(--space-lg); }
+    .tr-header h1 { font-size: 1.15rem; font-weight: 700; margin: 0; }
+    .tr-bal { display: inline-flex; align-items: center; gap: 4px; padding: 4px 14px; background: rgba(212,168,67,0.1); border: 1px solid rgba(212,168,67,0.2); border-radius: 20px; font-size: 0.82rem; color: var(--gold); font-weight: 600; }
+    .tr-info { font-size: 0.82rem; color: var(--text-muted); line-height: 1.6; margin-bottom: var(--space-lg); padding: var(--space-sm) var(--space-md); background: rgba(236,72,153,0.04); border: 1px solid rgba(236,72,153,0.1); border-radius: 12px; }
+    .tr-list { display: flex; flex-direction: column; gap: 10px; }
+    .tr-card { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-subtle); border-radius: 14px; transition: border-color 0.2s; }
+    .tr-card:hover { border-color: rgba(212,168,67,0.3); }
+    .tr-rank { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 800; flex-shrink: 0; }
+    .tr-rank-1 { background: linear-gradient(135deg, #d4a843, #f5d77a); color: #000; }
+    .tr-rank-2 { background: linear-gradient(135deg, #94a3b8, #cbd5e1); color: #000; }
+    .tr-rank-3 { background: linear-gradient(135deg, #b45309, #d97706); color: #fff; }
+    .tr-rank-n { background: rgba(255,255,255,0.06); color: var(--text-muted); }
+    .tr-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #1a1a2e, #2a2a4e); display: flex; align-items: center; justify-content: center; font-size: 1rem; color: var(--gold); font-weight: 700; flex-shrink: 0; overflow: hidden; }
+    .tr-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .tr-details { flex: 1; min-width: 0; }
+    .tr-name { font-weight: 600; font-size: 0.88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tr-meta { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+    .tr-meta .score { color: var(--gold); font-weight: 600; }
+    .tr-gift-form { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .tr-gift-select { background: var(--bg); color: var(--text); border: 1px solid rgba(236,72,153,0.25); border-radius: 8px; padding: 4px 6px; font-size: 0.72rem; cursor: pointer; }
+    .tr-gift-btn { padding: 6px 14px; border: none; border-radius: 20px; background: linear-gradient(135deg, #ec4899, #f472b6); color: #fff; font-weight: 700; font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: transform 0.2s; white-space: nowrap; }
+    .tr-gift-btn:hover { transform: scale(1.05); }
+    .tr-empty { text-align: center; padding: var(--space-2xl) var(--space-md); color: var(--text-muted); }
+    .tr-empty i { font-size: 2.5rem; color: rgba(236,72,153,0.3); display: block; margin-bottom: var(--space-md); }
+    .tr-gifts-badge { font-size: 0.65rem; color: #ec4899; opacity: 0.7; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="tr-page">
+    <div class="tr-header">
+        <a href="{{ url_for('studio.dashboard') }}" class="btn-ghost"><i class="bi bi-arrow-left"></i></a>
+        <h1><i class="bi bi-people-fill" style="color:#ec4899;"></i> Top Readers</h1>
+        <span class="tr-bal" style="margin-left:auto;"><i class="bi bi-coin"></i> {{ coin_balance }}</span>
+    </div>
+
+    <div class="tr-info">
+        <i class="bi bi-heart-fill" style="color:#ec4899;"></i>
+        <strong>Reward your best readers!</strong> These are the readers who engage the most with your stories —
+        reading chapters, liking, and commenting. Gift them sticker coins to show your appreciation.
+    </div>
+
+    {% if readers %}
+    <div class="tr-list">
+        {% for r in readers %}
+        {% set rank = loop.index %}
+        <div class="tr-card">
+            <div class="tr-rank {% if rank == 1 %}tr-rank-1{% elif rank == 2 %}tr-rank-2{% elif rank == 3 %}tr-rank-3{% else %}tr-rank-n{% endif %}">
+                {{ rank }}
+            </div>
+            <div class="tr-avatar">
+                {% if r.user.avatar_url %}
+                <img src="{{ r.user.avatar_url }}" alt="">
+                {% else %}
+                {{ r.user.display_name[0] | upper if r.user.display_name else '?' }}
+                {% endif %}
+            </div>
+            <div class="tr-details">
+                <div class="tr-name">{{ r.user.display_name or r.user.username or 'Reader' }}</div>
+                <div class="tr-meta">
+                    <span class="score">{{ r.score }} pts</span>
+                    {% if r.gifts_sent > 0 %}
+                    · <span class="tr-gifts-badge"><i class="bi bi-gift-fill"></i> {{ r.gifts_sent }} gifted</span>
+                    {% endif %}
+                </div>
+            </div>
+            <form method="post" action="{{ url_for('studio.gift_reader_coins') }}" class="tr-gift-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="reader_id" value="{{ r.user.id }}">
+                <select name="amount" class="tr-gift-select">
+                    <option value="5">5</option>
+                    <option value="10" selected>10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                </select>
+                <button type="submit" class="tr-gift-btn">
+                    <i class="bi bi-gift-fill"></i> Gift
+                </button>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="tr-empty">
+        <i class="bi bi-people"></i>
+        <p style="font-size:0.95rem;font-weight:600;margin:0 0 0.3rem;">No readers yet</p>
+        <p style="font-size:0.82rem;">Once readers start engaging with your stories, they'll appear here.
+            Keep writing and sharing your work!</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

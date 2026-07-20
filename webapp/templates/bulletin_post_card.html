@@ -1,0 +1,86 @@
+{# Reusable bulletin post card — included in bulletin.html and bulletin_feed.html #}
+{% set cp = post.creator_profile %}
+<div class="post-header">
+    {% if cp and cp.avatar_url %}
+    <img src="{{ cp.avatar_url }}" class="post-avatar" alt="">
+    {% else %}
+    <div class="post-avatar-placeholder">{{ (cp.pen_name if cp else 'C')[0] }}</div>
+    {% endif %}
+    <div class="post-meta">
+        <div class="post-author">
+            {% set _creator = post.creator %}
+            <a href="{% if _creator and _creator.username %}{{ url_for('creator.profile', username=_creator.username) }}{% else %}#{% endif %}" style="color:inherit;text-decoration:none">
+                {{ cp.pen_name if cp else 'Creator' }}
+            </a>
+        </div>
+        <div class="post-time">
+            {{ post.created_at.strftime('%b %d, %Y · %I:%M %p') }}
+        </div>
+    </div>
+</div>
+
+{% if post.text_content %}
+<div class="post-text">{{ post.text_content }}</div>
+{% endif %}
+
+{% if post.type == 'book_share' and post.book %}
+{% set book = post.book %}
+<a href="{{ url_for('book.detail', book_id=book.id) }}" class="post-book-card">
+    {% if book.cover_file_id %}
+    <img src="{{ book.cover_url }}" class="post-book-cover" alt="{{ book.title }}" loading="lazy">
+    {% else %}
+    <div class="post-book-cover" style="display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:0.8rem;padding:8px">No Cover</div>
+    {% endif %}
+    <div class="post-book-info">
+        <div class="post-book-title">{{ book.title }}</div>
+        <div class="post-book-meta">{{ book.genre or 'Story' }} · {{ book.author or 'Unknown' }}</div>
+        {% if book.status %}
+        <span class="post-book-badge {{ book.status }}">{{ book.status|title }}</span>
+        {% endif %}
+    </div>
+</a>
+{% endif %}
+
+<!-- Reactions -->
+<div class="post-reactions" id="reactions-{{ post.id }}">
+    {% set summary = post.reactions_summary %}
+    {% set my_reacts = user_reactions.get(post.id, []) %}
+    {% for emoji, count in summary.items() %}
+    <button class="reaction-chip {% if emoji in my_reacts %}active{% endif %}"
+            onclick="reactToPost({{ post.id }}, '{{ emoji }}')">
+        <span>{{ emoji }}</span>
+        <span class="count">{{ count }}</span>
+    </button>
+    {% endfor %}
+
+    <div style="position:relative;display:inline-block">
+        <button class="add-reaction-btn" onclick="toggleEmojiPicker({{ post.id }})" title="React">
+            <i class="bi bi-emoji-smile"></i>
+        </button>
+        <div class="emoji-picker-popover" id="emoji-picker-{{ post.id }}">
+            {% for em in ['❤️','🔥','👏','😍','😂','😢','😮','💯','🎉','📖','✨','💪','🙏','👀','💕','🫶'] %}
+            <button class="emoji-pick" onclick="reactToPost({{ post.id }}, '{{ em }}')">{{ em }}</button>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Creator actions (pin, delete) -->
+{% if is_own is defined and is_own %}
+<div class="post-actions">
+    <form method="post" action="{{ url_for('bulletin.toggle_pin', post_id=post.id) }}" style="display:inline">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="post-action-btn">
+            <i class="bi bi-pin{% if post.is_pinned %}-fill{% endif %} me-1"></i>
+            {{ 'Unpin' if post.is_pinned else 'Pin' }}
+        </button>
+    </form>
+    <form method="post" action="{{ url_for('bulletin.delete_post', post_id=post.id) }}"
+          style="display:inline" onsubmit="return confirm('Delete this post?')">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="post-action-btn danger">
+            <i class="bi bi-trash me-1"></i> Delete
+        </button>
+    </form>
+</div>
+{% endif %}

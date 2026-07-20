@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamStudio — Teaser Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:#000; border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); }
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+
+  .preview-banner{ position:absolute; top:0; left:0; right:0; z-index:10; background:var(--gold); padding:9px 20px; display:flex; align-items:center; justify-content:space-between; }
+  .preview-banner span{ font-size:11px; font-weight:800; color:var(--navy); letter-spacing:0.2px; display:flex; align-items:center; gap:6px; }
+  .preview-banner .exit{ font-size:11px; font-weight:800; color:var(--navy); }
+
+  .frame{ position:absolute; inset:0; background:
+      radial-gradient(circle at 30% 20%, rgba(120,30,40,0.5), transparent 55%),
+      radial-gradient(circle at 70% 75%, rgba(30,20,90,0.55), transparent 55%),
+      linear-gradient(165deg,#241030,#0a0a18 60%); }
+
+  .topgrad{ position:absolute; top:0; left:0; right:0; height:190px; background:linear-gradient(180deg, rgba(0,0,0,0.7), transparent); z-index:3; }
+  .botgrad{ position:absolute; bottom:0; left:0; right:0; height:56%; background:linear-gradient(0deg, rgba(4,4,12,0.98) 10%, rgba(4,4,12,0.75) 45%, transparent 100%); z-index:3; }
+
+  .statusbar{ height:44px; position:relative; z-index:5; margin-top:34px; }
+
+  .center-play{ position:absolute; top:46%; left:50%; transform:translate(-50%,-50%); z-index:4; width:60px; height:60px; border-radius:50%; background:rgba(255,255,255,0.14); backdrop-filter:blur(4px); border:1.5px solid rgba(255,255,255,0.3); display:flex; align-items:center; justify-content:center; }
+
+  .content{ position:absolute; left:0; right:0; bottom:0; z-index:5; padding:0 22px 30px; }
+  .badge-row{ display:flex; gap:8px; margin-bottom:10px; }
+  .meta-badge{ font-size:9.5px; font-weight:700; color:#C9C9DE; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.12); padding:4px 9px; border-radius:6px; }
+  .meta-badge.soon{ color:var(--navy); background:var(--gold); border-color:var(--gold); }
+
+  .title{ font-size:23px; font-weight:800; color:#fff; margin:0 0 8px; letter-spacing:-0.4px; line-height:1.15; }
+  .meta-line{ font-size:12px; color:#B8B8CC; margin:0 0 18px; }
+  .meta-line b{ color:var(--gold); }
+
+  .action-row{ display:flex; gap:10px; }
+  .btn-watch{ flex:1; padding:15px; border-radius:15px; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); border:none; color:var(--navy); font-size:14.5px; font-weight:800; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 12px 26px rgba(212,160,23,0.3); font-family:'Inter',sans-serif; }
+  .btn-follow{ width:52px; border-radius:15px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); display:flex; align-items:center; justify-content:center; }
+
+  .creator-note{ position:absolute; bottom:100px; left:22px; right:22px; z-index:6; background:rgba(8,8,26,0.85); backdrop-filter:blur(6px); border:1px solid rgba(212,160,23,0.3); border-radius:12px; padding:10px 12px; display:flex; gap:8px; align-items:flex-start; }
+  .creator-note svg{ width:13px; height:13px; color:var(--gold); flex-shrink:0; margin-top:1px; }
+  .creator-note span{ font-size:9.5px; color:#D9C89A; line-height:1.5; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="preview-banner">
+    <span><svg viewBox="0 0 24 24" width="12" height="12" color="var(--navy)"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>PREVIEW MODE — this is what viewers see</span>
+    <span class="exit">Exit</span>
+  </div>
+
+  <div class="frame"></div>
+  <div class="topgrad"></div>
+  <div class="botgrad"></div>
+
+  <div class="center-play"><svg viewBox="0 0 24 24" width="24" height="24" fill="#fff" stroke="none"><polygon points="6 3 20 12 6 21 6 3"/></svg></div>
+
+  <div class="creator-note">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <span>Viewers can tap Remind Me here — it counts toward your 200-interest threshold.</span>
+  </div>
+
+  <div class="content">
+    <div class="badge-row">
+      <span class="meta-badge soon">COMING SOON</span>
+      <span class="meta-badge">Drama · Royal &amp; Palace</span>
+    </div>
+    <h1 class="title">The Chief's Daughter</h1>
+    <p class="meta-line">20 Episodes planned · <b>146</b> interested</p>
+
+    <div class="action-row">
+      <button class="btn-watch"><svg viewBox="0 0 24 24" width="16" height="16" stroke="#08081A"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>Remind Me</button>
+      <div class="btn-follow"><svg viewBox="0 0 24 24" width="17" height="17" color="#fff"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

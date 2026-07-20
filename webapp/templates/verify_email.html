@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Verify Email — WiamApp{% endblock %}
+
+{% block extra_head %}
+<style>
+    .auth-field { margin-bottom: var(--space-md); }
+    .auth-field label { display:block; font-size:0.82rem; font-weight:500; color:var(--text-secondary); margin-bottom:6px; }
+    .auth-field input { width:100%; padding:11px 14px; border:1px solid var(--border-subtle); border-radius:var(--radius-md); background:var(--bg-card); color:var(--text); font-size:0.92rem; transition:border-color 0.2s; }
+    .auth-field input:focus { outline:none; border-color:var(--gold); box-shadow:0 0 0 3px rgba(212,168,67,0.12); }
+    .code-input { text-align:center; font-size:1.8rem !important; letter-spacing:12px; font-weight:700; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="min-height:80vh;display:flex;align-items:center;justify-content:center;padding:var(--space-xl);">
+    <div class="login-card" style="max-width:400px;width:100%;text-align:center;">
+        <div style="margin-bottom:var(--space-lg);">
+            <div style="width:64px;height:64px;border-radius:50%;background:var(--gold-glow);display:inline-flex;align-items:center;justify-content:center;">
+                <i class="bi bi-envelope-check" style="font-size:28px;color:var(--gold);"></i>
+            </div>
+        </div>
+
+        <h2>Check your email</h2>
+        <p style="color:var(--text-muted);margin-bottom:var(--space-lg);">
+            We sent a 6-digit code to<br>
+            <strong style="color:var(--text);">{{ email }}</strong>
+        </p>
+
+        <form method="POST" action="{{ url_for('auth.verify_email') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="auth-field">
+                <input type="text" name="code" class="code-input" placeholder="000000" maxlength="6" pattern="[0-9]{6}" required autofocus autocomplete="one-time-code" inputmode="numeric">
+            </div>
+            <button type="submit" class="btn btn-gold" style="width:100%;padding:12px;">Verify Email</button>
+        </form>
+
+        <div style="margin-top:var(--space-lg);color:var(--text-muted);font-size:0.85rem;">
+            Didn't receive the code?
+            <form method="POST" action="{{ url_for('auth.resend_code') }}" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="purpose" value="register">
+                <button type="submit" style="background:none;border:none;color:var(--gold);font-size:0.85rem;cursor:pointer;padding:0;font-weight:600;">Resend</button>
+            </form>
+        </div>
+
+        <div style="margin-top:var(--space-md);">
+            <a href="{{ url_for('auth.login') }}" style="color:var(--text-muted);font-size:0.82rem;">
+                <i class="bi bi-arrow-left me-1"></i> Back to login
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

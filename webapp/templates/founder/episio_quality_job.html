@@ -1,0 +1,69 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Season QC #{{ job.id }} — Founder{% endblock %}
+{% block sidebar_title %}Founder Dashboard{% endblock %}
+
+{% block sidebar_nav %}
+<a class="nav-link" href="{{ url_for('founder_dash.episio_quality') }}"><i class="bi bi-camera-reels" style="color:var(--gold);"></i> Episio Season QC</a>
+<a class="nav-link" href="{{ url_for('founder_dash.platform_settings') }}"><i class="bi bi-sliders"></i> Platform Settings</a>
+{% endblock %}
+
+{% block dash_content %}
+<div class="dash-header">
+  <h1>Season QC #{{ job.id }}</h1>
+  <p>{{ series.title if series else 'Series' }} · status <b>{{ job.status }}</b> · band <b>{{ job.overall_band or '—' }}</b> · score {{ '%.2f'|format(job.overall_score or 0) }}</p>
+  <p style="font-size:0.8rem;color:var(--text-muted);">Checked: trailer + every episode + cover/banner. Your job = light final check, then Publish (platform publishes, not the creator). <b>Changes Required</b> opens a pre-live fix window so the creator can re-upload only failed assets (not a live Revision Request).</p>
+</div>
+
+{% if job.failure_reasons %}
+<div class="dash-card" style="border:1px solid rgba(239,68,68,0.35);margin-bottom:16px;">
+  <h3 style="color:#f87171;">Issues</h3>
+  <p style="font-size:0.85rem;line-height:1.5;">{{ job.failure_reasons }}</p>
+</div>
+{% endif %}
+
+<div class="dash-card" style="margin-bottom:16px;">
+  <h3>Per-asset results</h3>
+  <table style="width:100%;border-collapse:collapse;font-size:0.82rem;">
+    <thead>
+      <tr style="color:var(--text-muted);text-align:left;">
+        <th style="padding:8px;">Asset</th>
+        <th style="padding:8px;">Status</th>
+        <th style="padding:8px;">Band</th>
+        <th style="padding:8px;">Score</th>
+        <th style="padding:8px;">Reasons</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for a in assets %}
+      <tr style="border-top:1px solid var(--border-subtle);">
+        <td style="padding:10px 8px;">
+          {{ a.asset_kind }}{% if a.episode_number %} EP.{{ a.episode_number }}{% endif %}
+        </td>
+        <td style="padding:10px 8px;">{{ a.status }}</td>
+        <td style="padding:10px 8px;">{{ a.band or '—' }}</td>
+        <td style="padding:10px 8px;">{{ '%.2f'|format(a.score or 0) }}</td>
+        <td style="padding:10px 8px;color:var(--text-muted);">{{ a.failure_reasons or '—' }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="5" style="padding:16px;color:var(--text-muted);">No asset rows — run queue or wait for submit processing.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="dash-card">
+  <h3>Founder decision</h3>
+  <form method="post" action="{{ url_for('founder_dash.episio_quality_decide', job_id=job.id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <textarea name="note" rows="3" placeholder="Optional note to creator / internal" style="width:100%;padding:10px;border-radius:10px;background:var(--bg);border:1px solid var(--border-subtle);color:var(--text);margin-bottom:12px;"></textarea>
+    <label style="display:flex;gap:8px;align-items:center;margin-bottom:14px;font-size:0.85rem;">
+      <input type="checkbox" name="publish_all" value="1"> Publish all episodes now (else free-first-N only)
+    </label>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <button type="submit" name="decision" value="publish" style="padding:12px 22px;background:var(--gold);color:#000;border:none;border-radius:10px;font-weight:800;cursor:pointer;">Publish for creator</button>
+      <button type="submit" name="decision" value="changes_required" style="padding:12px 22px;background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.35);border-radius:10px;font-weight:700;cursor:pointer;">Changes Required</button>
+      <a href="{{ url_for('founder_dash.episio_quality') }}" style="padding:12px 18px;color:var(--text-muted);">← Back</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

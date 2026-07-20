@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamEpisio — Maintenance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); }
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+
+  .statusbar{ height:44px; }
+  .glow-bg{ position:absolute; top:60px; left:50%; transform:translateX(-50%); width:420px; height:420px; background:radial-gradient(circle, rgba(212,160,23,0.16), transparent 65%); }
+
+  .wrap{ position:relative; z-index:2; height:calc(100% - 44px); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:0 32px 40px; text-align:center; }
+
+  .icon-wrap{ width:96px; height:96px; border-radius:50%; background:var(--navy-card); border:1px solid var(--navy-line); display:flex; align-items:center; justify-content:center; margin-bottom:26px; }
+  .icon-wrap svg{ width:40px; height:40px; color:var(--gold); }
+
+  h1{ font-size:19px; font-weight:800; color:#fff; margin:0 0 10px; }
+  .sub{ font-size:12.5px; color:var(--text-dim); line-height:1.6; margin:0 0 24px; max-width:280px; }
+
+  .eta-card{ width:100%; background:var(--navy-card); border:1px solid var(--navy-line); border-radius:16px; padding:16px; margin-bottom:24px; }
+  .eta-label{ font-size:10px; color:var(--text-faint); font-weight:700; text-transform:uppercase; margin:0 0 6px; }
+  .eta-value{ font-size:17px; color:#fff; font-weight:800; margin:0; }
+  .eta-sub{ font-size:11px; color:var(--gold); margin-top:4px; }
+
+  .status-row{ display:flex; align-items:center; gap:8px; margin-bottom:26px; }
+  .status-dot{ width:7px; height:7px; border-radius:50%; background:var(--gold); animation:none; }
+  .status-row span{ font-size:11px; color:var(--text-dim); }
+
+  .btn-ghost{ width:100%; padding:15px; border-radius:16px; background:var(--navy-card); border:1px solid var(--navy-line); color:#C9C9DE; font-size:13px; font-weight:700; font-family:'Inter',sans-serif; margin-bottom:10px; }
+  .ghost-link{ font-size:12px; color:var(--text-faint); font-weight:600; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"></div>
+  <div class="glow-bg"></div>
+
+  <div class="wrap">
+    <div class="icon-wrap"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
+
+    <h1>We're making things better</h1>
+    <p class="sub">WiamEpisio is temporarily down for scheduled maintenance. We'll be back shortly.</p>
+
+    <div class="eta-card">
+      <p class="eta-label">Estimated back online</p>
+      <p class="eta-value">Today, 2:30 AM GMT</p>
+      <p class="eta-sub">About 30 minutes remaining</p>
+    </div>
+
+    <div class="status-row"><span class="status-dot"></span><span>Follow live updates on our status page</span></div>
+
+    <button class="btn-ghost">Check Status Page</button>
+    <span class="ghost-link">Try Again</span>
+  </div>
+</div>
+
+</body>
+</html>

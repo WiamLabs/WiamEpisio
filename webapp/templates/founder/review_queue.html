@@ -1,0 +1,193 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Bot Review Queue — Founder{% endblock %}
+{% block sidebar_title %}Founder Dashboard{% endblock %}
+
+{% block sidebar_nav %}
+<a class="nav-link" href="{{ url_for('founder_dash.overview') }}"><i class="bi bi-speedometer2"></i> Overview</a>
+<a class="nav-link" href="{{ url_for('founder_dash.users') }}"><i class="bi bi-people"></i> Users</a>
+<a class="nav-link" href="{{ url_for('founder_dash.content') }}"><i class="bi bi-book"></i> Content</a>
+<a class="nav-link" href="{{ url_for('founder_dash.revenue') }}"><i class="bi bi-cash-stack"></i> Revenue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.financial_dashboard') }}"><i class="bi bi-bank" style="color:var(--gold);"></i> Financial v5</a>
+<a class="nav-link" href="{{ url_for('founder_dash.premium_analytics') }}"><i class="bi bi-gem" style="color:#c084fc;"></i> Premium Analytics</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payouts') }}"><i class="bi bi-send-check"></i> Payouts</a>
+<a class="nav-link" href="{{ url_for('founder_dash.withdrawals') }}"><i class="bi bi-arrow-up-right-circle" style="color:var(--gold);"></i> Withdrawals</a>
+<a class="nav-link" href="{{ url_for('founder_dash.subscribers') }}"><i class="bi bi-gem" style="color:#9b59b6;"></i> Subscribers</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payroll') }}"><i class="bi bi-wallet2" style="color:#2ecc71;"></i> Team Payroll</a>
+<a class="nav-link" href="{{ url_for('founder_dash.creators') }}"><i class="bi bi-person-badge"></i> Creators</a>
+<a class="nav-link" href="{{ url_for('founder_dash.genres') }}"><i class="bi bi-tags"></i> Genres</a>
+<a class="nav-link" href="{{ url_for('founder_dash.announcements') }}"><i class="bi bi-megaphone"></i> Announcements</a>
+<a class="nav-link" href="{{ url_for('founder_dash.collections') }}"><i class="bi bi-grid"></i> Collections</a>
+<a class="nav-link" href="{{ url_for('founder_dash.moderation') }}"><i class="bi bi-shield-exclamation"></i> Moderation</a>
+<a class="nav-link" href="{{ url_for('founder_dash.warnings_list') }}"><i class="bi bi-exclamation-triangle" style="color:#f59e0b;"></i> Warnings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.elite_manage') }}"><span style="color:var(--gold);">?</span> WiamElite</a>
+<a class="nav-link" href="{{ url_for('wiambot.apex_review') }}"><i class="bi bi-trophy-fill" style="color:var(--gold);"></i> Apex Review</a>
+<a class="nav-link active" href="{{ url_for('founder_dash.review_queue') }}"><i class="bi bi-robot"></i> Bot Review Queue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.platform_settings') }}"><i class="bi bi-sliders"></i> Platform Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.forms_dashboard') }}"><i class="bi bi-file-earmark-text"></i> Application Forms</a>
+<a class="nav-link" href="{{ url_for('founder_dash.email_studio') }}"><i class="bi bi-envelope-paper" style="color:var(--gold);"></i> Email Studio</a>
+<a class="nav-link" href="{{ url_for('founder_dash.team_management') }}"><i class="bi bi-people-fill"></i> Team</a>
+<a class="nav-link" href="{{ url_for('founder_dash.account_management') }}"><i class="bi bi-person-x"></i> Account Management</a>
+<a class="nav-link" href="{{ url_for('founder_dash.notification_testing') }}"><i class="bi bi-bell" style="color:#fbbf24;"></i> Notifications</a>
+<a class="nav-link" href="{{ url_for('classics.dashboard') }}"><i class="bi bi-journal-bookmark" style="color:#a78bfa;"></i> Content Seeder</a>
+<a class="nav-link" href="{{ url_for('founder_dash.settings') }}"><i class="bi bi-gear"></i> Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.admins') }}"><i class="bi bi-shield-check"></i> Admins</a>
+{% endblock %}
+
+{% block dash_content %}
+<div class="dash-header">
+    <h1><i class="bi bi-robot" style="color:var(--gold);"></i> Bot Review Queue</h1>
+    <p>Smart Hybrid Publishing — automated editorial review</p>
+</div>
+
+<!-- Stats -->
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="label">Total Submissions</div>
+        <div class="value gold">{{ stats.total }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Pending</div>
+        <div class="value" style="color:#facc15;">{{ stats.pending }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Approved</div>
+        <div class="value" style="color:#4ade80;">{{ stats.bot_approved }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Rejected</div>
+        <div class="value" style="color:#f87171;">{{ stats.bot_rejected }}</div>
+    </div>
+    {% if stats.tc_violation %}
+    <div class="stat-card" style="border:1px solid rgba(239,68,68,0.3);">
+        <div class="label" style="color:#f87171;">T&C Violations</div>
+        <div class="value" style="color:#f87171;">{{ stats.tc_violation }}</div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Filters -->
+<div class="dash-card" style="padding:12px 16px;margin-bottom:16px;">
+    <form method="get" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <select name="status" style="padding:6px 12px;background:var(--bg);border:1px solid var(--border-subtle);color:var(--text);border-radius:8px;font-size:0.82rem;">
+            <option value="">All Statuses</option>
+            <option value="pending" {{ 'selected' if status_filter == 'pending' }}>Pending</option>
+            <option value="bot_reviewing" {{ 'selected' if status_filter == 'bot_reviewing' }}>Bot Reviewing</option>
+            <option value="bot_approved" {{ 'selected' if status_filter == 'bot_approved' }}>Bot Approved</option>
+            <option value="bot_rejected" {{ 'selected' if status_filter == 'bot_rejected' }}>Bot Rejected</option>
+            <option value="approved" {{ 'selected' if status_filter == 'approved' }}>Approved (Final)</option>
+            <option value="rejected" {{ 'selected' if status_filter == 'rejected' }}>Rejected (Final)</option>
+            <option value="in_review" {{ 'selected' if status_filter == 'in_review' }}>Editor Reviewing</option>
+            <option value="tc_violation" {{ 'selected' if status_filter == 'tc_violation' }}>T&C Violation</option>
+        </select>
+        <button type="submit" style="padding:6px 16px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:0.82rem;cursor:pointer;">Filter</button>
+        {% if status_filter %}
+        <a href="{{ url_for('founder_dash.review_queue') }}" style="font-size:0.8rem;color:var(--text-muted);text-decoration:none;">Clear</a>
+        {% endif %}
+    </form>
+</div>
+
+<!-- Queue Table -->
+{% if items %}
+<div class="dash-card">
+    <table class="dash-table">
+        <thead>
+            <tr>
+                <th>Story</th>
+                <th>Creator</th>
+                <th>Type</th>
+                <th>Bot Score</th>
+                <th>Status</th>
+                <th>Submitted</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            {% set q = item.queue %}
+            {% set s = item.story %}
+            {% set c = item.creator %}
+            <tr>
+                <td>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        {% if s.cover_file_id %}
+                        <img src="{{ s.cover_url }}" alt="" style="width:28px;height:40px;border-radius:4px;object-fit:cover;">
+                        {% endif %}
+                        <div>
+                            <div style="font-weight:600;font-size:0.85rem;">{{ s.title|truncate(35) }}</div>
+                            <div style="font-size:0.7rem;color:var(--text-muted);">ID #{{ s.id }}</div>
+                        </div>
+                    </div>
+                </td>
+                <td style="font-size:0.82rem;color:var(--text-muted);">{{ c.display_name if c else 'Unknown' }}</td>
+                <td><span style="font-size:0.72rem;text-transform:uppercase;color:var(--text-muted);">{{ q.submission_type }}</span></td>
+                <td>
+                    {% if q.bot_score is not none %}
+                    <span style="font-weight:700;color:{% if q.bot_score >= 70 %}#4ade80{% elif q.bot_score >= 40 %}#facc15{% else %}#f87171{% endif %};">{{ q.bot_score }}</span><span style="color:var(--text-muted);font-size:0.7rem;">/100</span>
+                    {% else %}
+                    <span style="color:var(--text-muted);font-size:0.8rem;">—</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% set badge_colors = {
+                        'pending': ('rgba(234,179,8,0.15)', '#facc15'),
+                        'bot_reviewing': ('rgba(59,130,246,0.15)', '#60a5fa'),
+                        'bot_approved': ('rgba(34,197,94,0.15)', '#4ade80'),
+                        'bot_rejected': ('rgba(239,68,68,0.15)', '#f87171'),
+                        'approved': ('rgba(34,197,94,0.15)', '#4ade80'),
+                        'rejected': ('rgba(239,68,68,0.15)', '#f87171'),
+                        'in_review': ('rgba(99,102,241,0.15)', '#818cf8'),
+                        'revision_requested': ('rgba(251,191,36,0.15)', '#fbbf24'),
+                        'tc_violation': ('rgba(239,68,68,0.25)', '#ff4444'),
+                    } %}
+                    {% set bg, fg = badge_colors.get(q.status, ('rgba(156,163,175,0.15)', '#9ca3af')) %}
+                    <span style="display:inline-block;padding:3px 8px;border-radius:5px;font-size:0.7rem;font-weight:700;background:{{ bg }};color:{{ fg }};text-transform:uppercase;">{{ q.status|replace('_', ' ') }}</span>
+                </td>
+                <td style="font-size:0.78rem;color:var(--text-muted);">{{ q.created_at.strftime('%b %d, %H:%M') }}</td>
+                <td>
+                    <div style="display:flex;gap:4px;flex-wrap:wrap;">
+                        <!-- Re-run Bot -->
+                        <form method="post" action="{{ url_for('founder_dash.rerun_bot_review', queue_id=q.id) }}" style="display:inline;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn-dash btn-dash-sm" style="background:rgba(99,102,241,0.15);color:#818cf8;border:none;padding:4px 8px;border-radius:6px;font-size:0.72rem;cursor:pointer;" title="Re-run bot review">
+                                <i class="bi bi-arrow-repeat"></i>
+                            </button>
+                        </form>
+                        <!-- Override Approve -->
+                        <form method="post" action="{{ url_for('founder_dash.review_override', queue_id=q.id) }}" style="display:inline;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="action" value="approve">
+                            <input type="hidden" name="reason" value="Founder override">
+                            <button type="submit" class="btn-dash btn-dash-sm" style="background:rgba(34,197,94,0.15);color:#4ade80;border:none;padding:4px 8px;border-radius:6px;font-size:0.72rem;cursor:pointer;" title="Override: Approve">
+                                <i class="bi bi-check-lg"></i>
+                            </button>
+                        </form>
+                        <!-- Override Reject -->
+                        <button type="button" class="btn-dash btn-dash-sm" style="background:rgba(239,68,68,0.15);color:#f87171;border:none;padding:4px 8px;border-radius:6px;font-size:0.72rem;cursor:pointer;" title="Override: Reject"
+                                onclick="document.getElementById('rejectForm{{ q.id }}').style.display = document.getElementById('rejectForm{{ q.id }}').style.display === 'none' ? 'flex' : 'none'">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                        <!-- View in Editor Studio -->
+                        <a href="{{ url_for('editor_studio.review', book_id=s.id) }}" class="btn-dash btn-dash-sm btn-dash-primary" style="padding:4px 8px;font-size:0.72rem;text-decoration:none;" title="Open in Editor Studio">
+                            <i class="bi bi-journal-richtext"></i>
+                        </a>
+                    </div>
+                    <!-- Reject reason form (hidden) -->
+                    <form id="rejectForm{{ q.id }}" method="post" action="{{ url_for('founder_dash.review_override', queue_id=q.id) }}" style="display:none;margin-top:6px;gap:4px;flex-direction:column;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="action" value="reject">
+                        <input type="text" name="reason" placeholder="Rejection reason..." required style="padding:4px 8px;background:var(--bg);border:1px solid var(--border-subtle);color:var(--text);border-radius:6px;font-size:0.78rem;">
+                        <button type="submit" style="padding:4px 10px;background:rgba(239,68,68,0.3);color:#f87171;border:none;border-radius:6px;font-size:0.72rem;cursor:pointer;font-weight:700;">Confirm Reject</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="dash-card" style="text-align:center;padding:60px 20px;">
+    <i class="bi bi-inbox" style="font-size:2.5rem;opacity:0.2;display:block;margin-bottom:12px;color:var(--gold);"></i>
+    <p style="color:var(--text-muted);font-size:0.95rem;">No review submissions{{ ' matching this filter' if status_filter else '' }}.</p>
+</div>
+{% endif %}
+{% endblock %}

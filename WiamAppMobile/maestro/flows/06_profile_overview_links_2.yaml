@@ -1,0 +1,9 @@
+appId: com.wiamapp.mobile
+---
+# Requires logged-in test session
+- launchApp
+- tapOn: "Profile"
+- tapOn: "Coins"
+- back
+- tapOn: "Offline"
+- back

@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Gift "{{ book.title }}" — WiamApp{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width:560px;padding:var(--space-2xl) var(--space-md);">
+    <a href="{{ url_for('book.detail', book_id=book.id) }}" class="btn-ghost" style="margin-bottom:var(--space-lg);display:inline-block;">
+        <i class="bi bi-arrow-left me-1"></i> Back to book
+    </a>
+
+    <div style="text-align:center;margin-bottom:var(--space-xl);">
+        <i class="bi bi-gift" style="font-size:2.5rem;color:var(--gold);"></i>
+        <h1 class="font-display" style="font-size:1.6rem;margin-top:var(--space-sm);">Gift a Book</h1>
+        <p style="color:var(--text-secondary);">Send <strong>{{ book.title }}</strong> as a gift</p>
+    </div>
+
+    {% if book.cover_file_id %}
+    <div style="text-align:center;margin-bottom:var(--space-lg);">
+        <img src="{{ book.cover_url }}" alt="{{ book.title }}" style="width:120px;height:170px;object-fit:cover;border-radius:var(--radius-md);box-shadow:0 8px 24px rgba(0,0,0,0.3);">
+    </div>
+    {% endif %}
+
+    <form method="POST" style="background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);padding:var(--space-xl);">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div style="margin-bottom:var(--space-lg);">
+            <label style="display:block;color:var(--text-secondary);font-size:0.85rem;margin-bottom:var(--space-xs);">Personal message (optional)</label>
+            <textarea name="message" rows="3" placeholder="Enjoy this book! 📚" style="width:100%;padding:var(--space-md);background:var(--bg-elevated);border:1px solid var(--border-subtle);border-radius:var(--radius-md);color:var(--text);font-family:var(--font-ui);font-size:0.9rem;resize:vertical;"></textarea>
+        </div>
+        <button type="submit" class="btn btn-gold w-100" style="padding:0.7rem;font-size:1rem;">
+            <i class="bi bi-gift me-2"></i> Create Gift Link
+        </button>
+        <p style="color:var(--text-muted);font-size:0.8rem;text-align:center;margin-top:var(--space-md);">
+            A unique link will be generated. Share it with the recipient to give them access.
+        </p>
+    </form>
+</div>
+{% endblock %}

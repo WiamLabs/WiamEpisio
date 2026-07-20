@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+{% block title %}My Bulletin Feed — WiamApp{% endblock %}
+
+{% block extra_head %}
+<style>
+    .bulletin-page { max-width: 680px; margin: 0 auto; padding-bottom: 120px; }
+
+    /* ── Feed Header ── */
+    .feed-header {
+        padding: var(--space-xl) var(--space-lg) var(--space-lg);
+        text-align: center;
+    }
+    .feed-header h1 {
+        font-family: var(--font-display); font-size: 1.5rem; font-weight: 700;
+        margin-bottom: var(--space-xs);
+    }
+    .feed-header h1 i { color: var(--gold); }
+    .feed-header p { color: var(--text-muted); font-size: 0.88rem; }
+
+    /* ── Post cards (same styles as bulletin.html) ── */
+    .bulletin-post {
+        background: var(--bg-card); border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-lg); padding: var(--space-md) var(--space-lg);
+        margin-bottom: var(--space-md); transition: all 0.15s;
+        position: relative;
+    }
+    .bulletin-post:hover { border-color: var(--border-hover); }
+    .post-header { display: flex; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-sm); }
+    .post-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--gold); }
+    .post-avatar-placeholder {
+        width: 40px; height: 40px; border-radius: 50%;
+        background: var(--wine-dark); border: 2px solid var(--gold);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1rem; color: var(--gold); flex-shrink: 0;
+    }
+    .post-meta { flex: 1; }
+    .post-author { font-weight: 600; font-size: 0.92rem; }
+    .post-time { font-size: 0.75rem; color: var(--text-muted); }
+    .post-text { font-size: 0.95rem; line-height: 1.65; margin-bottom: var(--space-sm); white-space: pre-wrap; word-break: break-word; }
+
+    .post-book-card {
+        background: var(--bg-elevated); border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-md); overflow: hidden; margin-bottom: var(--space-sm);
+        display: flex; gap: 0; cursor: pointer; transition: all 0.15s;
+        text-decoration: none; color: inherit;
+    }
+    .post-book-card:hover { border-color: var(--gold); transform: translateY(-1px); }
+    .post-book-cover {
+        width: 90px; min-height: 120px; object-fit: cover; flex-shrink: 0;
+        background: var(--wine-dark);
+    }
+    .post-book-info { padding: var(--space-sm) var(--space-md); flex: 1; display: flex; flex-direction: column; justify-content: center; }
+    .post-book-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; }
+    .post-book-meta { font-size: 0.78rem; color: var(--text-muted); }
+    .post-book-badge {
+        display: inline-block; font-size: 0.68rem; font-weight: 600;
+        padding: 2px 8px; border-radius: 10px; margin-top: 6px;
+    }
+    .post-book-badge.ongoing { background: rgba(34,197,94,0.15); color: #4ade80; }
+    .post-book-badge.complete { background: rgba(59,130,246,0.15); color: #60a5fa; }
+
+    .post-reactions { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .reaction-chip {
+        display: inline-flex; align-items: center; gap: 4px;
+        background: var(--bg-elevated); border: 1px solid var(--border-subtle);
+        border-radius: 20px; padding: 4px 10px; font-size: 0.82rem;
+        cursor: pointer; transition: all 0.15s; user-select: none;
+    }
+    .reaction-chip:hover { border-color: var(--gold); }
+    .reaction-chip.active { border-color: var(--gold); background: rgba(212,168,67,0.1); }
+    .reaction-chip .count { font-size: 0.72rem; color: var(--text-muted); font-weight: 600; }
+    .add-reaction-btn {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 32px; height: 32px; border-radius: 50%;
+        background: var(--bg-elevated); border: 1px solid var(--border-subtle);
+        cursor: pointer; font-size: 0.9rem; transition: all 0.15s;
+    }
+    .add-reaction-btn:hover { border-color: var(--gold); background: rgba(212,168,67,0.08); }
+
+    .emoji-picker-popover {
+        display: none; position: absolute; bottom: 100%; left: 0;
+        background: var(--bg-card); border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-md); padding: 8px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.4); z-index: 100;
+        margin-bottom: 6px;
+    }
+    .emoji-picker-popover.show { display: flex; flex-wrap: wrap; gap: 4px; max-width: 280px; }
+    .emoji-pick {
+        width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+        font-size: 1.3rem; border-radius: 8px; cursor: pointer; transition: all 0.1s;
+        border: none; background: transparent;
+    }
+    .emoji-pick:hover { background: rgba(212,168,67,0.1); transform: scale(1.15); }
+
+    .bulletin-empty {
+        text-align: center; padding: var(--space-2xl) var(--space-lg);
+        color: var(--text-muted);
+    }
+    .bulletin-empty i { font-size: 3rem; display: block; margin-bottom: var(--space-md); opacity: 0.4; }
+
+    .bulletin-pagination { text-align: center; padding: var(--space-lg) 0; }
+    .bulletin-pagination a {
+        color: var(--gold); text-decoration: none; padding: 8px 16px;
+        border: 1px solid var(--border-subtle); border-radius: 20px;
+        font-size: 0.88rem; transition: all 0.15s;
+    }
+    .bulletin-pagination a:hover { background: rgba(212,168,67,0.1); border-color: var(--gold); }
+
+    .view-bulletin-link {
+        font-size: 0.78rem; color: var(--gold); text-decoration: none;
+        margin-left: auto;
+    }
+    .view-bulletin-link:hover { text-decoration: underline; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="bulletin-page">
+    <div class="feed-header">
+        <h1><i class="bi bi-megaphone"></i> Bulletin</h1>
+        <p>Updates from creators you follow</p>
+    </div>
+
+    {% if posts and posts.items %}
+        {% for post in posts.items %}
+        <div class="bulletin-post" id="post-{{ post.id }}">
+            {% include "bulletin_post_card.html" %}
+            <a href="{{ url_for('bulletin.feed', creator_id=post.creator_id) }}" class="view-bulletin-link">
+                View Bulletin <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+        {% endfor %}
+
+        {% if posts.has_prev or posts.has_next %}
+        <div class="bulletin-pagination">
+            {% if posts.has_prev %}
+            <a href="{{ url_for('bulletin.bulletin_list') }}">
+                <i class="bi bi-chevron-left me-1"></i> Newer
+            </a>
+            {% endif %}
+            {% if posts.has_next %}
+            <a href="{{ url_for('bulletin.bulletin_list') }}">
+                Older <i class="bi bi-chevron-right ms-1"></i>
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    {% else %}
+        <div class="bulletin-empty">
+            <i class="bi bi-megaphone"></i>
+            <h4>No bulletin posts yet</h4>
+            <p>Follow creators to see their updates here!</p>
+            <a href="{{ url_for('browse.browse_home') }}" class="btn btn-gold" style="margin-top:var(--space-md);display:inline-block;padding:8px 20px;border-radius:20px;text-decoration:none">
+                <i class="bi bi-compass me-1"></i> Browse Stories
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+var CSRF = '{{ csrf_token() }}';
+var REACT_URL_BASE = '{{ url_for("bulletin.react", post_id=0) }}'.replace('/0', '');
+var QUICK_EMOJIS = ['❤️','🔥','👏','😍','😂','😢','😮','💯','🎉','📖','✨','💪','🙏','👀','💕','🫶'];
+
+function toggleEmojiPicker(postId) {
+    var el = document.getElementById('emoji-picker-' + postId);
+    document.querySelectorAll('.emoji-picker-popover.show').forEach(function(p) {
+        if (p.id !== el.id) p.classList.remove('show');
+    });
+    el.classList.toggle('show');
+}
+
+function reactToPost(postId, emoji) {
+    fetch(REACT_URL_BASE + '/' + postId, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+        body: JSON.stringify({ emoji: emoji })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        var picker = document.getElementById('emoji-picker-' + postId);
+        if (picker) picker.classList.remove('show');
+        var container = document.getElementById('reactions-' + postId);
+        if (!container) return;
+        var html = '';
+        var reactions = data.reactions || {};
+        for (var e in reactions) {
+            html += '<button class="reaction-chip" onclick="reactToPost(' + postId + ',\'' + e + '\')">' +
+                    '<span>' + e + '</span><span class="count">' + reactions[e] + '</span></button>';
+        }
+        html += '<div style="position:relative;display:inline-block">' +
+                '<button class="add-reaction-btn" onclick="toggleEmojiPicker(' + postId + ')" title="React">' +
+                '<i class="bi bi-emoji-smile"></i></button>' +
+                '<div class="emoji-picker-popover" id="emoji-picker-' + postId + '">';
+        QUICK_EMOJIS.forEach(function(em) {
+            html += '<button class="emoji-pick" onclick="reactToPost(' + postId + ',\'' + em + '\')">' + em + '</button>';
+        });
+        html += '</div></div>';
+        container.innerHTML = html;
+    });
+}
+
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.add-reaction-btn') && !e.target.closest('.emoji-picker-popover')) {
+        document.querySelectorAll('.emoji-picker-popover.show').forEach(function(p) { p.classList.remove('show'); });
+    }
+});
+</script>
+{% endblock %}

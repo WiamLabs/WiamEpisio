@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamStudio — Creator Trust Tier</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75; --green:#3BB273;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); display:flex; flex-direction:column; }
+  .statusbar{ height:44px; flex-shrink:0; }
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+
+  .topbar{ display:flex; align-items:center; gap:12px; padding:2px 20px 14px; flex-shrink:0; }
+  .icon-btn{ width:34px; height:34px; border-radius:50%; background:var(--navy-card); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .topbar h1{ font-size:16px; font-weight:800; color:#fff; margin:0; }
+
+  .scroll{ flex:1; overflow-y:auto; padding:0 20px 20px; }
+
+  .tier-hero{ text-align:center; padding:14px 0 22px; }
+  .tier-badge{ width:88px; height:88px; border-radius:50%; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); display:flex; align-items:center; justify-content:center; margin:0 auto 16px; box-shadow:0 16px 38px rgba(212,160,23,0.4); position:relative; }
+  .tier-badge svg{ color:var(--navy); width:36px; height:36px; }
+  .tier-ring{ position:absolute; inset:-6px; border-radius:50%; border:2px dashed rgba(212,160,23,0.4); }
+  .tier-name{ font-size:19px; font-weight:800; color:#fff; margin:0 0 6px; }
+  .tier-sub{ font-size:12px; color:var(--text-dim); margin:0; max-width:280px; margin:0 auto; line-height:1.6; }
+  .tier-sub b{ color:var(--gold); }
+
+  .progress-card{ background:var(--navy-card); border:1px solid var(--navy-line); border-radius:16px; padding:16px; margin-bottom:20px; }
+  .progress-head{ display:flex; justify-content:space-between; margin-bottom:10px; }
+  .progress-head span{ font-size:11.5px; color:var(--text-dim); font-weight:600; }
+  .progress-head b{ font-size:11.5px; color:#fff; }
+  .progress-bar{ height:7px; background:var(--navy-line); border-radius:99px; overflow:hidden; margin-bottom:6px; }
+  .progress-fill{ height:100%; background:linear-gradient(90deg,var(--gold),var(--gold-dark)); border-radius:99px; width:66%; }
+  .progress-note{ font-size:10.5px; color:var(--text-faint); }
+  .progress-note b{ color:var(--gold); }
+
+  .section-title{ font-size:12px; font-weight:800; color:var(--text-dim); letter-spacing:0.4px; text-transform:uppercase; margin:4px 0 12px; }
+
+  .tier-row{ display:flex; align-items:center; gap:12px; background:var(--navy-card); border:1px solid var(--navy-line); border-radius:14px; padding:13px 14px; margin-bottom:9px; }
+  .tier-row.current{ border-color:var(--gold); background:rgba(212,160,23,0.08); }
+  .tier-icon{ width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .tier-row.current .tier-icon{ background:var(--gold); color:var(--navy); }
+  .tier-row:not(.current) .tier-icon{ background:var(--navy-soft); color:var(--text-faint); }
+  .tier-icon svg{ width:16px; height:16px; }
+  .tier-row-body{ flex:1; }
+  .tier-row-title{ font-size:12.5px; font-weight:700; color:#fff; margin:0 0 2px; display:flex; align-items:center; gap:6px; }
+  .current-tag{ font-size:8px; font-weight:800; color:var(--navy); background:var(--gold); padding:2px 6px; border-radius:4px; }
+  .tier-row-sub{ font-size:10.5px; color:var(--text-faint); margin:0; }
+
+  .benefit-card{ background:linear-gradient(135deg, rgba(212,160,23,0.12), rgba(18,18,42,0.9)); border:1px solid rgba(212,160,23,0.28); border-radius:16px; padding:16px; margin-top:20px; }
+  .benefit-title{ font-size:12.5px; font-weight:800; color:#fff; margin:0 0 10px; }
+  .benefit-item{ display:flex; gap:9px; margin-bottom:9px; font-size:11.5px; color:#D9C89A; line-height:1.55; }
+  .benefit-item:last-child{ margin-bottom:0; }
+  .benefit-item svg{ width:14px; height:14px; color:var(--gold); flex-shrink:0; margin-top:1px; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"></div>
+  <div class="topbar">
+    <div class="icon-btn"><svg viewBox="0 0 24 24" width="15" height="15" color="#fff"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></div>
+    <h1>Creator Trust Tier</h1>
+  </div>
+
+  <div class="scroll">
+
+    <div class="tier-hero">
+      <div class="tier-badge"><div class="tier-ring"></div><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2l2.4 6.8L21 11l-6.6 2.2L12 20l-2.4-6.8L3 11l6.6-2.2z"/></svg></div>
+      <p class="tier-name">Rising Creator</p>
+      <p class="tier-sub">2 series delivered on time and complete. <b>1 more</b> gets you to Trusted Creator status.</p>
+    </div>
+
+    <div class="progress-card">
+      <div class="progress-head"><span>Progress to Trusted</span><b>2 of 3 seasons</b></div>
+      <div class="progress-bar"><div class="progress-fill"></div></div>
+      <p class="progress-note">Complete <b>1 more full season</b> with no major revision requests to level up</p>
+    </div>
+
+    <p class="section-title">Trust Tiers</p>
+
+    <div class="tier-row">
+      <div class="tier-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+      <div class="tier-row-body"><p class="tier-row-title">New Creator</p><p class="tier-row-sub">First season · Always full review</p></div>
+    </div>
+
+    <div class="tier-row current">
+      <div class="tier-icon"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2l2.4 6.8L21 11l-6.6 2.2L12 20l-2.4-6.8L3 11l6.6-2.2z"/></svg></div>
+      <div class="tier-row-body"><p class="tier-row-title">Rising Creator<span class="current-tag">YOU ARE HERE</span></p><p class="tier-row-sub">2+ complete seasons · Priority queue</p></div>
+    </div>
+
+    <div class="tier-row">
+      <div class="tier-icon"><svg viewBox="0 0 24 24"><path d="M12 15a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/><path d="M8.21 13.89 7 23l5-3 5 3-1.21-9.12"/></svg></div>
+      <div class="tier-row-body"><p class="tier-row-title">Trusted Creator</p><p class="tier-row-sub">3+ complete seasons · Fast-lane review</p></div>
+    </div>
+
+    <div class="tier-row">
+      <div class="tier-icon"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2l2.4 2.6 3.5-.6.6 3.5L21.1 9l-2 3 2 3-3.6 1.5-.6 3.5-3.5-.6L12 22l-2.4-2.6-3.5.6-.6-3.5L2 15l2-3-2-3 3.6-1.5.6-3.5 3.5.6z"/></svg></div>
+      <div class="tier-row-body"><p class="tier-row-title">Elite Creator</p><p class="tier-row-sub">Sustained excellence · Near-instant publish</p></div>
+    </div>
+
+    <div class="benefit-card">
+      <p class="benefit-title">What Trusted unlocks</p>
+      <div class="benefit-item"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span>Review time drops from up to 72 hours to under 24 hours</span></div>
+      <div class="benefit-item"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span>Rule-based checks auto-clear more of your season, humans only review edge cases</span></div>
+      <div class="benefit-item"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span>Featured placement consideration for new series launches</span></div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

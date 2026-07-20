@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamEpisio — Empty Catalog</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); display:flex; flex-direction:column; }
+  .statusbar{ height:44px; flex-shrink:0; }
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+
+  .topbar{ display:flex; align-items:center; gap:12px; padding:2px 20px 14px; flex-shrink:0; }
+  .icon-btn{ width:34px; height:34px; border-radius:50%; background:var(--navy-card); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .topbar h1{ font-size:18px; font-weight:800; color:#fff; margin:0; }
+
+  .filter-row{ display:flex; gap:8px; padding:0 20px 14px; flex-shrink:0; overflow-x:auto; }
+  .filter-chip{ flex-shrink:0; padding:8px 15px; border-radius:999px; background:var(--navy-card); border:1px solid var(--navy-line); color:#B8B8CC; font-size:12px; font-weight:600; }
+  .filter-chip.active{ background:var(--gold); color:var(--navy); border-color:var(--gold); }
+
+  .empty-wrap{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:0 34px 60px; text-align:center; }
+
+  .empty-icon{ width:84px; height:84px; border-radius:24px; background:var(--navy-card); border:1px solid var(--navy-line); display:flex; align-items:center; justify-content:center; margin-bottom:22px; position:relative; }
+  .empty-icon svg{ width:34px; height:34px; color:var(--text-faint); }
+
+  h2{ font-size:16px; font-weight:800; color:#fff; margin:0 0 8px; }
+  .sub{ font-size:12px; color:var(--text-dim); line-height:1.6; margin:0 0 24px; max-width:270px; }
+  .sub b{ color:#fff; }
+
+  .btn-primary{ padding:13px 26px; border-radius:14px; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); border:none; color:var(--navy); font-size:13.5px; font-weight:800; box-shadow:0 12px 26px rgba(212,160,23,0.3); font-family:'Inter',sans-serif; margin-bottom:12px; }
+  .ghost-link{ font-size:12px; color:var(--text-dim); font-weight:600; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"></div>
+  <div class="topbar">
+    <div class="icon-btn"><svg viewBox="0 0 24 24" width="15" height="15" color="#fff"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></div>
+    <h1>Anime</h1>
+  </div>
+
+  <div class="filter-row">
+    <span class="filter-chip active">Popular</span>
+    <span class="filter-chip">Fresh</span>
+    <span class="filter-chip">Completed</span>
+    <span class="filter-chip">Free Only</span>
+  </div>
+
+  <div class="empty-wrap">
+    <div class="empty-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg></div>
+    <h2>Nothing here yet</h2>
+    <p class="sub">We don't have <b>Anime</b> series matching "Free Only" right now. New titles are added every week — check back soon.</p>
+    <button class="btn-primary">Browse All Genres</button>
+    <span class="ghost-link">Clear Filters</span>
+  </div>
+</div>
+
+</body>
+</html>

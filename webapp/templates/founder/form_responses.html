@@ -1,0 +1,185 @@
+{% extends "dashboard_base.html" %}
+{% block title %}{{ form.title }} — Responses{% endblock %}
+{% block sidebar_title %}Control Panel{% endblock %}
+
+{% block sidebar_nav %}
+<a class="nav-link" href="{{ url_for('founder_dash.overview') }}"><i class="bi bi-speedometer2"></i> Overview</a>
+<a class="nav-link" href="{{ url_for('founder_dash.users') }}"><i class="bi bi-people"></i> Users</a>
+<a class="nav-link" href="{{ url_for('founder_dash.content') }}"><i class="bi bi-book"></i> Content</a>
+
+<a class="nav-link" href="{{ url_for('founder_dash.revenue') }}"><i class="bi bi-cash-stack"></i> Revenue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.financial_dashboard') }}"><i class="bi bi-bank" style="color:var(--gold);"></i> Financial v5</a>
+<a class="nav-link" href="{{ url_for('founder_dash.premium_analytics') }}"><i class="bi bi-gem" style="color:#c084fc;"></i> Premium Analytics</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payouts') }}"><i class="bi bi-send-check"></i> Payouts</a>
+<a class="nav-link" href="{{ url_for('founder_dash.withdrawals') }}"><i class="bi bi-arrow-up-right-circle" style="color:var(--gold);"></i> Withdrawals</a>
+<a class="nav-link" href="{{ url_for('founder_dash.subscribers') }}"><i class="bi bi-gem" style="color:#9b59b6;"></i> Subscribers</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payroll') }}"><i class="bi bi-wallet2" style="color:#2ecc71;"></i> Team Payroll</a>
+<a class="nav-link" href="{{ url_for('founder_dash.creators') }}"><i class="bi bi-person-badge"></i> Creators</a>
+<a class="nav-link" href="{{ url_for('founder_dash.genres') }}"><i class="bi bi-tags"></i> Genres</a>
+<a class="nav-link" href="{{ url_for('founder_dash.announcements') }}"><i class="bi bi-megaphone"></i> Announcements</a>
+<a class="nav-link" href="{{ url_for('founder_dash.collections') }}"><i class="bi bi-grid"></i> Collections</a>
+<a class="nav-link" href="{{ url_for('founder_dash.moderation') }}"><i class="bi bi-shield-exclamation"></i> Moderation</a>
+<a class="nav-link" href="{{ url_for('founder_dash.warnings_list') }}"><i class="bi bi-exclamation-triangle" style="color:#f59e0b;"></i> Warnings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.elite_manage') }}"><span style="color:var(--gold);">&#10022;</span> WiamElite</a>
+<a class="nav-link" href="{{ url_for('wiambot.apex_review') }}"><i class="bi bi-trophy-fill" style="color:var(--gold);"></i> Apex Review</a>
+<a class="nav-link" href="{{ url_for('founder_dash.review_queue') }}"><i class="bi bi-robot"></i> Bot Review Queue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.platform_settings') }}"><i class="bi bi-sliders"></i> Platform Settings</a>
+<a class="nav-link active" href="{{ url_for('founder_dash.forms_dashboard') }}"><i class="bi bi-file-earmark-text"></i> Application Forms</a>
+<a class="nav-link" href="{{ url_for('founder_dash.email_studio') }}"><i class="bi bi-envelope-paper" style="color:var(--gold);"></i> Email Studio</a>
+<a class="nav-link" href="{{ url_for('founder_dash.team_management') }}"><i class="bi bi-people-fill"></i> Team</a>
+<a class="nav-link" href="{{ url_for('founder_dash.account_management') }}"><i class="bi bi-person-x"></i> Account Management</a>
+<a class="nav-link" href="{{ url_for('founder_dash.notification_testing') }}"><i class="bi bi-bell" style="color:#fbbf24;"></i> Notifications</a>
+<a class="nav-link" href="{{ url_for('classics.dashboard') }}"><i class="bi bi-journal-bookmark" style="color:#a78bfa;"></i> Content Seeder</a>
+<a class="nav-link" href="{{ url_for('founder_dash.settings') }}"><i class="bi bi-gear"></i> Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.admins') }}"><i class="bi bi-shield-check"></i> Admins</a>
+{% endblock %}
+
+{% block dash_content %}
+<div class="dash-header">
+    <a href="{{ url_for('founder_dash.forms_dashboard') }}" style="color:var(--text-muted);text-decoration:none;font-size:0.85rem;">
+        <i class="bi bi-arrow-left"></i> Back to Forms
+    </a>
+    <h1 style="margin-top:8px;">{{ form.title }}</h1>
+    <p style="color:var(--text-muted);">{{ form.description }}</p>
+</div>
+
+<!-- Send invite card -->
+<div style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:14px;padding:20px 24px;margin-bottom:24px;">
+    <h3 style="font-size:1rem;margin:0 0 12px;color:var(--gold);"><i class="bi bi-send"></i> Send Form Invite</h3>
+    <form method="POST" action="{{ url_for('founder_dash.send_form_invite', form_id=form.id) }}" style="display:flex;gap:10px;flex-wrap:wrap;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="text" name="name" placeholder="Applicant name (optional)" style="flex:1;min-width:150px;padding:10px 14px;background:var(--bg-elevated);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-size:0.9rem;">
+        <input type="email" name="email" placeholder="Email address *" required style="flex:2;min-width:200px;padding:10px 14px;background:var(--bg-elevated);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-size:0.9rem;">
+        <button type="submit" style="padding:10px 24px;background:linear-gradient(135deg,#d4a843,#b8860b);border:none;border-radius:8px;color:#000;font-weight:600;font-size:0.88rem;cursor:pointer;">
+            <i class="bi bi-envelope"></i> Send
+        </button>
+    </form>
+</div>
+
+<!-- Filter tabs -->
+<div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;">
+    {% for s, label in [('all','All'),('pending','Pending Review'),('sent','Awaiting Response'),('accepted','Accepted'),('rejected','Rejected')] %}
+    <a href="{{ url_for('founder_dash.form_responses', form_id=form.id, status=s) }}"
+       style="padding:7px 16px;border-radius:8px;font-size:0.82rem;font-weight:600;text-decoration:none;
+              {% if status_filter == s %}background:var(--gold);color:#000;{% else %}background:var(--bg-elevated);color:var(--text-muted);border:1px solid var(--border-color);{% endif %}">
+        {{ label }}
+    </a>
+    {% endfor %}
+</div>
+
+<!-- Responses list -->
+{% if not responses %}
+<div style="text-align:center;padding:40px 20px;color:var(--text-muted);">
+    <i class="bi bi-inbox" style="font-size:2.5rem;opacity:0.3;"></i>
+    <p style="margin-top:10px;">No responses yet for this filter.</p>
+</div>
+{% else %}
+<div style="display:flex;flex-direction:column;gap:16px;">
+{% for resp in responses %}
+{% set answers = json.loads(resp.answers_json or '{}') %}
+<div style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:14px;overflow:hidden;">
+    <!-- Response header -->
+    <div style="padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;border-bottom:1px solid var(--border-color);">
+        <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#d4a843,#b8860b);display:flex;align-items:center;justify-content:center;font-weight:700;color:#000;font-size:0.9rem;flex-shrink:0;">
+                {{ (resp.applicant_name or resp.applicant_email)[0]|upper }}
+            </div>
+            <div>
+                <div style="font-weight:600;color:var(--text-primary);">{{ resp.applicant_name or 'Unnamed' }}</div>
+                <div style="font-size:0.82rem;color:var(--text-muted);">{{ resp.applicant_email }}</div>
+            </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+            {% if not resp.is_submitted %}
+            <span style="padding:4px 12px;border-radius:6px;font-size:0.75rem;font-weight:600;background:rgba(96,165,250,0.15);color:#60a5fa;">Awaiting Response</span>
+            {% elif resp.status == 'pending' %}
+            <span style="padding:4px 12px;border-radius:6px;font-size:0.75rem;font-weight:600;background:rgba(250,204,21,0.15);color:#facc15;">Pending Review</span>
+            {% elif resp.status == 'accepted' %}
+            <span style="padding:4px 12px;border-radius:6px;font-size:0.75rem;font-weight:600;background:rgba(74,222,128,0.15);color:#4ade80;">Accepted</span>
+            {% elif resp.status == 'rejected' %}
+            <span style="padding:4px 12px;border-radius:6px;font-size:0.75rem;font-weight:600;background:rgba(248,113,113,0.15);color:#f87171;">Rejected</span>
+            {% endif %}
+            <span style="font-size:0.75rem;color:var(--text-muted);">
+                Sent {{ resp.sent_at.strftime('%b %d, %Y') if resp.sent_at else '' }}
+            </span>
+            <form method="POST" action="{{ url_for('founder_dash.delete_form_response', resp_id=resp.id) }}" style="display:inline;" onsubmit="return confirm('Permanently delete this application? This cannot be undone.')">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" style="width:28px;height:28px;border-radius:6px;border:1px solid rgba(248,113,113,0.3);background:rgba(248,113,113,0.1);color:#f87171;font-size:0.75rem;cursor:pointer;display:flex;align-items:center;justify-content:center;" title="Delete permanently">
+                    <i class="bi bi-trash3"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    {% if resp.is_submitted %}
+    <!-- Answers -->
+    <div style="padding:16px 20px;">
+        <details {% if resp.status == 'pending' %}open{% endif %}>
+            <summary style="cursor:pointer;font-weight:600;font-size:0.9rem;color:var(--gold);margin-bottom:12px;">
+                <i class="bi bi-list-check"></i> View Answers (submitted {{ resp.submitted_at.strftime('%b %d, %Y %H:%M') if resp.submitted_at else '' }})
+            </summary>
+            <div style="display:grid;gap:14px;">
+                {% for field in fields %}
+                {% set val = answers.get(field.name, '') %}
+                {% if val %}
+                <div>
+                    <div style="font-size:0.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.3px;margin-bottom:4px;">{{ field.label }}</div>
+                    <div style="font-size:0.9rem;color:var(--text-primary);line-height:1.5;padding:8px 12px;background:var(--bg-elevated);border-radius:8px;">
+                        {% if field.type == 'url' and val.startswith('http') %}
+                        <a href="{{ val }}" target="_blank" style="color:var(--gold);word-break:break-all;">{{ val }}</a>
+                        {% elif field.type == 'checkbox' %}
+                        <i class="bi bi-check-circle-fill" style="color:#4ade80;"></i> Confirmed
+                        {% else %}
+                        {{ val }}
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </details>
+
+        {% if resp.status == 'pending' %}
+        <!-- Review actions -->
+        <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border-color);display:flex;gap:10px;flex-wrap:wrap;align-items:end;">
+            <form method="POST" action="{{ url_for('founder_dash.review_response', resp_id=resp.id) }}" style="display:flex;gap:10px;flex-wrap:wrap;flex:1;align-items:end;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div style="flex:1;min-width:200px;">
+                    <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:4px;">Notes (optional)</label>
+                    <input type="text" name="notes" placeholder="Add review notes..." style="width:100%;padding:8px 12px;background:var(--bg-elevated);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-size:0.85rem;">
+                </div>
+                <button type="submit" name="action" value="accepted" style="padding:8px 20px;background:#22c55e;border:none;border-radius:8px;color:#fff;font-weight:600;font-size:0.85rem;cursor:pointer;">
+                    <i class="bi bi-check-lg"></i> Accept
+                </button>
+                <button type="submit" name="action" value="rejected" style="padding:8px 20px;background:#ef4444;border:none;border-radius:8px;color:#fff;font-weight:600;font-size:0.85rem;cursor:pointer;">
+                    <i class="bi bi-x-lg"></i> Reject
+                </button>
+            </form>
+        </div>
+        {% elif resp.status == 'accepted' %}
+        <!-- Accepted: show Create Account button -->
+        <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border-color);display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+            {% if resp.reviewer_notes %}
+            <div style="flex:1;min-width:200px;font-size:0.85rem;">
+                <span style="color:var(--text-muted);font-weight:600;">Notes:</span> {{ resp.reviewer_notes }}
+            </div>
+            {% endif %}
+            <form method="POST" action="{{ url_for('founder_dash.create_team_account', resp_id=resp.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" style="padding:10px 24px;background:linear-gradient(135deg,#d4a843,#b8860b);border:none;border-radius:8px;color:#000;font-weight:700;font-size:0.85rem;cursor:pointer;display:flex;align-items:center;gap:6px;">
+                    <i class="bi bi-person-plus"></i> Create Team Account
+                </button>
+            </form>
+        </div>
+        {% elif resp.status == 'rejected' and resp.reviewer_notes %}
+        <div style="margin-top:12px;padding:10px 14px;background:var(--bg-elevated);border-radius:8px;font-size:0.85rem;">
+            <span style="color:var(--text-muted);font-weight:600;">Notes:</span> {{ resp.reviewer_notes }}
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endfor %}
+</div>
+{% endif %}
+{% endblock %}

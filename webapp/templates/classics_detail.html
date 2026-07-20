@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block title %}{{ book.title }} — Classic Edition — WiamApp{% endblock %}
+{% block meta_description %}Read {{ book.title }} by {{ book.author }} — a public-domain classic on WiamApp. Free to read, one chapter released daily.{% endblock %}
+
+{% block extra_head %}
+<meta property="og:title" content="{{ book.title }} — Classic Edition — WiamApp">
+<meta property="og:description" content="Read {{ book.title }} by {{ book.author }} — free classic literature on WiamApp.">
+{% if book.cover_image %}<meta property="og:image" content="{{ book.cover_image }}">{% endif %}
+<style>
+    html,body{overflow-x:hidden !important;}
+
+    .cd-back{display:inline-flex;align-items:center;gap:6px;color:var(--text-muted);text-decoration:none;font-size:0.82rem;padding:12px 0;transition:color 0.2s;}
+    .cd-back:hover{color:var(--gold);}
+
+    .cd-hero{position:relative;overflow:hidden;margin:0 -12px;padding:2rem 12px 1.5rem;text-align:center;}
+    .cd-hero::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(114,47,55,0.15) 0%,var(--bg) 100%);z-index:0;}
+    .cd-cover-wrap{position:relative;z-index:1;display:inline-block;}
+    .cd-cover{width:180px;aspect-ratio:2/3;object-fit:cover;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,0.6),0 0 0 1px rgba(167,139,250,0.2);}
+    .cd-cover-ph{width:180px;aspect-ratio:2/3;border-radius:14px;background:linear-gradient(135deg,#2d1f4e,#1a1130);display:flex;align-items:center;justify-content:center;color:#a78bfa;font-size:3rem;box-shadow:0 20px 60px rgba(0,0,0,0.6);}
+
+    .cd-title-area{text-align:center;padding:0 1rem;margin-top:1rem;}
+    .cd-badge{display:inline-block;background:linear-gradient(135deg,rgba(167,139,250,0.25),rgba(124,58,237,0.2));color:#a78bfa;font-size:0.58rem;font-weight:700;padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:6px;border:1px solid rgba(167,139,250,0.2);}
+    .cd-title{font-family:var(--font-display);font-size:clamp(1.4rem,4vw,1.8rem);font-weight:700;margin:0 0 4px;line-height:1.2;}
+    .cd-author{color:var(--text-secondary);font-size:0.95rem;margin-bottom:8px;font-weight:500;}
+
+    .cd-stats{display:flex;justify-content:center;gap:1.5rem;flex-wrap:wrap;padding:12px 0;margin:8px 0;}
+    .cd-stat{text-align:center;}
+    .cd-stat-val{font-size:1rem;font-weight:700;color:var(--text);}
+    .cd-stat-label{font-size:0.62rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;}
+
+    .cd-actions{display:flex;flex-direction:column;gap:10px;padding:0 1rem;margin:1rem 0;max-width:500px;margin-left:auto;margin-right:auto;}
+    .cd-btn-primary{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;background:linear-gradient(135deg,#a78bfa,#7c3aed);color:#fff;border:none;border-radius:14px;font-weight:700;font-size:0.95rem;cursor:pointer;text-decoration:none;transition:transform 0.2s,box-shadow 0.2s;box-shadow:0 4px 20px rgba(167,139,250,0.3);}
+    .cd-btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(167,139,250,0.4);color:#fff;}
+
+    .cd-section{padding:0 1rem;margin:1.2rem 0;max-width:700px;margin-left:auto;margin-right:auto;}
+    .cd-section-title{font-family:var(--font-display);font-size:0.95rem;font-weight:700;margin:0 0 8px;display:flex;align-items:center;gap:8px;}
+    .cd-synopsis{color:var(--text-secondary);line-height:1.8;font-size:0.9rem;margin:0;}
+    .cd-genre-tag{display:inline-flex;align-items:center;gap:4px;padding:6px 14px;border-radius:20px;background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.15);font-size:0.78rem;color:#a78bfa;text-decoration:none;margin:0 6px 6px 0;}
+
+    .cd-chapters{max-width:700px;margin:0 auto;padding:0 1rem;}
+    .cd-ch-item{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.04);text-decoration:none;color:var(--text);transition:background 0.15s;border-radius:8px;}
+    .cd-ch-item:hover{background:rgba(255,255,255,0.03);}
+    .cd-ch-num{width:32px;height:32px;border-radius:8px;background:rgba(167,139,250,0.15);color:#a78bfa;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.82rem;flex-shrink:0;}
+    .cd-ch-title{flex:1;font-size:0.88rem;font-weight:500;}
+    .cd-ch-words{color:var(--text-muted);font-size:0.75rem;}
+    .cd-ch-locked{color:var(--text-muted);font-size:0.78rem;display:flex;align-items:center;gap:4px;}
+    .cd-ch-locked i{color:#a78bfa;}
+
+    .cd-upcoming{text-align:center;padding:1.5rem;color:var(--text-muted);font-size:0.85rem;border-top:1px solid rgba(255,255,255,0.04);margin-top:0.5rem;}
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="max-width:800px;margin:0 auto;padding-bottom:5rem;">
+    <a href="{{ url_for('browse.browse_home') }}" class="cd-back"><i class="bi bi-chevron-left"></i> Browse</a>
+
+    <!-- Cover Hero -->
+    <div class="cd-hero">
+        <div class="cd-cover-wrap">
+            {% if book.cover_image %}
+            <img src="{{ book.cover_image }}" alt="{{ book.title }}" class="cd-cover">
+            {% else %}
+            <div class="cd-cover-ph"><i class="bi bi-book"></i></div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Title Area -->
+    <div class="cd-title-area">
+        <div class="cd-badge">Classic Edition</div>
+        <h1 class="cd-title">{{ book.title }}</h1>
+        <div class="cd-author">by <strong style="color:#a78bfa;">{{ book.author }}</strong></div>
+
+        <div class="cd-stats">
+            <div class="cd-stat">
+                <div class="cd-stat-val">{{ book.views }}</div>
+                <div class="cd-stat-label">Views</div>
+            </div>
+            <div class="cd-stat">
+                <div class="cd-stat-val">{{ chapters|length }}</div>
+                <div class="cd-stat-label">Chapters</div>
+            </div>
+            <div class="cd-stat">
+                <div class="cd-stat-val">{{ '{:,}'.format(book.word_count) }}</div>
+                <div class="cd-stat-label">Words</div>
+            </div>
+            <div class="cd-stat">
+                <div class="cd-stat-val">Free</div>
+                <div class="cd-stat-label">Price</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CTA -->
+    {% if chapters %}
+    <div class="cd-actions">
+        <a href="{{ url_for('classics.read_chapter', book_id=book.id, chapter_num=1) }}" class="cd-btn-primary">
+            <i class="bi bi-book"></i> Start Reading
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- Synopsis -->
+    {% if book.description %}
+    <div class="cd-section">
+        <div class="cd-section-title"><i class="bi bi-text-paragraph" style="color:#a78bfa;"></i> About This Classic</div>
+        <p class="cd-synopsis">{{ book.description }}</p>
+    </div>
+    {% endif %}
+
+    <!-- Genre -->
+    <div class="cd-section">
+        <span class="cd-genre-tag"><i class="bi bi-tag"></i> {{ book.genre }}</span>
+        <span class="cd-genre-tag"><i class="bi bi-journal-bookmark"></i> Classic Literature</span>
+        <span class="cd-genre-tag"><i class="bi bi-unlock"></i> Public Domain</span>
+    </div>
+
+    <!-- Chapters List -->
+    <div class="cd-section">
+        <div class="cd-section-title"><i class="bi bi-list-ol" style="color:#a78bfa;"></i> Chapters</div>
+    </div>
+    <div class="cd-chapters">
+        {% for ch in chapters %}
+        <a href="{{ url_for('classics.read_chapter', book_id=book.id, chapter_num=ch.chapter_number) }}" class="cd-ch-item">
+            <div class="cd-ch-num">{{ ch.chapter_number }}</div>
+            <div class="cd-ch-title">{{ ch.chapter_title }}</div>
+            <div class="cd-ch-words">{{ '{:,}'.format(ch.word_count) }} words</div>
+        </a>
+        {% endfor %}
+
+        {% if chapters|length < total_chapters %}
+        <div class="cd-upcoming">
+            <i class="bi bi-clock" style="color:#a78bfa;"></i>
+            {{ total_chapters - chapters|length }} more chapter{{ 's' if (total_chapters - chapters|length) > 1 else '' }} releasing soon — one per day
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

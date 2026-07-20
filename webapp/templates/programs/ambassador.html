@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}WiamAmbassador — Referral Program{% endblock %}
+{% block content %}
+<div style="max-width:800px;margin:0 auto;padding:var(--space-xl) var(--space-md);">
+
+    <div style="text-align:center;margin-bottom:var(--space-2xl);">
+        <h1 style="font-size:1.8rem;font-family:var(--font-display);color:var(--text);margin-bottom:var(--space-sm);">
+            🤝 WiamAmbassador
+        </h1>
+        <p style="color:var(--text-secondary);font-size:0.9rem;max-width:480px;margin:0 auto;">
+            Invite friends to WiamApp and earn coin rewards. The more they read, the more you earn!
+        </p>
+    </div>
+
+    <!-- Stats -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:var(--space-md);margin-bottom:var(--space-2xl);">
+        <div style="padding:var(--space-lg);background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);text-align:center;">
+            <div style="font-size:1.6rem;font-weight:800;color:var(--text);">{{ referrals|length }}</div>
+            <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;">Total Referrals</div>
+        </div>
+        <div style="padding:var(--space-lg);background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);text-align:center;">
+            <div style="font-size:1.6rem;font-weight:800;color:#2ecc71;">{{ active_referrals }}</div>
+            <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;">Active Readers</div>
+        </div>
+        <div style="padding:var(--space-lg);background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);text-align:center;">
+            <div style="font-size:1.6rem;font-weight:800;color:var(--gold);">{{ total_coins }}</div>
+            <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;">Coins Earned</div>
+        </div>
+    </div>
+
+    <!-- Referral Code -->
+    <div style="padding:var(--space-xl);background:var(--bg-card);border:1px solid rgba(212,168,67,0.2);border-radius:var(--radius-lg);text-align:center;margin-bottom:var(--space-2xl);">
+        <h2 style="font-size:1rem;font-family:var(--font-display);color:var(--text);margin-bottom:var(--space-md);">Your Referral Code</h2>
+        <div style="padding:var(--space-md);background:var(--bg-elevated);border-radius:var(--radius-md);display:inline-block;margin-bottom:var(--space-md);">
+            <code style="font-size:1.2rem;font-weight:700;color:var(--gold);letter-spacing:2px;">{{ referral_code }}</code>
+        </div>
+        <div style="margin-bottom:var(--space-md);">
+            <button onclick="copyCode()" id="copyBtn" style="padding:8px 20px;background:rgba(212,168,67,0.15);color:var(--gold);border:1px solid rgba(212,168,67,0.3);border-radius:var(--radius-sm);font-size:0.8rem;font-weight:600;cursor:pointer;">
+                <i class="bi bi-clipboard"></i> Copy Code
+            </button>
+            <button onclick="shareLink()" style="padding:8px 20px;background:rgba(52,152,219,0.15);color:#3498db;border:1px solid rgba(52,152,219,0.3);border-radius:var(--radius-sm);font-size:0.8rem;font-weight:600;cursor:pointer;margin-left:var(--space-xs);">
+                <i class="bi bi-share"></i> Share Link
+            </button>
+        </div>
+        <p style="font-size:0.75rem;color:var(--text-muted);">
+            Share this code with friends. When they sign up using your code, you both get rewarded!
+        </p>
+    </div>
+
+    <!-- How it works -->
+    <div style="padding:var(--space-xl);background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);margin-bottom:var(--space-2xl);">
+        <h2 style="font-size:1rem;font-family:var(--font-display);color:var(--text);margin-bottom:var(--space-lg);">How It Works</h2>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:var(--space-lg);text-align:center;">
+            <div>
+                <div style="width:40px;height:40px;border-radius:50%;background:rgba(52,152,219,0.15);color:#3498db;display:flex;align-items:center;justify-content:center;margin:0 auto var(--space-sm);font-weight:700;">1</div>
+                <h3 style="font-size:0.85rem;color:var(--text);font-weight:600;margin-bottom:4px;">Share Your Code</h3>
+                <p style="font-size:0.75rem;color:var(--text-muted);">Send your referral code to friends</p>
+            </div>
+            <div>
+                <div style="width:40px;height:40px;border-radius:50%;background:rgba(46,204,113,0.15);color:#2ecc71;display:flex;align-items:center;justify-content:center;margin:0 auto var(--space-sm);font-weight:700;">2</div>
+                <h3 style="font-size:0.85rem;color:var(--text);font-weight:600;margin-bottom:4px;">They Sign Up</h3>
+                <p style="font-size:0.75rem;color:var(--text-muted);">Friend creates account with your code — you get <b>10 coins</b></p>
+            </div>
+            <div>
+                <div style="width:40px;height:40px;border-radius:50%;background:rgba(212,168,67,0.15);color:var(--gold);display:flex;align-items:center;justify-content:center;margin:0 auto var(--space-sm);font-weight:700;">3</div>
+                <h3 style="font-size:0.85rem;color:var(--text);font-weight:600;margin-bottom:4px;">They Read</h3>
+                <p style="font-size:0.75rem;color:var(--text-muted);">When they become active readers — you get <b>25 more coins</b></p>
+            </div>
+            <div>
+                <div style="width:40px;height:40px;border-radius:50%;background:rgba(155,89,182,0.15);color:#9b59b6;display:flex;align-items:center;justify-content:center;margin:0 auto var(--space-sm);font-weight:700;">4</div>
+                <h3 style="font-size:0.85rem;color:var(--text);font-weight:600;margin-bottom:4px;">They Go Premium</h3>
+                <p style="font-size:0.75rem;color:var(--text-muted);">If they subscribe to Premium — you get <b>50 bonus coins</b></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Referral History -->
+    {% if referrals %}
+    <div>
+        <h2 style="font-size:1rem;font-family:var(--font-display);color:var(--text);margin-bottom:var(--space-md);">Your Referrals</h2>
+        <div style="display:grid;gap:var(--space-sm);">
+            {% for r in referrals %}
+            <div style="padding:var(--space-md);background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);display:flex;align-items:center;gap:var(--space-md);">
+                <div style="width:36px;height:36px;border-radius:50%;background:var(--bg-elevated);color:var(--text-muted);display:flex;align-items:center;justify-content:center;font-size:0.8rem;">
+                    <i class="bi bi-person"></i>
+                </div>
+                <div style="flex:1;">
+                    <div style="font-size:0.8rem;color:var(--text);">User #{{ r.referred_id }}</div>
+                    <div style="font-size:0.7rem;color:var(--text-muted);">{{ r.created_at.strftime('%b %d, %Y') }}</div>
+                </div>
+                <div style="text-align:right;">
+                    <span style="font-size:0.7rem;padding:2px 8px;border-radius:10px;font-weight:600;
+                        {% if r.status == 'premium_convert' %}background:rgba(155,89,182,0.15);color:#9b59b6;
+                        {% elif r.status == 'active_reader' %}background:rgba(46,204,113,0.15);color:#2ecc71;
+                        {% else %}background:var(--bg-elevated);color:var(--text-muted);{% endif %}">
+                        {{ r.status|replace('_', ' ')|capitalize }}
+                    </span>
+                    {% if r.coins_earned > 0 %}
+                    <div style="font-size:0.7rem;color:var(--gold);font-weight:600;margin-top:2px;">+{{ r.coins_earned }} coins</div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div style="text-align:center;margin-top:var(--space-xl);">
+        <a href="{{ url_for('programs.hub') }}" style="color:var(--text-muted);font-size:0.8rem;text-decoration:none;">&larr; Back to Programs</a>
+    </div>
+</div>
+
+<script>
+function copyCode() {
+    const code = '{{ referral_code }}';
+    navigator.clipboard.writeText(code).then(() => {
+        const btn = document.getElementById('copyBtn');
+        btn.innerHTML = '<i class="bi bi-check2"></i> Copied!';
+        setTimeout(() => { btn.innerHTML = '<i class="bi bi-clipboard"></i> Copy Code'; }, 2000);
+    });
+}
+function shareLink() {
+    const url = window.location.origin + '/register?ref={{ referral_code }}';
+    if (navigator.share) {
+        navigator.share({ title: 'Join WiamApp!', text: 'Join me on WiamApp — a free novel reading platform!', url: url });
+    } else {
+        navigator.clipboard.writeText(url).then(() => alert('Link copied to clipboard!'));
+    }
+}
+</script>
+{% endblock %}

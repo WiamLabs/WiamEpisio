@@ -1,0 +1,110 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Creator Withdrawals — Control Panel{% endblock %}
+{% block sidebar_title %}Control Panel{% endblock %}
+
+{% block sidebar_nav %}
+<a class="nav-link" href="{{ url_for('founder_dash.overview') }}"><i class="bi bi-speedometer2"></i> Overview</a>
+<a class="nav-link" href="{{ url_for('founder_dash.users') }}"><i class="bi bi-people"></i> Users</a>
+<a class="nav-link" href="{{ url_for('founder_dash.content') }}"><i class="bi bi-book"></i> Content</a>
+<a class="nav-link" href="{{ url_for('founder_dash.revenue') }}"><i class="bi bi-cash-stack"></i> Revenue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.financial_dashboard') }}"><i class="bi bi-bank" style="color:var(--gold);"></i> Financial v5</a>
+<a class="nav-link" href="{{ url_for('founder_dash.premium_analytics') }}"><i class="bi bi-gem" style="color:#c084fc;"></i> Premium Analytics</a>
+<a class="nav-link" href="{{ url_for('founder_dash.subscribers') }}"><i class="bi bi-gem" style="color:#9b59b6;"></i> Subscribers</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payroll') }}"><i class="bi bi-wallet2" style="color:#2ecc71;"></i> Team Payroll</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payouts') }}"><i class="bi bi-send-check"></i> Payouts</a>
+<a class="nav-link active" href="{{ url_for('founder_dash.withdrawals') }}"><i class="bi bi-arrow-up-right-circle" style="color:var(--gold);"></i> Withdrawals</a>
+<a class="nav-link" href="{{ url_for('founder_dash.creators') }}"><i class="bi bi-person-badge"></i> Creators</a>
+<a class="nav-link" href="{{ url_for('founder_dash.genres') }}"><i class="bi bi-tags"></i> Genres</a>
+<a class="nav-link" href="{{ url_for('founder_dash.announcements') }}"><i class="bi bi-megaphone"></i> Announcements</a>
+<a class="nav-link" href="{{ url_for('founder_dash.collections') }}"><i class="bi bi-grid"></i> Collections</a>
+<a class="nav-link" href="{{ url_for('founder_dash.moderation') }}"><i class="bi bi-shield-exclamation"></i> Moderation</a>
+<a class="nav-link" href="{{ url_for('founder_dash.warnings_list') }}"><i class="bi bi-exclamation-triangle" style="color:#f59e0b;"></i> Warnings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.elite_manage') }}"><span style="color:var(--gold);">★</span> WiamElite</a>
+<a class="nav-link" href="{{ url_for('founder_dash.platform_settings') }}"><i class="bi bi-sliders"></i> Platform Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.settings') }}"><i class="bi bi-gear"></i> Settings</a>
+{% endblock %}
+
+{% block dash_content %}
+<div class="dash-header">
+    <h1><i class="bi bi-calendar-check" style="color:#2ecc71;"></i> Creator Payouts</h1>
+    <p>All creator payouts are now fully automatic — YouTube-style. No manual approval needed.</p>
+</div>
+
+<!-- Auto Payout Explanation -->
+<div style="background:var(--bg-card);border:1px solid rgba(46,204,113,0.25);border-radius:var(--radius-md);padding:var(--space-xl);text-align:center;margin-bottom:var(--space-xl);">
+    <i class="bi bi-cash-stack" style="font-size:3rem;color:#2ecc71;"></i>
+    <h2 style="font-size:1.2rem;font-weight:700;color:var(--text);margin:var(--space-md) 0 var(--space-sm);">Automatic Monthly Payouts</h2>
+    <p style="font-size:0.88rem;color:var(--text-muted);max-width:500px;margin:0 auto;line-height:1.7;">
+        On the <strong style="color:var(--text);">1st of every month</strong>, WiamApp automatically calculates each creator's earnings and sends payment to their registered Mobile Money account via Paystack.
+    </p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:var(--space-md);margin-top:var(--space-lg);max-width:600px;margin-left:auto;margin-right:auto;">
+        <div style="padding:16px;background:rgba(46,204,113,0.06);border:1px solid rgba(46,204,113,0.15);border-radius:var(--radius-md);">
+            <div style="font-size:1.4rem;font-weight:800;color:#2ecc71;">GH₵15</div>
+            <div style="font-size:0.72rem;color:var(--text-muted);">Minimum Payout</div>
+        </div>
+        <div style="padding:16px;background:rgba(212,168,67,0.06);border:1px solid rgba(212,168,67,0.15);border-radius:var(--radius-md);">
+            <div style="font-size:1.4rem;font-weight:800;color:var(--gold);">50%</div>
+            <div style="font-size:0.72rem;color:var(--text-muted);">Creator Share</div>
+        </div>
+        <div style="padding:16px;background:rgba(52,152,219,0.06);border:1px solid rgba(52,152,219,0.15);border-radius:var(--radius-md);">
+            <div style="font-size:1.4rem;font-weight:800;color:#3498db;">Monthly</div>
+            <div style="font-size:0.72rem;color:var(--text-muted);">Payout Cycle</div>
+        </div>
+    </div>
+</div>
+
+<!-- Auto Payout History -->
+{% if items %}
+<div style="background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);overflow:hidden;">
+    <div style="padding:14px 18px;border-bottom:1px solid var(--border-subtle);">
+        <h3 style="font-size:0.9rem;font-weight:700;color:var(--text);margin:0;"><i class="bi bi-clock-history"></i> Past Payout Records</h3>
+    </div>
+    <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:0.8rem;">
+            <thead>
+                <tr style="background:var(--bg-elevated);border-bottom:1px solid var(--border-subtle);">
+                    <th style="padding:10px 14px;text-align:left;font-weight:700;color:var(--text-muted);font-size:0.7rem;text-transform:uppercase;">ID</th>
+                    <th style="padding:10px 14px;text-align:left;font-weight:700;color:var(--text-muted);font-size:0.7rem;text-transform:uppercase;">Creator</th>
+                    <th style="padding:10px 14px;text-align:left;font-weight:700;color:var(--text-muted);font-size:0.7rem;text-transform:uppercase;">Amount</th>
+                    <th style="padding:10px 14px;text-align:left;font-weight:700;color:var(--text-muted);font-size:0.7rem;text-transform:uppercase;">To</th>
+                    <th style="padding:10px 14px;text-align:left;font-weight:700;color:var(--text-muted);font-size:0.7rem;text-transform:uppercase;">Date</th>
+                    <th style="padding:10px 14px;text-align:left;font-weight:700;color:var(--text-muted);font-size:0.7rem;text-transform:uppercase;">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for w in items %}
+                {% set creator = creators.get(w.creator_id) %}
+                <tr style="border-bottom:1px solid var(--border-subtle);">
+                    <td style="padding:10px 14px;color:var(--text-muted);">#{{ w.id }}</td>
+                    <td style="padding:10px 14px;">
+                        <div style="font-weight:600;color:var(--text);">{{ creator.display_name if creator else 'Unknown' }}</div>
+                        <div style="font-size:0.68rem;color:var(--text-muted);">ID: {{ w.creator_id }}</div>
+                    </td>
+                    <td style="padding:10px 14px;font-weight:700;color:#2ecc71;">GH₵{{ '%.2f'|format(w.amount_ghs) }}</td>
+                    <td style="padding:10px 14px;">
+                        <div style="font-weight:600;">{{ w.provider }}</div>
+                        <div style="font-size:0.68rem;color:var(--text-muted);">{{ w.account_number }} — {{ w.account_name }}</div>
+                    </td>
+                    <td style="padding:10px 14px;white-space:nowrap;">{{ w.requested_at.strftime('%d %b %Y %H:%M') if w.requested_at else '—' }}</td>
+                    <td style="padding:10px 14px;">
+                        {% if w.status == 'sent' %}
+                        <span style="padding:3px 10px;border-radius:20px;font-size:0.7rem;font-weight:700;background:rgba(46,204,113,0.15);color:#2ecc71;">Sent</span>
+                        {% elif w.status == 'failed' %}
+                        <span style="padding:3px 10px;border-radius:20px;font-size:0.7rem;font-weight:700;background:rgba(231,76,60,0.15);color:#e74c3c;">Failed</span>
+                        {% else %}
+                        <span style="padding:3px 10px;border-radius:20px;font-size:0.7rem;font-weight:700;background:rgba(149,165,166,0.15);color:#95a5a6;">{{ w.status|title }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div style="text-align:center;padding:60px 20px;color:var(--text-muted);">
+    <i class="bi bi-inbox" style="font-size:3rem;opacity:0.3;"></i>
+    <p style="margin-top:12px;">No payout records yet. Payouts will appear here after the first monthly cycle.</p>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,10 @@
+appId: com.wiamapp.mobile
+---
+# Requires logged-in test session
+- launchApp
+- tapOn: "Profile"
+- tapOn: "Alerts"
+- assertVisible: "Notifications"
+- back
+- tapOn: "Bulletin"
+- back

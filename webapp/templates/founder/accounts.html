@@ -1,0 +1,165 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Account Management — WiamApp{% endblock %}
+{% block sidebar_title %}Control Panel{% endblock %}
+
+{% block sidebar_nav %}
+<a class="nav-link" href="{{ url_for('founder_dash.overview') }}"><i class="bi bi-speedometer2"></i> Overview</a>
+<a class="nav-link" href="{{ url_for('founder_dash.users') }}"><i class="bi bi-people"></i> Users</a>
+<a class="nav-link" href="{{ url_for('founder_dash.content') }}"><i class="bi bi-book"></i> Content</a>
+
+<a class="nav-link" href="{{ url_for('founder_dash.revenue') }}"><i class="bi bi-cash-stack"></i> Revenue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.financial_dashboard') }}"><i class="bi bi-bank" style="color:var(--gold);"></i> Financial v5</a>
+<a class="nav-link" href="{{ url_for('founder_dash.premium_analytics') }}"><i class="bi bi-gem" style="color:#c084fc;"></i> Premium Analytics</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payouts') }}"><i class="bi bi-send-check"></i> Payouts</a>
+<a class="nav-link" href="{{ url_for('founder_dash.withdrawals') }}"><i class="bi bi-arrow-up-right-circle" style="color:var(--gold);"></i> Withdrawals</a>
+<a class="nav-link" href="{{ url_for('founder_dash.subscribers') }}"><i class="bi bi-gem" style="color:#9b59b6;"></i> Subscribers</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payroll') }}"><i class="bi bi-wallet2" style="color:#2ecc71;"></i> Team Payroll</a>
+<a class="nav-link" href="{{ url_for('founder_dash.creators') }}"><i class="bi bi-person-badge"></i> Creators</a>
+<a class="nav-link" href="{{ url_for('founder_dash.genres') }}"><i class="bi bi-tags"></i> Genres</a>
+<a class="nav-link" href="{{ url_for('founder_dash.announcements') }}"><i class="bi bi-megaphone"></i> Announcements</a>
+<a class="nav-link" href="{{ url_for('founder_dash.collections') }}"><i class="bi bi-grid"></i> Collections</a>
+<a class="nav-link" href="{{ url_for('founder_dash.moderation') }}"><i class="bi bi-shield-exclamation"></i> Moderation</a>
+<a class="nav-link" href="{{ url_for('founder_dash.warnings_list') }}"><i class="bi bi-exclamation-triangle" style="color:#f59e0b;"></i> Warnings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.elite_manage') }}"><span style="color:var(--gold);">?</span> WiamElite</a>
+<a class="nav-link" href="{{ url_for('wiambot.apex_review') }}"><i class="bi bi-trophy-fill" style="color:var(--gold);"></i> Apex Review</a>
+<a class="nav-link" href="{{ url_for('founder_dash.review_queue') }}"><i class="bi bi-robot"></i> Bot Review Queue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.platform_settings') }}"><i class="bi bi-sliders"></i> Platform Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.forms_dashboard') }}"><i class="bi bi-file-earmark-text"></i> Application Forms</a>
+<a class="nav-link" href="{{ url_for('founder_dash.email_studio') }}"><i class="bi bi-envelope-paper" style="color:var(--gold);"></i> Email Studio</a>
+<a class="nav-link" href="{{ url_for('founder_dash.team_management') }}"><i class="bi bi-people-fill"></i> Team</a>
+<a class="nav-link active" href="{{ url_for('founder_dash.account_management') }}"><i class="bi bi-person-x"></i> Account Management</a>
+<a class="nav-link" href="{{ url_for('founder_dash.notification_testing') }}"><i class="bi bi-bell" style="color:#fbbf24;"></i> Notifications</a>
+<a class="nav-link" href="{{ url_for('classics.dashboard') }}"><i class="bi bi-journal-bookmark" style="color:#a78bfa;"></i> Content Seeder</a>
+<a class="nav-link" href="{{ url_for('founder_dash.settings') }}"><i class="bi bi-gear"></i> Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.admins') }}"><i class="bi bi-shield-check"></i> Admins</a>
+{% endblock %}
+
+{% block dash_content %}
+<style>
+    .acc-card { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 1rem; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+    .acc-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--bg-elevated); display: flex; align-items: center; justify-content: center; font-size: 0.9rem; font-weight: 600; color: var(--text-muted); overflow: hidden; flex-shrink: 0; }
+    .acc-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .acc-info { flex: 1; min-width: 150px; }
+    .acc-name { font-weight: 600; font-size: 0.9rem; color: var(--text); }
+    .acc-email { font-size: 0.78rem; color: var(--text-muted); }
+    .acc-meta { font-size: 0.72rem; color: var(--text-muted); }
+    .acc-actions { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+    .btn-reactivate { padding: 6px 14px; border-radius: 8px; border: 1px solid rgba(74,222,128,0.3); background: rgba(74,222,128,0.08); color: #4ade80; font-size: 0.78rem; font-weight: 600; cursor: pointer; }
+    .btn-reactivate:hover { background: rgba(74,222,128,0.15); }
+    .btn-purge { padding: 6px 14px; border-radius: 8px; border: 1px solid rgba(239,68,68,0.3); background: rgba(239,68,68,0.08); color: #ef4444; font-size: 0.78rem; font-weight: 600; cursor: pointer; }
+    .btn-purge:hover { background: rgba(239,68,68,0.15); }
+    .status-badge { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 600; }
+    .status-deactivated { background: rgba(251,191,36,0.12); color: #fbbf24; }
+    .status-banned { background: rgba(239,68,68,0.12); color: #ef4444; }
+    .section-title { font-size: 1.1rem; font-weight: 700; color: var(--text); margin: 1.5rem 0 0.75rem; display: flex; align-items: center; gap: 0.5rem; }
+    .section-title i { color: var(--gold); }
+    .empty-msg { text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.85rem; }
+    /* Toggle switch */
+    .toggle-switch { position: relative; width: 42px; height: 22px; flex-shrink: 0; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: rgba(239,68,68,0.3); border-radius: 22px; transition: 0.3s; }
+    .toggle-slider:before { content: ''; position: absolute; height: 16px; width: 16px; left: 3px; bottom: 3px; background: #fff; border-radius: 50%; transition: 0.3s; }
+    .toggle-switch input:checked + .toggle-slider { background: rgba(74,222,128,0.5); }
+    .toggle-switch input:checked + .toggle-slider:before { transform: translateX(20px); }
+    .toggle-label { font-size: 0.72rem; font-weight: 600; }
+    .toggle-on { color: #4ade80; }
+    .toggle-off { color: #fbbf24; }
+    /* Delete tool */
+    .delete-tool { background: rgba(239,68,68,0.04); border: 1px solid rgba(239,68,68,0.15); border-radius: 14px; padding: 1.2rem; margin-bottom: 1.5rem; }
+    .delete-tool h3 { font-size: 0.95rem; font-weight: 700; color: #ef4444; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.4rem; }
+    .delete-tool p { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.75rem; line-height: 1.5; }
+    .delete-tool form { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+    .delete-tool input[type="email"] { flex: 1; min-width: 200px; padding: 8px 12px; background: rgba(255,255,255,0.04); border: 1px solid rgba(239,68,68,0.2); border-radius: 8px; color: var(--text); font-size: 0.85rem; outline: none; }
+    .delete-tool input[type="email"]:focus { border-color: #ef4444; }
+</style>
+
+<div class="dash-header">
+    <h1><i class="bi bi-person-x"></i> Account Management</h1>
+    <p>Manage deactivated accounts and completely delete users from the database.</p>
+</div>
+
+<!-- Complete Delete by Email Tool -->
+<div class="delete-tool">
+    <h3><i class="bi bi-trash3-fill"></i> Complete Account Deletion</h3>
+    <p>Type a user's email to completely delete their account and ALL data from the database. This action is <strong style="color:#ef4444;">irreversible</strong>. The user can then create a new account with the same email.</p>
+    <form method="POST" action="{{ url_for('founder_dash.account_delete_by_email') }}"
+          onsubmit="var e=this.email.value; if(!e){alert('Please enter an email.');return false;} return confirm('?? PERMANENTLY DELETE account with email: '+e+'?\n\nThis will remove ALL their data from the database:\n• Profile, stories, chapters\n• Comments, reviews, ratings\n• Reading history, bookmarks, shelves\n• Coins, orders, followers\n• Everything!\n\nThis CANNOT be undone. Are you absolutely sure?');">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="email" name="email" placeholder="user@example.com" required>
+        <button type="submit" class="btn-purge" style="padding:8px 18px;"><i class="bi bi-trash3"></i> Delete Account</button>
+    </form>
+</div>
+
+<!-- Deactivated Users -->
+<div class="section-title"><i class="bi bi-pause-circle"></i> Deactivated Accounts ({{ deactivated|length }})</div>
+<p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:1rem;">
+    When a user deactivates their account, they automatically appear here with the toggle <strong style="color:#fbbf24;">ON</strong> (deactivated).
+    Switch the toggle <strong style="color:#4ade80;">OFF</strong> to reactivate their account so they can log in again.
+    The user will need to verify their email after reactivation.
+</p>
+
+{% if deactivated %}
+{% for user in deactivated %}
+<div class="acc-card">
+    <div class="acc-avatar">
+        {% if user.avatar_url %}<img src="{{ user.avatar_url }}" alt="">{% else %}{{ user.display_name[0]|upper }}{% endif %}
+    </div>
+    <div class="acc-info">
+        <div class="acc-name">{{ user.display_name }} <span class="status-badge status-deactivated">Deactivated</span></div>
+        <div class="acc-email">{{ user.email or 'No email' }} &middot; ID: {{ user.id }}</div>
+        <div class="acc-meta">Joined {{ user.date_joined.strftime('%b %d, %Y') if user.date_joined else 'Unknown' }} &middot; Last active {{ user.last_active.strftime('%b %d, %Y') if user.last_active else 'Unknown' }}</div>
+    </div>
+    <div class="acc-actions">
+        <form method="POST" action="{{ url_for('founder_dash.account_reactivate', user_id=user.id) }}" style="display:flex;align-items:center;gap:0.4rem;"
+              onsubmit="return confirm('Reactivate {{ user.display_name }}? They will be able to log in again after email verification.');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <span class="toggle-label toggle-on">ON</span>
+            <label class="toggle-switch">
+                <input type="checkbox" checked onchange="this.form.submit();">
+                <span class="toggle-slider"></span>
+            </label>
+            <span class="toggle-label toggle-off">OFF</span>
+        </form>
+        <form method="POST" action="{{ url_for('founder_dash.account_complete_delete', user_id=user.id) }}" style="display:inline;"
+              onsubmit="return confirm('?? PERMANENTLY DELETE {{ user.display_name }}?\nThis removes ALL their data from the database. This cannot be undone!');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn-purge"><i class="bi bi-trash3"></i> Delete</button>
+        </form>
+    </div>
+</div>
+{% endfor %}
+{% else %}
+<div class="empty-msg"><i class="bi bi-check-circle" style="font-size:1.5rem;color:#4ade80;"></i><br>No deactivated accounts</div>
+{% endif %}
+
+<!-- Banned Users -->
+<div class="section-title"><i class="bi bi-slash-circle"></i> Banned Accounts ({{ banned|length }})</div>
+{% if banned %}
+{% for user in banned %}
+<div class="acc-card">
+    <div class="acc-avatar">
+        {% if user.avatar_url %}<img src="{{ user.avatar_url }}" alt="">{% else %}{{ user.display_name[0]|upper }}{% endif %}
+    </div>
+    <div class="acc-info">
+        <div class="acc-name">{{ user.display_name }} <span class="status-badge status-banned">Banned</span></div>
+        <div class="acc-email">{{ user.email or 'No email' }} &middot; ID: {{ user.id }}</div>
+        <div class="acc-meta">Joined {{ user.date_joined.strftime('%b %d, %Y') if user.date_joined else 'Unknown' }}</div>
+    </div>
+    <div class="acc-actions">
+        <form method="POST" action="{{ url_for('founder_dash.account_reactivate', user_id=user.id) }}" style="display:inline;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn-reactivate"><i class="bi bi-toggle2-off"></i> Unban</button>
+        </form>
+        <form method="POST" action="{{ url_for('founder_dash.account_complete_delete', user_id=user.id) }}" style="display:inline;"
+              onsubmit="return confirm('?? PERMANENTLY DELETE {{ user.display_name }}? This removes ALL data. Cannot be undone!');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn-purge"><i class="bi bi-trash3"></i> Delete</button>
+        </form>
+    </div>
+</div>
+{% endfor %}
+{% else %}
+<div class="empty-msg"><i class="bi bi-check-circle" style="font-size:1.5rem;color:#4ade80;"></i><br>No banned accounts</div>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,152 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Banned Words — WiamApp{% endblock %}
+{% block sidebar_title %}Control Panel{% endblock %}
+
+{% block sidebar_nav %}
+<a class="nav-link" href="{{ url_for('founder_dash.overview') }}"><i class="bi bi-speedometer2"></i> Overview</a>
+<a class="nav-link" href="{{ url_for('founder_dash.users') }}"><i class="bi bi-people"></i> Users</a>
+<a class="nav-link" href="{{ url_for('founder_dash.content') }}"><i class="bi bi-book"></i> Content</a>
+
+<a class="nav-link" href="{{ url_for('founder_dash.revenue') }}"><i class="bi bi-cash-stack"></i> Revenue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.financial_dashboard') }}"><i class="bi bi-bank" style="color:var(--gold);"></i> Financial v5</a>
+<a class="nav-link" href="{{ url_for('founder_dash.premium_analytics') }}"><i class="bi bi-gem" style="color:#c084fc;"></i> Premium Analytics</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payouts') }}"><i class="bi bi-send-check"></i> Payouts</a>
+<a class="nav-link" href="{{ url_for('founder_dash.withdrawals') }}"><i class="bi bi-arrow-up-right-circle" style="color:var(--gold);"></i> Withdrawals</a>
+<a class="nav-link" href="{{ url_for('founder_dash.subscribers') }}"><i class="bi bi-gem" style="color:#9b59b6;"></i> Subscribers</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payroll') }}"><i class="bi bi-wallet2" style="color:#2ecc71;"></i> Team Payroll</a>
+<a class="nav-link" href="{{ url_for('founder_dash.creators') }}"><i class="bi bi-person-badge"></i> Creators</a>
+<a class="nav-link" href="{{ url_for('founder_dash.genres') }}"><i class="bi bi-tags"></i> Genres</a>
+<a class="nav-link" href="{{ url_for('founder_dash.announcements') }}"><i class="bi bi-megaphone"></i> Announcements</a>
+<a class="nav-link" href="{{ url_for('founder_dash.collections') }}"><i class="bi bi-grid"></i> Collections</a>
+<a class="nav-link active" href="{{ url_for('founder_dash.moderation') }}"><i class="bi bi-shield-exclamation"></i> Moderation</a>
+<a class="nav-link" href="{{ url_for('founder_dash.warnings_list') }}"><i class="bi bi-exclamation-triangle" style="color:#f59e0b;"></i> Warnings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.elite_manage') }}"><span style="color:var(--gold);">?</span> WiamElite</a>
+<a class="nav-link" href="{{ url_for('wiambot.apex_review') }}"><i class="bi bi-trophy-fill" style="color:var(--gold);"></i> Apex Review</a>
+<a class="nav-link" href="{{ url_for('founder_dash.review_queue') }}"><i class="bi bi-robot"></i> Bot Review Queue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.platform_settings') }}"><i class="bi bi-sliders"></i> Platform Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.forms_dashboard') }}"><i class="bi bi-file-earmark-text"></i> Application Forms</a>
+<a class="nav-link" href="{{ url_for('founder_dash.email_studio') }}"><i class="bi bi-envelope-paper" style="color:var(--gold);"></i> Email Studio</a>
+<a class="nav-link" href="{{ url_for('founder_dash.team_management') }}"><i class="bi bi-people-fill"></i> Team</a>
+<a class="nav-link" href="{{ url_for('founder_dash.account_management') }}"><i class="bi bi-person-x"></i> Account Management</a>
+<a class="nav-link" href="{{ url_for('founder_dash.notification_testing') }}"><i class="bi bi-bell" style="color:#fbbf24;"></i> Notifications</a>
+<a class="nav-link" href="{{ url_for('classics.dashboard') }}"><i class="bi bi-journal-bookmark" style="color:#a78bfa;"></i> Content Seeder</a>
+<a class="nav-link" href="{{ url_for('founder_dash.settings') }}"><i class="bi bi-gear"></i> Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.admins') }}"><i class="bi bi-shield-check"></i> Admins</a>
+{% endblock %}
+
+{% block dash_content %}
+<div class="dash-header">
+    <h1><i class="bi bi-slash-circle" style="color:#ef4444"></i> Banned Words</h1>
+    <p>Manage the word filter used for automated content scanning</p>
+</div>
+
+<div style="display:flex;gap:0.75rem;margin-bottom:1.5rem;flex-wrap:wrap;align-items:center">
+    <a href="{{ url_for('founder_dash.moderation') }}" class="btn-dash" style="padding:0.4rem 1rem;font-size:0.82rem">
+        <i class="bi bi-arrow-left"></i> Back to Moderation
+    </a>
+    {% if not words %}
+    <form method="POST" action="{{ url_for('founder_dash.seed_words') }}" style="display:inline">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn-dash btn-dash-primary" style="padding:0.4rem 1rem;font-size:0.82rem">
+            <i class="bi bi-magic"></i> Seed Default Words
+        </button>
+    </form>
+    {% endif %}
+</div>
+
+<!-- Add new word -->
+<div class="dash-card" style="margin-bottom:1.5rem">
+    <h3 style="margin:0 0 1rem;font-size:0.95rem"><i class="bi bi-plus-circle"></i> Add Banned Word</h3>
+    <form method="POST" action="{{ url_for('founder_dash.add_banned_word') }}" style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:flex-end">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div style="flex:1;min-width:200px">
+            <label style="display:block;font-size:0.78rem;color:var(--text-muted);margin-bottom:0.3rem">Word / Phrase</label>
+            <input type="text" name="word" required placeholder="Enter word or phrase..." style="width:100%;padding:0.5rem;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-size:0.85rem">
+        </div>
+        <div style="min-width:140px">
+            <label style="display:block;font-size:0.78rem;color:var(--text-muted);margin-bottom:0.3rem">Category</label>
+            <select name="category" style="width:100%;padding:0.5rem;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-size:0.85rem">
+                <option value="general">General</option>
+                <option value="sexual">Sexual</option>
+                <option value="hate">Hate Speech</option>
+                <option value="spam">Spam</option>
+                <option value="violence">Violence</option>
+            </select>
+        </div>
+        <div style="min-width:100px">
+            <label style="display:block;font-size:0.78rem;color:var(--text-muted);margin-bottom:0.3rem">Severity</label>
+            <select name="severity" style="width:100%;padding:0.5rem;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-size:0.85rem">
+                <option value="1">1 — Log only</option>
+                <option value="2">2 — Flag for review</option>
+                <option value="3">3 — Auto-reject</option>
+            </select>
+        </div>
+        <button type="submit" style="padding:0.5rem 1.2rem;background:linear-gradient(135deg,#d4a843,#f5d98a);color:#000;border:none;border-radius:8px;font-weight:600;font-size:0.85rem;cursor:pointer">
+            <i class="bi bi-plus"></i> Add
+        </button>
+    </form>
+</div>
+
+<!-- Word list -->
+<div class="dash-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+        <h3 style="margin:0;font-size:0.95rem">{{ words|length }} Banned Words</h3>
+    </div>
+
+    {% if words %}
+    <div class="table-responsive">
+        <table class="dash-table">
+            <thead>
+                <tr>
+                    <th>Word / Phrase</th>
+                    <th>Category</th>
+                    <th>Severity</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for w in words %}
+            <tr>
+                <td style="font-family:monospace;font-size:0.82rem">{{ w.word }}</td>
+                <td>
+                    <span style="font-size:0.75rem;padding:0.1rem 0.4rem;border-radius:4px;background:rgba(255,255,255,0.05)">{{ w.category }}</span>
+                </td>
+                <td>
+                    {% if w.severity == 3 %}
+                    <span style="color:#ef4444;font-weight:700">3 — Auto-reject</span>
+                    {% elif w.severity == 2 %}
+                    <span style="color:#f59e0b;font-weight:600">2 — Flag</span>
+                    {% else %}
+                    <span style="color:var(--text-muted)">1 — Log</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if w.is_active %}
+                    <span style="color:#22c55e;font-size:0.78rem"><i class="bi bi-check-circle"></i> Active</span>
+                    {% else %}
+                    <span style="color:var(--text-muted);font-size:0.78rem"><i class="bi bi-pause-circle"></i> Inactive</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <form method="POST" action="{{ url_for('founder_dash.delete_banned_word', word_id=w.id) }}" style="display:inline"
+                          onsubmit="return confirm('Remove this banned word?')">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" style="padding:0.2rem 0.5rem;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);border-radius:6px;color:#ef4444;font-size:0.72rem;cursor:pointer">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:2rem;color:var(--text-muted)">
+        <i class="bi bi-slash-circle" style="font-size:2rem;display:block;margin-bottom:0.5rem"></i>
+        No banned words yet. Click "Seed Default Words" to get started.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

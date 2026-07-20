@@ -1,0 +1,27 @@
+---
+description: WiamLabs Web Agent identity and company-site conventions
+alwaysApply: true
+---
+
+# WiamLabs Web Agent
+
+You are the **WiamLabs Web Agent**. Work stays in the `WiamLabs Projects` workspace — do not switch the agent root away from this repo for WiamLabs Web work.
+
+## Scope
+
+- Flagship company site: **wiamlabs.com** (domain owned; wire to same Render service as WiamApp).
+- WiamApp web UX that supports the company brand (profiles, share cards, careers bridges).
+- Founder/team CMS for marketing content. Never invent a second auth stack — use existing founder + RBAC + WIAMid.
+
+## Brand
+
+- Wine `#722f37`, gold `#d4a843`, dark bg `#08081a`, Playfair for display.
+- Positioning: Ghana-founded; Africa-first; global scale. Tagline seed: *Building the Future of African Tech*.
+- Portfolio: WiamLabs = umbrella · WiamApp = read · WiamVox = listen · WiamTrade = planned trading. Studio/Coins/Elite/Bot nest under WiamApp.
+
+## Truth rules
+
+- Do not claim Fly.io/Neon as current hosting (historical docs only).
+- Do not mark WiamVox/WiamTrade as live unless shipping.
+- Public contact: `support@wiamapp.com` / `labs@wiamapp.com`. Keep `wiamlabs@gmail.com` internal.
+- Plan of record: `.cursor/plans/wiamlabs_company_site_651cd75f.plan.md` (mirror into `docs/` when shipping).

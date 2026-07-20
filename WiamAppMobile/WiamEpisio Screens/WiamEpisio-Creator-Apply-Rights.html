@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamEpisio — Apply: Rights &amp; Standards</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); display:flex; flex-direction:column; }
+  .statusbar{ height:44px; flex-shrink:0; }
+
+  .topbar{ padding:2px 20px 16px; flex-shrink:0; }
+  .top-row{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+  .icon-btn{ width:34px; height:34px; border-radius:50%; background:var(--navy-card); display:flex; align-items:center; justify-content:center; }
+  .step-label{ font-size:11px; font-weight:700; color:var(--text-faint); }
+  .step-track{ display:flex; gap:6px; margin-bottom:16px; }
+  .step-seg{ flex:1; height:4px; border-radius:99px; background:var(--navy-line); }
+  .step-seg.done{ background:var(--gold); }
+  h1{ font-size:19px; font-weight:800; color:#fff; margin:0 0 5px; letter-spacing:-0.3px; }
+  .sub{ font-size:12px; color:var(--text-dim); margin:0; }
+
+  .scroll{ flex:1; overflow-y:auto; padding:0 20px 20px; }
+
+  .check-card{ display:flex; gap:12px; background:var(--navy-card); border:1px solid var(--navy-line); border-radius:16px; padding:15px; margin-bottom:12px; }
+  .check-card.checked{ border-color:rgba(212,160,23,0.4); background:rgba(212,160,23,0.06); }
+  .checkbox{ width:22px; height:22px; border-radius:7px; border:1.5px solid var(--navy-line); flex-shrink:0; margin-top:1px; display:flex; align-items:center; justify-content:center; }
+  .checkbox.on{ background:var(--gold); border-color:var(--gold); }
+  .checkbox svg{ width:13px; height:13px; stroke:var(--navy); stroke-width:3; }
+  .check-body b{ font-size:12.5px; font-weight:700; color:#fff; display:block; margin-bottom:3px; }
+  .check-body span{ font-size:11px; color:var(--text-dim); line-height:1.55; }
+
+  .earnings-card{ background:linear-gradient(135deg, rgba(212,160,23,0.12), rgba(18,18,42,0.9)); border:1px solid rgba(212,160,23,0.28); border-radius:16px; padding:16px; margin:16px 0; }
+  .earnings-title{ font-size:12.5px; font-weight:800; color:#fff; margin:0 0 8px; }
+  .earnings-text{ font-size:11.5px; color:#D9C89A; line-height:1.6; margin:0; }
+
+  .footer{ flex-shrink:0; padding:12px 20px 26px; }
+  .btn-primary{ width:100%; padding:16px; border-radius:16px; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); border:none; color:var(--navy); font-size:15px; font-weight:800; box-shadow:0 14px 30px rgba(212,160,23,0.3); font-family:'Inter',sans-serif; margin-bottom:8px; }
+  .btn-primary.disabled{ opacity:0.4; box-shadow:none; }
+  .footer-note{ text-align:center; font-size:10.5px; color:var(--text-faint); }
+
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"></div>
+  <div class="topbar">
+    <div class="top-row">
+      <div class="icon-btn"><svg viewBox="0 0 24 24" width="15" height="15" color="#fff"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></div>
+      <span class="step-label">Step 4 of 4</span>
+    </div>
+    <div class="step-track">
+      <div class="step-seg done"></div>
+      <div class="step-seg done"></div>
+      <div class="step-seg done"></div>
+      <div class="step-seg done"></div>
+    </div>
+    <h1>Rights &amp; standards</h1>
+    <p class="sub">Read and confirm each one — this protects your work too.</p>
+  </div>
+
+  <div class="scroll">
+
+    <div class="check-card checked">
+      <div class="checkbox on"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <div class="check-body"><b>I own or have full rights to this work</b><span>Including any music, footage, or scripts used — no copyrighted material I don't have permission for.</span></div>
+    </div>
+
+    <div class="check-card checked">
+      <div class="checkbox on"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <div class="check-body"><b>I'll follow the content standards</b><span>No hate speech, no graphic violence, no sexual content involving minors, no plagiarism of other creators' series.</span></div>
+    </div>
+
+    <div class="check-card">
+      <div class="checkbox"></div>
+      <div class="check-body"><b>I understand the quality gate</b><span>My series won't go public until every episode is uploaded, the trailer passes QA, and it's reviewed.</span></div>
+    </div>
+
+    <div class="check-card">
+      <div class="checkbox"></div>
+      <div class="check-body"><b>I agree to the Creator Agreement</b><span>Including how earnings are calculated and paid out. <span style="color:var(--gold); font-weight:700;">Read full agreement →</span></span></div>
+    </div>
+
+    <div class="earnings-card">
+      <p class="earnings-title">How you get paid</p>
+      <p class="earnings-text">You earn a share of coins spent unlocking your episodes, plus a bonus pool for watch-time. Payouts are monthly once you pass ₵100 in earnings.</p>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <button class="btn-primary disabled">Submit Application</button>
+    <p class="footer-note">Confirm all 4 items to continue</p>
+  </div>
+</div>
+
+</body>
+</html>

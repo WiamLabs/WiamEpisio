@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamEpisio — Report Content</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75; --red:#E4573D;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); }
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+
+  .backdrop{ position:absolute; inset:0; background:linear-gradient(160deg,#1a1030,#0d0d24,#000); filter:brightness(0.3); }
+
+  .sheet{ position:absolute; left:0; right:0; bottom:0; background:var(--navy-soft); border-radius:26px 26px 0 0; padding:14px 24px 34px; box-shadow:0 -20px 50px rgba(0,0,0,0.5); max-height:88%; overflow-y:auto; }
+  .sheet-handle{ width:36px; height:4px; background:var(--navy-line); border-radius:99px; margin:0 auto 20px; }
+
+  .sheet-title{ font-size:16px; font-weight:800; color:#fff; margin:0 0 4px; }
+  .sheet-sub{ font-size:11.5px; color:var(--text-dim); margin:0 0 18px; }
+  .sheet-sub b{ color:#fff; }
+
+  .reason-item{ display:flex; align-items:center; gap:12px; padding:13px 14px; border-radius:13px; background:var(--navy-card); border:1px solid var(--navy-line); margin-bottom:8px; }
+  .reason-item.selected{ border-color:var(--red); background:rgba(228,87,61,0.08); }
+  .radio{ width:18px; height:18px; border-radius:50%; border:2px solid var(--navy-line); flex-shrink:0; }
+  .reason-item.selected .radio{ border-color:var(--red); position:relative; }
+  .reason-item.selected .radio::after{ content:''; position:absolute; inset:3px; border-radius:50%; background:var(--red); }
+  .reason-item span{ font-size:12.5px; color:#E7E7F2; font-weight:500; }
+
+  .detail-box{ background:var(--navy-card); border:1px solid var(--navy-line); border-radius:14px; padding:13px 14px; margin:14px 0 18px; }
+  .detail-box textarea{ background:none; border:none; outline:none; color:#fff; font-size:12.5px; font-family:inherit; width:100%; resize:none; }
+  .detail-box textarea::placeholder{ color:var(--text-faint); }
+
+  .btn-submit{ width:100%; padding:16px; border-radius:16px; background:var(--red); border:none; color:#fff; font-size:14.5px; font-weight:800; font-family:'Inter',sans-serif; margin-bottom:10px; }
+  .footer-note{ text-align:center; font-size:10.5px; color:var(--text-faint); line-height:1.5; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="backdrop"></div>
+
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+
+    <p class="sheet-title">Report this content</p>
+    <p class="sheet-sub">Reporting <b>"The Chief's Daughter" — EP 12</b></p>
+
+    <div class="reason-item selected"><div class="radio"></div><span>Copyright or stolen content</span></div>
+    <div class="reason-item"><div class="radio"></div><span>Hate speech or harassment</span></div>
+    <div class="reason-item"><div class="radio"></div><span>Graphic violence</span></div>
+    <div class="reason-item"><div class="radio"></div><span>Sexual content</span></div>
+    <div class="reason-item"><div class="radio"></div><span>Misleading title or thumbnail</span></div>
+    <div class="reason-item"><div class="radio"></div><span>Something else</span></div>
+
+    <div class="detail-box">
+      <textarea rows="3" placeholder="Add details (optional) — this helps our team review faster">This episode reuses scenes from another creator's series without credit.</textarea>
+    </div>
+
+    <button class="btn-submit">Submit Report</button>
+    <p class="footer-note">Reports are reviewed within 48 hours. The creator won't see who reported.</p>
+  </div>
+</div>
+
+</body>
+</html>

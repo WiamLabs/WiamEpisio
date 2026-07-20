@@ -1,0 +1,97 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Manage Classics — WiamApp{% endblock %}
+{% block sidebar_title %}Control Panel{% endblock %}
+
+{% block sidebar_nav %}
+<a class="nav-link" href="{{ url_for('founder_dash.overview') }}"><i class="bi bi-speedometer2"></i> Overview</a>
+<a class="nav-link" href="{{ url_for('founder_dash.users') }}"><i class="bi bi-people"></i> Users</a>
+<a class="nav-link" href="{{ url_for('founder_dash.content') }}"><i class="bi bi-book"></i> Content</a>
+<a class="nav-link" href="{{ url_for('founder_dash.revenue') }}"><i class="bi bi-cash-stack"></i> Revenue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.financial_dashboard') }}"><i class="bi bi-bank" style="color:var(--gold);"></i> Financial v5</a>
+<a class="nav-link" href="{{ url_for('founder_dash.premium_analytics') }}"><i class="bi bi-gem" style="color:#c084fc;"></i> Premium Analytics</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payouts') }}"><i class="bi bi-send-check"></i> Payouts</a>
+<a class="nav-link" href="{{ url_for('founder_dash.withdrawals') }}"><i class="bi bi-arrow-up-right-circle" style="color:var(--gold);"></i> Withdrawals</a>
+<a class="nav-link" href="{{ url_for('founder_dash.subscribers') }}"><i class="bi bi-gem" style="color:#9b59b6;"></i> Subscribers</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payroll') }}"><i class="bi bi-wallet2" style="color:#2ecc71;"></i> Team Payroll</a>
+<a class="nav-link" href="{{ url_for('founder_dash.creators') }}"><i class="bi bi-person-badge"></i> Creators</a>
+<a class="nav-link" href="{{ url_for('founder_dash.genres') }}"><i class="bi bi-tags"></i> Genres</a>
+<a class="nav-link" href="{{ url_for('founder_dash.announcements') }}"><i class="bi bi-megaphone"></i> Announcements</a>
+<a class="nav-link" href="{{ url_for('founder_dash.collections') }}"><i class="bi bi-grid"></i> Collections</a>
+<a class="nav-link" href="{{ url_for('founder_dash.moderation') }}"><i class="bi bi-shield-exclamation"></i> Moderation</a>
+<a class="nav-link" href="{{ url_for('founder_dash.warnings_list') }}"><i class="bi bi-exclamation-triangle" style="color:#f59e0b;"></i> Warnings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.elite_manage') }}"><span style="color:var(--gold);">?</span> WiamElite</a>
+<a class="nav-link" href="{{ url_for('wiambot.apex_review') }}"><i class="bi bi-trophy-fill" style="color:var(--gold);"></i> Apex Review</a>
+<a class="nav-link" href="{{ url_for('founder_dash.review_queue') }}"><i class="bi bi-robot"></i> Bot Review Queue</a>
+<a class="nav-link active" href="{{ url_for('classics.dashboard') }}"><i class="bi bi-journal-bookmark" style="color:#a78bfa;"></i> Content Seeder</a>
+<a class="nav-link" href="{{ url_for('founder_dash.platform_settings') }}"><i class="bi bi-sliders"></i> Platform Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.forms_dashboard') }}"><i class="bi bi-file-earmark-text"></i> Application Forms</a>
+<a class="nav-link" href="{{ url_for('founder_dash.email_studio') }}"><i class="bi bi-envelope-paper" style="color:var(--gold);"></i> Email Studio</a>
+<a class="nav-link" href="{{ url_for('founder_dash.team_management') }}"><i class="bi bi-people-fill"></i> Team</a>
+<a class="nav-link" href="{{ url_for('founder_dash.account_management') }}"><i class="bi bi-person-x"></i> Account Management</a>
+<a class="nav-link" href="{{ url_for('founder_dash.notification_testing') }}"><i class="bi bi-bell" style="color:#fbbf24;"></i> Notifications</a>
+<a class="nav-link" href="{{ url_for('founder_dash.settings') }}"><i class="bi bi-gear"></i> Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.admins') }}"><i class="bi bi-shield-check"></i> Admins</a>
+{% endblock %}
+
+{% block dash_content %}
+<style>
+    .manage-card{background:linear-gradient(135deg,rgba(20,20,35,0.9),rgba(15,15,28,0.9));border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:1.25rem;margin-bottom:1rem;display:flex;gap:1rem;align-items:center;flex-wrap:wrap;transition:border-color 0.2s;}
+    .manage-card:hover{border-color:rgba(167,139,250,0.3);}
+    .manage-cover{width:65px;height:92px;border-radius:8px;object-fit:cover;background:rgba(255,255,255,0.05);flex-shrink:0;}
+    .manage-info{flex:1;min-width:200px;}
+    .manage-info h4{margin:0 0 0.2rem;font-size:0.95rem;color:var(--text);}
+    .manage-info p{margin:0;font-size:0.8rem;color:var(--text-muted);}
+    .manage-stats{display:flex;gap:1.5rem;flex-wrap:wrap;font-size:0.82rem;}
+    .manage-stats span{color:var(--text-muted);}
+    .manage-stats strong{color:var(--text);}
+    .badge-classic{background:linear-gradient(135deg,rgba(167,139,250,0.2),rgba(124,58,237,0.15));color:#a78bfa;padding:0.15rem 0.5rem;border-radius:5px;font-size:0.68rem;font-weight:700;letter-spacing:0.04em;}
+    .btn-view{background:rgba(212,168,67,0.15);color:var(--gold);border:1px solid rgba(212,168,67,0.2);border-radius:6px;padding:0.35rem 0.85rem;font-weight:600;font-size:0.78rem;text-decoration:none;}
+    .btn-delete{background:rgba(248,113,113,0.15);color:#f87171;border:1px solid rgba(248,113,113,0.2);border-radius:6px;padding:0.35rem 0.85rem;font-weight:600;font-size:0.78rem;cursor:pointer;}
+    .low-perf{border-left:3px solid #f87171;}
+    .high-perf{border-left:3px solid #4ade80;}
+    .mid-perf{border-left:3px solid #facc15;}
+</style>
+
+<div class="dash-header">
+    <h1><i class="bi bi-gear" style="color:#a78bfa;"></i> Manage Classics</h1>
+    <p>View performance and remove underperforming classics</p>
+</div>
+
+<a href="{{ url_for('classics.dashboard') }}" style="display:inline-block;margin-bottom:1.5rem;padding:0.4rem 1rem;background:rgba(255,255,255,0.06);color:var(--text-muted);border:1px solid rgba(255,255,255,0.1);border-radius:8px;font-size:0.85rem;text-decoration:none;">
+    <i class="bi bi-arrow-left"></i> Back to Content Seeder
+</a>
+
+{% if books %}
+{% for b in books %}
+<div class="manage-card {% if b.views < 10 %}low-perf{% elif b.views >= 50 %}high-perf{% else %}mid-perf{% endif %}">
+    {% if b.cover_image %}
+    <img src="{{ b.cover_image }}" alt="{{ b.title }}" class="manage-cover">
+    {% else %}
+    <div class="manage-cover" style="display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.1);"><i class="bi bi-book" style="font-size:1.5rem;"></i></div>
+    {% endif %}
+    <div class="manage-info">
+        <h4><span class="badge-classic">CLASSIC</span> {{ b.title }}</h4>
+        <p>by {{ b.author }} &middot; {{ b.genre }}</p>
+        <div class="manage-stats" style="margin-top:0.4rem;">
+            <span><strong>{{ b.views }}</strong> views</span>
+            <span><strong>{{ b.published_chapter_count }}</strong>/{{ b.chapter_count }} chapters released</span>
+            <span><strong>{{ '{:,}'.format(b.word_count) }}</strong> words</span>
+            <span>Published {{ b.published_at.strftime('%b %d, %Y') if b.published_at else '—' }}</span>
+        </div>
+    </div>
+    <div style="display:flex;gap:0.4rem;flex-shrink:0;">
+        <a href="{{ url_for('classics.book_detail', book_id=b.id) }}" class="btn-view" target="_blank"><i class="bi bi-eye"></i> View</a>
+        <form method="POST" action="{{ url_for('classics.delete', book_id=b.id) }}" style="display:inline;" onsubmit="return confirm('Permanently remove this classic and all its chapters?')">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn-delete"><i class="bi bi-trash"></i> Remove</button>
+        </form>
+    </div>
+</div>
+{% endfor %}
+{% else %}
+<div style="text-align:center;padding:3rem;color:var(--text-muted);">
+    <i class="bi bi-journal-bookmark" style="font-size:2.5rem;display:block;margin-bottom:0.5rem;opacity:0.3;"></i>
+    No published classics yet.
+</div>
+{% endif %}
+{% endblock %}

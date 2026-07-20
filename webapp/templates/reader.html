@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Reading: {{ book.title }} — WiamApp{% endblock %}
+
+{% block extra_head %}
+<style>
+    .reader-toolbar {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: var(--bg-glass);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-bottom: 1px solid var(--border-subtle);
+        padding: 10px 0;
+    }
+    .reader-toolbar-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-md);
+    }
+    .reader-title {
+        font-family: var(--font-display);
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: var(--text);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        flex: 1;
+        min-width: 0;
+    }
+    .reader-frame {
+        width: 100%;
+        min-height: 85vh;
+        border: none;
+        border-radius: var(--radius-md);
+        background: #1a1a1a;
+    }
+    .reader-error {
+        text-align: center;
+        padding: var(--space-3xl) var(--space-md);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Reader Toolbar -->
+<div class="reader-toolbar">
+    <div class="container reader-toolbar-inner">
+        <a href="{{ url_for('book.detail', book_id=book.id) }}" class="btn-ghost" style="flex-shrink: 0;">
+            <i class="bi bi-arrow-left me-1"></i> Back
+        </a>
+        <span class="reader-title">{{ book.title }}</span>
+        <div style="display: flex; gap: var(--space-sm); flex-shrink: 0;">
+            <button class="btn-ghost" onclick="toggleFullscreen()" title="Fullscreen">
+                <i class="bi bi-arrows-fullscreen"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- PDF Viewer -->
+<div class="container" style="padding: var(--space-md) 0 var(--space-2xl);">
+    {% if book.pdf_file_id %}
+    <iframe id="pdfFrame" src="{{ url_for('api.serve_pdf', book_id=book.id) }}" class="reader-frame" loading="lazy"></iframe>
+    <p style="text-align: center; color: var(--text-muted); font-size: 0.78rem; margin-top: var(--space-md);">
+        If the PDF doesn't load, <a href="{{ url_for('api.serve_pdf', book_id=book.id) }}" target="_blank">open in new tab</a>.
+    </p>
+    {% else %}
+    <div class="reader-error">
+        <div style="font-size: 3rem; color: var(--text-muted); opacity: 0.4; margin-bottom: var(--space-md);">
+            <i class="bi bi-file-earmark-x"></i>
+        </div>
+        <h3 class="font-display" style="font-weight: 400; font-style: italic; color: var(--text-secondary);">
+            No PDF available for this book.
+        </h3>
+        <p style="color: var(--text-muted); font-size: 0.88rem;">
+            The creator hasn't uploaded a PDF version yet.
+        </p>
+        <a href="{{ url_for('book.detail', book_id=book.id) }}" class="btn btn-outline-gold mt-3">Back to Book</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleFullscreen() {
+    var frame = document.getElementById('pdfFrame');
+    if (!frame) return;
+    if (document.fullscreenElement) {
+        document.exitFullscreen();
+    } else {
+        frame.requestFullscreen().catch(function(){});
+    }
+}
+</script>
+{% endblock %}

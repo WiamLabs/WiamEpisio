@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamEpisio — About Coins &amp; Pricing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); display:flex; flex-direction:column; }
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+
+  .statusbar{ height:44px; flex-shrink:0; }
+  .topbar{ display:flex; align-items:center; gap:12px; padding:2px 20px 14px; flex-shrink:0; }
+  .icon-btn{ width:34px; height:34px; border-radius:50%; background:var(--navy-card); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .topbar h1{ font-size:16.5px; font-weight:800; color:#fff; margin:0; }
+
+  .scroll{ flex:1; overflow-y:auto; padding:0 20px 24px; }
+
+  .rate-card{ background:linear-gradient(135deg, rgba(212,160,23,0.14), rgba(18,18,42,0.9)); border:1px solid rgba(212,160,23,0.3); border-radius:16px; padding:16px; margin-bottom:20px; }
+  .rate-title{ font-size:12px; font-weight:800; color:#fff; margin:0 0 10px; }
+  .rate-row{ display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(212,160,23,0.15); }
+  .rate-row:last-child{ border-bottom:none; }
+  .rate-row .k{ font-size:11.5px; color:#D9C89A; }
+  .rate-row .v{ font-size:12.5px; color:#fff; font-weight:700; }
+
+  .section-title{ font-size:12px; font-weight:800; color:var(--text-dim); letter-spacing:0.4px; text-transform:uppercase; margin:18px 0 10px; }
+
+  .info-block{ background:var(--navy-card); border:1px solid var(--navy-line); border-radius:16px; padding:15px 16px; margin-bottom:12px; }
+  .info-block b{ display:block; font-size:12.5px; font-weight:700; color:#fff; margin-bottom:6px; }
+  .info-block p{ font-size:11.5px; color:var(--text-dim); line-height:1.65; margin:0; }
+
+  .region-list{ display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+  .region-chip{ font-size:10.5px; font-weight:600; color:#C9C9DE; background:var(--navy-soft); border:1px solid var(--navy-line); padding:6px 11px; border-radius:999px; }
+
+  .note-strip{ display:flex; gap:9px; font-size:10.5px; color:var(--text-faint); line-height:1.6; padding:4px 2px 0; }
+  .note-strip svg{ width:13px; height:13px; flex-shrink:0; margin-top:1px; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"></div>
+  <div class="topbar">
+    <div class="icon-btn"><svg viewBox="0 0 24 24" width="15" height="15" color="#fff"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></div>
+    <h1>About Coins &amp; Pricing</h1>
+  </div>
+
+  <div class="scroll">
+
+    <div class="rate-card">
+      <p class="rate-title">Your local pricing</p>
+      <div class="rate-row"><span class="k">Display currency</span><span class="v">GHS (₵)</span></div>
+      <div class="rate-row"><span class="k">Reference rate</span><span class="v">1 coin ≈ ₵0.069</span></div>
+      <div class="rate-row"><span class="k">Last updated</span><span class="v">Today, 6:00 AM</span></div>
+    </div>
+
+    <p class="section-title">How pricing works</p>
+
+    <div class="info-block">
+      <b>Coins are the only in-app currency</b>
+      <p>All episodes, VIP content, and unlocks are priced in coins. Coin packs are purchased with real money at the rate shown above, which may vary slightly by payment method and region.</p>
+    </div>
+
+    <div class="info-block">
+      <b>Prices are shown in your local currency</b>
+      <p>WiamEpisio detects your region and displays coin pack prices in your local currency at checkout. The coin amount you receive never changes based on payment method.</p>
+      <div class="region-list">
+        <span class="region-chip">🇬🇭 GHS</span>
+        <span class="region-chip">🇳🇬 NGN</span>
+        <span class="region-chip">🇰🇪 KES</span>
+        <span class="region-chip">🇿🇦 ZAR</span>
+        <span class="region-chip">🇺🇸 USD</span>
+      </div>
+    </div>
+
+    <div class="info-block">
+      <b>Coins don't expire</b>
+      <p>Once purchased, coins remain in your wallet indefinitely — no forced expiry, no monthly reset.</p>
+    </div>
+
+    <div class="info-block">
+      <b>Refund policy</b>
+      <p>Coin purchases are generally non-refundable once used to unlock content. If a payment was charged but coins weren't delivered, contact Help Center within 7 days for a review.</p>
+    </div>
+
+    <div class="note-strip">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span>Exchange rates are indicative and may shift with currency markets. The price shown at checkout is always final.</span>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

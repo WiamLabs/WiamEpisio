@@ -1,0 +1,132 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Support Dashboard — WiamApp{% endblock %}
+{% block sidebar_title %}Support Panel{% endblock %}
+
+{% block sidebar_nav %}
+<a class="nav-link active" href="{{ url_for('team.dashboard') }}"><i class="bi bi-speedometer2"></i> Overview</a>
+<div class="sidebar-title" style="margin-top:1rem;">Support Tools</div>
+<a class="nav-link" href="{{ url_for('team.admin_user_list') }}"><i class="bi bi-people"></i> User Lookup</a>
+<a class="nav-link" href="{{ url_for('team.admin_user_list', status='banned') }}"><i class="bi bi-slash-circle" style="color:#f87171;"></i> Banned Users</a>
+<div class="sidebar-title" style="margin-top:1rem;">Feedback</div>
+<a class="nav-link" href="{{ url_for('team.dashboard') }}#feedback"><i class="bi bi-chat-dots" style="color:#34d399;"></i> Open Feedback</a>
+<a class="nav-link" href="{{ url_for('team.dashboard') }}#help"><i class="bi bi-question-circle" style="color:#60a5fa;"></i> Help Questions</a>
+<div class="sidebar-title" style="margin-top:1rem;">Account</div>
+<a class="nav-link" href="{{ url_for('profile.account_safety') }}"><i class="bi bi-shield-check"></i> Account Safety</a>
+{% endblock %}
+
+{% block dash_content %}
+{% include "team/_dashboard_switcher.html" ignore missing %}
+{% include "team/_greeting.html" ignore missing %}
+<div class="dash-header">
+    <h1><i class="bi bi-headset" style="color:#38bdf8;"></i> Support Dashboard</h1>
+</div>
+
+<!-- Stats -->
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="label">Total Users</div>
+        <div class="value gold">{{ total_users }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Open Feedback</div>
+        <div class="value" style="color:#facc15;">{{ open_feedback }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Resolved (30d)</div>
+        <div class="value" style="color:#4ade80;">{{ resolved_feedback_30d }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Unmatched Help Qs</div>
+        <div class="value" style="color:#f87171;">{{ unmatched_questions }}</div>
+    </div>
+</div>
+
+<!-- Recent Feedback -->
+<div class="dash-card" style="border-left:3px solid #38bdf8;">
+    <h3><i class="bi bi-chat-dots" style="color:#38bdf8;margin-right:6px;"></i> User Feedback (Recent)</h3>
+    {% for fb in recent_feedback %}
+    <div style="padding:0.75rem 0;border-bottom:1px solid rgba(255,255,255,0.04);">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:0.75rem;flex-wrap:wrap;">
+            <div style="flex:1;min-width:200px;">
+                <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:4px;">
+                    <strong style="font-size:0.85rem;">{{ fb.user_name or 'Anonymous' }}</strong>
+                    <span style="background:rgba(56,189,248,0.15);color:#38bdf8;padding:2px 8px;border-radius:10px;font-size:0.68rem;font-weight:600;">{{ fb.category or 'General' }}</span>
+                    <span style="font-size:0.68rem;padding:2px 8px;border-radius:8px;font-weight:600;{% if fb.status == 'new' %}background:rgba(212,168,67,0.15);color:var(--gold);{% elif fb.status == 'resolved' %}background:rgba(74,222,128,0.12);color:#4ade80;{% else %}background:rgba(255,255,255,0.06);color:var(--text-muted);{% endif %}">{{ fb.status }}</span>
+                </div>
+                <p style="font-size:0.85rem;line-height:1.5;margin:4px 0;white-space:pre-wrap;">{{ fb.message }}</p>
+                <span style="color:var(--text-muted);font-size:0.7rem;">{{ fb.created_at.strftime('%b %d, %Y at %H:%M') if fb.created_at else '—' }}</span>
+                {% if fb.reply %}
+                <div style="margin-top:0.5rem;padding:0.5rem 0.75rem;background:rgba(74,222,128,0.06);border-left:3px solid #4ade80;border-radius:6px;">
+                    <div style="font-size:0.68rem;color:#4ade80;font-weight:600;margin-bottom:2px;"><i class="bi bi-reply-fill me-1"></i>Reply</div>
+                    <p style="font-size:0.82rem;line-height:1.4;margin:0;white-space:pre-wrap;">{{ fb.reply }}</p>
+                </div>
+                {% endif %}
+            </div>
+            {% if not fb.reply %}
+            <button class="btn-dash btn-dash-sm" style="color:var(--gold);" onclick="document.getElementById('tr-{{ fb.id }}').style.display=document.getElementById('tr-{{ fb.id }}').style.display==='none'?'block':'none'"><i class="bi bi-reply-fill"></i> Reply</button>
+            {% endif %}
+        </div>
+        {% if not fb.reply %}
+        <div id="tr-{{ fb.id }}" style="display:none;margin-top:0.5rem;">
+            <form method="post" action="{{ url_for('team.reply_feedback', fb_id=fb.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <textarea name="reply" rows="2" placeholder="Reply to {{ fb.user_name or 'user' }}..." style="width:100%;background:var(--bg-card);color:var(--text);border:1px solid var(--border-subtle);border-radius:8px;padding:0.5rem 0.7rem;font-size:0.82rem;resize:vertical;font-family:inherit;" required></textarea>
+                <div style="display:flex;justify-content:flex-end;gap:0.4rem;margin-top:0.4rem;">
+                    <button type="button" class="btn-dash btn-dash-sm" onclick="this.closest('[id^=tr-]').style.display='none'">Cancel</button>
+                    <button type="submit" class="btn-dash btn-dash-sm btn-dash-primary"><i class="bi bi-send-fill me-1"></i>Send</button>
+                </div>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+    {% if not recent_feedback %}
+    <p style="text-align:center;color:var(--text-muted);padding:2rem 0;font-size:0.85rem;">No feedback yet — great job!</p>
+    {% endif %}
+</div>
+
+<!-- Unmatched Help Center Questions -->
+<div class="dash-card">
+    <h3><i class="bi bi-question-circle" style="color:#facc15;margin-right:6px;"></i> Unmatched Help Center Questions</h3>
+    <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.75rem;">Questions users asked that the system couldn't answer. Review and train the help center.</p>
+    <table class="dash-table">
+        <thead>
+            <tr><th>Question</th><th>User ID</th><th>Date</th></tr>
+        </thead>
+        <tbody>
+        {% for q in unmatched_list %}
+        <tr>
+            <td>{{ q.user_message[:120] }}</td>
+            <td style="color:var(--text-muted);">{{ q.user_id or '—' }}</td>
+            <td style="color:var(--text-muted);font-size:0.8rem;">{{ q.created_at.strftime('%b %d %H:%M') if q.created_at else '—' }}</td>
+        </tr>
+        {% endfor %}
+        {% if not unmatched_list %}
+        <tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:1.5rem">No unmatched questions</td></tr>
+        {% endif %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Banned Users -->
+<div class="dash-card">
+    <h3><i class="bi bi-person-x" style="color:#f87171;margin-right:6px;"></i> Banned / Blocked Users</h3>
+    <table class="dash-table">
+        <thead>
+            <tr><th>User</th><th>Status</th><th>Email</th></tr>
+        </thead>
+        <tbody>
+        {% for u in banned_users %}
+        <tr>
+            <td><strong>{{ u.display_name }}</strong></td>
+            <td><span style="color:{% if u.status == 'banned' %}#f87171{% else %}#facc15{% endif %};font-weight:600;font-size:0.8rem;">{{ u.status }}</span></td>
+            <td style="color:var(--text-muted);font-size:0.8rem;">{{ u.email or '—' }}</td>
+        </tr>
+        {% endfor %}
+        {% if not banned_users %}
+        <tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:1.5rem">No banned or blocked users</td></tr>
+        {% endif %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

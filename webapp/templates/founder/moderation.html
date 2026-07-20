@@ -1,0 +1,281 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Moderation — WiamApp{% endblock %}
+{% block sidebar_title %}Control Panel{% endblock %}
+
+{% block sidebar_nav %}
+<a class="nav-link" href="{{ url_for('founder_dash.overview') }}"><i class="bi bi-speedometer2"></i> Overview</a>
+<a class="nav-link" href="{{ url_for('founder_dash.users') }}"><i class="bi bi-people"></i> Users</a>
+<a class="nav-link" href="{{ url_for('founder_dash.content') }}"><i class="bi bi-book"></i> Content</a>
+
+<a class="nav-link" href="{{ url_for('founder_dash.revenue') }}"><i class="bi bi-cash-stack"></i> Revenue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.financial_dashboard') }}"><i class="bi bi-bank" style="color:var(--gold);"></i> Financial v5</a>
+<a class="nav-link" href="{{ url_for('founder_dash.premium_analytics') }}"><i class="bi bi-gem" style="color:#c084fc;"></i> Premium Analytics</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payouts') }}"><i class="bi bi-send-check"></i> Payouts</a>
+<a class="nav-link" href="{{ url_for('founder_dash.withdrawals') }}"><i class="bi bi-arrow-up-right-circle" style="color:var(--gold);"></i> Withdrawals</a>
+<a class="nav-link" href="{{ url_for('founder_dash.subscribers') }}"><i class="bi bi-gem" style="color:#9b59b6;"></i> Subscribers</a>
+<a class="nav-link" href="{{ url_for('founder_dash.payroll') }}"><i class="bi bi-wallet2" style="color:#2ecc71;"></i> Team Payroll</a>
+<a class="nav-link" href="{{ url_for('founder_dash.creators') }}"><i class="bi bi-person-badge"></i> Creators</a>
+<a class="nav-link" href="{{ url_for('founder_dash.genres') }}"><i class="bi bi-tags"></i> Genres</a>
+<a class="nav-link" href="{{ url_for('founder_dash.announcements') }}"><i class="bi bi-megaphone"></i> Announcements</a>
+<a class="nav-link" href="{{ url_for('founder_dash.collections') }}"><i class="bi bi-grid"></i> Collections</a>
+<a class="nav-link active" href="{{ url_for('founder_dash.moderation') }}"><i class="bi bi-shield-exclamation"></i> Moderation</a>
+<a class="nav-link" href="{{ url_for('founder_dash.warnings_list') }}"><i class="bi bi-exclamation-triangle" style="color:#f59e0b;"></i> Warnings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.elite_manage') }}"><span style="color:var(--gold);">?</span> WiamElite</a>
+<a class="nav-link" href="{{ url_for('wiambot.apex_review') }}"><i class="bi bi-trophy-fill" style="color:var(--gold);"></i> Apex Review</a>
+<a class="nav-link" href="{{ url_for('founder_dash.review_queue') }}"><i class="bi bi-robot"></i> Bot Review Queue</a>
+<a class="nav-link" href="{{ url_for('founder_dash.platform_settings') }}"><i class="bi bi-sliders"></i> Platform Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.forms_dashboard') }}"><i class="bi bi-file-earmark-text"></i> Application Forms</a>
+<a class="nav-link" href="{{ url_for('founder_dash.email_studio') }}"><i class="bi bi-envelope-paper" style="color:var(--gold);"></i> Email Studio</a>
+<a class="nav-link" href="{{ url_for('founder_dash.team_management') }}"><i class="bi bi-people-fill"></i> Team</a>
+<a class="nav-link" href="{{ url_for('founder_dash.account_management') }}"><i class="bi bi-person-x"></i> Account Management</a>
+<a class="nav-link" href="{{ url_for('founder_dash.notification_testing') }}"><i class="bi bi-bell" style="color:#fbbf24;"></i> Notifications</a>
+<a class="nav-link" href="{{ url_for('classics.dashboard') }}"><i class="bi bi-journal-bookmark" style="color:#a78bfa;"></i> Content Seeder</a>
+<a class="nav-link" href="{{ url_for('founder_dash.settings') }}"><i class="bi bi-gear"></i> Settings</a>
+<a class="nav-link" href="{{ url_for('founder_dash.admins') }}"><i class="bi bi-shield-check"></i> Admins</a>
+{% endblock %}
+
+{% block dash_content %}
+<div class="dash-header">
+    <h1><i class="bi bi-shield-exclamation" style="color:#ef4444"></i> Content Moderation</h1>
+    <p>Review flagged content, reports, and manage banned words</p>
+</div>
+
+<!-- Stats row -->
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="label">Flagged Content</div>
+        <div class="value" style="color:#f59e0b">{{ flagged_items|length }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Pending Reports</div>
+        <div class="value" style="color:#ef4444">{{ report_items|length }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Mod Actions (recent)</div>
+        <div class="value">{{ log_entries|length }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Banned Words</div>
+        <div class="value">{{ banned_count }}</div>
+    </div>
+</div>
+
+<!-- Tab navigation -->
+<div style="display:flex;gap:0.5rem;margin-bottom:1.5rem;flex-wrap:wrap">
+    <a href="{{ url_for('founder_dash.moderation', tab='flagged') }}" class="btn-dash {% if tab == 'flagged' %}btn-dash-primary{% endif %}" style="padding:0.4rem 1rem;font-size:0.82rem">
+        <i class="bi bi-flag"></i> Flagged ({{ flagged_items|length }})
+    </a>
+    <a href="{{ url_for('founder_dash.moderation', tab='reports') }}" class="btn-dash {% if tab == 'reports' %}btn-dash-primary{% endif %}" style="padding:0.4rem 1rem;font-size:0.82rem">
+        <i class="bi bi-exclamation-triangle"></i> Reports ({{ report_items|length }})
+    </a>
+    <a href="{{ url_for('founder_dash.moderation', tab='log') }}" class="btn-dash {% if tab == 'log' %}btn-dash-primary{% endif %}" style="padding:0.4rem 1rem;font-size:0.82rem">
+        <i class="bi bi-journal-text"></i> Activity Log
+    </a>
+    <a href="{{ url_for('founder_dash.banned_words') }}" class="btn-dash" style="padding:0.4rem 1rem;font-size:0.82rem">
+        <i class="bi bi-slash-circle"></i> Banned Words
+    </a>
+</div>
+
+{% if tab == 'flagged' %}
+<!-- Flagged Content -->
+{% if flagged_items %}
+<div class="table-responsive">
+    <table class="dash-table">
+        <thead>
+            <tr>
+                <th>Story</th>
+                <th>Chapter</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Details</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for item in flagged_items %}
+        <tr>
+            <td>
+                {% if item.book %}
+                <a href="{{ url_for('book.detail', book_id=item.book.id) }}" style="color:var(--text-primary)">{{ item.book.title|truncate(30) }}</a>
+                {% else %}
+                <span style="color:var(--text-muted)">#{{ item.flag.content_id }}</span>
+                {% endif %}
+            </td>
+            <td>{{ item.flag.chapter_number or 'Whole story' }}</td>
+            <td>
+                {% if item.flag.flag_type == 'scan' %}
+                <span style="color:#8b5cf6;font-size:0.78rem"><i class="bi bi-cpu"></i> Auto-scan</span>
+                {% elif item.flag.flag_type == 'report' %}
+                <span style="color:#f59e0b;font-size:0.78rem"><i class="bi bi-people"></i> Reports ({{ item.flag.report_count }})</span>
+                {% else %}
+                <span style="color:#6b7280;font-size:0.78rem"><i class="bi bi-hand-index"></i> Manual</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if item.flag.status == 'hidden' %}
+                <span style="color:#ef4444;font-size:0.78rem"><i class="bi bi-eye-slash"></i> Hidden</span>
+                {% else %}
+                <span style="color:#f59e0b;font-size:0.78rem"><i class="bi bi-flag-fill"></i> Flagged</span>
+                {% endif %}
+            </td>
+            <td style="font-size:0.75rem;color:var(--text-muted);max-width:200px">
+                {% if item.flag.scan_matches %}Matches: {{ item.flag.scan_matches|truncate(50) }}{% endif %}
+                {% if item.flag.scan_severity %}(sev {{ item.flag.scan_severity }}){% endif %}
+            </td>
+            <td>
+                <div style="display:flex;gap:0.3rem;flex-wrap:wrap">
+                    <form method="POST" action="{{ url_for('founder_dash.moderation_action') }}" style="display:inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="content_id" value="{{ item.flag.content_id }}">
+                        <input type="hidden" name="chapter_number" value="{{ item.flag.chapter_number or '' }}">
+                        {% if item.flag.status == 'hidden' %}
+                        <button type="submit" name="action" value="restore" style="padding:0.25rem 0.6rem;background:#22c55e;color:#fff;border:none;border-radius:6px;font-size:0.72rem;cursor:pointer" title="Restore">
+                            <i class="bi bi-arrow-counterclockwise"></i> Restore
+                        </button>
+                        {% endif %}
+                        <button type="submit" name="action" value="clear" style="padding:0.25rem 0.6rem;background:#3b82f6;color:#fff;border:none;border-radius:6px;font-size:0.72rem;cursor:pointer" title="Approve">
+                            <i class="bi bi-check"></i> Approve
+                        </button>
+                        {% if item.flag.status != 'hidden' %}
+                        <button type="submit" name="action" value="hide" style="padding:0.25rem 0.6rem;background:#ef4444;color:#fff;border:none;border-radius:6px;font-size:0.72rem;cursor:pointer" title="Hide">
+                            <i class="bi bi-eye-slash"></i> Hide
+                        </button>
+                        {% endif %}
+                    </form>
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="dash-card" style="text-align:center;padding:3rem;color:var(--text-muted)">
+    <i class="bi bi-shield-check" style="font-size:2.5rem;color:#22c55e;display:block;margin-bottom:0.8rem"></i>
+    No flagged content. Everything looks clean!
+</div>
+{% endif %}
+
+{% elif tab == 'reports' %}
+<!-- Pending Reports -->
+{% if report_items %}
+<div class="table-responsive">
+    <table class="dash-table">
+        <thead>
+            <tr>
+                <th>Reporter</th>
+                <th>Story</th>
+                <th>Chapter</th>
+                <th>Reason</th>
+                <th>Details</th>
+                <th>Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for item in report_items %}
+        <tr>
+            <td style="font-size:0.82rem">{{ item.reporter.display_name if item.reporter else 'Unknown' }}</td>
+            <td>
+                {% if item.book %}
+                <a href="{{ url_for('book.detail', book_id=item.book.id) }}" style="color:var(--text-primary)">{{ item.book.title|truncate(25) }}</a>
+                {% else %}
+                #{{ item.report.content_id }}
+                {% endif %}
+            </td>
+            <td>{{ item.report.chapter_number or 'Story' }}</td>
+            <td>
+                <span style="font-size:0.78rem;padding:0.15rem 0.5rem;border-radius:4px;
+                    {% if item.report.reason == 'hate' %}background:#fecdd3;color:#be123c
+                    {% elif item.report.reason == 'inappropriate' %}background:#fed7aa;color:#c2410c
+                    {% elif item.report.reason == 'spam' %}background:#e0e7ff;color:#4338ca
+                    {% elif item.report.reason == 'plagiarism' %}background:#fef3c7;color:#92400e
+                    {% else %}background:#e5e7eb;color:#374151{% endif %}">
+                    {{ item.report.reason }}
+                </span>
+            </td>
+            <td style="font-size:0.75rem;color:var(--text-muted);max-width:150px">{{ item.report.details|truncate(60) }}</td>
+            <td style="font-size:0.75rem;color:var(--text-muted)">{{ item.report.created_at.strftime('%b %d') }}</td>
+            <td>
+                <div style="display:flex;gap:0.3rem">
+                    <form method="POST" action="{{ url_for('founder_dash.moderation_action') }}" style="display:inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="content_id" value="{{ item.report.content_id }}">
+                        <input type="hidden" name="chapter_number" value="{{ item.report.chapter_number or '' }}">
+                        <button type="submit" name="action" value="hide" style="padding:0.25rem 0.6rem;background:#ef4444;color:#fff;border:none;border-radius:6px;font-size:0.72rem;cursor:pointer">
+                            <i class="bi bi-eye-slash"></i> Hide
+                        </button>
+                    </form>
+                    <form method="POST" action="{{ url_for('founder_dash.dismiss_report', report_id=item.report.id) }}" style="display:inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" style="padding:0.25rem 0.6rem;background:rgba(255,255,255,0.1);border:1px solid var(--border);border-radius:6px;font-size:0.72rem;cursor:pointer;color:var(--text-muted)">
+                            <i class="bi bi-x"></i> Dismiss
+                        </button>
+                    </form>
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="dash-card" style="text-align:center;padding:3rem;color:var(--text-muted)">
+    <i class="bi bi-inbox" style="font-size:2.5rem;display:block;margin-bottom:0.8rem"></i>
+    No pending reports.
+</div>
+{% endif %}
+
+{% elif tab == 'log' %}
+<!-- Moderation Log -->
+{% if log_entries %}
+<div class="table-responsive">
+    <table class="dash-table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Actor</th>
+                <th>Action</th>
+                <th>Target</th>
+                <th>Reason</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for entry in log_entries %}
+        <tr>
+            <td style="font-size:0.78rem;color:var(--text-muted)">{{ entry.created_at.strftime('%b %d, %H:%M') }}</td>
+            <td style="font-size:0.82rem">
+                {% if entry.actor_id == 0 %}
+                <span style="color:#8b5cf6"><i class="bi bi-cpu"></i> System</span>
+                {% else %}
+                <span style="color:var(--text-primary)">Admin #{{ entry.actor_id }}</span>
+                {% endif %}
+            </td>
+            <td>
+                <span style="font-size:0.78rem;padding:0.15rem 0.5rem;border-radius:4px;
+                    {% if entry.action == 'hide' %}background:#fecdd3;color:#be123c
+                    {% elif entry.action == 'flag' %}background:#fed7aa;color:#c2410c
+                    {% elif entry.action == 'clear' %}background:#d1fae5;color:#065f46
+                    {% elif entry.action == 'restore' %}background:#dbeafe;color:#1e40af
+                    {% else %}background:#e5e7eb;color:#374151{% endif %}">
+                    {{ entry.action }}
+                </span>
+            </td>
+            <td style="font-size:0.82rem">
+                {{ entry.target_type }} #{{ entry.target_id }}
+                {% if entry.chapter_number %} Ch {{ entry.chapter_number }}{% endif %}
+            </td>
+            <td style="font-size:0.75rem;color:var(--text-muted);max-width:250px">{{ entry.reason|truncate(80) }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="dash-card" style="text-align:center;padding:3rem;color:var(--text-muted)">
+    <i class="bi bi-journal" style="font-size:2.5rem;display:block;margin-bottom:0.8rem"></i>
+    No moderation actions yet.
+</div>
+{% endif %}
+{% endif %}
+{% endblock %}

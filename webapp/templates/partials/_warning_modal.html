@@ -1,0 +1,118 @@
+{% if current_user.is_authenticated and unacked_warnings %}
+<!-- Warning Acknowledgment Modal -->
+<div id="warnModal" style="display:none;position:fixed;inset:0;z-index:10500;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);">
+    <div style="position:absolute;bottom:0;left:0;right:0;background:var(--bg-card,#1e1e2e);border-radius:18px 18px 0 0;padding:20px 18px calc(20px + env(safe-area-inset-bottom,0px));max-height:80vh;overflow-y:auto;">
+        <div style="width:36px;height:4px;border-radius:4px;background:rgba(255,255,255,0.1);margin:0 auto 14px;"></div>
+        <div style="text-align:center;margin-bottom:14px;">
+            {% if escalation_level == 'critical' %}
+            <div style="width:56px;height:56px;border-radius:50%;background:rgba(239,68,68,0.12);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;">
+                <i class="bi bi-exclamation-triangle-fill" style="font-size:1.5rem;color:#ef4444;"></i>
+            </div>
+            <h3 style="font-size:1.1rem;font-weight:800;color:#ef4444;margin:0 0 4px;">Account at Risk</h3>
+            <p style="font-size:0.78rem;color:var(--text-muted);margin:0;">You have unacknowledged warnings. Please review them carefully.</p>
+            {% elif escalation_level == 'high' %}
+            <div style="width:56px;height:56px;border-radius:50%;background:rgba(245,158,11,0.12);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;">
+                <i class="bi bi-exclamation-circle-fill" style="font-size:1.5rem;color:#f59e0b;"></i>
+            </div>
+            <h3 style="font-size:1.1rem;font-weight:800;color:#f59e0b;margin:0 0 4px;">Action Required</h3>
+            <p style="font-size:0.78rem;color:var(--text-muted);margin:0;">You have a strike on your account. Please review and acknowledge.</p>
+            {% else %}
+            <div style="width:56px;height:56px;border-radius:50%;background:rgba(56,189,248,0.12);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;">
+                <i class="bi bi-info-circle-fill" style="font-size:1.5rem;color:#38bdf8;"></i>
+            </div>
+            <h3 style="font-size:1.1rem;font-weight:800;color:#38bdf8;margin:0 0 4px;">New Notice</h3>
+            <p style="font-size:0.78rem;color:var(--text-muted);margin:0;">You have a new notice on your account.</p>
+            {% endif %}
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1rem;">
+            {% for w in unacked_warnings[:3] %}
+            <div id="wm-{{ w.id }}" style="background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);border-radius:10px;padding:0.8rem;border-left:3px solid {% if w.severity == 'strike' %}#ef4444{% elif w.severity == 'warning' %}#f59e0b{% else %}#38bdf8{% endif %};">
+                <div style="display:flex;align-items:center;gap:0.4rem;margin-bottom:0.3rem;">
+                    <span style="font-size:0.65rem;padding:1px 6px;border-radius:6px;font-weight:600;
+                        {% if w.severity == 'strike' %}background:rgba(239,68,68,0.12);color:#f87171;
+                        {% elif w.severity == 'warning' %}background:rgba(245,158,11,0.12);color:#f59e0b;
+                        {% else %}background:rgba(56,189,248,0.12);color:#38bdf8;{% endif %}">{{ w.severity|title }}</span>
+                    <span style="font-size:0.65rem;color:var(--text-muted);margin-left:auto;">{{ w.created_at.strftime('%b %d') if w.created_at else '' }}</span>
+                </div>
+                <p style="font-size:0.82rem;line-height:1.5;margin:0;color:var(--text);white-space:pre-wrap;">{{ w.message|truncate(200) }}</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if unacked_warnings|length > 3 %}
+        <p style="text-align:center;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.8rem;">
+            + {{ unacked_warnings|length - 3 }} more warning{{ 's' if (unacked_warnings|length - 3) != 1 else '' }}
+        </p>
+        {% endif %}
+
+        <button id="wmAckAll" onclick="wmAcknowledgeAll()" style="width:100%;padding:12px;border-radius:10px;border:none;font-weight:700;font-size:0.9rem;cursor:pointer;margin-bottom:0.5rem;
+            {% if escalation_level == 'critical' %}background:#ef4444;color:#fff;
+            {% elif escalation_level == 'high' %}background:#f59e0b;color:#000;
+            {% else %}background:var(--gold,#d4a843);color:#000;{% endif %}">
+            <i class="bi bi-check2-all me-1"></i>I Understand — Acknowledge All
+        </button>
+        <a href="{{ url_for('profile.account_safety') }}" style="display:block;text-align:center;padding:10px;font-size:0.82rem;color:var(--text-muted);text-decoration:none;">
+            View Account Safety <i class="bi bi-arrow-right"></i>
+        </a>
+    </div>
+</div>
+<style>
+#warnModal{display:none !important;}
+#warnModal.open{display:flex !important;align-items:flex-end;}
+</style>
+<script>
+(function(){
+    var csrf = document.querySelector('meta[name=csrf-token]')?.content || '';
+    var ids = [{% for w in unacked_warnings %}{{ w.id }}{% if not loop.last %},{% endif %}{% endfor %}];
+    // Show modal after 1.5s delay
+    var shown = sessionStorage.getItem('wm_shown_{{ unacked_warnings[0].id if unacked_warnings else 0 }}');
+    if (!shown) {
+        setTimeout(function(){
+            var m = document.getElementById('warnModal');
+            if (m) m.classList.add('open');
+        }, 1500);
+    }
+
+    window.wmAcknowledgeAll = function(){
+        var btn = document.getElementById('wmAckAll');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Processing...';
+        var done = 0;
+        ids.forEach(function(wid){
+            fetch('/warnings/' + wid + '/acknowledge', {
+                method: 'POST',
+                headers: {'X-CSRFToken': csrf, 'X-Requested-With': 'XMLHttpRequest'}
+            }).then(function(){ done++; checkDone(); }).catch(function(){ done++; checkDone(); });
+        });
+        function checkDone(){
+            if (done >= ids.length) {
+                sessionStorage.setItem('wm_shown_{{ unacked_warnings[0].id if unacked_warnings else 0 }}', '1');
+                var m = document.getElementById('warnModal');
+                if (m) m.classList.remove('open');
+                // Remove escalation banner if present
+                var eb = document.getElementById('escalationBanner');
+                if (eb) eb.style.display = 'none';
+            }
+        }
+    };
+})();
+</script>
+{% endif %}
+
+{% if current_user.is_authenticated and escalation_level %}
+<!-- Escalation Banner -->
+<div id="escalationBanner" style="position:sticky;top:56px;z-index:1040;padding:8px 16px;text-align:center;font-size:0.78rem;font-weight:600;
+    {% if escalation_level == 'critical' %}background:linear-gradient(90deg,rgba(239,68,68,0.15),rgba(239,68,68,0.08));border-bottom:1px solid rgba(239,68,68,0.2);color:#f87171;
+    {% elif escalation_level == 'high' %}background:linear-gradient(90deg,rgba(245,158,11,0.12),rgba(245,158,11,0.06));border-bottom:1px solid rgba(245,158,11,0.15);color:#f59e0b;
+    {% else %}background:linear-gradient(90deg,rgba(56,189,248,0.08),rgba(56,189,248,0.04));border-bottom:1px solid rgba(56,189,248,0.1);color:#38bdf8;{% endif %}">
+    {% if escalation_level == 'critical' %}
+    <i class="bi bi-exclamation-triangle-fill me-1"></i>Your account has {{ strike_count }} strike{{ 's' if strike_count != 1 else '' }}. One more may result in suspension.
+    {% elif escalation_level == 'high' %}
+    <i class="bi bi-exclamation-circle me-1"></i>You have {{ strike_count }} strike on your account.
+    {% else %}
+    <i class="bi bi-info-circle me-1"></i>You have unacknowledged warnings.
+    {% endif %}
+    <a href="{{ url_for('profile.account_safety') }}" style="color:inherit;text-decoration:underline;margin-left:6px;">Review</a>
+</div>
+{% endif %}

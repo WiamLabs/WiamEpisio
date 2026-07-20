@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Flagged Stories — WiamApp Team{% endblock %}
+
+{% block extra_head %}
+<style>
+.flagged-wrap{max-width:900px;margin:0 auto;padding:24px 16px 60px;}
+.back-link{display:inline-flex;align-items:center;gap:6px;color:var(--text-muted,#888);font-size:0.85rem;text-decoration:none;margin-bottom:20px;}
+.back-link:hover{color:var(--gold,#d4a843);}
+.page-title{font-size:1.3rem;font-weight:700;margin-bottom:24px;display:flex;align-items:center;gap:10px;}
+.page-title i{color:#f87171;}
+.page-title .count{font-size:0.82rem;font-weight:600;padding:3px 10px;border-radius:6px;background:rgba(248,113,113,0.15);color:#f87171;}
+.flag-card{display:flex;gap:16px;padding:18px 20px;background:var(--card-bg,#111);border:1px solid var(--border-color,#222);border-left:4px solid #f87171;border-radius:14px;margin-bottom:12px;align-items:center;flex-wrap:wrap;}
+.flag-card .cover{width:50px;height:70px;border-radius:8px;object-fit:cover;flex-shrink:0;background:rgba(212,168,67,0.1);}
+.flag-card .info{flex:1;min-width:180px;}
+.flag-card .info .title{font-size:0.95rem;font-weight:600;color:var(--text-primary,#fff);}
+.flag-card .info .sub{font-size:0.78rem;color:var(--text-muted,#888);margin-top:3px;}
+.flag-card .actions{display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap;}
+.act-sm{padding:8px 16px;border:none;border-radius:8px;font-weight:600;font-size:0.78rem;cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:opacity 0.15s;}
+.act-sm:hover{opacity:0.85;}
+.act-sm.restore{background:rgba(74,222,128,0.12);color:#4ade80;border:1px solid rgba(74,222,128,0.25);}
+.act-sm.review{background:rgba(96,165,250,0.12);color:#60a5fa;border:1px solid rgba(96,165,250,0.25);text-decoration:none;}
+.act-sm.delete{background:rgba(248,113,113,0.12);color:#f87171;border:1px solid rgba(248,113,113,0.25);}
+.empty{text-align:center;padding:60px 20px;color:var(--text-muted,#888);}
+.empty i{font-size:2.5rem;opacity:0.3;margin-bottom:12px;display:block;}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="flagged-wrap">
+    <a href="{{ url_for('team.dashboard') }}" class="back-link"><i class="bi bi-arrow-left"></i> Back to Dashboard</a>
+
+    <h1 class="page-title"><i class="bi bi-flag-fill"></i> Flagged Stories <span class="count">{{ flagged|length }}</span></h1>
+
+    {% if flagged %}
+    {% for story in flagged %}
+    <div class="flag-card">
+        {% if story.cover_url %}
+        <img src="{{ story.cover_url }}" alt="" class="cover">
+        {% else %}
+        <div class="cover" style="display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:1.2rem;">
+            <i class="bi bi-book"></i>
+        </div>
+        {% endif %}
+        <div class="info">
+            <div class="title">{{ story.title }}</div>
+            <div class="sub">ID: {{ story.id }} · Views: {{ story.views or 0 }} · Updated: {{ story.created_at.strftime('%b %d') if story.created_at else 'N/A' }}</div>
+        </div>
+        <div class="actions">
+            <a href="{{ url_for('team.editor_review', story_id=story.id) }}" class="act-sm review"><i class="bi bi-eye"></i> Review</a>
+            <form method="POST" action="{{ url_for('team.mod_unflag_story', story_id=story.id) }}" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="act-sm restore"><i class="bi bi-check-circle"></i> Restore</button>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="empty">
+        <i class="bi bi-shield-check"></i>
+        <p>No flagged stories. All clear!</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

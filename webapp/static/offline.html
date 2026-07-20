@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#08081a">
+<title>WiamApp — We'll Be Right Back</title>
+<link rel="icon" href="/static/img/WiamLogo.png">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+    font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+    background:#08081a;color:#e0e0e0;min-height:100vh;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    overflow:hidden;
+}
+.bg{
+    position:fixed;top:0;left:0;right:0;bottom:0;z-index:0;
+    background:radial-gradient(ellipse at 30% 20%,rgba(212,168,67,0.06) 0%,transparent 50%),
+               radial-gradient(ellipse at 70% 80%,rgba(100,60,180,0.05) 0%,transparent 50%),
+               #08081a;
+}
+.particles{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+.particles span{
+    position:absolute;display:block;width:4px;height:4px;
+    background:rgba(212,168,67,0.3);border-radius:50%;
+    animation:float-up linear infinite;
+}
+.particles span:nth-child(1){left:10%;width:3px;height:3px;animation-duration:12s;animation-delay:0s;}
+.particles span:nth-child(2){left:25%;width:5px;height:5px;animation-duration:10s;animation-delay:2s;}
+.particles span:nth-child(3){left:40%;width:3px;height:3px;animation-duration:14s;animation-delay:1s;}
+.particles span:nth-child(4){left:55%;width:6px;height:6px;animation-duration:11s;animation-delay:3s;}
+.particles span:nth-child(5){left:70%;width:4px;height:4px;animation-duration:13s;animation-delay:0.5s;}
+.particles span:nth-child(6){left:85%;width:3px;height:3px;animation-duration:15s;animation-delay:4s;}
+.particles span:nth-child(7){left:50%;width:5px;height:5px;animation-duration:9s;animation-delay:1.5s;}
+.particles span:nth-child(8){left:15%;width:4px;height:4px;animation-duration:16s;animation-delay:2.5s;}
+@keyframes float-up{
+    0%{bottom:-10%;opacity:0;transform:translateX(0);}
+    10%{opacity:1;}
+    90%{opacity:1;}
+    100%{bottom:110%;opacity:0;transform:translateX(40px);}
+}
+.container{
+    position:relative;z-index:1;text-align:center;padding:24px;max-width:480px;width:100%;
+}
+.character{
+    margin:0 auto 24px;width:180px;height:180px;animation:bob 3s ease-in-out infinite;
+}
+@keyframes bob{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+.error-code{
+    font-size:5rem;font-weight:900;letter-spacing:-3px;line-height:1;margin-bottom:4px;
+    background:linear-gradient(135deg,#d4a843 0%,#f0d078 40%,#d4a843 100%);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    filter:drop-shadow(0 2px 10px rgba(212,168,67,0.3));
+}
+.error-title{
+    font-size:1.3rem;font-weight:700;color:#e0e0e0;margin-bottom:10px;
+}
+.error-msg{
+    font-size:0.92rem;color:#888;line-height:1.6;margin-bottom:32px;
+    max-width:380px;margin-left:auto;margin-right:auto;
+}
+.actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:28px;}
+.btn{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:12px 28px;border-radius:12px;font-weight:600;font-size:0.9rem;
+    text-decoration:none;cursor:pointer;transition:all 0.2s;border:none;font-family:inherit;
+}
+.btn-primary{
+    background:linear-gradient(135deg,#d4a843,#b8860b);color:#000;
+    box-shadow:0 4px 16px rgba(212,168,67,0.25);
+}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(212,168,67,0.35);}
+.btn-ghost{
+    background:rgba(255,255,255,0.06);color:#c0c0c0;
+    border:1px solid rgba(255,255,255,0.1);
+}
+.btn-ghost:hover{background:rgba(255,255,255,0.1);color:#fff;}
+.countdown{
+    margin-top:16px;font-size:0.82rem;color:#666;
+}
+.countdown span{color:#d4a843;font-weight:700;}
+.footer{
+    position:fixed;bottom:16px;left:0;right:0;text-align:center;z-index:1;
+    font-size:0.72rem;color:#444;
+}
+.footer a{color:#d4a843;text-decoration:none;}
+@media(max-width:480px){
+    .error-code{font-size:3.5rem;}
+    .character{width:140px;height:140px;}
+    .error-title{font-size:1.1rem;}
+}
+</style>
+</head>
+<body>
+<div class="bg"></div>
+<div class="particles">
+    <span></span><span></span><span></span><span></span>
+    <span></span><span></span><span></span><span></span>
+</div>
+
+<div class="container">
+    <div class="character">
+        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="100" cy="120" r="55" fill="#1a1a35" stroke="#d4a843" stroke-width="2"/>
+            <circle cx="100" cy="68" r="38" fill="#1a1a35" stroke="#d4a843" stroke-width="2"/>
+            <circle cx="86" cy="60" r="6" fill="#d4a843">
+                <animate attributeName="r" values="6;5;6" dur="3s" repeatCount="indefinite"/>
+            </circle>
+            <circle cx="114" cy="60" r="6" fill="#d4a843">
+                <animate attributeName="r" values="6;5;6" dur="3s" repeatCount="indefinite"/>
+            </circle>
+            <circle cx="88" cy="58" r="2" fill="#fff" opacity="0.8"/>
+            <circle cx="116" cy="58" r="2" fill="#fff" opacity="0.8"/>
+            <circle cx="78" cy="70" r="5" fill="#d4a843" opacity="0.15"/>
+            <circle cx="122" cy="70" r="5" fill="#d4a843" opacity="0.15"/>
+            <ellipse cx="80" cy="80" rx="22" ry="14" fill="#12122a" stroke="#d4a843" stroke-width="1.5" transform="rotate(-10 80 80)"/>
+            <ellipse cx="120" cy="80" rx="22" ry="14" fill="#12122a" stroke="#d4a843" stroke-width="1.5" transform="rotate(10 120 80)"/>
+            <circle cx="64" cy="76" r="4" fill="#12122a" stroke="#d4a843" stroke-width="1"/>
+            <circle cx="68" cy="72" r="4" fill="#12122a" stroke="#d4a843" stroke-width="1"/>
+            <circle cx="136" cy="76" r="4" fill="#12122a" stroke="#d4a843" stroke-width="1"/>
+            <circle cx="132" cy="72" r="4" fill="#12122a" stroke="#d4a843" stroke-width="1"/>
+            <ellipse cx="80" cy="172" rx="16" ry="8" fill="#12122a" stroke="#d4a843" stroke-width="1.5"/>
+            <ellipse cx="120" cy="172" rx="16" ry="8" fill="#12122a" stroke="#d4a843" stroke-width="1.5"/>
+            <!-- zzz sleeping animation for maintenance -->
+            <text x="145" y="40" fill="#d4a843" font-size="14" font-weight="bold" opacity="0.5">
+                z
+                <animate attributeName="y" values="40;35;40" dur="2s" repeatCount="indefinite"/>
+                <animate attributeName="opacity" values="0.5;0.2;0.5" dur="2s" repeatCount="indefinite"/>
+            </text>
+            <text x="155" y="30" fill="#d4a843" font-size="18" font-weight="bold" opacity="0.4">
+                Z
+                <animate attributeName="y" values="30;24;30" dur="2.5s" repeatCount="indefinite"/>
+                <animate attributeName="opacity" values="0.4;0.15;0.4" dur="2.5s" repeatCount="indefinite"/>
+            </text>
+        </svg>
+    </div>
+
+    <div class="error-code" id="errCode">503</div>
+    <h1 class="error-title" id="errTitle">We'll Be Right Back</h1>
+    <p class="error-msg" id="errMsg">The app may be waking up after a quiet period — try again in a moment. If you're on a patchy connection, check Wi‑Fi or switch to mobile data.</p>
+
+    <div class="actions">
+        <button class="btn btn-primary" onclick="location.reload()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+            Try Again
+        </button>
+        <a href="/" class="btn btn-ghost">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Go Home
+        </a>
+    </div>
+
+    <div class="countdown">Auto-retry in <span id="timer">15</span> seconds</div>
+</div>
+
+<div class="footer">
+    &copy; WiamApp &mdash; Where Stories Come Alive &nbsp;|&nbsp;
+    <a href="https://wiamapp.com">wiamapp.com</a>
+</div>
+
+<script>
+// Auto-retry countdown
+var seconds = 15;
+var el = document.getElementById('timer');
+var iv = setInterval(function(){
+    seconds--;
+    if(el) el.textContent = seconds;
+    if(seconds <= 0){
+        clearInterval(iv);
+        location.reload();
+    }
+}, 1000);
+
+// If we're here because of a network error vs server error, update text
+if (!navigator.onLine) {
+    document.getElementById('errTitle').textContent = 'You\'re Offline';
+    document.getElementById('errMsg').textContent = 'It looks like you\'ve lost your internet connection. Please check your Wi-Fi or data and try again.';
+    document.getElementById('errCode').textContent = ':(';
+}
+</script>
+</body>
+</html>

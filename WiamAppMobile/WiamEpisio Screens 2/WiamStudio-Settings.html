@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamStudio — Settings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); display:flex; flex-direction:column; }
+  .statusbar{ height:44px; flex-shrink:0; }
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+
+  .topbar{ display:flex; align-items:center; gap:12px; padding:2px 20px 14px; flex-shrink:0; }
+  .icon-btn{ width:34px; height:34px; border-radius:50%; background:var(--navy-card); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .topbar h1{ font-size:18px; font-weight:800; color:#fff; margin:0; }
+
+  .scroll{ flex:1; overflow-y:auto; padding:0 20px 26px; }
+
+  .studio-card{ display:flex; gap:12px; align-items:center; background:var(--navy-card); border:1px solid var(--navy-line); border-radius:16px; padding:14px; margin-bottom:18px; }
+  .studio-avatar{ width:46px; height:46px; border-radius:13px; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); display:flex; align-items:center; justify-content:center; color:var(--navy); font-weight:800; font-size:19px; flex-shrink:0; }
+  .studio-card b{ display:block; font-size:13.5px; font-weight:800; color:#fff; }
+  .studio-card span{ font-size:10.5px; color:var(--text-faint); }
+  .edit-link{ margin-left:auto; font-size:11px; color:var(--gold); font-weight:700; }
+
+  .group-title{ font-size:11px; font-weight:800; color:var(--text-faint); letter-spacing:0.4px; text-transform:uppercase; margin:16px 0 10px; }
+  .group-title:first-of-type{ margin-top:4px; }
+
+  .row-card{ background:var(--navy-card); border:1px solid var(--navy-line); border-radius:14px; overflow:hidden; }
+  .row{ display:flex; align-items:center; gap:12px; padding:13px 14px; border-bottom:1px solid var(--navy-line); }
+  .row:last-child{ border-bottom:none; }
+  .row-icon{ width:30px; height:30px; border-radius:9px; background:var(--navy-soft); display:flex; align-items:center; justify-content:center; flex-shrink:0; color:var(--text-dim); }
+  .row-icon svg{ width:15px; height:15px; }
+  .row-label{ flex:1; font-size:13px; color:#E7E7F2; font-weight:500; }
+  .row-value{ font-size:12px; color:var(--text-faint); margin-right:4px; }
+  .chevron{ color:var(--text-faint); width:14px; height:14px; flex-shrink:0; }
+
+  .toggle{ width:42px; height:24px; border-radius:99px; position:relative; flex-shrink:0; }
+  .toggle.on{ background:var(--gold); }
+  .toggle.off{ background:var(--navy-line); }
+  .toggle-knob{ position:absolute; top:2px; width:20px; height:20px; border-radius:50%; background:#fff; }
+  .toggle.on .toggle-knob{ right:2px; }
+  .toggle.off .toggle-knob{ left:2px; }
+
+  .status-tag{ font-size:9px; font-weight:800; padding:3px 8px; border-radius:6px; background:rgba(59,178,115,0.16); color:#3BB273; }
+
+  .signout-btn{ width:100%; padding:14px; border-radius:14px; background:rgba(228,87,61,0.1); border:1px solid rgba(228,87,61,0.3); color:#E4573D; font-size:13px; font-weight:700; font-family:'Inter',sans-serif; margin-top:20px; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"></div>
+  <div class="topbar">
+    <div class="icon-btn"><svg viewBox="0 0 24 24" width="15" height="15" color="#fff"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></div>
+    <h1>Studio Settings</h1>
+  </div>
+
+  <div class="scroll">
+
+    <div class="studio-card">
+      <div class="studio-avatar">K</div>
+      <div><b>Kwabena Studios</b><span>@kwabenastudios · Verified Creator</span></div>
+      <span class="edit-link">Edit</span>
+    </div>
+
+    <p class="group-title">Studio Profile</p>
+    <div class="row-card">
+      <div class="row"><div class="row-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><span class="row-label">Public Profile</span><svg class="chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+      <div class="row"><div class="row-icon"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z" opacity="0"/><path d="M22 6l-10 7L2 6"/><path d="M2 6h20v12H2z"/></svg></div><span class="row-label">Contact Email</span><span class="row-value">kwabena@studio.co</span><svg class="chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+    </div>
+
+    <p class="group-title">Publishing</p>
+    <div class="row-card">
+      <div class="row"><div class="row-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><span class="row-label">Auto-submit when gates pass</span><div class="toggle off"><div class="toggle-knob"></div></div></div>
+      <div class="row"><div class="row-icon"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div><span class="row-label">Review status notifications</span><div class="toggle on"><div class="toggle-knob"></div></div></div>
+      <div class="row"><div class="row-icon"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15l4-6 4 3 5-8"/></svg></div><span class="row-label">Weekly analytics email</span><div class="toggle on"><div class="toggle-knob"></div></div></div>
+    </div>
+
+    <p class="group-title">Payouts</p>
+    <div class="row-card">
+      <div class="row"><div class="row-icon"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div><span class="row-label">Identity Verification</span><span class="status-tag">VERIFIED</span></div>
+      <div class="row"><div class="row-icon"><svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg></div><span class="row-label">Bank / Mobile Money Details</span><svg class="chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+    </div>
+
+    <p class="group-title">Support</p>
+    <div class="row-card">
+      <div class="row"><div class="row-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div><span class="row-label">Creator Help Center</span><svg class="chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+      <div class="row"><div class="row-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><span class="row-label">Creator Agreement</span><svg class="chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+    </div>
+
+    <button class="signout-btn">Exit WiamStudio</button>
+
+  </div>
+</div>
+
+</body>
+</html>

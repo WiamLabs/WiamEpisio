@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+{% block title %}Community Guidelines — WiamApp{% endblock %}
+{% block meta_description %}WiamApp Community Guidelines. Rules for respectful interaction, content standards, and maintaining a safe environment for all readers and creators.{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/support.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="legal-page">
+    <a href="javascript:void(0)" onclick="window.history.length>1?history.back():location.href='/'" class="legal-back" data-no-loader>
+        <i class="bi bi-arrow-left"></i> Back
+    </a>
+
+    <div class="legal-hero">
+        <i class="bi bi-people"></i>
+        <h1>Community Guidelines</h1>
+        <div class="legal-meta">Last updated: <span>March 2026</span> · Effective immediately</div>
+    </div>
+
+    <div class="legal-toc">
+        <h3>Table of Contents</h3>
+        <ol>
+            <li><a href="#p1">Our Values</a></li>
+            <li><a href="#p2">Content Standards</a></li>
+            <li><a href="#p3">Prohibited Content</a></li>
+            <li><a href="#p4">Interaction Rules</a></li>
+            <li><a href="#p5">Creator Responsibilities</a></li>
+            <li><a href="#p6">Reader Responsibilities</a></li>
+            <li><a href="#p7">Privacy & Respect</a></li>
+            <li><a href="#p8">Reporting Violations</a></li>
+            <li><a href="#p9">Consequences</a></li>
+            <li><a href="#p10">Appeals Process</a></li>
+        </ol>
+    </div>
+
+    <!-- Section 1 -->
+    <div class="legal-section" id="p1">
+        <h2><span class="s-num">1.</span> Our Values</h2>
+        <p>WiamApp is built on respect, creativity, and community. We believe every voice matters and every reader deserves a safe, welcoming space to discover stories.</p>
+        <p>Our community is guided by these core values:</p>
+        <ul>
+            <li><strong>Respect:</strong> Treat everyone with dignity, regardless of their background, beliefs, or creative choices.</li>
+            <li><strong>Creativity:</strong> Celebrate diverse storytelling and artistic expression within community guidelines.</li>
+            <li><strong>Safety:</strong> Prioritise the well-being of all users, especially young adults and vulnerable members.</li>
+            <li><strong>Integrity:</strong> Be authentic, honest, and transparent in your interactions and content.</li>
+            <li><strong>Growth:</strong> Support each other's development as readers, writers, and community members.</li>
+        </ul>
+    </div>
+
+    <!-- Section 2 -->
+    <div class="legal-section" id="p2">
+        <h2><span class="s-num">2.</span> Content Standards</h2>
+        <p>All content on WiamApp must meet these standards:</p>
+        <ul>
+            <li><strong>Original Work:</strong> Only share content you have created yourself or have permission to share.</li>
+            <li><strong>Appropriate Rating:</strong> Content should be suitable for young adult audiences (16+). Explicit sexual content, graphic violence, or hate speech is prohibited.</li>
+            <li><strong>Quality Standards:</strong> Stories should be coherent, properly formatted, and free from excessive errors that impede readability.</li>
+            <li><strong>Cultural Sensitivity:</strong> Respect diverse cultures, beliefs, and perspectives. Avoid harmful stereotypes or cultural appropriation.</li>
+            <li><strong>Constructive Feedback:</strong> Comments and reviews should be helpful, respectful, and focused on the work, not personal attacks.</li>
+        </ul>
+    </div>
+
+    <!-- Section 3 -->
+    <div class="legal-section" id="p3">
+        <h2><span class="s-num">3.</span> Prohibited Content</h2>
+        <p>The following content is strictly prohibited and will result in immediate removal and potential account suspension:</p>
+        <ul>
+            <li><strong>Explicit Sexual Content:</strong> Pornography, explicit sexual descriptions, or content primarily intended for sexual arousal.</li>
+            <li><strong>Hate Speech:</strong> Content that attacks or demeans individuals or groups based on race, ethnicity, religion, gender, sexual orientation, disability, or other protected characteristics.</li>
+            <li><strong>Graphic Violence:</strong> Excessive gore, detailed violence, or content that glorifies self-harm or violence against others.</li>
+            <li><strong>Illegal Activities:</strong> Content promoting, depicting, or facilitating illegal acts including drug use, terrorism, or criminal activities.</li>
+            <li><strong>Harassment & Bullying:</strong> Content intended to harass, threaten, intimidate, or bully specific individuals.</li>
+            <li><strong>Privacy Violations:</strong> Sharing private information, revenge porn, or content that violates others' privacy without consent.</li>
+            <li><strong>Spam & Misinformation:</strong> Repetitive irrelevant content, scams, or deliberate misinformation intended to deceive or harm.</li>
+        </ul>
+        <div class="legal-callout warn">
+            <strong>Zero Tolerance:</strong> Some violations (especially involving minors, illegal content, or credible threats) result in immediate permanent bans without warning.
+        </div>
+    </div>
+
+    <!-- Section 4 -->
+    <div class="legal-section" id="p4">
+        <h2><span class="s-num">4.</span> Interaction Rules</h2>
+        <p>How you interact with others matters as much as what you create:</p>
+        <ul>
+            <li><strong>Respectful Communication:</strong> No personal attacks, harassment, or abusive language in comments, reviews, or messages.</li>
+            <li><strong>Constructive Criticism:</strong> Feedback should help creators improve, not tear them down. Focus on the work, not the person.</li>
+            <li><strong>No Spoiler Abuse:</strong> Use spoiler tags appropriately. Don't deliberately ruin reading experiences for others.</li>
+            <li><strong>Professional Conduct:</strong> Treat WiamApp as a professional creative space. No trolling, flame wars, or disruptive behaviour.</li>
+            <li><strong>Boundaries:</strong> Respect creators' boundaries and stated preferences. Don't pressure creators for content they're uncomfortable producing.</li>
+        </ul>
+    </div>
+
+    <!-- Section 5 -->
+    <div class="legal-section" id="p5">
+        <h2><span class="s-num">5.</span> Creator Responsibilities</h2>
+        <p>Creators have additional responsibilities due to their influence on readers and community:</p>
+        <ul>
+            <li><strong>Content Warnings:</strong> Appropriately tag potentially sensitive content (triggers, mature themes, etc.) so readers can make informed choices.</li>
+            <li><strong>Regular Updates:</strong> Maintain consistent posting schedules or communicate clearly about delays. Abandoned stories should be marked as such.</li>
+            <li><strong>Community Engagement:</strong> Respond respectfully to reader feedback, moderate your own story comments, and foster positive community around your work.</li>
+            <li><strong>Copyright Respect:</strong> Only use content you have rights to. Properly credit any sources, inspirations, or referenced works.</li>
+            <li><strong>Platform Guidelines:</strong> Follow all WiamApp rules, monetisation policies, and content standards.</li>
+        </ul>
+    </div>
+
+    <!-- Section 6 -->
+    <div class="legal-section" id="p6">
+        <h2><span class="s-num">6.</span> Reader Responsibilities</h2>
+        <p>Readers help maintain community health through their engagement and support:</p>
+        <ul>
+            <li><strong>Respect Creation Time:</strong> Understand that stories take effort. Provide constructive feedback rather than harsh criticism.</li>
+            <li><strong>Fair Reviews:</strong> Rate stories based on actual content quality, not personal biases or external factors.</li>
+            <li><strong>Support System:</strong> Use official channels to report issues. Don't engage in public call-outs or harassment.</li>
+            <li><strong>Creator Boundaries:</strong> Respect creators' stated limits, content warnings, and personal boundaries.</li>
+            <li><strong>Genuine Engagement:</strong> Participate authentically in discussions. Don't manipulate ratings, engagement, or community features.</li>
+        </ul>
+    </div>
+
+    <!-- Section 7 -->
+    <div class="legal-section" id="p7">
+        <h2><span class="s-num">7.</span> Privacy & Respect</h2>
+        <p>Privacy and mutual respect are fundamental to our community:</p>
+        <ul>
+            <li><strong>Personal Information:</strong> Never share others' private information without explicit consent.</li>
+            <li><strong>Consent:</strong> Ask permission before sharing private conversations, screenshots, or personal details.</li>
+            <li><strong>Boundaries:</strong> Respect others' comfort levels with personal questions or discussions.</li>
+            <li><strong>Anonymous Reporting:</strong> Use official reporting tools rather than public shaming or call-outs.</li>
+            <li><strong>Digital Safety:</strong> Protect your account with strong passwords and enable available security features.</li>
+        </ul>
+    </div>
+
+    <!-- Section 8 -->
+    <div class="legal-section" id="p8">
+        <h2><span class="s-num">8.</span> Reporting Violations</h2>
+        <p>Help keep WiamApp safe by reporting violations through official channels:</p>
+        <h3>How to Report</h3>
+        <ul>
+            <li><strong>In-App Reporting:</strong> Use report button on stories, comments, or profiles that violate guidelines.</li>
+            <li><strong>Feedback Form:</strong> Submit detailed reports through Feedback page with specific examples and context.</li>
+            <li><strong>Email Support:</strong> For serious violations, contact <a href="mailto:{{ config.SUPPORT_EMAIL or 'support@wiamapp.com' }}" style="color:var(--gold);text-decoration:none;">{{ config.SUPPORT_EMAIL or 'support@wiamapp.com' }}</a> directly.</li>
+        </ul>
+        <h3>What to Include in Reports</h3>
+        <ul>
+            <li>Specific content or behaviour that violates guidelines</li>
+            <li>Relevant screenshots or evidence (when appropriate)</li>
+            <li>Context and timing of violation</li>
+            <li>Any previous interactions with reported user/content</li>
+        </ul>
+        <div class="legal-callout">
+            <strong>Good Faith Reporting:</strong> Only report genuine violations. False or malicious reporting undermines community trust and may result in penalties.
+        </div>
+    </div>
+
+    <!-- Section 9 -->
+    <div class="legal-section" id="p9">
+        <h2><span class="s-num">9.</span> Consequences</h2>
+        <p>Violations result in escalating consequences based on severity and frequency:</p>
+        <table class="strike-table">
+            <thead>
+                <tr><th>Violation Level</th><th>First Offense</th><th>Second Offense</th><th>Third Offense</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="sev-notice">Minor</span><br><small>Inappropriate language, minor harassment, spam</small></td>
+                    <td>Notice</td>
+                    <td>Warning</td>
+                    <td><span class="sev-strike">Strike</span> (3-day suspension)</td>
+                </tr>
+                <tr>
+                    <td><span class="sev-warning">Moderate</span><br><small>Persistent harassment, boundary violations, mild hate speech</small></td>
+                    <td>Warning</td>
+                    <td><span class="sev-strike">Strike</span> (7-day suspension)</td>
+                    <td><span class="sev-strike">Strike</span> (30-day suspension)</td>
+                </tr>
+                <tr>
+                    <td><span class="sev-strike">Severe</span><br><small>Illegal content, explicit material, credible threats</small></td>
+                    <td colspan="3"><span class="sev-strike">Immediate Permanent Ban</span></td>
+                </tr>
+            </tbody>
+        </table>
+        <p>Additional consequences may include:</p>
+        <ul>
+            <li>Content removal without notice</li>
+            <li>Loss of monetisation privileges</li>
+            <li>Removal from WiamElite or featured sections</li>
+            <li>Legal action for illegal activities</li>
+        </ul>
+    </div>
+
+    <!-- Section 10 -->
+    <div class="legal-section" id="p10">
+        <h2><span class="s-num">10.</span> Appeals Process</h2>
+        <p>If you believe action was taken unfairly, you can appeal:</p>
+        <h3>Appeal Steps</h3>
+        <ol>
+            <li><strong>Review:</strong> Carefully read notification explaining which guideline was violated and why.</li>
+            <li><strong>Wait Period:</strong> Allow 24 hours for initial review of any automated or moderator actions.</li>
+            <li><strong>Submit Appeal:</strong> Use Feedback form to submit your appeal with clear explanation of why you believe action was incorrect.</li>
+            <li><strong>Provide Evidence:</strong> Include relevant context, screenshots, or information that supports your case.</li>
+            <li><strong>Response Time:</strong> Appeals are typically reviewed within 3-5 business days.</li>
+        </ol>
+        <h3>Appeal Outcomes</h3>
+        <ul>
+            <li><strong>Upheld:</strong> Original action stands if violation is confirmed.</li>
+            <li><strong>Reduced:</strong> Penalty may be reduced if circumstances warrant reconsideration.</li>
+            <li><strong>Overturned:</strong> Action is completely reversed if mistake is confirmed.</li>
+        </ul>
+        <div class="legal-callout warn">
+            <strong>Appeal Limits:</strong> Repeated appeals without new evidence may be rejected. Focus appeals on genuine errors or misunderstandings.
+        </div>
+    </div>
+
+    <div class="about-footer">
+        <a href="{{ url_for('profile.terms') }}">Terms & Conditions</a>
+        <a href="{{ url_for('profile.privacy_policy') }}">Privacy Policy</a>
+        <a href="{{ url_for('profile.feedback') }}">Send Feedback</a>
+        <div class="copy">© {{ now().year if now is defined else 2026 }} WiamLabs. All rights reserved.</div>
+    </div>
+</div>
+{% endblock %}

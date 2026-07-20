@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Gift Created — WiamApp{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width:560px;padding:var(--space-2xl) var(--space-md);text-align:center;">
+    <i class="bi bi-gift-fill" style="font-size:3rem;color:var(--gold);"></i>
+    <h1 class="font-display" style="font-size:1.6rem;margin-top:var(--space-sm);">Gift Ready!</h1>
+    <p style="color:var(--text-secondary);margin-bottom:var(--space-xl);">Share this link with the recipient</p>
+
+    {% if book and book.cover_file_id %}
+    <div style="margin-bottom:var(--space-lg);">
+        <img src="{{ book.cover_url }}" alt="{{ book.title }}" style="width:100px;height:140px;object-fit:cover;border-radius:var(--radius-md);box-shadow:0 8px 24px rgba(0,0,0,0.3);">
+    </div>
+    {% endif %}
+
+    <div style="background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);padding:var(--space-xl);margin-bottom:var(--space-xl);">
+        <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:var(--space-sm);">Gift Link</p>
+        <input type="text" id="giftLink" readonly value="{{ request.host_url }}gift/claim/{{ gift.recipient_code }}" style="width:100%;padding:var(--space-md);background:var(--bg-elevated);border:1px solid var(--border-subtle);border-radius:var(--radius-md);color:var(--gold);font-family:monospace;font-size:0.85rem;text-align:center;">
+        <button onclick="navigator.clipboard.writeText(document.getElementById('giftLink').value);this.textContent='Copied!';setTimeout(()=>this.textContent='Copy Link',2000);" class="btn btn-gold" style="margin-top:var(--space-md);padding:0.5rem 1.5rem;">
+            Copy Link
+        </button>
+
+        {% if gift.message %}
+        <div style="margin-top:var(--space-lg);padding-top:var(--space-md);border-top:1px solid var(--border-subtle);">
+            <p style="color:var(--text-muted);font-size:0.8rem;">Your message:</p>
+            <p style="color:var(--text);font-style:italic;">"{{ gift.message }}"</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <div style="display:flex;gap:var(--space-md);justify-content:center;flex-wrap:wrap;">
+        <a href="https://wa.me/?text={{ 'I got you a book on WiamApp! Claim it here: '|urlencode }}{{ (request.host_url ~ 'gift/claim/' ~ gift.recipient_code)|urlencode }}" target="_blank" class="btn btn-ghost"><i class="bi bi-whatsapp me-1" style="color:#25d366;"></i> WhatsApp</a>
+    </div>
+
+    <div style="margin-top:var(--space-xl);">
+        <a href="{{ url_for('gift.my_gifts') }}" style="color:var(--text-muted);">View all my gifts &rarr;</a>
+    </div>
+</div>
+{% endblock %}

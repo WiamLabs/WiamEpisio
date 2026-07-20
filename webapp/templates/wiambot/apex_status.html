@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}Apex Submission — {{ sub.title }}{% endblock %}
+
+{% block extra_head %}
+<style>
+    .apex-status{max-width:700px;margin:0 auto;padding-bottom:100px;}
+    .as-header{padding:1.5rem 0 1rem;}
+    .as-header h1{font-size:1.2rem;font-weight:700;margin:0 0 6px;}
+    .as-header .as-meta{font-size:0.78rem;color:var(--text-muted);}
+
+    .score-ring{width:100px;height:100px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.8rem;font-weight:800;margin:16px auto;}
+    .score-ring.pass{background:rgba(74,222,128,0.1);border:3px solid #4ade80;color:#4ade80;}
+    .score-ring.fail{background:rgba(239,68,68,0.1);border:3px solid #ef4444;color:#ef4444;}
+
+    .breakdown{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:16px 0;}
+    .bd-item{background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:10px;padding:10px 12px;}
+    .bd-item .bd-label{font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.3px;}
+    .bd-item .bd-value{font-size:1.1rem;font-weight:700;color:var(--text);}
+
+    .flag-list{margin:16px 0;}
+    .flag-item{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:8px;margin-bottom:6px;font-size:0.82rem;color:var(--text-secondary);}
+    .flag-item i{color:#facc15;}
+
+    .status-big{text-align:center;margin:16px 0;padding:14px;border-radius:12px;font-weight:700;font-size:0.9rem;}
+    .status-big.pending_review{background:rgba(250,204,21,0.1);color:#facc15;border:1px solid rgba(250,204,21,0.3);}
+    .status-big.signed{background:rgba(74,222,128,0.1);color:#4ade80;border:1px solid rgba(74,222,128,0.3);}
+    .status-big.rejected{background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.3);}
+    .status-big.revision_requested{background:rgba(251,146,60,0.1);color:#fb923c;border:1px solid rgba(251,146,60,0.3);}
+
+    .admin-notes{background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:12px;padding:14px;margin:12px 0;font-size:0.85rem;color:var(--text-secondary);}
+    .admin-notes h4{font-size:0.8rem;font-weight:700;color:var(--text);margin:0 0 6px;}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="apex-status">
+    <div class="as-header">
+        <a href="{{ url_for('wiambot.apex_submit') }}" style="color:var(--text-muted);font-size:0.82rem;text-decoration:none;"><i class="bi bi-arrow-left"></i> Back to submissions</a>
+        <h1>{{ sub.title }}</h1>
+        <div class="as-meta">{{ sub.genre }} · {{ sub.pen_name }} · Submitted {{ sub.created_at.strftime('%b %d, %Y') }}</div>
+    </div>
+
+    <div class="status-big {{ sub.status }}">
+        {% if sub.status == 'pending_review' %}⏳ Pending Review — Your submission is being reviewed
+        {% elif sub.status == 'signed' %}🏆 APPROVED — Welcome to Wiam Apex!
+        {% elif sub.status == 'rejected' %}❌ Not Accepted — See feedback below
+        {% elif sub.status == 'revision_requested' %}📝 Revision Requested — See notes below
+        {% else %}{{ sub.status|replace('_',' ')|title }}
+        {% endif %}
+    </div>
+
+    <div class="score-ring {{ 'pass' if sub.total_score >= 90 else 'fail' }}">{{ sub.total_score }}</div>
+    <p style="text-align:center;font-size:0.78rem;color:var(--text-muted);margin:-8px 0 16px;">Score out of 100 (minimum 90 to pass)</p>
+
+    {% if sub.score_breakdown and sub.score_breakdown != '{}' %}
+    {% set bd = sub.score_breakdown | from_json %}
+    <div class="breakdown">
+        {% for key, val in bd.items() %}
+        <div class="bd-item">
+            <div class="bd-label">{{ key.replace('_', ' ') }}</div>
+            <div class="bd-value">{{ val }}</div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if sub.flags and sub.flags != '[]' %}
+    {% set flag_list = sub.flags | from_json %}
+    <h3 style="font-size:0.9rem;font-weight:700;margin:16px 0 8px;">⚠️ Flags & Feedback</h3>
+    <div class="flag-list">
+        {% for flag in flag_list %}
+        <div class="flag-item"><i class="bi bi-exclamation-triangle"></i> {{ flag }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if sub.admin_notes %}
+    <div class="admin-notes">
+        <h4>📋 Reviewer Notes</h4>
+        {{ sub.admin_notes }}
+    </div>
+    {% endif %}
+
+    {% if sub.status == 'rejected' %}
+    <div style="background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:12px;padding:16px;margin-top:16px;">
+        <h4 style="font-size:0.85rem;font-weight:700;margin:0 0 8px;">💡 What to do next</h4>
+        <ul style="font-size:0.82rem;color:var(--text-secondary);padding-left:18px;margin:0;">
+            <li>Review the flags above and address each issue</li>
+            <li>Use our <a href="{{ url_for('wiambot.creator_tools') }}" style="color:var(--gold);">Creator Tools</a> for templates and analysis</li>
+            <li>You can resubmit after the 14-day cooldown period</li>
+            <li>Maximum 3 submissions per 60 days</li>
+        </ul>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

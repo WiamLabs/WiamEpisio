@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamEpisio — Subtitles</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{ --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42; --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75; }
+  *{box-sizing:border-box;} body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); display:flex; flex-direction:column; }
+  .statusbar{ height:44px; flex-shrink:0; } svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+  .topbar{ display:flex; align-items:center; gap:12px; padding:2px 20px 14px; flex-shrink:0; }
+  .icon-btn{ width:34px; height:34px; border-radius:50%; background:var(--navy-card); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .topbar h1{ font-size:16px; font-weight:800; color:#fff; margin:0; }
+  .scroll{ flex:1; overflow-y:auto; padding:0 20px 20px; }
+
+  .preview-frame{ aspect-ratio:16/9; border-radius:14px; background:linear-gradient(160deg,#241a3a,#0d0d24); position:relative; overflow:hidden; margin-bottom:22px; display:flex; align-items:flex-end; justify-content:center; padding-bottom:16px; }
+  .cc-preview-text{ background:rgba(0,0,0,0.75); color:#fff; font-size:14px; font-weight:600; padding:5px 12px; border-radius:4px; }
+
+  .group-title{ font-size:11px; font-weight:800; color:var(--text-faint); letter-spacing:0.4px; text-transform:uppercase; margin:4px 0 12px; }
+  .row-card{ background:var(--navy-card); border:1px solid var(--navy-line); border-radius:14px; overflow:hidden; margin-bottom:20px; }
+  .row{ display:flex; align-items:center; gap:12px; padding:13px 14px; border-bottom:1px solid var(--navy-line); }
+  .row:last-child{ border-bottom:none; }
+  .row-label{ flex:1; font-size:13px; color:#E7E7F2; font-weight:500; }
+  .row-value{ font-size:12px; color:var(--text-faint); margin-right:4px; }
+  .chevron{ color:var(--text-faint); width:14px; height:14px; flex-shrink:0; }
+
+  .toggle{ width:42px; height:24px; border-radius:99px; position:relative; flex-shrink:0; }
+  .toggle.on{ background:var(--gold); } .toggle.off{ background:var(--navy-line); }
+  .toggle-knob{ position:absolute; top:2px; width:20px; height:20px; border-radius:50%; background:#fff; }
+  .toggle.on .toggle-knob{ right:2px; } .toggle.off .toggle-knob{ left:2px; }
+
+  .size-row{ display:flex; gap:8px; padding:13px 14px; }
+  .size-chip{ flex:1; text-align:center; padding:9px; border-radius:10px; background:var(--navy-soft); border:1px solid var(--navy-line); font-size:11.5px; color:var(--text-dim); font-weight:600; }
+  .size-chip.active{ background:var(--gold); color:var(--navy); border-color:var(--gold); }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="statusbar"></div>
+  <div class="topbar"><div class="icon-btn"><svg viewBox="0 0 24 24" width="15" height="15" color="#fff"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></div><h1>Subtitles &amp; CC</h1></div>
+
+  <div class="scroll">
+    <div class="preview-frame"><span class="cc-preview-text">Whatever you decide, I stand with you.</span></div>
+
+    <p class="group-title">Captions</p>
+    <div class="row-card">
+      <div class="row"><span class="row-label">Show subtitles</span><div class="toggle on"><div class="toggle-knob"></div></div></div>
+      <div class="row"><span class="row-label">Subtitle language</span><span class="row-value">English</span><svg class="chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+    </div>
+
+    <p class="group-title">Appearance</p>
+    <div class="row-card">
+      <div style="padding:13px 14px; border-bottom:1px solid var(--navy-line);"><span class="row-label" style="display:block; margin-bottom:10px;">Text size</span>
+        <div class="size-row" style="padding:0;">
+          <div class="size-chip">Small</div>
+          <div class="size-chip active">Medium</div>
+          <div class="size-chip">Large</div>
+        </div>
+      </div>
+      <div class="row"><span class="row-label">Background</span><span class="row-value">Semi-transparent</span><svg class="chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+      <div class="row"><span class="row-label">Text color</span><span class="row-value">White</span><svg class="chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

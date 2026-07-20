@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamEpisio — Episode List Sheet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:#000; border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); }
+  .blurred-bg{ position:absolute; inset:0; background:linear-gradient(160deg,#1a1030,#0d0d24,#000); filter:blur(8px) brightness(0.5); }
+  .scrim{ position:absolute; inset:0; background:rgba(8,8,26,0.4); }
+
+  .sheet{ position:absolute; bottom:0; left:0; right:0; top:70px; background:var(--navy); border-radius:26px 26px 0 0; border-top:1px solid var(--navy-line); display:flex; flex-direction:column; }
+  .sheet-handle{ width:36px; height:4px; border-radius:999px; background:var(--navy-line); margin:12px auto 0; flex-shrink:0; }
+  .close-x{ position:absolute; top:14px; right:18px; color:var(--text-faint); }
+
+  .sheet-scroll{ flex:1; overflow-y:auto; padding:14px 20px 20px; }
+
+  .header-row{ display:flex; gap:12px; margin-bottom:16px; }
+  .thumb{ width:64px; height:88px; border-radius:12px; background:linear-gradient(160deg,var(--navy-soft),#0d0d24); flex-shrink:0; }
+  .header-title{ font-size:15.5px; font-weight:800; color:#fff; margin:0 0 6px; line-height:1.3; }
+  .header-views{ font-size:11px; color:var(--text-faint); margin:0 0 4px; }
+  .header-rate{ display:flex; align-items:center; gap:5px; font-size:12px; }
+  .header-rate svg{ color:var(--gold); width:12px; height:12px; }
+  .header-rate b{ color:#fff; }
+  .header-rate span{ color:var(--text-faint); }
+
+  .sheet-tabs{ display:flex; gap:24px; border-bottom:1px solid var(--navy-line); margin-bottom:16px; }
+  .sheet-tab{ font-size:13.5px; font-weight:600; color:var(--text-faint); padding-bottom:10px; border-bottom:2px solid transparent; }
+  .sheet-tab.active{ color:#fff; border-color:var(--gold); }
+
+  .range-tabs{ display:flex; gap:20px; margin-bottom:16px; }
+  .range-tab{ font-size:13px; font-weight:600; color:var(--text-faint); }
+  .range-tab.active{ color:#fff; }
+
+  .episode-grid{ display:grid; grid-template-columns:repeat(6,1fr); gap:8px; position:relative; }
+  .ep-cell{ aspect-ratio:1; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; position:relative; background:var(--navy-card); border:1px solid var(--navy-line); color:#fff; }
+  .ep-cell.current{ background:rgba(212,160,23,0.14); border-color:var(--gold); color:var(--gold); }
+  .ep-cell.locked{ color:var(--text-faint); }
+  .ep-cell .lock-badge{ position:absolute; top:4px; right:4px; width:13px; height:13px; }
+  .ep-cell .playing-bars{ position:absolute; bottom:5px; left:6px; display:flex; gap:1.5px; align-items:flex-end; }
+  .playing-bars span{ width:2px; background:var(--gold); border-radius:1px; animation:bounce 0.9s ease-in-out infinite; }
+  .playing-bars span:nth-child(1){ height:5px; animation-delay:0s; }
+  .playing-bars span:nth-child(2){ height:9px; animation-delay:0.2s; }
+  .playing-bars span:nth-child(3){ height:6px; animation-delay:0.4s; }
+  @keyframes bounce{ 0%,100%{ transform:scaleY(0.5); } 50%{ transform:scaleY(1); } }
+
+  .piracy-tooltip{
+    position:absolute; top:150px; left:8px; right:8px; background:rgba(0,0,0,0.88); border-radius:12px;
+    padding:12px 14px; text-align:center; z-index:5;
+  }
+  .piracy-tooltip p{ font-size:11.5px; color:#D3D3E2; line-height:1.5; margin:0; }
+
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="blurred-bg"></div>
+  <div class="scrim"></div>
+
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <svg class="close-x" viewBox="0 0 24 24" width="18" height="18"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+
+    <div class="sheet-scroll">
+      <div class="header-row">
+        <div class="thumb"></div>
+        <div>
+          <p class="header-title">The King's Forgotten Son</p>
+          <p class="header-views">4.9M Views</p>
+          <p class="header-rate"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15 9 22 9.5 16.5 14.3 18.2 21 12 17.3 5.8 21 7.5 14.3 2 9.5 9 9"/></svg><b>4.9</b> <span>(30.9K)</span></p>
+        </div>
+      </div>
+
+      <div class="sheet-tabs">
+        <span class="sheet-tab">Synopsis</span>
+        <span class="sheet-tab active">Episodes</span>
+      </div>
+
+      <div class="range-tabs">
+        <span class="range-tab active">1–30</span>
+        <span class="range-tab">31–48</span>
+      </div>
+
+      <div class="episode-grid">
+        <div class="ep-cell current">1<div class="playing-bars"><span></span><span></span><span></span></div></div>
+        <div class="ep-cell">2</div>
+        <div class="ep-cell">3</div>
+        <div class="ep-cell">4</div>
+        <div class="ep-cell">5</div>
+        <div class="ep-cell locked">6<svg class="lock-badge" viewBox="0 0 24 24" color="#5A5A75"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+
+        <div class="piracy-tooltip">Sharing episodes outside the app may lead to a copyright violation notice.</div>
+
+        <div class="ep-cell locked">7<svg class="lock-badge" viewBox="0 0 24 24" color="#5A5A75"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+        <div class="ep-cell locked">8<svg class="lock-badge" viewBox="0 0 24 24" color="#5A5A75"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+        <div class="ep-cell locked">9<svg class="lock-badge" viewBox="0 0 24 24" color="#5A5A75"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+        <div class="ep-cell locked">10<svg class="lock-badge" viewBox="0 0 24 24" color="#5A5A75"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+        <div class="ep-cell locked">11<svg class="lock-badge" viewBox="0 0 24 24" color="#5A5A75"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+        <div class="ep-cell locked">12<svg class="lock-badge" viewBox="0 0 24 24" color="#5A5A75"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+
+        <div class="ep-cell locked">13<svg class="lock-badge" viewBox="0 0 24 24" color="#5A5A75"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+        <div class="ep-cell locked">14<svg class="lock-badge" viewBox="0 0 24 24" color="#5A5A75"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+        <div class="ep-cell locked">15<svg class="lock-badge" viewBox="0 0 24 24" color="#5A5A75"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+        <div class="ep-cell locked">16<svg class="lock-badge" viewBox="0 0 24 24" color="#5A5A75"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+        <div class="ep-cell locked">17<svg class="lock-badge" viewBox="0 0 24 24" color="#5A5A75"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+        <div class="ep-cell locked">18<svg class="lock-badge" viewBox="0 0 24 24" color="#5A5A75"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

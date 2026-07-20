@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% block title %}Reading Streaks — WiamApp{% endblock %}
+{% block content %}
+<style>
+.rs-wrap { max-width:700px; margin:0 auto; padding:var(--space-xl) var(--space-md); }
+.rs-hero {
+    text-align:center; padding:var(--space-2xl) var(--space-lg);
+    background:linear-gradient(135deg,rgba(231,76,60,0.1),rgba(243,156,18,0.08));
+    border-radius:var(--radius-lg); border:1px solid rgba(231,76,60,0.15);
+    margin-bottom:var(--space-xl);
+}
+.rs-flame { font-size:3.5rem; margin-bottom:var(--space-xs); }
+.rs-streak-num { font-size:2.8rem; font-weight:800; color:#e74c3c; line-height:1; }
+.rs-streak-label { font-size:0.85rem; color:var(--text-secondary); margin-top:4px; }
+.rs-stats {
+    display:grid; grid-template-columns:repeat(4,1fr); gap:var(--space-md);
+    margin-bottom:var(--space-xl);
+}
+.rs-stat {
+    text-align:center; padding:var(--space-lg) var(--space-sm);
+    background:var(--bg-card); border:1px solid var(--border-subtle);
+    border-radius:var(--radius-md);
+}
+.rs-stat-val { font-size:1.5rem; font-weight:700; color:var(--text); }
+.rs-stat-lbl { font-size:0.7rem; color:var(--text-muted); margin-top:2px; }
+
+/* Calendar */
+.rs-cal-title { font-size:1rem; font-weight:700; color:var(--text); margin-bottom:var(--space-md); }
+.rs-cal {
+    display:grid; grid-template-columns:repeat(7,1fr); gap:6px;
+    margin-bottom:var(--space-xl);
+}
+.rs-cal-day {
+    aspect-ratio:1; border-radius:var(--radius-sm); display:flex; flex-direction:column;
+    align-items:center; justify-content:center; font-size:0.65rem; color:var(--text-muted);
+    border:1px solid var(--border-subtle); background:var(--bg-card); position:relative;
+}
+.rs-cal-day.active {
+    background:linear-gradient(135deg,rgba(231,76,60,0.15),rgba(243,156,18,0.12));
+    border-color:rgba(231,76,60,0.3); color:#e74c3c; font-weight:600;
+}
+.rs-cal-day.today { box-shadow:0 0 0 2px var(--gold); }
+.rs-cal-num { font-size:0.75rem; font-weight:600; }
+.rs-cal-min { font-size:0.55rem; opacity:0.7; }
+.rs-day-labels { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-bottom:4px; }
+.rs-day-labels span { text-align:center; font-size:0.6rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; }
+
+/* Badges */
+.rs-badges-title { font-size:1rem; font-weight:700; color:var(--text); margin-bottom:var(--space-md); }
+.rs-badges { display:grid; grid-template-columns:repeat(3,1fr); gap:var(--space-md); margin-bottom:var(--space-xl); }
+.rs-badge {
+    text-align:center; padding:var(--space-lg) var(--space-sm);
+    background:var(--bg-card); border:1px solid var(--border-subtle);
+    border-radius:var(--radius-md); transition:all 0.2s;
+}
+.rs-badge.earned { border-color:rgba(212,168,67,0.3); background:linear-gradient(135deg,rgba(212,168,67,0.06),transparent); }
+.rs-badge.locked { opacity:0.4; filter:grayscale(0.8); }
+.rs-badge-icon { font-size:1.8rem; margin-bottom:var(--space-xs); }
+.rs-badge-name { font-size:0.78rem; font-weight:700; color:var(--text); }
+.rs-badge-req { font-size:0.65rem; color:var(--text-muted); margin-top:2px; }
+
+@media (max-width:600px) {
+    .rs-stats { grid-template-columns:repeat(2,1fr); }
+    .rs-badges { grid-template-columns:repeat(2,1fr); }
+    .rs-streak-num { font-size:2rem; }
+    .rs-flame { font-size:2.5rem; }
+}
+</style>
+
+<div class="rs-wrap">
+
+    <!-- Hero -->
+    <div class="rs-hero">
+        <div class="rs-flame">{% if streak > 0 %}🔥{% else %}📖{% endif %}</div>
+        <div class="rs-streak-num">{{ streak }}</div>
+        <div class="rs-streak-label">day{{ 's' if streak != 1 else '' }} current streak</div>
+    </div>
+
+    <!-- Stats -->
+    <div class="rs-stats">
+        <div class="rs-stat">
+            <div class="rs-stat-val">{{ longest }}</div>
+            <div class="rs-stat-lbl">Best Streak</div>
+        </div>
+        <div class="rs-stat">
+            <div class="rs-stat-val">{{ total_days }}</div>
+            <div class="rs-stat-lbl">Total Days</div>
+        </div>
+        <div class="rs-stat">
+            <div class="rs-stat-val">{{ (total_minutes / 60)|int if total_minutes >= 60 else total_minutes }}{{ 'h' if total_minutes >= 60 else 'm' }}</div>
+            <div class="rs-stat-lbl">Time Read</div>
+        </div>
+        <div class="rs-stat">
+            <div class="rs-stat-val">{{ total_pages }}</div>
+            <div class="rs-stat-lbl">Pages Read</div>
+        </div>
+    </div>
+
+    <!-- 28-Day Calendar -->
+    <div class="rs-cal-title"><i class="bi bi-calendar3" style="color:var(--gold);"></i> Last 28 Days</div>
+    <div class="rs-day-labels">
+        <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+    </div>
+    <div class="rs-cal">
+        {% for day in calendar %}
+        <div class="rs-cal-day {{ 'active' if day.active else '' }} {{ 'today' if day.date == today else '' }}" title="{{ day.date.strftime('%b %d') }} — {{ day.minutes }}min, {{ day.pages }} pages">
+            <div class="rs-cal-num">{{ day.date.day }}</div>
+            {% if day.active %}<div class="rs-cal-min">{{ day.minutes }}m</div>{% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Streak Badges -->
+    <div class="rs-badges-title"><i class="bi bi-award-fill" style="color:var(--gold);"></i> Streak Badges</div>
+    <div class="rs-badges">
+        {% for b in badges %}
+        <div class="rs-badge {{ 'earned' if b.earned else 'locked' }}">
+            <div class="rs-badge-icon">{{ b.icon }}</div>
+            <div class="rs-badge-name" style="color:{{ b.color if b.earned else 'var(--text-muted)' }};">{{ b.name }}</div>
+            <div class="rs-badge-req">{{ b.days }}-day streak</div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Back -->
+    <div style="text-align:center;">
+        <a href="{{ url_for('programs.hub') }}" style="color:var(--text-secondary);font-size:0.85rem;text-decoration:none;">
+            <i class="bi bi-arrow-left"></i> Back to Programs
+        </a>
+        <span style="color:var(--text-muted);margin:0 12px;">·</span>
+        <a href="{{ url_for('dashboard.index') }}" style="color:var(--text-secondary);font-size:0.85rem;text-decoration:none;">
+            <i class="bi bi-house"></i> Dashboard
+        </a>
+    </div>
+
+</div>
+{% endblock %}

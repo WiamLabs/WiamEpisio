@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}🎉 {{ story.title }} — WiamElite Celebration{% endblock %}
+{% block meta_description %}{{ story.title }} has achieved WiamElite status! Celebrate this legendary achievement.{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:var(--space-2xl);padding-bottom:var(--space-2xl);max-width:600px;margin:0 auto;text-align:center;">
+
+    <!-- Celebration Card -->
+    <div id="celebrationCard" style="position:relative;background:linear-gradient(135deg,rgba(212,168,67,0.12),rgba(114,47,55,0.12));border:2px solid rgba(212,168,67,0.4);border-radius:var(--radius-xl);padding:var(--space-2xl) var(--space-xl);overflow:hidden;">
+
+        <!-- Decorative sparkles -->
+        <div style="position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;opacity:0.15;">
+            <div style="position:absolute;top:10%;left:15%;font-size:1.5rem;">✦</div>
+            <div style="position:absolute;top:20%;right:12%;font-size:1rem;">✦</div>
+            <div style="position:absolute;bottom:25%;left:10%;font-size:0.8rem;">✦</div>
+            <div style="position:absolute;bottom:15%;right:20%;font-size:1.2rem;">✦</div>
+            <div style="position:absolute;top:45%;left:5%;font-size:0.7rem;">✦</div>
+            <div style="position:absolute;top:60%;right:8%;font-size:0.9rem;">✦</div>
+        </div>
+
+        <!-- WiamElite badge -->
+        <div style="margin-bottom:var(--space-lg);">
+            <div style="display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#d4a843,#b8860b);color:#000;font-size:0.75rem;font-weight:700;padding:6px 18px;border-radius:20px;text-transform:uppercase;letter-spacing:2px;">
+                ✦ WiamElite
+            </div>
+        </div>
+
+        <!-- Story cover -->
+        <div style="width:120px;height:180px;margin:0 auto var(--space-lg);border-radius:var(--radius-md);overflow:hidden;border:2px solid rgba(212,168,67,0.4);box-shadow:0 8px 30px rgba(212,168,67,0.2);">
+            {% if story.cover_file_id %}
+            <img src="{{ story.cover_url }}" alt="{{ story.title }}" style="width:100%;height:100%;object-fit:cover;">
+            {% else %}
+            <div style="width:100%;height:100%;background:linear-gradient(135deg,var(--wine),var(--wine-deep));display:flex;align-items:center;justify-content:center;">
+                <i class="bi bi-book" style="font-size:2rem;color:var(--gold);opacity:0.5;"></i>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Title -->
+        <h1 style="font-size:1.4rem;font-family:var(--font-display);color:var(--gold);margin:0 0 var(--space-xs);">{{ story.title }}</h1>
+
+        {% if creator %}
+        <p style="font-size:0.9rem;color:var(--text-secondary);margin:0 0 var(--space-lg);">
+            by {{ story.author or creator.display_name }}
+        </p>
+        {% endif %}
+
+        <!-- Achievement message -->
+        <div style="margin-bottom:var(--space-xl);">
+            <p style="font-size:1.1rem;color:var(--text);margin:0 0 var(--space-xs);font-weight:600;">
+                Has achieved WiamElite status!
+            </p>
+            <p style="font-size:0.8rem;color:var(--text-muted);margin:0;">
+                One of the rarest achievements on WiamApp
+            </p>
+        </div>
+
+        <!-- Stats grid -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-md);margin-bottom:var(--space-xl);">
+            <div style="padding:var(--space-sm);background:rgba(0,0,0,0.2);border-radius:var(--radius-md);">
+                <div style="font-size:1rem;font-weight:700;color:var(--gold);">{{ '{:,}'.format(elite.total_reads) }}</div>
+                <div style="font-size:0.6rem;color:var(--text-muted);">Reads</div>
+            </div>
+            <div style="padding:var(--space-sm);background:rgba(0,0,0,0.2);border-radius:var(--radius-md);">
+                <div style="font-size:1rem;font-weight:700;color:var(--gold);">{{ '%.1f'|format(elite.avg_rating) }}</div>
+                <div style="font-size:0.6rem;color:var(--text-muted);">★ Rating</div>
+            </div>
+            <div style="padding:var(--space-sm);background:rgba(0,0,0,0.2);border-radius:var(--radius-md);">
+                <div style="font-size:1rem;font-weight:700;color:var(--gold);">{{ elite.chapter_count }}</div>
+                <div style="font-size:0.6rem;color:var(--text-muted);">Chapters</div>
+            </div>
+        </div>
+
+        <!-- Creator benefits -->
+        <div style="padding:var(--space-md);background:rgba(212,168,67,0.08);border:1px solid rgba(212,168,67,0.15);border-radius:var(--radius-md);margin-bottom:var(--space-lg);text-align:left;">
+            <div style="font-size:0.75rem;font-weight:600;color:var(--gold);margin-bottom:var(--space-sm);text-align:center;">Creator Rewards Unlocked</div>
+            <div style="display:flex;flex-wrap:wrap;gap:var(--space-sm);justify-content:center;">
+                <span style="font-size:0.7rem;color:var(--text-secondary);background:rgba(0,0,0,0.2);padding:4px 10px;border-radius:12px;">🏅 Verified Badge ({{ badge_duration }})</span>
+                <span style="font-size:0.7rem;color:var(--text-secondary);background:rgba(0,0,0,0.2);padding:4px 10px;border-radius:12px;">💰 {{ revenue_pct }}% Revenue Split</span>
+                <span style="font-size:0.7rem;color:var(--text-secondary);background:rgba(0,0,0,0.2);padding:4px 10px;border-radius:12px;">🪙 {{ coin_multiplier }}x Coin Multiplier</span>
+            </div>
+        </div>
+
+        <!-- Watermark -->
+        <div style="font-size:0.6rem;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;">
+            WiamApp — Your Personal Reading Space
+        </div>
+    </div>
+
+    <!-- Actions (outside the card for sharing) -->
+    <div style="margin-top:var(--space-xl);display:flex;gap:var(--space-md);justify-content:center;flex-wrap:wrap;">
+        <a href="{{ url_for('elite.elite_book_detail', book_id=story.id) }}" style="display:inline-flex;align-items:center;gap:6px;padding:10px 24px;background:linear-gradient(135deg,#d4a843,#b8860b);color:#000;border-radius:var(--radius-md);font-weight:700;font-size:0.85rem;text-decoration:none;">
+            <i class="bi bi-book"></i> View Story
+        </a>
+        <button onclick="shareCard()" style="display:inline-flex;align-items:center;gap:6px;padding:10px 24px;background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-md);font-size:0.85rem;color:var(--text);cursor:pointer;">
+            <i class="bi bi-share"></i> Share
+        </button>
+        <a href="{{ url_for('elite.elite_page') }}" style="display:inline-flex;align-items:center;gap:6px;padding:10px 18px;font-size:0.85rem;color:var(--text-secondary);text-decoration:none;">
+            ← Back to Elite
+        </a>
+    </div>
+</div>
+
+<script>
+function shareCard() {
+    var shareData = {
+        title: '{{ story.title }} — WiamElite',
+        text: '{{ story.title }} has achieved WiamElite status on WiamApp! Check it out:',
+        url: window.location.href
+    };
+    if (navigator.share) {
+        navigator.share(shareData);
+    } else {
+        navigator.clipboard.writeText(window.location.href).then(function() {
+            alert('Link copied to clipboard!');
+        });
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamEpisio — Confirm Your Age</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{ --navy:#08081A; --navy-card:#12122A; --navy-line:#1E1E42; --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75; }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); }
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+
+  .statusbar{ height:44px; }
+  .glow-bg{ position:absolute; top:60px; left:50%; transform:translateX(-50%); width:420px; height:420px; background:radial-gradient(circle, rgba(212,160,23,0.16), transparent 65%); }
+
+  .wrap{ position:relative; z-index:2; height:calc(100% - 44px); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:0 30px 40px; text-align:center; }
+
+  .logo-badge{ width:56px; height:56px; border-radius:16px; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); display:flex; align-items:center; justify-content:center; color:var(--navy); font-weight:800; font-size:24px; margin-bottom:22px; clip-path: polygon(30% 0%, 100% 0, 100% 100%, 30% 100%, 0% 50%); }
+
+  h1{ font-size:20px; font-weight:800; color:#fff; margin:0 0 10px; }
+  .sub{ font-size:12.5px; color:var(--text-dim); line-height:1.6; margin:0 0 28px; max-width:280px; }
+
+  .dob-row{ display:flex; gap:10px; width:100%; margin-bottom:8px; }
+  .dob-field{ flex:1; background:var(--navy-card); border:1px solid var(--navy-line); border-radius:14px; padding:14px; text-align:center; }
+  .dob-field input{ background:none; border:none; outline:none; color:#fff; font-size:16px; font-weight:700; font-family:inherit; width:100%; text-align:center; }
+  .dob-field input::placeholder{ color:var(--text-faint); }
+  .dob-labels{ display:flex; gap:10px; width:100%; margin-bottom:24px; }
+  .dob-labels span{ flex:1; text-align:center; font-size:9.5px; color:var(--text-faint); font-weight:700; text-transform:uppercase; }
+
+  .privacy-note{ display:flex; gap:8px; text-align:left; background:var(--navy-card); border:1px solid var(--navy-line); border-radius:13px; padding:12px 14px; margin-bottom:26px; width:100%; }
+  .privacy-note svg{ width:14px; height:14px; color:var(--gold); flex-shrink:0; margin-top:1px; }
+  .privacy-note span{ font-size:10.5px; color:var(--text-dim); line-height:1.55; }
+
+  .btn-primary{ width:100%; padding:16px; border-radius:16px; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); border:none; color:var(--navy); font-size:15px; font-weight:800; box-shadow:0 14px 30px rgba(212,160,23,0.3); margin-bottom:12px; font-family:'Inter',sans-serif; }
+  .decline-link{ font-size:12px; color:var(--text-faint); font-weight:600; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="statusbar"></div>
+  <div class="glow-bg"></div>
+
+  <div class="wrap">
+    <div class="logo-badge">W</div>
+
+    <h1>Confirm your date of birth</h1>
+    <p class="sub">WiamEpisio includes drama series intended for mature audiences. You must be 18+ to continue.</p>
+
+    <div class="dob-row">
+      <div class="dob-field"><input placeholder="DD" value="14" maxlength="2" /></div>
+      <div class="dob-field"><input placeholder="MM" value="03" maxlength="2" /></div>
+      <div class="dob-field"><input placeholder="YYYY" value="1996" maxlength="4" /></div>
+    </div>
+    <div class="dob-labels"><span>Day</span><span>Month</span><span>Year</span></div>
+
+    <div class="privacy-note">
+      <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+      <span>Used only to confirm eligibility — never shown on your profile or shared with anyone.</span>
+    </div>
+
+    <button class="btn-primary">Confirm &amp; Continue</button>
+    <span class="decline-link">I'm under 18</span>
+  </div>
+</div>
+
+</body>
+</html>

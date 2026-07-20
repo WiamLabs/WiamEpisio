@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}Wiam Apex Submission{% endblock %}
+
+{% block extra_head %}
+<style>
+    .apex-container{max-width:700px;margin:0 auto;padding-bottom:100px;}
+    .apex-header{text-align:center;padding:1.5rem 0 1rem;}
+    .apex-header h1{font-size:1.3rem;font-weight:700;margin:0 0 4px;color:var(--gold);}
+    .apex-header p{color:var(--text-muted);font-size:0.85rem;margin:0;}
+    .apex-badge{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,rgba(212,168,67,0.15),rgba(212,168,67,0.05));border:1px solid rgba(212,168,67,0.3);border-radius:10px;padding:8px 16px;font-size:0.8rem;color:var(--gold);font-weight:600;margin-bottom:12px;}
+
+    .apex-form label{display:block;font-size:0.82rem;font-weight:600;margin-bottom:4px;color:var(--text);}
+    .apex-form input,.apex-form select,.apex-form textarea{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border-subtle);background:var(--bg-card);color:var(--text);font-size:0.85rem;margin-bottom:14px;}
+    .apex-form textarea{min-height:150px;resize:vertical;}
+    .apex-form input:focus,.apex-form select:focus,.apex-form textarea:focus{border-color:var(--gold);outline:none;}
+    .apex-form .field-hint{font-size:0.72rem;color:var(--text-muted);margin:-10px 0 14px;}
+    .apex-submit-btn{width:100%;padding:14px;border-radius:12px;border:none;background:var(--gold);color:#000;font-weight:700;font-size:0.95rem;cursor:pointer;margin-top:8px;}
+    .apex-submit-btn:disabled{opacity:0.4;cursor:default;}
+
+    .cooldown-notice{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:12px;padding:16px;text-align:center;margin-bottom:20px;}
+    .cooldown-notice p{color:#ef4444;font-size:0.85rem;margin:0;}
+
+    .prev-submissions{margin-top:24px;}
+    .prev-sub{background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:12px;padding:14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;text-decoration:none;}
+    .prev-sub:hover{border-color:var(--gold);}
+    .prev-sub .ps-title{font-size:0.85rem;font-weight:600;color:var(--text);}
+    .prev-sub .ps-meta{font-size:0.72rem;color:var(--text-muted);}
+    .status-badge{padding:3px 10px;border-radius:8px;font-size:0.7rem;font-weight:700;text-transform:uppercase;}
+    .status-badge.pending_review{background:rgba(250,204,21,0.15);color:#facc15;}
+    .status-badge.signed{background:rgba(74,222,128,0.15);color:#4ade80;}
+    .status-badge.rejected{background:rgba(239,68,68,0.15);color:#ef4444;}
+    .status-badge.revision_requested{background:rgba(251,146,60,0.15);color:#fb923c;}
+
+    .check-row{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+    .check-row input[type=checkbox]{width:18px;height:18px;accent-color:var(--gold);}
+    .check-row label{margin:0;font-size:0.82rem;}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="apex-container">
+    <div class="apex-header">
+        <div class="apex-badge">🏆 Wiam Apex</div>
+        <h1>Contract Submission</h1>
+        <p>Submit your best work for Wiam Apex — our exclusive publishing contract.</p>
+    </div>
+
+    {% if not can_submit %}
+    <div class="cooldown-notice">
+        <p>⏳ {{ cooldown_msg }}</p>
+    </div>
+    {% else %}
+    <form class="apex-form" method="POST" action="{{ url_for('wiambot.apex_submit') }}">
+        <label>Pen Name *</label>
+        <input type="text" name="pen_name" required placeholder="Your author name">
+
+        <label>Email *</label>
+        <input type="email" name="email" required placeholder="Contact email">
+
+        <label>Country *</label>
+        <input type="text" name="country" required placeholder="Your country">
+
+        <label>Story Title *</label>
+        <input type="text" name="title" required placeholder="Title of your story">
+
+        <label>Genre *</label>
+        <select name="genre" required>
+            <option value="">Select genre</option>
+            <option value="Romance">Romance</option>
+            <option value="Fantasy">Fantasy</option>
+            <option value="Thriller">Thriller</option>
+            <option value="Mystery">Mystery</option>
+            <option value="Sci-Fi">Sci-Fi</option>
+            <option value="Horror">Horror</option>
+            <option value="Drama">Drama</option>
+            <option value="Adventure">Adventure</option>
+            <option value="Historical">Historical</option>
+            <option value="Literary Fiction">Literary Fiction</option>
+            <option value="Young Adult">Young Adult</option>
+        </select>
+
+        <label>Logline * <small style="font-weight:400;color:var(--text-muted);">(1-2 sentences that hook the reader)</small></label>
+        <textarea name="logline" rows="2" required placeholder="When [inciting incident], a [protagonist] must [goal], or else [stakes]..."></textarea>
+        <div class="field-hint">A one-sentence pitch. Make us want to read more.</div>
+
+        <label>Synopsis * <small style="font-weight:400;color:var(--text-muted);">(minimum 200 words)</small></label>
+        <textarea name="synopsis" rows="6" required placeholder="Full plot summary including the ending..."></textarea>
+        <div class="field-hint">Reveal the whole plot. This is not a blurb — include the ending.</div>
+
+        <label>Chapter 1 * <small style="font-weight:400;color:var(--text-muted);">(minimum 1,500 words)</small></label>
+        <textarea name="chapter_1" rows="10" required placeholder="Paste your complete Chapter 1..."></textarea>
+
+        <label>Chapter 2 * <small style="font-weight:400;color:var(--text-muted);">(minimum 1,500 words)</small></label>
+        <textarea name="chapter_2" rows="10" required placeholder="Paste your complete Chapter 2..."></textarea>
+
+        <label>Plot Outline * <small style="font-weight:400;color:var(--text-muted);">(minimum 10 structured points)</small></label>
+        <textarea name="outline" rows="8" required placeholder="1. Opening — ...&#10;2. Inciting Incident — ...&#10;3. Rising Action — ...&#10;(one point per line, minimum 10)"></textarea>
+
+        <label>Posting Commitment *</label>
+        <textarea name="posting_commitment" rows="2" required placeholder="e.g. 3 chapters per week, completing the story in 6 months"></textarea>
+
+        <div class="check-row">
+            <input type="checkbox" name="originality_declaration" id="origCheck" required>
+            <label for="origCheck">I declare this is my original work and has not been published elsewhere. *</label>
+        </div>
+
+        <button type="submit" class="apex-submit-btn">Submit for Review</button>
+    </form>
+    {% endif %}
+
+    {% if existing %}
+    <div class="prev-submissions">
+        <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:12px;">Your Submissions</h3>
+        {% for sub in existing %}
+        <a href="{{ url_for('wiambot.apex_status', submission_id=sub.id) }}" class="prev-sub">
+            <div>
+                <div class="ps-title">{{ sub.title }}</div>
+                <div class="ps-meta">Score: {{ sub.total_score }}/100 · {{ sub.created_at.strftime('%b %d, %Y') }}</div>
+            </div>
+            <span class="status-badge {{ sub.status }}">{{ sub.status.replace('_', ' ') }}</span>
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

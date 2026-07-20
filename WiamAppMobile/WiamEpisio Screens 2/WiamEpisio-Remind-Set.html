@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamEpisio — Remind Me Set</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#08081A; --navy-card:#12122A; --navy-soft:#161634; --navy-line:#1E1E42;
+    --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75; --green:#3BB273;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:#000; border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); }
+  svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+
+  .bg-context{ position:absolute; inset:0; opacity:0.55; background:
+      radial-gradient(circle at 30% 20%, rgba(120,30,40,0.5), transparent 55%),
+      radial-gradient(circle at 70% 75%, rgba(30,20,90,0.55), transparent 55%),
+      linear-gradient(165deg,#241030,#0a0a18 60%); }
+  .bg-botgrad{ position:absolute; bottom:0; left:0; right:0; height:40%; background:linear-gradient(0deg, rgba(0,0,0,0.9), transparent); opacity:0.6; }
+
+  .toast{ position:absolute; top:90px; left:20px; right:20px; z-index:5; display:flex; align-items:center; gap:10px; background:rgba(18,18,42,0.94); backdrop-filter:blur(10px); border-radius:14px; padding:12px 15px; box-shadow:0 14px 30px rgba(0,0,0,0.4); border:1px solid rgba(212,160,23,0.35); }
+  .toast-icon{ width:26px; height:26px; border-radius:50%; background:var(--gold); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .toast-icon svg{ color:#08081A; width:14px; height:14px; stroke-width:2.5; }
+  .toast-text{ flex:1; }
+  .toast-text b{ display:block; font-size:12px; font-weight:700; color:#fff; }
+  .toast-text span{ font-size:10.5px; color:var(--text-dim); }
+
+  .content{ position:absolute; left:20px; right:20px; bottom:110px; z-index:4; }
+  .title{ font-size:20px; font-weight:800; color:#fff; margin:0 0 8px; }
+  .meta{ font-size:11.5px; color:#B8B8CC; margin:0 0 16px; }
+  .meta b{ color:var(--gold); }
+
+  .action-row{ display:flex; gap:10px; }
+  .btn-reminded{ flex:1; padding:14px; border-radius:14px; background:var(--navy-card); border:1px solid rgba(59,178,115,0.35); color:var(--green); font-size:13.5px; font-weight:800; display:flex; align-items:center; justify-content:center; gap:8px; font-family:'Inter',sans-serif; }
+  .btn-follow{ width:48px; border-radius:14px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); display:flex; align-items:center; justify-content:center; }
+
+  .label-tag{ position:absolute; bottom:20px; left:20px; right:20px; text-align:center; font-size:10px; color:var(--text-faint); background:var(--navy-card); border:1px solid var(--navy-line); border-radius:10px; padding:8px; z-index:6; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="bg-context"></div>
+  <div class="bg-botgrad"></div>
+
+  <div class="toast">
+    <div class="toast-icon"><svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>
+    <div class="toast-text"><b>We'll remind you</b><span>You'll get a notification when it goes live</span></div>
+  </div>
+
+  <div class="content">
+    <p class="title">The Chief's Daughter</p>
+    <p class="meta">Coming Soon · <b>147</b> interested</p>
+    <div class="action-row">
+      <button class="btn-reminded"><svg viewBox="0 0 24 24" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg>Reminder Set</button>
+      <div class="btn-follow"><svg viewBox="0 0 24 24" width="17" height="17" color="#fff"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+    </div>
+  </div>
+
+  <div class="label-tag">Remind-set pattern — button flips to a checked state, one-time toast confirms</div>
+</div>
+
+</body>
+</html>

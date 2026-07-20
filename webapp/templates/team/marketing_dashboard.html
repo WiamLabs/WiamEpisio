@@ -1,0 +1,116 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Marketing Dashboard — WiamApp{% endblock %}
+{% block sidebar_title %}Marketing Panel{% endblock %}
+
+{% block sidebar_nav %}
+<a class="nav-link active" href="{{ url_for('team.dashboard') }}"><i class="bi bi-speedometer2"></i> Overview</a>
+<div class="sidebar-title" style="margin-top:1rem;">Growth Tools</div>
+<a class="nav-link" href="{{ url_for('team.admin_user_list') }}"><i class="bi bi-people"></i> User Analytics</a>
+<a class="nav-link" href="{{ url_for('admin_dash.content') }}"><i class="bi bi-journal-text"></i> Content Library</a>
+<a class="nav-link" href="{{ url_for('team.careers') }}" target="_blank"><i class="bi bi-globe" style="color:#38bdf8;"></i> Public Careers</a>
+<div class="sidebar-title" style="margin-top:1rem;">Social</div>
+<a class="nav-link" href="https://twitter.com" target="_blank"><i class="bi bi-twitter"></i> Twitter / X</a>
+<a class="nav-link" href="https://instagram.com" target="_blank"><i class="bi bi-instagram" style="color:#e879f9;"></i> Instagram</a>
+<a class="nav-link" href="https://tiktok.com" target="_blank"><i class="bi bi-tiktok"></i> TikTok</a>
+<div class="sidebar-title" style="margin-top:1rem;">Account</div>
+<a class="nav-link" href="{{ url_for('profile.account_safety') }}"><i class="bi bi-shield-check"></i> Account Safety</a>
+{% endblock %}
+
+{% block dash_content %}
+{% include "team/_dashboard_switcher.html" ignore missing %}
+{% include "team/_greeting.html" ignore missing %}
+<div class="dash-header">
+    <h1><i class="bi bi-graph-up-arrow" style="color:#f472b6;"></i> Marketing Dashboard</h1>
+</div>
+
+<!-- Stats -->
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="label">Total Users</div>
+        <div class="value gold">{{ total_users }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">New This Week</div>
+        <div class="value" style="color:#60a5fa;">{{ new_users_week }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Total Favorites</div>
+        <div class="value" style="color:#f472b6;">{{ total_favorites }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Total Ratings</div>
+        <div class="value" style="color:#fbbf24;">{{ total_ratings }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Published Stories</div>
+        <div class="value" style="color:#4ade80;">{{ total_published }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Total Stories</div>
+        <div class="value">{{ total_stories }}</div>
+    </div>
+</div>
+
+<!-- User Growth Chart -->
+<div class="dash-card" style="border-left:3px solid #f472b6;">
+    <h3><i class="bi bi-graph-up" style="color:#f472b6;margin-right:6px;"></i> New Users — Last 7 Days</h3>
+    <div style="display:flex;align-items:flex-end;gap:12px;height:140px;padding:20px 10px 30px;position:relative;">
+        {% set max_count = user_growth|map(attribute='count')|max or 1 %}
+        {% for d in user_growth %}
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;position:relative;">
+            <span style="font-size:0.75rem;font-weight:700;color:var(--gold);margin-bottom:6px;">{{ d.count }}</span>
+            <div style="width:100%;max-width:48px;height:{{ (d.count / max_count * 90 + 6)|int }}px;background:linear-gradient(to top,rgba(244,114,182,0.3),rgba(244,114,182,0.7));border-radius:8px 8px 0 0;transition:height 0.3s;"></div>
+            <span style="font-size:0.7rem;color:var(--text-muted);margin-top:8px;position:absolute;bottom:-22px;">{{ d.day }}</span>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Engagement Overview -->
+<div class="dash-card">
+    <h3><i class="bi bi-heart" style="color:#f87171;margin-right:6px;"></i> Engagement Overview</h3>
+    <div class="stat-grid" style="margin-bottom:0;">
+        <div class="stat-card">
+            <div class="label">Avg Favorites / Story</div>
+            <div class="value" style="color:#f472b6;">{{ '%.1f'|format(total_favorites / total_published) if total_published else '0' }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="label">Avg Ratings / Story</div>
+            <div class="value" style="color:#fbbf24;">{{ '%.1f'|format(total_ratings / total_published) if total_published else '0' }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="label">Users / Story Ratio</div>
+            <div class="value">{{ '%.0f'|format(total_users / total_published) if total_published else '0' }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Key Content Metrics -->
+<div class="dash-card">
+    <h3><i class="bi bi-bullseye" style="color:var(--gold);margin-right:6px;"></i> Key Metrics for Campaigns</h3>
+    <table class="dash-table">
+        <tbody>
+            <tr>
+                <td style="font-weight:600;">Total Registered Users</td>
+                <td style="color:var(--gold);font-weight:700;">{{ total_users }}</td>
+                <td style="color:var(--text-muted);font-size:0.8rem;">Target: 10,000</td>
+            </tr>
+            <tr>
+                <td style="font-weight:600;">Weekly Signups</td>
+                <td style="color:#60a5fa;font-weight:700;">{{ new_users_week }}</td>
+                <td style="color:var(--text-muted);font-size:0.8rem;">Target: 200/week</td>
+            </tr>
+            <tr>
+                <td style="font-weight:600;">Published Stories</td>
+                <td style="color:#4ade80;font-weight:700;">{{ total_published }}</td>
+                <td style="color:var(--text-muted);font-size:0.8rem;">Target: 500</td>
+            </tr>
+            <tr>
+                <td style="font-weight:600;">Community Engagement</td>
+                <td style="color:#f472b6;font-weight:700;">{{ total_favorites + total_ratings }}</td>
+                <td style="color:var(--text-muted);font-size:0.8rem;">Favorites + Ratings</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+{% endblock %}

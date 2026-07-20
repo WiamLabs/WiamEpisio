@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WiamEpisio — Player</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;0,700;1,600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.44.0/iconfont/tabler-icons.min.css">
+<link rel="stylesheet" href="design-system.css">
+<style>
+.player-screen{min-height:844px;position:relative;background:linear-gradient(200deg,#241A0E 0%,#0B0A08 65%)}
+.top-overlay{position:absolute;top:14px;left:14px;right:14px;display:flex;justify-content:space-between;align-items:flex-start;z-index:3}
+.icon-btn{width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center}
+.icon-btn i{font-size:16px;color:var(--paper)}
+.ep-badge{background:rgba(0,0,0,0.4);border-radius:var(--radius-pill);padding:6px 12px;text-align:right}
+.ep-badge .series{font-size:11px;color:var(--smoke);display:block}
+.ep-badge .ep{font-size:12px;font-weight:700;color:var(--paper)}
+.center-play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:64px;height:64px;border-radius:50%;background:rgba(245,239,227,0.14);display:flex;align-items:center;justify-content:center;z-index:3}
+.center-play i{font-size:26px;color:var(--paper)}
+.action-rail{position:absolute;right:12px;bottom:190px;display:flex;flex-direction:column;align-items:center;gap:20px;z-index:3}
+.action-item{display:flex;flex-direction:column;align-items:center;gap:4px}
+.action-circle{width:42px;height:42px;border-radius:50%;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center}
+.action-circle i{font-size:19px;color:var(--paper)}
+.action-count{font-size:10px;font-weight:700;color:var(--paper)}
+.bottom-panel{position:absolute;left:0;right:0;bottom:0;z-index:3;padding:0 16px 18px;background:linear-gradient(to top,rgba(11,10,8,0.92) 30%,rgba(11,10,8,0) 100%);padding-top:70px}
+.watch-info{margin-bottom:12px}
+.watch-title{font-family:var(--font-display);font-weight:600;font-size:17px;color:var(--paper)}
+.watch-series{font-size:12px;color:var(--smoke);margin-top:2px}
+.scrub{height:3px;background:var(--ring-track);border-radius:2px;margin-bottom:8px;position:relative}
+.scrub-fill{position:absolute;left:0;top:0;bottom:0;width:38%;background:var(--ember);border-radius:2px}
+.scrub-time{display:flex;justify-content:space-between;font-size:10px;color:var(--smoke-dim);margin-bottom:14px}
+.up-next{display:flex;align-items:center;gap:10px;background:var(--ink-800);border-radius:var(--radius-card);padding:10px 12px;margin-bottom:10px}
+.up-next-thumb{width:38px;height:38px;border-radius:8px;background:var(--ink-700);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.up-next-thumb i{font-size:14px;color:var(--smoke)}
+.up-next-text{flex:1}
+.up-next-text b{font-size:12px;color:var(--paper);display:block}
+.up-next-text span{font-size:10px;color:var(--smoke)}
+.countdown-ring{--pct:70;width:28px;height:28px}
+.countdown-ring .ring-inner{width:20px;height:20px;background:var(--ink-800);font-size:9px}
+.swipe-hint{text-align:center;font-size:10px;color:var(--smoke-dim);display:flex;align-items:center;justify-content:center;gap:4px}
+</style>
+</head>
+<body>
+
+<div class="device">
+<div class="player-screen">
+
+  <div class="top-overlay">
+    <div class="icon-btn"><i class="ti ti-chevron-left"></i></div>
+    <div class="ep-badge">
+      <span class="series">Ashes of Accra</span>
+      <span class="ep">Ep 7 of 24</span>
+    </div>
+  </div>
+
+  <div class="center-play"><i class="ti ti-player-play-filled"></i></div>
+
+  <div class="action-rail">
+    <div class="action-item">
+      <div class="action-circle"><i class="ti ti-heart"></i></div>
+      <span class="action-count">24.1K</span>
+    </div>
+    <div class="action-item">
+      <div class="action-circle"><i class="ti ti-message-circle"></i></div>
+      <span class="action-count">892</span>
+    </div>
+    <div class="action-item">
+      <div class="action-circle"><i class="ti ti-share"></i></div>
+      <span class="action-count">Share</span>
+    </div>
+    <div class="action-item">
+      <div class="ring" style="--pct:21"><div class="ring-inner" style="width:42px;height:42px;background:rgba(0,0,0,0.4);font-size:8px">5/24<br>free</div></div>
+    </div>
+  </div>
+
+  <div class="bottom-panel">
+
+    <div class="up-next">
+      <div class="countdown-ring ring"><div class="ring-inner">3s</div></div>
+      <div class="up-next-thumb"><i class="ti ti-player-play-filled"></i></div>
+      <div class="up-next-text">
+        <b>Up next · Episode 8</b>
+        <span>Efua's answer · autoplay</span>
+      </div>
+      <div class="icon-btn" style="width:28px;height:28px"><i class="ti ti-x" style="font-size:13px"></i></div>
+    </div>
+
+    <div class="watch-info">
+      <p class="watch-title">The other will</p>
+      <p class="watch-series">Episode 7 · Ashes of Accra</p>
+    </div>
+
+    <div class="scrub"><div class="scrub-fill"></div></div>
+    <div class="scrub-time"><span>2:41</span><span>7:05</span></div>
+
+    <p class="swipe-hint"><i class="ti ti-chevron-up" style="font-size:12px"></i>Swipe up for next episode</p>
+
+  </div>
+
+</div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>WiamEpisio — Watch History</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{ --navy:#08081A; --navy-card:#12122A; --navy-line:#1E1E42; --gold:#D4A017; --gold-dark:#A07810; --text-dim:#7D7D97; --text-faint:#5A5A75; }
+  *{box-sizing:border-box;} body{ margin:0; font-family:'Inter',sans-serif; background:#0a0a0f; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px 0; }
+  .phone{ width:390px; height:844px; background:var(--navy); border-radius:46px; overflow:hidden; position:relative; border:6px solid #000; box-shadow:0 30px 60px rgba(0,0,0,0.5); display:flex; flex-direction:column; }
+  .statusbar{ height:44px; flex-shrink:0; } svg{ stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+  .topbar{ display:flex; align-items:center; gap:12px; padding:2px 20px 14px; flex-shrink:0; }
+  .icon-btn{ width:34px; height:34px; border-radius:50%; background:var(--navy-card); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .topbar h1{ font-size:18px; font-weight:800; color:#fff; margin:0; flex:1; }
+  .clear-link{ font-size:11px; color:var(--gold); font-weight:700; }
+  .scroll{ flex:1; overflow-y:auto; padding:0 20px 20px; }
+  .day-label{ font-size:11px; font-weight:800; color:var(--text-faint); letter-spacing:0.4px; text-transform:uppercase; margin:14px 0 10px; }
+  .day-label:first-child{ margin-top:4px; }
+  .hist-row{ display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--navy-line); }
+  .hist-thumb{ width:52px; height:74px; border-radius:9px; flex-shrink:0; position:relative; overflow:hidden; }
+  .hist-thumb.t1{ background:linear-gradient(160deg,#3a1420,#12122a); } .hist-thumb.t2{ background:linear-gradient(160deg,#1a2a3a,#12122a); } .hist-thumb.t3{ background:linear-gradient(160deg,#241a3a,#0d0d24); }
+  .hist-progress{ position:absolute; bottom:0; left:0; right:0; height:3px; background:rgba(255,255,255,0.2); }
+  .hist-progress-fill{ height:100%; background:var(--gold); }
+  .hist-body{ flex:1; min-width:0; }
+  .hist-title{ font-size:12.5px; font-weight:700; color:#fff; margin:0 0 3px; }
+  .hist-meta{ font-size:10.5px; color:var(--text-dim); margin:0; }
+  .hist-time{ font-size:9.5px; color:var(--text-faint); flex-shrink:0; }
+  .remove-btn{ color:var(--text-faint); flex-shrink:0; }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="statusbar"></div>
+  <div class="topbar"><div class="icon-btn"><svg viewBox="0 0 24 24" width="15" height="15" color="#fff"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></div><h1>Watch History</h1><span class="clear-link">Clear all</span></div>
+
+  <div class="scroll">
+    <p class="day-label">Today</p>
+    <div class="hist-row"><div class="hist-thumb t1"><div class="hist-progress"><div class="hist-progress-fill" style="width:64%;"></div></div></div><div class="hist-body"><p class="hist-title">The Chief's Daughter — EP 14</p><p class="hist-meta">Old Wounds · 64% watched</p></div><span class="hist-time">11:40 AM</span><svg class="remove-btn" viewBox="0 0 24 24" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+    <div class="hist-row"><div class="hist-thumb t2"><div class="hist-progress"><div class="hist-progress-fill" style="width:100%;"></div></div></div><div class="hist-body"><p class="hist-title">The Chief's Daughter — EP 13</p><p class="hist-meta">The Warning · Completed</p></div><span class="hist-time">9:12 AM</span><svg class="remove-btn" viewBox="0 0 24 24" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+
+    <p class="day-label">Yesterday</p>
+    <div class="hist-row"><div class="hist-thumb t3"><div class="hist-progress"><div class="hist-progress-fill" style="width:100%;"></div></div></div><div class="hist-body"><p class="hist-title">Accra Nights — EP 12</p><p class="hist-meta">Completed</p></div><span class="hist-time">7:04 PM</span><svg class="remove-btn" viewBox="0 0 24 24" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+    <div class="hist-row"><div class="hist-thumb t1"><div class="hist-progress"><div class="hist-progress-fill" style="width:100%;"></div></div></div><div class="hist-body"><p class="hist-title">Accra Nights — EP 11</p><p class="hist-meta">Completed</p></div><span class="hist-time">6:55 PM</span><svg class="remove-btn" viewBox="0 0 24 24" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+    <div class="hist-row"><div class="hist-thumb t2"><div class="hist-progress"><div class="hist-progress-fill" style="width:38%;"></div></div></div><div class="hist-body"><p class="hist-title">My Father is Thor — EP 29</p><p class="hist-meta">38% watched</p></div><span class="hist-time">2:20 PM</span><svg class="remove-btn" viewBox="0 0 24 24" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+
+    <p class="day-label">This week</p>
+    <div class="hist-row"><div class="hist-thumb t3"><div class="hist-progress"><div class="hist-progress-fill" style="width:100%;"></div></div></div><div class="hist-body"><p class="hist-title">Love Delayed — EP 3</p><p class="hist-meta">Completed</p></div><span class="hist-time">Monday</span><svg class="remove-btn" viewBox="0 0 24 24" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+  </div>
+</div>
+</body>
+</html>
