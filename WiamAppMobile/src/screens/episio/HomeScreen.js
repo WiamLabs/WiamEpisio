@@ -179,23 +179,21 @@ const HomeScreen = () => {
             </Text>
           </View>
           <View style={styles.headerIcons}>
+            <TouchableOpacity
+              style={styles.coinPill}
+              onPress={() => navigation.navigate('BuyCoins')}
+            >
+              <Coins size={13} color={COLORS.navy} fill={COLORS.navy} />
+              <Text style={styles.coinPillText}>{isAuthenticated ? balance : 'Buy'}</Text>
+            </TouchableOpacity>
             {!isAuthenticated ? (
               <TouchableOpacity style={styles.signInPill} onPress={() => navigation.navigate('Login')}>
                 <Text style={styles.signInText}>Sign In</Text>
               </TouchableOpacity>
             ) : (
-              <>
-                <TouchableOpacity
-                  style={styles.coinPill}
-                  onPress={() => navigation.navigate('BuyCoins')}
-                >
-                  <Coins size={13} color={COLORS.navy} fill={COLORS.navy} />
-                  <Text style={styles.coinPillText}>{balance}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('Notifications')}>
-                  <Bell size={16} color="#C9C9DE" />
-                </TouchableOpacity>
-              </>
+              <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('Notifications')}>
+                <Bell size={16} color="#C9C9DE" />
+              </TouchableOpacity>
             )}
           </View>
         </View>

@@ -23,6 +23,8 @@ const LoginRequiredSheetScreen = () => {
   const title = route.params?.title || 'Sign in to continue';
   const message = route.params?.message
     || 'Following creators, saving to My List, and unlocking episodes needs a free account.';
+  const returnTo = route.params?.returnTo;
+  const returnParams = route.params?.returnParams || {};
 
   const keepBrowsing = () => {
     if (navigation.canGoBack()) {
@@ -54,13 +56,13 @@ const LoginRequiredSheetScreen = () => {
 
         <EpisioGoldButton
           label="Sign Up Free"
-          onPress={() => navigation.navigate('AuthRegister')}
+          onPress={() => navigation.navigate('AuthRegister', { returnTo, returnParams })}
           style={styles.primary}
         />
         <EpisioGoldButton
           variant="ghost"
           label="I already have an account"
-          onPress={() => navigation.navigate('Login')}
+          onPress={() => navigation.navigate('Login', { returnTo, returnParams })}
           style={styles.ghost}
         />
         <TouchableOpacity onPress={keepBrowsing} hitSlop={12}>

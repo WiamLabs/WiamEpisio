@@ -146,15 +146,40 @@ const ProfileScreen = () => {
         </View>
 
         <View style={styles.guestMenuGroup}>
-          {/* Guests must log in before wallet / coins / rewards */}
-          <GuestMenuRow title="Top Up" onPress={() => navigation.navigate('Login')} />
-          <GuestMenuRow title="My Wallet" value={0} onPress={() => navigation.navigate('Login')} />
-          <GuestMenuRow title="Earn Rewards" onPress={() => navigation.navigate('Login')} />
-          <GuestMenuRow title="History" onPress={() => navigation.navigate('Login')} />
+          <GuestMenuRow title="Top Up" onPress={() => navigation.navigate('BuyCoins')} />
+          <GuestMenuRow
+            title="My Wallet"
+            value={0}
+            onPress={() => navigation.navigate('LoginRequiredSheet', {
+              title: 'Sign up for a wallet',
+              message: 'Create a free account to keep coins and purchases safe.',
+              returnTo: 'BuyCoins',
+            })}
+          />
+          <GuestMenuRow
+            title="Earn Rewards"
+            onPress={() => navigation.navigate('LoginRequiredSheet', {
+              title: 'Sign up for rewards',
+              message: 'Daily rewards need a free WiamEpisio account.',
+              returnTo: 'DailyRewards',
+            })}
+          />
+          <GuestMenuRow
+            title="History"
+            onPress={() => navigation.navigate('LoginRequiredSheet', {
+              title: 'Sign up to see history',
+              message: 'Transaction history is saved on your account.',
+              returnTo: 'TransactionHistory',
+            })}
+          />
           <GuestMenuRow
             title="Download"
             last
-            onPress={() => navigation.navigate('Login')}
+            onPress={() => navigation.navigate('LoginRequiredSheet', {
+              title: 'Sign up to download',
+              message: 'Offline downloads need a free WiamEpisio account.',
+              returnTo: 'DownloadsManager',
+            })}
           />
         </View>
 

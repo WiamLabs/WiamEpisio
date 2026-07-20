@@ -8,7 +8,7 @@ import {
   KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator, Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { X, Mail, Lock, Eye, EyeOff } from 'lucide-react-native';
 import { COLORS, FONTS } from '../../constants/theme';
 import LogoBadge from '../../components/episio/LogoBadge';
@@ -20,7 +20,10 @@ import { GoogleSignInSlot } from '../../services/googleAuth';
 const LoginScreen = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
+  const route = useRoute();
   const setAuth = useAuthStore((s) => s.setAuth);
+  const returnTo = route.params?.returnTo;
+  const returnParams = route.params?.returnParams || {};
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
@@ -32,6 +35,10 @@ const LoginScreen = () => {
 
   const finishAuth = async (data) => {
     await setAuth(data.user, data.token);
+    if (returnTo) {
+      navigation.replace(returnTo, returnParams);
+      return;
+    }
     if (navigation.canGoBack()) navigation.goBack();
     else navigation.replace('Main');
   };
@@ -150,7 +157,7 @@ const LoginScreen = () => {
         </GoogleSignInSlot>
 
         <View style={styles.bottom}>
-          <TouchableOpacity onPress={() => navigation.replace('AuthRegister')}>
+          <TouchableOpacity onPress={() => navigation.replace('AuthRegister', { returnTo, returnParams })}>
             <Text style={styles.signup}>
               {"Don't have an account? "}
               <Text style={{ color: COLORS.gold, fontFamily: FONTS.bold }}>Sign up</Text>

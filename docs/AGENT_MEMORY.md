@@ -2,7 +2,9 @@
 
 Living journal the AI agent reads at the start of every session and updates as work progresses. Mutable — overwrite freely. Durable project facts live in `.cursor/rules/project-context.mdc` instead.
 
-**Last updated:** 2026-07-20 — **Standing order from Martin:** after finishing meaningful work, **commit + push to `master`** so Render auto-deploys. Do not leave shippable Episio/webapp changes only local.
+**Last updated:** 2026-07-20 — **Restored email signup (no SMS).** Guest: Buy Coins open from Home/Profile; downloads require signup; one-series watch unchanged. Checkout still needs email account so IAP credits wallet.
+
+**Standing order from Martin:** after finishing meaningful work, **commit + push to `master`** so Render auto-deploys. Do not leave shippable Episio/webapp changes only local.
 
 **Previous — Account delete auth + RLS SQL + hide CDN names in delete UI.** Creator/Watcher mood, media crop, episode preview also on `b428fef`.
 

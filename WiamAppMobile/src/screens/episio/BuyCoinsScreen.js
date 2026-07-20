@@ -151,7 +151,7 @@ const BuyCoinsScreen = () => {
 
         {!isAuthenticated ? (
           <Text style={styles.guestHint}>
-            Browse packs freely. Checkout uses Apple / Google in-app purchase — sign in once so coins credit to your wallet.
+            Guests can buy coins. Create a free email account at checkout so packs credit to your wallet (Apple / Google billing). No SMS.
           </Text>
         ) : null}
 
@@ -169,8 +169,8 @@ const BuyCoinsScreen = () => {
                   if (pkg._iap) buyIap(pkg._iap);
                   else if (!isAuthenticated) {
                     navigation.navigate('LoginRequiredSheet', {
-                      title: 'Sign in to buy',
-                      message: 'In-app purchases need an account so coins stay on your profile.',
+                      title: 'Quick email signup to buy',
+                      message: 'Guests can buy coins — a free email account keeps them on your wallet. No SMS. Then you return here to checkout.',
                       returnTo: 'BuyCoins',
                     });
                   } else {

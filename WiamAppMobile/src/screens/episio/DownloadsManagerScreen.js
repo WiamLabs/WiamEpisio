@@ -58,8 +58,9 @@ const DownloadsManagerScreen = () => {
           <TouchableOpacity
             style={styles.cta}
             onPress={() => navigation.navigate('LoginRequiredSheet', {
-              title: 'Sign in to download',
-              message: 'Offline downloads need a free WiamEpisio account.',
+              title: 'Sign up to download',
+              message: 'Offline downloads need a free email account. Guests can watch one series but cannot save videos offline.',
+              returnTo: 'DownloadsManager',
             })}
           >
             <Text style={styles.ctaText}>Sign in / Register</Text>
