@@ -92,10 +92,15 @@ def jwt_required(f):
     """Decorator: require a valid JWT in the Authorization header."""
     @wraps(f)
     def decorated(*args, **kwargs):
-        auth_header = request.headers.get('Authorization', '')
-        if not auth_header.startswith('Bearer '):
+        auth_header = (
+            request.headers.get('Authorization')
+            or request.headers.get('authorization')
+            or ''
+        )
+        parts = auth_header.split(None, 1)
+        if len(parts) != 2 or parts[0].lower() != 'bearer' or not parts[1].strip():
             return jsonify({'error': 'Missing or invalid Authorization header'}), 401
-        token = auth_header[7:]
+        token = parts[1].strip()
         user_id = _decode_token(token)
         if not user_id:
             return jsonify({'error': 'Invalid or expired token'}), 401
@@ -104,6 +109,8 @@ def jwt_required(f):
             return jsonify({'error': 'User not found'}), 401
         if user.status == 'banned':
             return jsonify({'error': 'Account is banned'}), 403
+        if user.status == 'deleted':
+            return jsonify({'error': 'Account no longer exists'}), 401
         # Centralized premium expiry enforcement
         from ..services.premium_service import check_and_expire_premium
         check_and_expire_premium(user)
@@ -1009,11 +1016,10 @@ def change_password():
 @api_v1.route('/auth/delete-account', methods=['POST'])
 @jwt_required
 def delete_account():
-    """Soft-delete the current user account and clean up Cloudinary assets.
+    """Hard-delete the current user and related data from the database.
 
-    The user row is kept (``status='deleted'``) for audit + foreign-key safety,
-    but every Cloudinary asset they own — avatar, every book cover, every voice
-    story cover — is destroyed so we don't leak storage on the free CDN tier.
+    Requires password. Also best-effort Cloudinary cleanup, then full purge
+    (same path as founder/web delete) so the account does not linger soft-deleted.
     """
     user = request.api_user
     data = request.get_json(silent=True) or {}
@@ -1024,26 +1030,46 @@ def delete_account():
     if not user.check_password(password):
         return jsonify({'error': 'Incorrect password'}), 400
 
-    # Cloudinary cleanup — best-effort, never blocks the soft-delete.
+    user_id = user.id
+    uid = user.wiam_id or user.id
+
+    # Cloudinary cleanup — best-effort before row purge.
     try:
         from ..services.image_service import (
             delete_avatar as _del_avatar,
             delete_cover as _del_cover,
             delete_voice_cover as _del_voice_cover,
+            delete_image_url,
         )
-        from ..models import Content, VoiceStory
+        from ..models import Content, VoiceStory, EpisioCreatorPublicProfile
 
         try:
+            if user.avatar_url and 'res.cloudinary.com' in str(user.avatar_url):
+                delete_image_url(user.avatar_url)
             _del_avatar(user.id)
         except Exception as _exc:
             log.warning("delete-account avatar cleanup skipped for %s: %s", user.id, _exc)
 
+        try:
+            pub = EpisioCreatorPublicProfile.query.get(uid)
+            if pub:
+                if pub.avatar_url:
+                    delete_image_url(pub.avatar_url)
+                if pub.banner_url:
+                    delete_image_url(pub.banner_url)
+        except Exception as _exc:
+            log.warning("delete-account channel media cleanup skipped: %s", _exc)
+
         owned_books = Content.query.filter(
             (Content.creator_wiam_id == user.wiam_id) | (Content.creator_wiam_id == user.id)
-        ).all() if user.wiam_id else []
+        ).all() if user.wiam_id else Content.query.filter_by(creator_wiam_id=user.id).all()
         for _bk in owned_books:
             try:
                 _del_cover(_bk.id)
+                if getattr(_bk, 'cover_url', None):
+                    delete_image_url(_bk.cover_url)
+                if getattr(_bk, 'banner_url', None):
+                    delete_image_url(_bk.banner_url)
             except Exception as _exc:
                 log.warning("delete-account cover cleanup skipped for book %s: %s", _bk.id, _exc)
 
@@ -1058,9 +1084,37 @@ def delete_account():
     except Exception as _exc:
         log.warning("delete-account Cloudinary cleanup top-level failure: %s", _exc)
 
-    user.status = 'deleted'
-    db.session.commit()
-    return jsonify({'message': 'Account deleted'})
+    # Hard purge every related row + the user record.
+    try:
+        from .profile import _purge_user_data
+        # Extra Episio studio rows keyed by wiam_id / user id
+        try:
+            from ..models import (
+                EpisioCreatorPublicProfile, EpisioCreatorApplication,
+                EpisioCreatorInviteRedemption, CreatorEarnings, CreatorPayoutSettings,
+            )
+            EpisioCreatorInviteRedemption.query.filter_by(user_id=uid).delete(synchronize_session=False)
+            EpisioCreatorApplication.query.filter_by(user_id=uid).delete(synchronize_session=False)
+            EpisioCreatorPublicProfile.query.filter_by(user_id=uid).delete(synchronize_session=False)
+            try:
+                CreatorEarnings.query.filter_by(creator_id=uid).delete(synchronize_session=False)
+            except Exception:
+                pass
+            try:
+                CreatorPayoutSettings.query.filter_by(creator_id=uid).delete(synchronize_session=False)
+            except Exception:
+                pass
+            db.session.commit()
+        except Exception as _exc:
+            db.session.rollback()
+            log.warning("delete-account episio row cleanup: %s", _exc)
+
+        _purge_user_data(user_id, uid)
+    except Exception as exc:
+        log.exception("delete-account hard purge failed for %s: %s", user_id, exc)
+        return jsonify({'error': 'Could not fully delete account. Contact support@wiamapp.com.'}), 500
+
+    return jsonify({'ok': True, 'message': 'Account permanently deleted'})
 
 
 # ---------------------------------------------------------------------------
@@ -2907,11 +2961,18 @@ def reader_badges():
 # CREATORS — Profile, Follow
 # ---------------------------------------------------------------------------
 
-@api_v1.route('/creators/<int:creator_id>')
+@api_v1.route('/creators/<creator_id>')
 @jwt_optional
 def creator_profile(creator_id):
     """Get a creator's profile."""
-    user = User.query.get(creator_id)
+    user = None
+    try:
+        cid = int(creator_id)
+        user = User.query.get(cid)
+    except (TypeError, ValueError):
+        cid = None
+    if not user:
+        user = User.query.filter_by(wiam_id=str(creator_id)).first()
     if not user or not user.is_creator:
         return jsonify({'error': 'Creator not found'}), 404
 
@@ -2959,8 +3020,8 @@ def creator_profile(creator_id):
         'id': user.id,
         'username': user.username,
         'display_name': display,
-        'avatar_url': (pub.avatar_url if pub and pub.avatar_url else None) or user.avatar_url,
-        'banner_url': (pub.banner_url if pub else None) or None,
+        'avatar_url': _abs_url((pub.avatar_url if pub and pub.avatar_url else None) or user.avatar_url),
+        'banner_url': _abs_url(pub.banner_url if pub and pub.banner_url else None),
         'bio': bio,
         'tagline': (pub.tagline if pub else None) or None,
         'pen_name': profile.pen_name if profile else display,
@@ -2975,6 +3036,8 @@ def creator_profile(creator_id):
         'facebook': (pub.facebook if pub else None) or None,
         'genres': genres if isinstance(genres, list) else [],
         'follower_count': follower_count,
+        'series_count': len(drama),
+        'total_views': sum(int(getattr(d, 'view_count', 0) or getattr(d, 'views', 0) or 0) for d in drama),
         'is_following': is_following,
         'verified': bool(getattr(user, 'is_verified', False) or getattr(user, 'is_founder', False)),
         'book_count': len(books),

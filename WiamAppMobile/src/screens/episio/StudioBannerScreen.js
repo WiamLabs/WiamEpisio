@@ -8,12 +8,12 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
-import * as ImagePicker from 'expo-image-picker';
 import { ChevronLeft, BarChart2, Monitor } from 'lucide-react-native';
 import EpisioGoldButton from '../../components/episio/EpisioGoldButton';
 import { COLORS, FONTS } from '../../constants/theme';
 import studioEpisioApi from '../../api/studioEpisio';
 import resolveUrl from '../../utils/resolveUrl';
+import { pickCroppedImage } from '../../utils/pickMedia';
 
 const WHERE_USED = [
   { icon: BarChart2, text: 'Home page hero carousel, when your series is featured by the team' },
@@ -49,20 +49,12 @@ const StudioBannerScreen = () => {
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
   const pickBanner = async () => {
-    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) {
-      Alert.alert('Permission needed', 'Allow photo access to pick a banner.');
-      return;
-    }
-    const pick = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.85,
-    });
-    if (pick.canceled || !pick.assets?.[0]?.uri) return;
+    const uri = await pickCroppedImage('banner');
+    if (!uri) return;
     setBusy(true);
     try {
-      await studioEpisioApi.uploadBanner(seriesId, pick.assets[0].uri);
-      setPreviewUri(pick.assets[0].uri);
+      await studioEpisioApi.uploadBanner(seriesId, uri);
+      setPreviewUri(uri);
       setPass(true);
       Alert.alert('Banner uploaded', 'Our team may feature strong banners on Home.');
       await load();

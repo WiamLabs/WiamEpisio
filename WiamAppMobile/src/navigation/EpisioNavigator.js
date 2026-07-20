@@ -9,6 +9,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import * as SplashScreen from 'expo-splash-screen';
 import useAuthStore from '../store/useAuthStore';
+import useAppModeStore from '../store/useAppModeStore';
 import { COLORS } from '../constants/theme';
 import BottomTabBar from '../components/episio/BottomTabBar';
 import { setupNotificationListeners } from '../services/pushNotifications';
@@ -47,6 +48,8 @@ import CreatorApplyScreen from '../screens/episio/CreatorApplyScreen';
 import CreatorApplyInviteOnlyScreen from '../screens/episio/CreatorApplyInviteOnlyScreen';
 import CreatorTrustTierScreen from '../screens/episio/CreatorTrustTierScreen';
 import StudioHomeScreen from '../screens/episio/StudioHomeScreen';
+import StudioSeriesTabScreen from '../screens/episio/StudioSeriesTabScreen';
+import StudioProfileTabScreen from '../screens/episio/StudioProfileTabScreen';
 import StudioSeriesCreateScreen from '../screens/episio/StudioSeriesCreateScreen';
 import StudioSeriesDetailScreen from '../screens/episio/StudioSeriesDetailScreen';
 import StudioSpecsScreen from '../screens/episio/StudioSpecsScreen';
@@ -137,8 +140,29 @@ const NavTheme = {
 };
 
 function MainTabs() {
+  const mode = useAppModeStore((s) => s.mode);
+  const user = useAuthStore((s) => s.user);
+  const creatorMood = mode === 'creator' && !!user?.is_creator;
+
+  if (creatorMood) {
+    return (
+      <Tab.Navigator
+        key="creator-tabs"
+        tabBar={(props) => <BottomTabBar {...props} />}
+        screenOptions={{ headerShown: false }}
+      >
+        <Tab.Screen name="CreatorHome" component={StudioHomeScreen} options={{ tabBarLabel: 'Home' }} />
+        <Tab.Screen name="CreatorSeries" component={StudioSeriesTabScreen} options={{ tabBarLabel: 'Series' }} />
+        <Tab.Screen name="CreatorAnalytics" component={StudioAnalyticsScreen} options={{ tabBarLabel: 'Analytics' }} />
+        <Tab.Screen name="CreatorEarnings" component={StudioEarningsScreen} options={{ tabBarLabel: 'Earnings' }} />
+        <Tab.Screen name="CreatorProfile" component={StudioProfileTabScreen} options={{ tabBarLabel: 'Profile' }} />
+      </Tab.Navigator>
+    );
+  }
+
   return (
     <Tab.Navigator
+      key="watcher-tabs"
       tabBar={(props) => <BottomTabBar {...props} />}
       screenOptions={{ headerShown: false }}
     >
@@ -155,11 +179,14 @@ const EpisioNavigator = () => {
   const isLoading = useAuthStore((s) => s.isLoading);
   const checkAuth = useAuthStore((s) => s.checkAuth);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const hydrateMode = useAppModeStore((s) => s.hydrate);
+  const modeHydrated = useAppModeStore((s) => s.hydrated);
   const navigationRef = React.useRef(null);
 
   useEffect(() => {
     checkAuth();
-  }, [checkAuth]);
+    hydrateMode();
+  }, [checkAuth, hydrateMode]);
 
   useEffect(() => {
     const base = (CONFIG.API_URL || '').replace(/\/api\/v1\/?$/, '');
@@ -180,7 +207,7 @@ const EpisioNavigator = () => {
     }
   }, [isLoading]);
 
-  if (isLoading) {
+  if (isLoading || !modeHydrated) {
     return (
       <View style={{ flex: 1, backgroundColor: COLORS.navy, alignItems: 'center', justifyContent: 'center' }}>
         <ActivityIndicator color={COLORS.gold} />

@@ -1,22 +1,27 @@
 /**
- * WiamEpisio-Creator-Viewer-Switch.html — interstitial → StudioHome.
+ * WiamEpisio-Creator-Viewer-Switch.html — interstitial between Watcher ↔ Creator mood.
  */
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { CommonActions, useNavigation, useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Clapperboard, Play } from 'lucide-react-native';
 import useAuthStore from '../../store/useAuthStore';
+import useAppModeStore from '../../store/useAppModeStore';
 import { COLORS, FONTS, RADIUS } from '../../constants/theme';
 
-const HOLD_MS = 1500;
+const HOLD_MS = 1400;
 
 const CreatorViewerSwitchScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const insets = useSafeAreaInsets();
   const user = useAuthStore((s) => s.user);
+  const setMode = useAppModeStore((s) => s.setMode);
+
+  const direction = route.params?.direction === 'watcher' ? 'watcher' : 'creator';
+  const toCreator = direction === 'creator';
 
   const accountName = user?.display_name
     || user?.username
@@ -25,43 +30,78 @@ const CreatorViewerSwitchScreen = () => {
   const studioLabel = route.params?.studioName
     || user?.creator_name
     || user?.channel_name
+    || user?.display_name
     || 'WiamStudio';
 
   useEffect(() => {
-    const t = setTimeout(() => {
-      const target = route.params?.target || 'StudioHome';
-      try {
-        navigation.replace(target, route.params?.targetParams || {});
-      } catch {
-        navigation.navigate(target, route.params?.targetParams || {});
-      }
-    }, HOLD_MS);
-    return () => clearTimeout(t);
-  }, [navigation, route.params]);
+    let cancelled = false;
+    (async () => {
+      await setMode(toCreator ? 'creator' : 'watcher');
+      await new Promise((r) => setTimeout(r, HOLD_MS));
+      if (cancelled) return;
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: 'Main' }],
+        }),
+      );
+    })();
+    return () => { cancelled = true; };
+  }, [navigation, setMode, toCreator]);
 
   return (
     <View style={[styles.root, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
       <View style={styles.glow} pointerEvents="none" />
 
       <View style={styles.icons}>
-        <View style={[styles.iconCircle, styles.iconDim]}>
-          <Play size={22} color={COLORS.textFaint} />
-        </View>
-        <Text style={styles.arrow}>→</Text>
-        <LinearGradient
-          colors={[COLORS.gold, COLORS.goldDark]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.iconCircle}
-        >
-          <Clapperboard size={22} color={COLORS.navy} />
-        </LinearGradient>
+        {toCreator ? (
+          <>
+            <View style={[styles.iconCircle, styles.iconDim]}>
+              <Play size={22} color={COLORS.textFaint} />
+            </View>
+            <Text style={styles.arrow}>→</Text>
+            <LinearGradient
+              colors={[COLORS.gold, COLORS.goldDark]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.iconCircle}
+            >
+              <Clapperboard size={22} color={COLORS.navy} />
+            </LinearGradient>
+          </>
+        ) : (
+          <>
+            <LinearGradient
+              colors={[COLORS.gold, COLORS.goldDark]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={[styles.iconCircle, { opacity: 0.55 }]}
+            >
+              <Clapperboard size={22} color={COLORS.navy} />
+            </LinearGradient>
+            <Text style={styles.arrow}>→</Text>
+            <View style={[styles.iconCircle, styles.iconDim, { borderColor: COLORS.gold }]}>
+              <Play size={22} color={COLORS.gold} />
+            </View>
+          </>
+        )}
       </View>
 
-      <Text style={styles.title}>Switching to WiamStudio</Text>
+      <Text style={styles.title}>
+        {toCreator ? 'Switching to WiamStudio' : 'Switching to Watcher Mood'}
+      </Text>
       <Text style={styles.sub}>
-        Same account, creator mode. Your viewer profile stays exactly as you left it —{' '}
-        <Text style={styles.em}>{studioLabel}</Text> is loading.
+        {toCreator ? (
+          <>
+            Same account, creator mode. Your viewer profile stays exactly as you left it —{' '}
+            <Text style={styles.em}>{studioLabel}</Text> is loading.
+          </>
+        ) : (
+          <>
+            Back to watching. Your Studio series stay saved —{' '}
+            <Text style={styles.em}>{studioLabel}</Text> waits when you return.
+          </>
+        )}
       </Text>
 
       <ActivityIndicator color={COLORS.gold} style={{ marginTop: 28 }} />

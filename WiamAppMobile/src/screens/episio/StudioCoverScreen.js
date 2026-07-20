@@ -8,12 +8,12 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
-import * as ImagePicker from 'expo-image-picker';
 import { ChevronLeft, Check } from 'lucide-react-native';
 import EpisioGoldButton from '../../components/episio/EpisioGoldButton';
 import { COLORS, FONTS } from '../../constants/theme';
 import studioEpisioApi from '../../api/studioEpisio';
 import resolveUrl from '../../utils/resolveUrl';
+import { pickCroppedImage } from '../../utils/pickMedia';
 
 const CHECKS = [
   '2:3 portrait ratio',
@@ -57,20 +57,12 @@ const StudioCoverScreen = () => {
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
   const pickCover = async () => {
-    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) {
-      Alert.alert('Permission needed', 'Allow photo access to pick a cover.');
-      return;
-    }
-    const pick = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.85,
-    });
-    if (pick.canceled || !pick.assets?.[0]?.uri) return;
+    const uri = await pickCroppedImage([2, 3]);
+    if (!uri) return;
     setBusy(true);
     try {
-      await studioEpisioApi.uploadCover(seriesId, pick.assets[0].uri);
-      setPreviewUri(pick.assets[0].uri);
+      await studioEpisioApi.uploadCover(seriesId, uri);
+      setPreviewUri(uri);
       setPass(true);
       Alert.alert('Cover uploaded', 'The WiamEpisio team will check it during review.');
       await load();

@@ -7,12 +7,12 @@ import {
   View, Text, StyleSheet, Alert, ActivityIndicator, TouchableOpacity,
 } from 'react-native';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
-import * as ImagePicker from 'expo-image-picker';
 import { Check, RefreshCw } from 'lucide-react-native';
 import EpisioScreenShell from '../../components/episio/EpisioScreenShell';
 import EpisioGoldButton from '../../components/episio/EpisioGoldButton';
 import { COLORS, FONTS } from '../../constants/theme';
 import studioEpisioApi from '../../api/studioEpisio';
+import { pickVideo } from '../../utils/pickMedia';
 
 const StudioTrailerScreen = () => {
   const navigation = useNavigation();
@@ -47,17 +47,8 @@ const StudioTrailerScreen = () => {
       Alert.alert('Season locked', 'Trailer replace opens when Needs Changes allows a fix window.');
       return;
     }
-    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) {
-      Alert.alert('Permission needed', 'Allow media access to pick a trailer.');
-      return;
-    }
-    const pick = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Videos,
-      quality: 1,
-    });
-    if (pick.canceled || !pick.assets?.[0]) return;
-    const asset = pick.assets[0];
+    const asset = await pickVideo();
+    if (!asset) return;
     let seconds = 42;
     if (asset.duration) {
       seconds = asset.duration > 1000 ? Math.round(asset.duration / 1000) : Math.round(asset.duration);

@@ -1,10 +1,12 @@
 /**
  * Layout: WiamStudio-Series-Create + Series vs Season choice (team copy).
  * structure_mode: series (one complete story) | season (Season N — submit season-by-season)
+ * KeyboardAvoidingView + scroll so Next stays reachable.
  */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView,
+  KeyboardAvoidingView, Platform, Keyboard,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -17,6 +19,7 @@ import { useEpisioGenres } from '../../hooks/useEpisioGenres';
 const StudioSeriesCreateScreen = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
+  const scrollRef = useRef(null);
   const { genres: GENRES } = useEpisioGenres();
   const [title, setTitle] = useState('');
   const [synopsis, setSynopsis] = useState('');
@@ -33,8 +36,13 @@ const StudioSeriesCreateScreen = () => {
     }
   }, [GENRES, genre]);
 
+  const scrollToEnd = () => {
+    setTimeout(() => scrollRef.current?.scrollToEnd?.({ animated: true }), 100);
+  };
+
   const create = async () => {
     setError(null);
+    Keyboard.dismiss();
     if (title.trim().length < 2) {
       setError('Title required');
       return;
@@ -71,105 +79,135 @@ const StudioSeriesCreateScreen = () => {
   };
 
   return (
-    <ScrollView style={[styles.root, { paddingTop: insets.top + 8 }]} contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }}>
-      <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
-        <ChevronLeft size={20} color={COLORS.text} />
-      </TouchableOpacity>
-
-      <Text style={styles.stepLabel}>Step 1 of 4 — Identity</Text>
-      <View style={styles.stepTrack}>
-        <View style={[styles.stepSeg, styles.stepDone]} />
-        <View style={styles.stepSeg} />
-        <View style={styles.stepSeg} />
-        <View style={styles.stepSeg} />
-      </View>
-
-      <Text style={styles.title}>Tell us about the series</Text>
-      <Text style={styles.hint}>
-        This becomes the public series page once live. The WiamEpisio team reviews the full unit you submit — every episode + trailer — before anything goes live.
-      </Text>
-
-      <Text style={styles.label}>How is this story structured?</Text>
-
-      <TouchableOpacity
-        style={[styles.choice, structure === 'series' && styles.choiceOn]}
-        onPress={() => setStructure('series')}
+    <KeyboardAvoidingView
+      style={[styles.root, { paddingTop: insets.top + 8 }]}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
+    >
+      <ScrollView
+        ref={scrollRef}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 48 }}
       >
-        <View style={styles.choiceTop}>
-          <Text style={styles.choiceTitle}>Series (no seasons)</Text>
-          {structure === 'series' ? <Check size={16} color={COLORS.gold} /> : null}
+        <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
+          <ChevronLeft size={20} color={COLORS.text} />
+        </TouchableOpacity>
+
+        <Text style={styles.stepLabel}>Step 1 of 4 — Identity</Text>
+        <View style={styles.stepTrack}>
+          <View style={[styles.stepSeg, styles.stepDone]} />
+          <View style={styles.stepSeg} />
+          <View style={styles.stepSeg} />
+          <View style={styles.stepSeg} />
         </View>
-        <Text style={styles.choiceBody}>
-          One complete story. You upload all planned episodes, lock the series, and submit once.
-          Best when the story ends in this batch — not split into Season 1 / Season 2.
-        </Text>
-      </TouchableOpacity>
 
-      <TouchableOpacity
-        style={[styles.choice, structure === 'season' && styles.choiceOn]}
-        onPress={() => setStructure('season')}
-      >
-        <View style={styles.choiceTop}>
-          <Text style={styles.choiceTitle}>Season (multi-season show)</Text>
-          {structure === 'season' ? <Check size={16} color={COLORS.gold} /> : null}
+        <Text style={styles.title}>Tell us about the series</Text>
+        <Text style={styles.hint}>
+          This becomes the public series page once live. The WiamEpisio team reviews the full unit you submit — every episode + trailer — before anything goes live.
+        </Text>
+
+        <Text style={styles.label}>How is this story structured?</Text>
+
+        <TouchableOpacity
+          style={[styles.choice, structure === 'series' && styles.choiceOn]}
+          onPress={() => setStructure('series')}
+        >
+          <View style={styles.choiceTop}>
+            <Text style={styles.choiceTitle}>Series (no seasons)</Text>
+            {structure === 'series' ? <Check size={16} color={COLORS.gold} /> : null}
+          </View>
+          <Text style={styles.choiceBody}>
+            One complete story. You upload all planned episodes, lock the series, and submit once.
+            Best when the story ends in this batch — not split into Season 1 / Season 2.
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.choice, structure === 'season' && styles.choiceOn]}
+          onPress={() => setStructure('season')}
+        >
+          <View style={styles.choiceTop}>
+            <Text style={styles.choiceTitle}>Season (multi-season show)</Text>
+            {structure === 'season' ? <Check size={16} color={COLORS.gold} /> : null}
+          </View>
+          <Text style={styles.choiceBody}>
+            This upload is one season of a longer show. Finish every episode in this season, lock it, and submit season-by-season.
+            Season 2 only after Season 1 is live. Our team checks this season fully before publish.
+          </Text>
+        </TouchableOpacity>
+
+        {structure === 'season' ? (
+          <>
+            <Text style={styles.label}>Season number</Text>
+            <TextInput
+              style={styles.input}
+              value={seasonNumber}
+              onChangeText={setSeasonNumber}
+              keyboardType="number-pad"
+              onFocus={scrollToEnd}
+              placeholderTextColor={COLORS.textFaint}
+            />
+          </>
+        ) : null}
+
+        <Text style={styles.label}>Series title</Text>
+        <TextInput
+          style={styles.input}
+          value={title}
+          onChangeText={setTitle}
+          keyboardType="default"
+          autoCapitalize="words"
+          onFocus={scrollToEnd}
+          placeholderTextColor={COLORS.textFaint}
+          placeholder="Series title"
+        />
+        <Text style={styles.label}>Synopsis · {synopsis.length}/400</Text>
+        <TextInput
+          style={[styles.input, { minHeight: 90 }]}
+          multiline
+          maxLength={400}
+          value={synopsis}
+          onChangeText={setSynopsis}
+          keyboardType="default"
+          textAlignVertical="top"
+          onFocus={scrollToEnd}
+          placeholderTextColor={COLORS.textFaint}
+          placeholder="Story hook (min 40 characters when set)"
+        />
+        <Text style={styles.label}>Genre</Text>
+        <View style={styles.genreRow}>
+          {GENRES.map((g) => (
+            <TouchableOpacity
+              key={g}
+              style={[styles.genreChip, genre === g && styles.genreOn]}
+              onPress={() => setGenre(g)}
+            >
+              <Text style={[styles.genreText, genre === g && { color: COLORS.navy }]}>{g}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
-        <Text style={styles.choiceBody}>
-          This upload is one season of a longer show. Finish every episode in this season, lock it, and submit season-by-season.
-          Season 2 only after Season 1 is live. Our team checks this season fully before publish.
+        <Text style={styles.label}>
+          Planned episodes for this {structure === 'season' ? 'season' : 'series'} (min 20 · max 200)
         </Text>
-      </TouchableOpacity>
-
-      {structure === 'season' ? (
-        <>
-          <Text style={styles.label}>Season number</Text>
-          <TextInput
-            style={styles.input}
-            value={seasonNumber}
-            onChangeText={setSeasonNumber}
-            keyboardType="number-pad"
-            placeholderTextColor={COLORS.textFaint}
-          />
-        </>
-      ) : null}
-
-      <Text style={styles.label}>Series title</Text>
-      <TextInput style={styles.input} value={title} onChangeText={setTitle} placeholderTextColor={COLORS.textFaint} placeholder="Series title" />
-      <Text style={styles.label}>Synopsis · {synopsis.length}/400</Text>
-      <TextInput
-        style={[styles.input, { minHeight: 90 }]}
-        multiline
-        maxLength={400}
-        value={synopsis}
-        onChangeText={setSynopsis}
-        placeholderTextColor={COLORS.textFaint}
-        placeholder="Story hook (min 40 characters when set)"
-      />
-      <Text style={styles.label}>Genre</Text>
-      <View style={styles.genreRow}>
-        {GENRES.map((g) => (
-          <TouchableOpacity
-            key={g}
-            style={[styles.genreChip, genre === g && styles.genreOn]}
-            onPress={() => setGenre(g)}
-          >
-            <Text style={[styles.genreText, genre === g && { color: COLORS.navy }]}>{g}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-      <Text style={styles.label}>
-        Planned episodes for this {structure === 'season' ? 'season' : 'series'} (min 20 · max 200)
-      </Text>
-      <TextInput style={styles.input} value={planned} onChangeText={setPlanned} keyboardType="number-pad" placeholderTextColor={COLORS.textFaint} />
-      <Text style={styles.footNote}>
-        Episode count locks your completeness gate. Each episode must be 4–5 minutes. Trailer 15–60 seconds. Half stories cannot go live or earn.
-      </Text>
-      {error ? <Text style={styles.error}>{error}</Text> : null}
-      <EpisioGoldButton
-        label={`Next: Cover · create ${structure === 'season' ? `Season ${seasonNumber}` : 'series'} draft`}
-        onPress={create}
-        loading={busy}
-      />
-    </ScrollView>
+        <TextInput
+          style={styles.input}
+          value={planned}
+          onChangeText={setPlanned}
+          keyboardType="number-pad"
+          onFocus={scrollToEnd}
+          placeholderTextColor={COLORS.textFaint}
+        />
+        <Text style={styles.footNote}>
+          Episode count locks your completeness gate. Each episode must be 4–5 minutes. Trailer 15–60 seconds. Half stories cannot go live or earn.
+        </Text>
+        {error ? <Text style={styles.error}>{error}</Text> : null}
+        <EpisioGoldButton
+          label={`Next: Cover · create ${structure === 'season' ? `Season ${seasonNumber}` : 'series'} draft`}
+          onPress={create}
+          loading={busy}
+        />
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -200,13 +238,15 @@ const styles = StyleSheet.create({
   },
   genreRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
   genreChip: {
-    paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10,
+    paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999,
     backgroundColor: COLORS.navyCard, borderWidth: 1, borderColor: COLORS.navyLine,
   },
   genreOn: { backgroundColor: COLORS.gold, borderColor: COLORS.gold },
-  genreText: { fontFamily: FONTS.bold, color: COLORS.textDim, fontSize: 11.5 },
-  footNote: { color: COLORS.textFaint, fontFamily: FONTS.regular, fontSize: 11.5, lineHeight: 17, marginBottom: 10 },
-  error: { color: COLORS.error, fontFamily: FONTS.medium, marginBottom: 8 },
+  genreText: { fontFamily: FONTS.semi, fontSize: 12, color: COLORS.textDim },
+  footNote: {
+    fontFamily: FONTS.regular, fontSize: 11, color: COLORS.textFaint, lineHeight: 16, marginBottom: 14,
+  },
+  error: { color: COLORS.error, fontFamily: FONTS.medium, marginBottom: 10 },
 });
 
 export default StudioSeriesCreateScreen;

@@ -2,7 +2,7 @@
 
 Living journal the AI agent reads at the start of every session and updates as work progresses. Mutable — overwrite freely. Durable project facts live in `.cursor/rules/project-context.mdc` instead.
 
-**Last updated:** 2026-07-20 — **Blockers pass (complete):** Invite keyboard avoid + single-use invites; Studio unlock persists (`/auth/me` refresh + `studio_unlocked`); public profile avatar/banner clip; EditProfile + Cloudinary avatar delete/replace; Specs never show R2/provider; bank-only payout KYC + live selfie+ID; offline downloads (quality + guest gate + Player Save); auto-payout local 02:00 + threshold + silent retention. Images = Cloudinary (`CLOUDINARY_*`). Deploy backend when ready for Render.
+**Last updated:** 2026-07-20 — **Creator/Watcher mood:** Profile Apply → Switch to Creator Mood (HTML switch interstitial). Creator mood replaces bottom nav (Home/Series/Analytics/Earnings/Profile). Channel edit only in Studio Profile. StudioHome rebuilt from WiamStudio-Home.html. Series create keyboard avoid fixed.
 
 **Previous — Genres DB-driven + Origin split + FX + comments.**
 

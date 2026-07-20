@@ -160,10 +160,26 @@ const authApi = {
 
   deleteAccount: async (password) => {
     try {
-      const response = await apiClient.post('/auth/delete-account', { password });
+      // Explicit Bearer — do not rely only on interceptor (delete must never send without JWT).
+      const { getAuthToken } = await import('./client');
+      const token = await getAuthToken();
+      if (!token) {
+        throw 'Your session expired. Sign in again, then delete your account.';
+      }
+      const response = await apiClient.post(
+        '/auth/delete-account',
+        { password },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          skipLogout: true,
+        },
+      );
       return response.data;
     } catch (error) {
-      throw error.response?.data?.error || 'Failed to delete account';
+      const msg = error?.response?.data?.error || error?.message || error;
+      throw typeof msg === 'string' ? msg : 'Failed to delete account';
     }
   },
 

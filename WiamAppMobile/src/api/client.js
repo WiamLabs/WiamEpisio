@@ -16,33 +16,52 @@ let _cachedToken = null;
 export const setTokenCache = (token) => { _cachedToken = token; };
 export const clearTokenCache = () => { _cachedToken = null; };
 
+export async function getAuthToken() {
+  if (_cachedToken) return _cachedToken;
+  try {
+    const token = await SecureStore.getItemAsync(CONFIG.AUTH_TOKEN_KEY);
+    if (token) _cachedToken = token;
+    return token || null;
+  } catch {
+    return null;
+  }
+}
+
+function attachAuthHeader(config, token) {
+  if (!token) return config;
+  const value = `Bearer ${token}`;
+  if (!config.headers) {
+    config.headers = { Authorization: value };
+    return config;
+  }
+  if (typeof config.headers.set === 'function') {
+    config.headers.set('Authorization', value);
+  } else {
+    config.headers.Authorization = value;
+    config.headers.authorization = value;
+  }
+  return config;
+}
+
 // Request interceptor for adding the JWT token
 apiClient.interceptors.request.use(
   async (config) => {
-    let token = _cachedToken;
-    if (!token) {
-      token = await SecureStore.getItemAsync(CONFIG.AUTH_TOKEN_KEY);
-      if (token) _cachedToken = token;
-    }
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
+    // Allow callers to skip auto-attach (rare); otherwise always attach JWT.
+    if (config.skipAuth) return config;
+    const token = await getAuthToken();
+    return attachAuthHeader(config, token);
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error),
 );
 
 // Response interceptor for handling common errors (like 401 Unauthorized)
 apiClient.interceptors.response.use(
-  (response) => {
-    return response;
-  },
+  (response) => response,
   async (error) => {
-    const config = error.config;
+    const config = error.config || {};
     const status = error.response?.status;
-    const method = (config?.method || 'get').toLowerCase();
+    const method = (config.method || 'get').toLowerCase();
+    const url = String(config.url || '');
 
     // Render/host cold starts often return one 502/503; retry safe reads only.
     const transientGateway = status === 502 || status === 503 || status === 504;
@@ -56,9 +75,10 @@ apiClient.interceptors.response.use(
       }
     }
 
-    if (error.response && error.response.status === 401) {
+    // Do not force-logout on account-delete failures — user needs to stay signed in to retry.
+    const isDeleteAccount = url.includes('/auth/delete-account');
+    if (error.response && error.response.status === 401 && !config.skipLogout && !isDeleteAccount) {
       _cachedToken = null;
-      // Lazy-import to break require cycle (client → useAuthStore → iap → client)
       const { default: useAuthStore } = await import('../store/useAuthStore');
       const logout = useAuthStore.getState().logout;
       await logout();
@@ -68,7 +88,7 @@ apiClient.interceptors.response.use(
       error.networkHint = `No response from ${base}. Use https://episio.wiamlabs.com/api/v1 (not wiamapp.com). On a phone, do not use localhost.`;
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 export default apiClient;

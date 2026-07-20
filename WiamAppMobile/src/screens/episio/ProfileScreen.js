@@ -11,7 +11,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import {
   ChevronRight, Crown, Coins, Wallet, Star, Camera, Bell, Settings,
-  CircleHelp as HelpIcon, LogOut, User, Play, Download, MonitorPlay,
+  CircleHelp as HelpIcon, LogOut, User, Play, Download, MonitorPlay, Clapperboard,
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS, FONTS } from '../../constants/theme';
@@ -180,6 +180,7 @@ const ProfileScreen = () => {
   const name = user?.display_name || user?.username || user?.first_name || 'Viewer';
   const avatar = resolveUrl(user?.avatar_url);
   const isMember = !!(user?.is_vip || user?.vip || user?.membership);
+  const isCreator = !!user?.is_creator;
 
   return (
     <ScrollView
@@ -213,6 +214,9 @@ const ProfileScreen = () => {
             </View>
           ) : null}
         </View>
+        <TouchableOpacity onPress={() => navigation.navigate('EditProfile')} hitSlop={10}>
+          <Text style={styles.editLink}>Edit</Text>
+        </TouchableOpacity>
       </View>
 
       <LinearGradient
@@ -253,20 +257,26 @@ const ProfileScreen = () => {
         <MenuRowIcon icon={Star} title="Daily Rewards & Points" onPress={() => navigation.navigate('DailyRewards')} />
       </View>
 
-      <Text style={styles.sectionLabel}>Become a Creator</Text>
+      <Text style={styles.sectionLabel}>{isCreator ? 'Creator' : 'Become a Creator'}</Text>
       <View style={styles.menuGroup}>
-        <MenuRowIcon
-          icon={Camera}
-          title="Upload Your Own Series"
-          sub="Apply to become a WiamEpisio Creator"
-          onPress={() => navigation.navigate(user?.is_creator ? 'StudioHome' : 'CreatorApplyInviteOnly')}
-        />
-        <MenuRowIcon
-          icon={User}
-          title="Edit profile"
-          sub="Photo, name, bio"
-          onPress={() => navigation.navigate('EditProfile')}
-        />
+        {isCreator ? (
+          <MenuRowIcon
+            icon={Clapperboard}
+            title="Switch to Creator Mood"
+            sub="Open WiamStudio — series, earnings, channel"
+            onPress={() => navigation.navigate('CreatorViewerSwitch', {
+              direction: 'creator',
+              studioName: user?.channel_name || user?.display_name,
+            })}
+          />
+        ) : (
+          <MenuRowIcon
+            icon={Camera}
+            title="Upload Your Own Series"
+            sub="Apply to become a WiamEpisio Creator"
+            onPress={() => navigation.navigate('CreatorApplyInviteOnly')}
+          />
+        )}
       </View>
 
       <Text style={styles.sectionLabel}>Watch & rewards</Text>
@@ -382,6 +392,7 @@ const styles = StyleSheet.create({
 
   /* Logged-in — Profile.html */
   header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 14, marginBottom: 6 },
+  editLink: { fontFamily: FONTS.semi, fontSize: 13, color: COLORS.gold },
   avatar: {
     width: 64, height: 64, borderRadius: 32,
     alignItems: 'center', justifyContent: 'center',

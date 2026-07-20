@@ -9,7 +9,6 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
-import * as ImagePicker from 'expo-image-picker';
 import { ChevronLeft, Lock, Check } from 'lucide-react-native';
 import { COLORS, FONTS } from '../../constants/theme';
 import studioEpisioApi from '../../api/studioEpisio';
@@ -69,20 +68,13 @@ const StudioSeriesDetailScreen = () => {
   };
 
   const pickImage = async (kind) => {
-    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) {
-      setError('Photo permission required');
-      return;
-    }
-    const pick = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.85,
-    });
-    if (pick.canceled || !pick.assets?.[0]?.uri) return;
+    const { pickCroppedImage } = await import('../../utils/pickMedia');
+    const uri = await pickCroppedImage(kind === 'banner' ? 'banner' : [2, 3]);
+    if (!uri) return;
     if (kind === 'banner') {
-      await run('banner', () => studioEpisioApi.uploadBanner(seriesId, pick.assets[0].uri));
+      await run('banner', () => studioEpisioApi.uploadBanner(seriesId, uri));
     } else {
-      await run('cover', () => studioEpisioApi.uploadCover(seriesId, pick.assets[0].uri));
+      await run('cover', () => studioEpisioApi.uploadCover(seriesId, uri));
     }
   };
 

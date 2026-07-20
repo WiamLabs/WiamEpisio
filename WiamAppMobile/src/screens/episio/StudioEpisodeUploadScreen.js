@@ -1,18 +1,19 @@
 /**
  * Layout: WiamStudio-Episode-Upload.html
- * Validates 9:16 + duration via complete-upload; mark-final after ready.
+ * Shows local video preview after pick. Validates 9:16 + duration via complete-upload.
  */
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, TextInput, Alert, TouchableOpacity,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import * as ImagePicker from 'expo-image-picker';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import { Upload, Film } from 'lucide-react-native';
 import EpisioScreenShell from '../../components/episio/EpisioScreenShell';
 import EpisioGoldButton from '../../components/episio/EpisioGoldButton';
 import { COLORS, FONTS } from '../../constants/theme';
 import studioEpisioApi from '../../api/studioEpisio';
+import { pickVideo } from '../../utils/pickMedia';
 
 const StudioEpisodeUploadScreen = () => {
   const navigation = useNavigation();
@@ -20,33 +21,42 @@ const StudioEpisodeUploadScreen = () => {
   const { seriesId, episodeId: existingId, episodeNumber, locked } = params;
   const [title, setTitle] = useState(episodeNumber ? `Episode ${episodeNumber}` : '');
   const [pickedName, setPickedName] = useState(null);
+  const [videoUri, setVideoUri] = useState(null);
   const [width, setWidth] = useState('1080');
   const [height, setHeight] = useState('1920');
   const [duration, setDuration] = useState('270');
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState(null);
 
-  const pickVideo = async () => {
+  const player = useVideoPlayer(videoUri || '', (p) => {
+    p.loop = true;
+    p.muted = true;
+    if (videoUri) {
+      try { p.play(); } catch { /* ignore */ }
+    }
+  });
+
+  useEffect(() => {
+    if (!videoUri) return undefined;
+    try {
+      player.replace(videoUri);
+      player.play();
+    } catch { /* ignore */ }
+    return undefined;
+  }, [videoUri, player]);
+
+  const onPickVideo = async () => {
     if (locked) {
       Alert.alert('Season locked', 'Replace files only when Needs Changes opens a fix window.');
       return;
     }
-    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) {
-      Alert.alert('Permission needed', 'Allow media access to pick an episode video.');
-      return;
-    }
-    const pick = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Videos,
-      quality: 1,
-    });
-    if (pick.canceled || !pick.assets?.[0]) return;
-    const asset = pick.assets[0];
+    const asset = await pickVideo();
+    if (!asset) return;
+    setVideoUri(asset.uri);
     setPickedName(asset.fileName || asset.uri.split('/').pop() || 'episode.mp4');
     if (asset.width) setWidth(String(asset.width));
     if (asset.height) setHeight(String(asset.height));
     if (asset.duration) {
-      // expo may report ms
       const sec = asset.duration > 1000 ? Math.round(asset.duration / 1000) : Math.round(asset.duration);
       if (sec > 0) setDuration(String(sec));
     }
@@ -55,6 +65,10 @@ const StudioEpisodeUploadScreen = () => {
   const upload = async ({ markFinal }) => {
     if (locked) {
       Alert.alert('Season locked', 'Replace files only when Needs Changes opens a fix window.');
+      return;
+    }
+    if (!videoUri && !pickedName) {
+      Alert.alert('Video required', 'Choose an episode video first.');
       return;
     }
     setBusy(true);
@@ -77,6 +91,7 @@ const StudioEpisodeUploadScreen = () => {
         storage_key: `stub/ep_${epId}`,
         hls_manifest_url: `https://stub.local/hls/ep_${epId}/master.m3u8`,
         source_filename: pickedName || undefined,
+        local_uri: videoUri || undefined,
       });
       if (markFinal && done?.episode && !done.episode.is_final) {
         await studioEpisioApi.markFinal(epId, true);
@@ -133,12 +148,27 @@ const StudioEpisodeUploadScreen = () => {
         </Text>
       </View>
 
-      <TouchableOpacity style={styles.dropZone} onPress={pickVideo} disabled={locked} activeOpacity={0.85}>
-        <View style={styles.dropIcon}>
-          {pickedName ? <Film size={22} color={COLORS.gold} /> : <Upload size={22} color={COLORS.gold} />}
-        </View>
+      <TouchableOpacity style={styles.dropZone} onPress={onPickVideo} disabled={locked} activeOpacity={0.85}>
+        {videoUri ? (
+          <View style={styles.previewWrap}>
+            <VideoView
+              style={styles.preview}
+              player={player}
+              contentFit="cover"
+              nativeControls={false}
+            />
+            <View style={styles.previewBadge}>
+              <Film size={12} color={COLORS.navy} />
+              <Text style={styles.previewBadgeText}>Preview</Text>
+            </View>
+          </View>
+        ) : (
+          <View style={styles.dropIcon}>
+            <Upload size={22} color={COLORS.gold} />
+          </View>
+        )}
         <Text style={styles.dropTitle}>
-          {pickedName ? 'Video selected' : 'Choose episode video'}
+          {pickedName ? 'Video selected — tap to change' : 'Choose episode video'}
         </Text>
         <Text style={styles.dropSub}>
           {pickedName || 'Upload from your device — vertical 9:16 only'}
@@ -193,11 +223,28 @@ const styles = StyleSheet.create({
     borderColor: COLORS.navyLine,
     borderRadius: 18,
     backgroundColor: COLORS.navyCard,
-    paddingVertical: 28,
+    paddingVertical: 16,
     paddingHorizontal: 16,
     alignItems: 'center',
     marginBottom: 18,
+    overflow: 'hidden',
   },
+  previewWrap: {
+    width: '100%',
+    aspectRatio: 9 / 16,
+    maxHeight: 280,
+    borderRadius: 14,
+    overflow: 'hidden',
+    backgroundColor: '#000',
+    marginBottom: 12,
+  },
+  preview: { width: '100%', height: '100%' },
+  previewBadge: {
+    position: 'absolute', top: 10, left: 10,
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    backgroundColor: COLORS.gold, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8,
+  },
+  previewBadgeText: { fontFamily: FONTS.bold, fontSize: 10, color: COLORS.navy },
   dropIcon: {
     width: 48, height: 48, borderRadius: 24,
     backgroundColor: 'rgba(212,160,23,0.14)',

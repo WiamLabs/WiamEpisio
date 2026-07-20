@@ -1,6 +1,6 @@
 /**
  * Watcher / creator personal profile editor — avatar + bio via Cloudinary.
- * Creators also manage channel banner in Studio Settings.
+ * Crop required before upload (square → shown circular).
  */
 import React, { useState } from 'react';
 import {
@@ -9,13 +9,13 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { ChevronLeft } from 'lucide-react-native';
-import * as ImagePicker from 'expo-image-picker';
 import { COLORS, FONTS } from '../../constants/theme';
 import EpisioGoldButton from '../../components/episio/EpisioGoldButton';
 import authApi from '../../api/auth';
 import useAuthStore from '../../store/useAuthStore';
 import resolveUrl from '../../utils/resolveUrl';
 import apiClient from '../../api/client';
+import { pickCroppedImage } from '../../utils/pickMedia';
 
 const EditProfileScreen = () => {
   const insets = useSafeAreaInsets();
@@ -28,19 +28,11 @@ const EditProfileScreen = () => {
   const [busy, setBusy] = useState(false);
 
   const pickAvatar = async () => {
-    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) {
-      Alert.alert('Photos', 'Allow photo access to change your profile picture.');
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.85,
-    });
-    if (result.canceled || !result.assets?.[0]) return;
+    const uri = await pickCroppedImage('avatar');
+    if (!uri) return;
     setBusy(true);
     try {
-      const data = await authApi.uploadAvatar(result.assets[0].uri);
+      const data = await authApi.uploadAvatar(uri);
       const url = resolveUrl(data?.avatar_url);
       setAvatar(url);
       await patchUser({ avatar_url: data?.avatar_url });
@@ -96,9 +88,11 @@ const EditProfileScreen = () => {
           {avatar ? (
             <Image source={{ uri: avatar }} style={styles.avatarImg} />
           ) : (
-            <Text style={styles.avatarLetter}>{(displayName || 'U')[0]?.toUpperCase()}</Text>
+            <View style={styles.avatarLetterWrap}>
+              <Text style={styles.avatarLetter}>{(displayName || 'U')[0]?.toUpperCase()}</Text>
+            </View>
           )}
-          <Text style={styles.changePhoto}>Change photo</Text>
+          <Text style={styles.changePhoto}>Change photo · crop first</Text>
         </TouchableOpacity>
         {avatar ? (
           <TouchableOpacity onPress={deleteAvatar} disabled={busy}>
@@ -146,12 +140,12 @@ const styles = StyleSheet.create({
   },
   h1: { fontSize: 17, fontFamily: FONTS.bold, color: '#fff' },
   avatar: { alignItems: 'center', marginBottom: 8 },
-  avatarImg: { width: 96, height: 96, borderRadius: 24 },
-  avatarLetter: {
-    width: 96, height: 96, borderRadius: 24, backgroundColor: COLORS.gold,
-    textAlign: 'center', lineHeight: 96, fontSize: 36, fontFamily: FONTS.extraBold, color: COLORS.navy,
-    overflow: 'hidden',
+  avatarImg: { width: 96, height: 96, borderRadius: 48 },
+  avatarLetterWrap: {
+    width: 96, height: 96, borderRadius: 48, backgroundColor: COLORS.gold,
+    alignItems: 'center', justifyContent: 'center',
   },
+  avatarLetter: { fontSize: 36, fontFamily: FONTS.extraBold, color: COLORS.navy },
   changePhoto: { marginTop: 10, color: COLORS.gold, fontFamily: FONTS.semi, fontSize: 13 },
   deletePhoto: {
     textAlign: 'center', color: '#EF4444', fontFamily: FONTS.medium, fontSize: 12, marginBottom: 18,

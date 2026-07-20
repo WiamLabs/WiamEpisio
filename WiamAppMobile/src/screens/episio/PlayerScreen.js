@@ -195,6 +195,8 @@ const PlayerScreen = () => {
       },
     });
   };
+
+  const onShare = async () => {
     const title = meta?.seriesTitle || 'WiamEpisio';
     const url = `${CONFIG.SITE_ORIGIN}/series/${seriesId || ''}`;
     try {

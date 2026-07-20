@@ -12,12 +12,12 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import {
   ChevronLeft, ChevronRight, FileText, HelpCircle, Star, Wallet, Banknote, LogOut, Save,
 } from 'lucide-react-native';
-import * as ImagePicker from 'expo-image-picker';
 import EpisioGoldButton from '../../components/episio/EpisioGoldButton';
 import { COLORS, FONTS } from '../../constants/theme';
 import useAuthStore from '../../store/useAuthStore';
 import studioEpisioApi from '../../api/studioEpisio';
 import resolveUrl from '../../utils/resolveUrl';
+import { pickCroppedImage } from '../../utils/pickMedia';
 
 const Row = ({ icon: Icon, label, value, onPress, tag }) => (
   <TouchableOpacity style={styles.row} onPress={onPress} disabled={!onPress}>
@@ -102,23 +102,15 @@ const StudioSettingsScreen = () => {
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
   const pickAndUpload = async (kind) => {
-    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) {
-      Alert.alert('Photos', 'Allow photo access to upload.');
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.85,
-    });
-    if (result.canceled || !result.assets?.[0]) return;
+    const uri = await pickCroppedImage(kind === 'banner' ? 'banner' : 'avatar');
+    if (!uri) return;
     setSaving(true);
     try {
       if (kind === 'avatar') {
-        const data = await studioEpisioApi.uploadChannelAvatar(result.assets[0].uri);
+        const data = await studioEpisioApi.uploadChannelAvatar(uri);
         setProfile((p) => ({ ...p, avatar_url: data?.avatar_url || p.avatar_url }));
       } else {
-        const data = await studioEpisioApi.uploadChannelBanner(result.assets[0].uri);
+        const data = await studioEpisioApi.uploadChannelBanner(uri);
         setProfile((p) => ({ ...p, banner_url: data?.banner_url || p.banner_url }));
       }
       Alert.alert('Uploaded', kind === 'avatar' ? 'Channel photo updated.' : 'Channel banner updated.');
@@ -191,7 +183,7 @@ const StudioSettingsScreen = () => {
             <Text style={styles.cardSub}>
               @{user?.username || 'creator'} · {tierLabel}
             </Text>
-            <Text style={styles.tapHint}>Tap photo to change · Cloudinary</Text>
+            <Text style={styles.tapHint}>Tap photo · crop square first</Text>
           </View>
         </View>
 
@@ -200,7 +192,7 @@ const StudioSettingsScreen = () => {
           {profile.banner_url ? (
             <Image source={{ uri: resolveUrl(profile.banner_url) }} style={styles.bannerImg} />
           ) : (
-            <Text style={styles.bannerHint}>Upload a wide banner for your public channel</Text>
+            <Text style={styles.bannerHint}>Upload a wide banner · crop 16:9 first</Text>
           )}
         </TouchableOpacity>
         {profile.banner_url ? (

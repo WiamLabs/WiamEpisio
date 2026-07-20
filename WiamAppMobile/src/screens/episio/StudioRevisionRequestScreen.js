@@ -7,7 +7,6 @@ import {
   View, Text, StyleSheet, TextInput, Alert, TouchableOpacity, ActivityIndicator,
 } from 'react-native';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
-import * as ImagePicker from 'expo-image-picker';
 import { Lock, Upload } from 'lucide-react-native';
 import EpisioScreenShell from '../../components/episio/EpisioScreenShell';
 import EpisioGoldButton from '../../components/episio/EpisioGoldButton';
@@ -57,17 +56,9 @@ const StudioRevisionRequestScreen = () => {
     || series?.pipeline_state === 'live';
 
   const pickFile = async () => {
-    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) {
-      Alert.alert('Permission needed', 'Allow media access to attach a corrected file.');
-      return;
-    }
-    const pick = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Videos,
-      quality: 1,
-    });
-    if (pick.canceled || !pick.assets?.[0]) return;
-    const asset = pick.assets[0];
+    const { pickVideo } = await import('../../utils/pickMedia');
+    const asset = await pickVideo();
+    if (!asset) return;
     setFileName(asset.fileName || asset.uri.split('/').pop() || 'corrected.mp4');
   };
 
