@@ -402,7 +402,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 14,
   },
-  brand: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  brand: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   brandName: {
     fontSize: 17,
     fontFamily: FONTS.extraBold,
