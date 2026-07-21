@@ -10,9 +10,10 @@ import studioEpisioApi from '../../api/studioEpisio';
 import { COLORS, FONTS, RADIUS } from '../../constants/theme';
 
 const REJECT = [
-  'Horizontal or square video — vertical only',
+  'Square / odd ratios — use 9:16 vertical or 16:9 landscape only',
   'Watermarked exports used as the final file',
-  'Black bars that break the 9:16 frame',
+  'Stolen / duplicate catalog matches',
+  'Explicit genitals / open pornographic sex (romance & kissing OK)',
 ];
 
 function pick(obj, ...keys) {
@@ -71,7 +72,7 @@ const StudioSpecsScreen = () => {
     },
     {
       label: 'Aspect ratio',
-      value: fmtVal(pick(episode, 'aspect_ratio', 'aspect', 'ratio')) || '9:16 exact',
+      value: fmtVal(pick(episode, 'aspect_ratio', 'aspect', 'ratio')) || '9:16 or 16:9',
       emphasis: true,
     },
     {
@@ -104,7 +105,7 @@ const StudioSpecsScreen = () => {
   const trailerRows = useMemo(() => ([
     {
       label: 'Aspect',
-      value: fmtVal(pick(trailer, 'aspect_ratio', 'aspect')) || '9:16',
+      value: fmtVal(pick(trailer, 'aspect_ratio', 'aspect')) || '9:16 or 16:9',
       emphasis: true,
     },
     {

@@ -1213,6 +1213,8 @@ class PlatformConfig(db.Model):
     ff_season_qc_auto_clear_good = db.Column(db.Boolean, default=False)  # when ON, good+excellent skip human
     # Founder/team must review QC flags before creators see Needs Changes (SLA may release later)
     ff_season_qc_founder_first = db.Column(db.Boolean, default=True)
+    # Gemini vision: explicit genitals hard-fail; romance/kissing allowed
+    ff_season_qc_ai_safety = db.Column(db.Boolean, default=True)
     # After trust-tier SLA (72/48/24/12h) with no founder action: Good→publish, else Needs Changes
     ff_season_qc_sla_auto_decide = db.Column(db.Boolean, default=True)
     money_base_currency = db.Column(db.Text, default='USD')  # ledger display base

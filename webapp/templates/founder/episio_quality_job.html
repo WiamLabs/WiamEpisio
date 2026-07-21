@@ -13,11 +13,11 @@
     Series QC status: <b>{{ series.season_qc_status or '—' }}</b>
     · review: <b>{{ series.review_status or '—' }}</b>
     {% if (series.season_qc_status or '') == 'pending_founder' %}
-    <span style="margin-left:8px;padding:3px 10px;border-radius:999px;background:rgba(212,160,23,0.2);color:var(--gold);font-weight:700;">Awaiting your decision — creator still sees “In review”</span>
+    <span style="margin-left:8px;padding:3px 10px;border-radius:999px;background:rgba(212,160,23,0.2);color:var(--gold);font-weight:700;">System flagged — your decision required</span>
     {% endif %}
   </p>
   {% endif %}
-  <p style="font-size:0.8rem;color:var(--text-muted);">Machine QC is technical only (aspect, duration, blur, audio, duplicates). It does <b>not</b> flag kissing/romance. You decide Publish or Changes Required. After trust-tier SLA, the system may release Needs Changes if nobody acts.</p>
+  <p style="font-size:0.8rem;color:var(--text-muted);">Machines check aspect (9:16 or 16:9), duration, blur, watermark, VMAF/SSIM, pHash stolen, audio, and AI safety (explicit genitals fail · romance/kissing allowed). You do the final Publish / Needs Changes after the checklist below.</p>
 </div>
 
 {% if job.failure_reasons %}
@@ -29,8 +29,7 @@
 
 {% if draft_items %}
 <div class="dash-card" style="border:1px solid rgba(212,160,23,0.35);margin-bottom:16px;">
-  <h3 style="color:var(--gold);">Draft flags (not shown to creator yet)</h3>
-  <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:10px;">These become the creator’s Needs Changes list only when you press <b>Changes Required</b> (or SLA auto-releases).</p>
+  <h3 style="color:var(--gold);">Draft flags (creators see these only after Needs Changes)</h3>
   <ul style="margin:0;padding-left:18px;font-size:0.85rem;line-height:1.55;">
     {% for item in draft_items %}
     <li><b>{{ item.tag or 'FLAG' }}</b> — {{ item.title }}{% if item.text %}: {{ item.text }}{% endif %}</li>
@@ -70,9 +69,22 @@
 </div>
 
 <div class="dash-card">
-  <h3>Your final decision</h3>
+  <h3>Final founder checklist (required)</h3>
+  <p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:12px;">Confirm each box before Approve &amp; Publish or Needs Changes. System already checked — this is your last eye.</p>
   <form method="post" action="{{ url_for('founder_dash.episio_quality_decide', job_id=job.id) }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label style="display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;font-size:0.85rem;">
+      <input type="checkbox" name="check_romance_ok" value="1" required style="margin-top:3px;">
+      <span><b>Romance OK?</b> Kissing / hugging / romance without genitals is allowed drama for this generation.</span>
+    </label>
+    <label style="display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;font-size:0.85rem;">
+      <input type="checkbox" name="check_no_explicit" value="1" required style="margin-top:3px;">
+      <span><b>No open explicit sex?</b> No clear penis/vagina / pornographic genitals. If present → Needs Changes (or reject).</span>
+    </label>
+    <label style="display:flex;gap:10px;align-items:flex-start;margin-bottom:14px;font-size:0.85rem;">
+      <input type="checkbox" name="check_technical" value="1" required style="margin-top:3px;">
+      <span><b>Technical look?</b> You reviewed machine flags (aspect, blur, watermark, stolen, VMAF) and agree with Publish or Needs Changes.</span>
+    </label>
     <textarea name="note" rows="3" placeholder="Optional note to creator / internal" style="width:100%;padding:10px;border-radius:10px;background:var(--bg);border:1px solid var(--border-subtle);color:var(--text);margin-bottom:12px;"></textarea>
     <label style="display:flex;gap:8px;align-items:center;margin-bottom:14px;font-size:0.85rem;">
       <input type="checkbox" name="publish_all" value="1"> Publish all episodes now (else free-first-N only)

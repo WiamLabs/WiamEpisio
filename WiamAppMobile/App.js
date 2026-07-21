@@ -9,10 +9,24 @@ import { StatusBar } from 'expo-status-bar';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Provider as PaperProvider, MD3DarkTheme } from 'react-native-paper';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { LogBox } from 'react-native';
+import Constants from 'expo-constants';
 import EpisioNavigator from './src/navigation/EpisioNavigator';
 import ErrorBoundary from './src/components/ErrorBoundary';
 import { COLORS } from './src/constants/theme';
 import { View, Text, Animated, StyleSheet, Dimensions } from 'react-native';
+
+// Expo Go SDK 53+: remote push is unavailable — silence the known package ERROR noise.
+if (
+  Constants.appOwnership === 'expo'
+  || Constants.executionEnvironment === 'storeClient'
+) {
+  LogBox.ignoreLogs([
+    'expo-notifications',
+    'Android Push notifications',
+    '`expo-notifications` functionality is not fully supported in Expo Go',
+  ]);
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {

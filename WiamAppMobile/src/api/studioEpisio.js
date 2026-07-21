@@ -1,6 +1,6 @@
 import apiClient from './client';
 
-def fmt(error, fallback) {
+function fmt(error, fallback) {
   const raw = error?.message || '';
   const code = error?.code || error?.response?.status;
   const isTimeout = code === 'ECONNABORTED'

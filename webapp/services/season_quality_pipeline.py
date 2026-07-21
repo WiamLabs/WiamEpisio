@@ -151,6 +151,7 @@ def review_tool_catalog() -> List[Dict[str, Any]]:
         {'id': 'ebur128', 'name': 'EBU R128 loudness', 'catches': 'Too quiet, clipping, inconsistent volume', 'when': 'Stage 4', 'installed': avail['ebur128']['installed']},
         {'id': 'webrtcvad', 'name': 'WebRTC VAD', 'catches': 'Dead air / missing dialogue where speech expected', 'when': 'Stage 4', 'installed': avail['webrtcvad']['installed']},
         {'id': 'phash', 'name': 'Perceptual hash', 'catches': 'Re-uploads / stolen content vs catalog', 'when': 'Stage 5', 'installed': avail['phash']['installed']},
+        {'id': 'ai_safety', 'name': 'AI visual safety (Gemini)', 'catches': 'Explicit genitals / open sex — romance/kissing allowed', 'when': 'Stage 3', 'installed': bool((os.environ.get('GEMINI_API_KEY') or '').strip())},
     ]
 
 
@@ -680,23 +681,39 @@ def _score_asset(
 
         if width and height:
             ratio = width / float(height)
-            aspect_ok = abs(ratio - 9 / 16) <= 0.05
-            res_ok = width >= 720 and height >= 1280
+            vertical = abs(ratio - 9 / 16) <= 0.06
+            landscape = abs(ratio - 16 / 9) <= 0.06
+            aspect_ok = vertical or landscape
+            if vertical:
+                res_ok = width >= 720 and height >= 1280
+                pref = width >= 1080 and height >= 1920
+                orient = '9:16'
+            elif landscape:
+                res_ok = width >= 1280 and height >= 720
+                pref = width >= 1920 and height >= 1080
+                orient = '16:9'
+            else:
+                res_ok = False
+                pref = False
+                orient = f'{width}x{height}'
             if not aspect_ok:
                 checks['aspect'] = {'ok': False, 'band': 'poor', 'w': width, 'h': height}
-                fails.append(f'{kind}: must be 9:16 vertical')
+                fails.append(f'{kind}: must be 9:16 vertical or 16:9 landscape')
                 score -= 0.35
             elif not res_ok:
-                checks['resolution'] = {'ok': False, 'band': 'borderline', 'w': width, 'h': height}
-                fails.append(f'{kind}: resolution below 720x1280')
+                checks['resolution'] = {
+                    'ok': False, 'band': 'borderline', 'w': width, 'h': height, 'orient': orient,
+                }
+                fails.append(f'{kind}: resolution below minimum for {orient}')
                 score -= 0.2
             else:
-                pref = width >= 1080 and height >= 1920
                 checks['resolution'] = {
                     'ok': True,
                     'band': 'excellent' if pref else 'good',
                     'w': width, 'h': height,
+                    'orient': orient,
                 }
+                checks['aspect'] = {'ok': True, 'band': 'good', 'orient': orient}
         else:
             checks['resolution'] = {'ok': None, 'band': 'borderline', 'reason': 'not_probed'}
             score -= 0.08
@@ -750,11 +767,32 @@ def _score_asset(
         checks['watermark'] = {k: v for k, v in wm.items()}
         if wm.get('checked'):
             checks['tools_run'].append('watermark')
-        # Advisory only — corner heuristics false-fire on titles/UI; founder sees it,
-        # creators are not auto-failed for possible watermarks alone.
         if wm.get('suspect_watermark'):
-            checks['watermark_advisory'] = 'possible corner logo — founder should eye-check'
-            score -= 0.05
+            fails.append(f'{kind}: possible platform watermark in corner — re-export clean')
+            score -= 0.3
+
+        # AI visual safety (Gemini free) — romance OK; explicit genitals hard-fail
+        try:
+            from .episio_visual_safety import check_visual_safety
+            safety = check_visual_safety(path=path, frames_bgr=frames_bgr or [], kind=kind)
+            checks['ai_safety'] = {k: v for k, v in safety.items() if k != 'frames'}
+            if safety.get('checked'):
+                checks['tools_run'].append('ai_safety')
+            if safety.get('hard_fail'):
+                fails.append(
+                    f'{kind}: explicit sexual content with genitals detected — not allowed '
+                    f'({safety.get("reason") or "remove explicit shots"})'
+                )
+                score -= 0.5
+                checks['ai_safety_band'] = 'poor'
+            elif safety.get('founder_attention'):
+                score -= 0.05
+                checks['ai_safety_band'] = 'borderline'
+                checks['founder_attention'] = True
+            elif safety.get('checked'):
+                checks['ai_safety_band'] = 'good'
+        except Exception as e:
+            checks['ai_safety'] = {'checked': False, 'error': str(e)[:120]}
 
         bf = _ffmpeg_black_freeze(path)
         checks['black_freeze'] = bf
@@ -773,16 +811,15 @@ def _score_asset(
                 vmaf = _vmaf_score(path, proxy)
                 if vmaf is not None:
                     checks['tools_run'].append('vmaf')
-                    # Source-vs-our-proxy is encode-health for founders — not a creator reject.
-                    checks['vmaf'] = {
-                        'score': round(vmaf, 2),
-                        'source': 'delivery_proxy',
-                        'creator_facing': False,
-                    }
+                    checks['vmaf'] = {'score': round(vmaf, 2), 'source': 'delivery_proxy'}
+                    # Netflix bands: 80+ excellent, 60–79 good, 40–59 borderline, <40 poor
                     if vmaf < 40:
+                        fails.append(f'{kind}: VMAF {vmaf:.0f} — video quality below threshold')
+                        score -= 0.35
                         checks['vmaf_band'] = 'poor'
-                        score -= 0.05
                     elif vmaf < 60:
+                        fails.append(f'{kind}: VMAF {vmaf:.0f} — quality borderline — re-export cleaner')
+                        score -= 0.12
                         checks['vmaf_band'] = 'borderline'
                     elif vmaf < 80:
                         checks['vmaf_band'] = 'good'
@@ -794,12 +831,13 @@ def _score_asset(
                 ssim = _ssim_score(path, proxy)
                 if ssim is not None:
                     checks['tools_run'].append('ssim')
-                    checks['ssim'] = {'score': round(ssim, 3), 'creator_facing': False}
+                    checks['ssim'] = {'score': round(ssim, 3)}
                     if ssim < 0.75:
+                        fails.append(f'{kind}: SSIM {ssim:.2f} — structural quality weak after delivery encode')
+                        score -= 0.15
                         checks['ssim_band'] = 'poor'
-                        score -= 0.05
                     elif ssim < 0.88:
-                        score -= 0.02
+                        score -= 0.05
                         checks['ssim_band'] = 'borderline'
                     else:
                         checks['ssim_band'] = 'good'
@@ -885,11 +923,17 @@ def _score_asset(
     band = _band_from_score(score)
     if fails and band in ('excellent', 'good'):
         band = 'borderline'
-    # Hard creator-facing fails: wrong aspect, duration, missing files, stolen dupes.
-    # Soft/romance-safe: no NSFW classifier — kissing/hugging never auto-flagged.
-    if any('must be 9:16' in f or 'missing duration' in f or 'outside' in f for f in fails):
+    # Hard creator-facing fails: aspect, duration, watermark, VMAF, stolen, explicit safety.
+    if any('must be 9:16' in f or '16:9' in f or 'missing duration' in f or 'outside' in f for f in fails):
         if score < 0.4:
             band = 'poor'
+    if any('VMAF' in f and ('below threshold' in f or 'borderline' in f) for f in fails):
+        if any('below threshold' in f for f in fails):
+            band = 'poor'
+    if any('watermark' in f for f in fails):
+        band = 'poor' if score < 0.45 else 'borderline'
+    if any('explicit sexual' in f or 'genitals' in f for f in fails):
+        band = 'poor'
     if any('duplicate/stolen' in f for f in fails):
         band = 'poor'
     return score, band, checks, fails
@@ -1006,6 +1050,7 @@ def run_season_qc_job(job_id: int) -> SeasonQualityJob:
         .order_by(Episode.episode_number.asc())
         .all()
     )
+    founder_attention_hits = 0
     for ep in episodes:
         probe = {}
         try:
@@ -1025,6 +1070,8 @@ def run_season_qc_job(job_id: int) -> SeasonQualityJob:
         score, band, checks, fails = _score_asset(
             'episode', meta, path, content_id=content.id, episode_id=ep.id,
         )
+        if checks.get('founder_attention') or (checks.get('ai_safety') or {}).get('founder_attention'):
+            founder_attention_hits += 1
         _save_asset('episode', ep, score, band, checks, fails)
 
     overall_band = _worst_band(asset_bands) if asset_bands else 'poor'
@@ -1036,18 +1083,20 @@ def run_season_qc_job(job_id: int) -> SeasonQualityJob:
     auto_clear = _flag('ff_season_qc_auto_clear_good', False)
     # Founder-first: never push Needs Changes to creators until founder decides or SLA fires.
     founder_first = _flag('ff_season_qc_founder_first', True)
+    # System must flag + pull founder attention; never silent-pass safety concerns
+    needs_founder_eye = overall_band in ('poor', 'borderline') or founder_attention_hits > 0
 
     if overall_band == 'poor' and auto_reject and not founder_first:
         job.status = 'failed'
         content.season_qc_status = 'failed'
         content.review_status = 'revision_requested'
-    elif overall_band in ('excellent', 'good') and auto_clear:
+    elif overall_band in ('excellent', 'good') and auto_clear and not needs_founder_eye:
         job.status = 'passed'
         content.season_qc_status = 'passed'
         content.review_status = 'under_review'
-    elif founder_first and overall_band in ('poor', 'borderline'):
+    elif founder_first and needs_founder_eye:
         # Hold for founder/team final check — creator stays "in review"
-        job.status = 'borderline' if overall_band == 'borderline' else 'failed'
+        job.status = 'borderline' if overall_band == 'borderline' else ('failed' if overall_band == 'poor' else 'borderline')
         content.season_qc_status = 'pending_founder'
         content.review_status = 'under_review'
     elif overall_band == 'borderline' or (overall_band in ('excellent', 'good') and not auto_clear):
@@ -1105,6 +1154,7 @@ def run_season_qc_job(job_id: int) -> SeasonQualityJob:
         'tool_catalog': review_tool_catalog(),
         'timing': timing,
         'founder_first': founder_first,
+        'founder_attention_hits': founder_attention_hits,
         'draft_change_items': draft_items,
         'flags': {
             'technical': _flag('ff_season_qc_technical', True),
@@ -1118,19 +1168,20 @@ def run_season_qc_job(job_id: int) -> SeasonQualityJob:
             'watermark': _flag('ff_season_qc_watermark', True),
             'blackdetect': _flag('ff_season_qc_blackdetect', True),
             'integrity': _flag('ff_season_qc_integrity', True),
+            'ai_safety': _flag('ff_season_qc_ai_safety', True),
         },
     })
     job.completed_at = datetime.utcnow()
     db.session.commit()
 
-    if founder_first and overall_band in ('poor', 'borderline'):
+    if founder_first and needs_founder_eye:
         try:
             from .platform_notify import notify_episio_qc_flags_ready
             notify_episio_qc_flags_ready(
                 getattr(content, 'title', None) or f'Series {content.id}',
                 content.id,
                 overall_band,
-                len(draft_items),
+                len(draft_items) or founder_attention_hits,
             )
         except Exception:
             pass

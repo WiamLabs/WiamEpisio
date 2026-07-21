@@ -39,12 +39,19 @@ const TrailerPlayerScreen = () => {
 
   useEffect(() => {
     if (url && player) {
-      try {
-        player.muted = false;
-        player.volume = 1;
-        player.replace(url);
-        player.play();
-      } catch { /* ignore */ }
+      const run = async () => {
+        try {
+          player.muted = false;
+          player.volume = 1;
+          if (typeof player.replaceAsync === 'function') {
+            await player.replaceAsync(url);
+          } else {
+            player.replace(url);
+          }
+          player.play();
+        } catch { /* ignore */ }
+      };
+      run();
     }
   }, [url, player]);
 

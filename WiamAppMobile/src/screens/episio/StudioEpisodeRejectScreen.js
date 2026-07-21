@@ -28,7 +28,7 @@ const StudioEpisodeRejectScreen = () => {
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Why</Text>
         <Text style={styles.cardText}>
-          {message || 'Wrong aspect ratio or duration. Export 9:16 at 1080×1920, 4–5 minutes.'}
+          {message || 'Wrong aspect or duration. Export 9:16 vertical or 16:9 landscape, 4–5 minutes.'}
         </Text>
       </View>
       <TouchableOpacity

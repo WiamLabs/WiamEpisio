@@ -24,7 +24,7 @@ import { assertGuestCanWatchSeries } from '../../utils/guestSeriesGate';
 import WatchRewardRing from '../../components/episio/WatchRewardRing';
 
 const { width: W } = Dimensions.get('window');
-const FRAME_H = Math.min(W * (16 / 9) * 0.58, W * 1.15);
+const FRAME_H = Math.min(W * 1.25, 520);
 
 const PlayerScreen = () => {
   const insets = useSafeAreaInsets();
@@ -53,12 +53,19 @@ const PlayerScreen = () => {
 
   useEffect(() => {
     if (streamUrl && player) {
-      try {
-        player.replace(streamUrl);
-        player.play();
-      } catch {
-        /* ignore */
-      }
+      const run = async () => {
+        try {
+          if (typeof player.replaceAsync === 'function') {
+            await player.replaceAsync(streamUrl);
+          } else {
+            player.replace(streamUrl);
+          }
+          player.play();
+        } catch {
+          /* ignore */
+        }
+      };
+      run();
     }
   }, [streamUrl, player]);
 

@@ -54,7 +54,11 @@ function Slide({ item, active, width, onPress }) {
       try {
         player.muted = true;
         player.volume = 0;
-        player.replace(url);
+        if (typeof player.replaceAsync === 'function') {
+          await player.replaceAsync(url);
+        } else {
+          player.replace(url);
+        }
         player.play();
       } catch { /* ignore */ }
     })();

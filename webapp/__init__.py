@@ -1959,6 +1959,7 @@ def _run_safe_migrations(app):
         "ALTER TABLE w_platform_config ADD COLUMN IF NOT EXISTS ff_season_qc_auto_clear_good BOOLEAN DEFAULT FALSE",
         "ALTER TABLE w_platform_config ADD COLUMN IF NOT EXISTS ff_season_qc_sla_auto_decide BOOLEAN DEFAULT TRUE",
         "ALTER TABLE w_platform_config ADD COLUMN IF NOT EXISTS ff_season_qc_founder_first BOOLEAN DEFAULT TRUE",
+        "ALTER TABLE w_platform_config ADD COLUMN IF NOT EXISTS ff_season_qc_ai_safety BOOLEAN DEFAULT TRUE",
         """CREATE TABLE IF NOT EXISTS w_content_fingerprints (
             id SERIAL PRIMARY KEY,
             content_id INTEGER NOT NULL,

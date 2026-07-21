@@ -43,9 +43,12 @@ csrf.exempt(episio_studio_api)
 
 MEDIA_SPECS = {
     'episode': {
-        'aspect': '9:16',
-        'preferred_resolution': '1080x1920',
-        'min_resolution': '720x1280',
+        'aspect': '9:16 or 16:9',
+        'aspects_allowed': ['9:16', '16:9'],
+        'preferred_resolution_vertical': '1080x1920',
+        'preferred_resolution_landscape': '1920x1080',
+        'min_resolution_vertical': '720x1280',
+        'min_resolution_landscape': '1280x720',
         # Product law (Specs Guide): 4–5 minutes only
         'duration_target_seconds': [240, 300],
         'duration_band_seconds': [240, 300],
@@ -54,11 +57,14 @@ MEDIA_SPECS = {
         'max_file_mb': 500,
     },
     'trailer': {
-        'aspect': '9:16',
+        'aspect': '9:16 or 16:9',
+        'aspects_allowed': ['9:16', '16:9'],
         # Product law (Specs Guide): 15–60 seconds — NOT 1–2 minutes
         'duration_band_seconds': [15, 60],
-        'preferred_resolution': '1080x1920',
-        'min_resolution': '720x1280',
+        'preferred_resolution_vertical': '1080x1920',
+        'preferred_resolution_landscape': '1920x1080',
+        'min_resolution_vertical': '720x1280',
+        'min_resolution_landscape': '1280x720',
     },
     'cover': {
         'aspect': '2:3',
@@ -208,17 +214,25 @@ def _owns(user, c: Content) -> bool:
 
 
 def _validate_aspect(width, height):
+    """TikTok-style: accept vertical 9:16 OR landscape 16:9."""
     try:
         w, h = int(width or 0), int(height or 0)
     except (TypeError, ValueError):
         return False, 'Missing width/height'
-    if w < 720 or h < 1280:
-        return False, f'Resolution too low ({w}x{h}). Min 720x1280, prefer 1080x1920.'
-    ratio = w / float(h) if h else 0
-    # 9:16 = 0.5625; allow small tolerance
-    if abs(ratio - 9 / 16) > 0.05:
-        return False, f'Video must be 9:16 vertical. Got {w}x{h}.'
-    return True, None
+    if w < 1 or h < 1:
+        return False, 'Missing width/height'
+    ratio = w / float(h)
+    vertical = abs(ratio - 9 / 16) <= 0.06
+    landscape = abs(ratio - 16 / 9) <= 0.06
+    if vertical:
+        if w < 720 or h < 1280:
+            return False, f'Resolution too low ({w}x{h}). Vertical min 720×1280, prefer 1080×1920.'
+        return True, None
+    if landscape:
+        if w < 1280 or h < 720:
+            return False, f'Resolution too low ({w}x{h}). Landscape min 1280×720, prefer 1920×1080.'
+        return True, None
+    return False, f'Video must be 9:16 vertical or 16:9 landscape (TikTok-style). Got {w}x{h}.'
 
 
 def _validate_duration(seconds, kind='episode'):

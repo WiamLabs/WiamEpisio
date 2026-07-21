@@ -4714,7 +4714,7 @@ def episio_quality_flags():
         'ff_season_qc_scenedetect', 'ff_season_qc_vad', 'ff_season_qc_phash',
         'ff_season_qc_watermark', 'ff_season_qc_blackdetect', 'ff_season_qc_integrity',
         'ff_season_qc_auto_reject_poor', 'ff_season_qc_auto_clear_good',
-        'ff_season_qc_founder_first',
+        'ff_season_qc_founder_first', 'ff_season_qc_ai_safety',
         'ff_season_qc_sla_auto_decide',
         'ff_trailer_quality_gate', 'ff_require_complete_series',
     ):
@@ -4782,6 +4782,14 @@ def episio_quality_decide(job_id):
     series = Content.query.get_or_404(job.content_id)
     decision = (request.form.get('decision') or '').strip()
     note = (request.form.get('note') or '').strip()
+    # Required founder checklist — system already checked; founder confirms last eye
+    if not (
+        request.form.get('check_romance_ok') == '1'
+        and request.form.get('check_no_explicit') == '1'
+        and request.form.get('check_technical') == '1'
+    ):
+        flash('Complete the founder checklist (Romance OK · No explicit · Technical) before deciding.', 'error')
+        return redirect(url_for('founder_dash.episio_quality_job', job_id=job.id))
     job.founder_note = note
     job.decided_by = current_user.wiam_id or current_user.id
     job.decided_at = _dt.utcnow()

@@ -104,6 +104,10 @@ const StudioEpisodeListScreen = () => {
     });
   };
 
+  const planMet = planned > 0 && uploaded >= planned;
+  const hasReady = uploaded > 0;
+  const canContinue = hasReady && !rejected.length && !locked;
+
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
       <View style={styles.topbar}>
@@ -152,10 +156,15 @@ const StudioEpisodeListScreen = () => {
         <FlatList
           data={rows}
           keyExtractor={(item) => String(item.id)}
-          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }}
+          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: canContinue ? 140 : 40 }}
           refreshControl={(
             <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(true); }} tintColor={COLORS.gold} />
           )}
+          ListFooterComponent={planMet && !rejected.length ? (
+            <Text style={styles.nextHint}>
+              Planned count reached. Next: Completeness checklist → trailer/cover → Submit for live.
+            </Text>
+          ) : null}
           renderItem={({ item: ep }) => {
             const st = statusMeta(ep);
             const thumb = resolveUrl(ep.poster_url || ep.thumbnail_url);
@@ -180,7 +189,7 @@ const StudioEpisodeListScreen = () => {
                     {ep.slot
                       ? 'Draft slot · Tap to upload'
                       : ep.rejected
-                        ? (ep.reject_message || 'Video must be 9:16. Tap to fix.')
+                        ? (ep.reject_message || 'Video must be 9:16 or 16:9. Tap to fix.')
                         : `${fmtDur(ep.duration_seconds)} · ${st.label}${ep.is_final ? ' · Final' : ''}`}
                   </Text>
                 </View>
@@ -203,6 +212,29 @@ const StudioEpisodeListScreen = () => {
           }}
         />
       )}
+
+      {canContinue ? (
+        <View style={[styles.continueBar, { paddingBottom: Math.max(insets.bottom, 14) }]}>
+          <Text style={styles.continueHint}>
+            {planMet
+              ? 'Episodes ready — continue to Completeness, then Submit for live.'
+              : 'You can keep adding episodes, or continue to Completeness anytime.'}
+          </Text>
+          <TouchableOpacity
+            style={styles.continueBtn}
+            onPress={() => navigation.navigate('StudioCompleteness', { seriesId })}
+            activeOpacity={0.9}
+          >
+            <Text style={styles.continueBtnText}>Continue → Completeness</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.workspaceLink}
+            onPress={() => navigation.navigate('StudioSeriesDetail', { seriesId })}
+          >
+            <Text style={styles.workspaceLinkText}>Back to series workspace</Text>
+          </TouchableOpacity>
+        </View>
+      ) : null}
     </View>
   );
 };
@@ -246,6 +278,25 @@ const styles = StyleSheet.create({
   pillReject: { backgroundColor: 'rgba(228,87,61,0.14)' },
   pillUp: { backgroundColor: 'rgba(212,160,23,0.14)' },
   pillText: { fontSize: 8.5, fontFamily: FONTS.extraBold },
+  nextHint: {
+    fontFamily: FONTS.medium, color: COLORS.textDim, fontSize: 12, lineHeight: 18,
+    marginTop: 8, marginBottom: 12, textAlign: 'center',
+  },
+  continueBar: {
+    position: 'absolute', left: 0, right: 0, bottom: 0,
+    paddingHorizontal: 20, paddingTop: 12,
+    backgroundColor: COLORS.navy,
+    borderTopWidth: 1, borderTopColor: COLORS.navyLine,
+  },
+  continueHint: {
+    fontFamily: FONTS.regular, color: COLORS.textDim, fontSize: 12, lineHeight: 17, marginBottom: 10,
+  },
+  continueBtn: {
+    backgroundColor: COLORS.gold, borderRadius: 14, paddingVertical: 14, alignItems: 'center',
+  },
+  continueBtnText: { fontFamily: FONTS.extraBold, color: COLORS.navy, fontSize: 14 },
+  workspaceLink: { paddingVertical: 12, alignItems: 'center' },
+  workspaceLinkText: { fontFamily: FONTS.semi, color: COLORS.textDim, fontSize: 13 },
 });
 
 export default StudioEpisodeListScreen;

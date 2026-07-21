@@ -160,7 +160,7 @@ const StudioTrailerScreen = () => {
           <View style={styles.fileCard}>
             <Text style={styles.fileTitle}>File Details</Text>
             <Text style={styles.fileLine}>Codec · H.264 / AAC (preferred)</Text>
-            <Text style={styles.fileLine}>Target · 15–60 seconds · vertical 9:16</Text>
+            <Text style={styles.fileLine}>Target · 15–60 seconds · 9:16 or 16:9</Text>
             <Text style={styles.fileLine}>Status · {qa || 'not uploaded'}</Text>
           </View>
         </>

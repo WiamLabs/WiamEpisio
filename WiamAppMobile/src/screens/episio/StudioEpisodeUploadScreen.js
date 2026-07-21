@@ -43,10 +43,17 @@ const StudioEpisodeUploadScreen = () => {
 
   useEffect(() => {
     if (!videoUri) return undefined;
-    try {
-      player.replace(videoUri);
-      player.play();
-    } catch { /* ignore */ }
+    const run = async () => {
+      try {
+        if (typeof player.replaceAsync === 'function') {
+          await player.replaceAsync(videoUri);
+        } else {
+          player.replace(videoUri);
+        }
+        player.play();
+      } catch { /* ignore */ }
+    };
+    run();
     return undefined;
   }, [videoUri, player]);
 
@@ -181,7 +188,7 @@ const StudioEpisodeUploadScreen = () => {
         markFinal ? 'Marked final' : 'Upload ready',
         markFinal
           ? `EP ${done?.episode?.episode_number || episodeNumber} is final — cover + video saved.`
-          : 'File validated (9:16 + duration). Add cover + mark final when the cut is locked.',
+          : 'File validated (aspect + duration). Add cover + mark final when the cut is locked.',
       );
       if (markFinal) navigation.goBack();
     } catch (e) {
@@ -228,9 +235,9 @@ const StudioEpisodeUploadScreen = () => {
       )}
     >
       <View style={styles.specCallout}>
-        <Text style={styles.specTitle}>9:16 · 1080×1920 · 4–5 min · MP4</Text>
+        <Text style={styles.specTitle}>9:16 or 16:9 · 4–5 min · MP4</Text>
         <Text style={styles.specSub}>
-          Vertical 9:16 only (phone / Shorts-style). Landscape 16:9 will be rejected.
+          TikTok-style: vertical 9:16 (prefer 1080×1920) or landscape 16:9 (prefer 1920×1080). Both play.
         </Text>
       </View>
 
@@ -257,7 +264,7 @@ const StudioEpisodeUploadScreen = () => {
           {pickedName ? 'Video selected — tap to change' : 'Choose episode video'}
         </Text>
         <Text style={styles.dropSub}>
-          {pickedName || 'Upload from your device — vertical 9:16 only'}
+          {pickedName || 'Upload 9:16 vertical or 16:9 landscape'}
         </Text>
       </TouchableOpacity>
 

@@ -2,7 +2,11 @@
 
 Living journal the AI agent reads at the start of every session and updates as work progresses. Mutable — overwrite freely. Durable project facts live in `.cursor/rules/project-context.mdc` instead.
 
-**Last updated:** 2026-07-21 — **Studio UX + founder-first QC + hard-delete.** Hard-purge workspace (DB + Cloudinary + R2). Friendly Studio timeout copy. Circular avatar crop (watcher + channel) + 16:9 banner. Profile: tap @username to copy; no verify chips. Comments @mention autocomplete from following. AgeGate brand bg / empty age copy. Episodes can grow past planned count. Expo Go skips push module. QC: `ff_season_qc_founder_first` → `pending_founder` before creator Needs Changes; watermark/VMAF/SSIM advisory; no romance NSFW classifier.
+**Last updated:** 2026-07-21 — **Episodes Continue CTA · dual aspect · serious QC + AI safety.** Studio Episode List has Continue→Completeness. Upload/play accept **9:16 and 16:9**. Restored watermark/VMAF/SSIM/pHash as creator-facing fails. Wired **Gemini free vision** (`episio_visual_safety.py`, `ff_season_qc_ai_safety`) — romance OK, explicit genitals hard-fail + founder attention. Founder QC checklist required before decide. Fixed `studioEpisio.js` `def`→`function` (Metro crash). Player `replaceAsync` + Expo Go LogBox for push noise.
+
+**Martin law (memory):** Do not defer “build later.” If he asks for a system (AI safety, QC, etc.), wire it now even if UI is thin — he will not circle back when money/time pressure hits.
+
+**Previous — Studio UX + founder-first QC + hard-delete.** Hard-purge workspace (DB + Cloudinary + R2). Friendly Studio timeout copy. Circular avatar crop (watcher + channel) + 16:9 banner. Profile: tap @username to copy; no verify chips. Comments @mention autocomplete from following. AgeGate brand bg / empty age copy. Episodes can grow past planned count. Expo Go skips push module. QC: `ff_season_qc_founder_first` → `pending_founder` before creator Needs Changes.
 
 **Previous — Finish polish Wave A+B.** Studio: probe chips + override, soft-interest/QC gate truth, Settings/Cover/Banner shell+KAV, trailer honesty, hub Assets/Publish/After-live groups. Watch: honest Home empties, real fullscreen via Player, Like→remind (no `/books/favorite`), BuyCoins→Paystack CheckoutWeb, VIP offer no fake timer/prices, Discover feed index not cosmetic dots.
 

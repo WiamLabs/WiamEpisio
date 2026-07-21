@@ -21,7 +21,9 @@ This is the implementation of `WIAMEPISIO_QUALITY_PIPELINE_PLAN.md`. Every layer
 | **WebRTC VAD** | Google WebRTC | Dialogue presence + long silence gaps | “little/no dialogue detected” |
 | **pHash** | ImageHash | Fingerprint vs catalog — re-uploads / stolen content | “possible duplicate/stolen match” |
 
-**Bands (Netflix-style routing):** with **founder-first** ON (default), Poor/Borderline go to `pending_founder` — creators still see “In review”. You get a founder notify. Creators only see Needs Changes after you press **Changes Required**, or after trust-tier SLA expires with no founder action. **There is no romance/NSFW video classifier** — kissing/hugging/romance are not auto-flagged. Hard creator fails stay technical: wrong aspect, duration, missing assets, stolen duplicates. VMAF/SSIM/watermark are founder advisory (encode health), not automatic creator rejects.
+**Bands (Netflix-style routing):** with **founder-first** ON (default), Poor/Borderline / AI-safety attention go to `pending_founder` — creators still see “In review”. You get a founder notify. Creators only see Needs Changes after you press **Changes Required**, or after trust-tier SLA expires with no founder action.
+
+**What the system MUST check (creator-facing):** aspect (9:16 **or** 16:9), duration, blur/exposure/shake, **watermark**, **VMAF**, **SSIM**, black/freeze, audio, **pHash stolen**, and **AI visual safety** (Gemini free — explicit genitals hard-fail; kissing/romance allowed). Founder checklist is the last eye — not a replacement for machine checks.
 
 Cover + banner are presence-checked; trailer + **every** episode run the full video/audio stack.
 
@@ -39,29 +41,29 @@ enqueue SeasonQualityJob (status=queued)
 run_season_qc_job()  [same process or founder "Run queue"]
         ↓
 For cover, banner, trailer, EACH episode:
-  Stage 1 technical → watermark (advisory)
+  Stage 1 technical (9:16 or 16:9) → watermark (fail if suspect)
   Stage 2 scene sample
-  Stage 3 OpenCV + black/freeze + VMAF/SSIM (founder advisory)
+  Stage 3 OpenCV + black/freeze + VMAF + SSIM + Gemini AI safety
   Stage 4 ebur128 + VAD
   Stage 5 pHash vs w_content_fingerprints
         ↓
 Aggregate worst band across assets
         ↓
-Poor/Borderline + founder-first → pending_founder (notify founder only)
-Good/Excellent → under_review for light human publish
+Poor/Borderline/AI attention + founder-first → pending_founder (notify founder)
+Good/Excellent clean → under_review for light human publish
         ↓
-Founder website: Approve & Publish OR Changes Required (then creator sees fix list)
+Founder checklist (Romance OK · No explicit · Technical) then Publish OR Needs Changes
         ↓
 SLA expiry (if founder absent): Good→auto-publish · else Needs Changes
         ↓
 ONLY founder/system publish flips series live (creator cannot)
 ```
 
-**Content policy (human):** Romance, kissing, hugging = allowed drama. Explicit genitals / open sex = reject manually in founder review (machine does not scan for this yet — add only if you want a separate safety layer).
+**Content policy:** Romance, kissing, hugging = allowed. Explicit genitals / open sex with private parts = machine + founder reject. Requires `GEMINI_API_KEY` for vision safety (same free AI stack as WiamApp).
 
 **Tables:** `w_season_quality_jobs`, `w_season_asset_quality_reports` (per-asset checks JSON), `w_content_fingerprints`.
 
-**If a tool binary/lib is missing** on the host, that layer is skipped gracefully and recorded as not installed on the founder toolkit table — other layers still run. Install packages from `requirements.txt` (opencv, scenedetect, webrtcvad, ImageHash) plus **ffmpeg/ffprobe with libvmaf** on the worker for full Netflix VMAF.
+**If a tool binary/lib is missing** on the host, that layer is skipped gracefully and recorded as not installed on the founder toolkit table — other layers still run. Install packages from `requirements.txt` (opencv, scenedetect, webrtcvad, ImageHash) plus **ffmpeg/ffprobe with libvmaf** on the worker for full Netflix VMAF. Set **GEMINI_API_KEY** on Render for AI safety.
 
 ---
 

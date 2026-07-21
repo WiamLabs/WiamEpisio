@@ -15,12 +15,12 @@ const FAQS = [
   {
     chip: 'Specs',
     q: 'What video specs pass review?',
-    a: 'Episodes must be 9:16 vertical, preferred 1080×1920, 4–5 minutes (accept band 3:00–6:00), H.264 + AAC MP4. Trailer 15–60 seconds.',
+    a: 'Episodes may be 9:16 vertical or 16:9 landscape (TikTok-style), preferred 1080×1920 or 1920×1080, 4–5 minutes, H.264 + AAC MP4. Trailer 15–60 seconds.',
   },
   {
     chip: 'Rejections',
     q: 'Why did my trailer fail?',
-    a: 'Common fails: wrong duration (not 15–60s), watermarks, heavy compression, or wrong aspect. Fix and re-upload — only that asset is re-checked on Needs Changes.',
+    a: 'Common fails: wrong duration (not 15–60s), watermarks, heavy compression, stolen match, explicit genitals, or wrong aspect. Romance/kissing is allowed. Fix and re-upload — only that asset is re-checked on Needs Changes.',
   },
   {
     chip: 'Review Time',
