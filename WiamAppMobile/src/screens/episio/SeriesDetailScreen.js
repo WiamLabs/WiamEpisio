@@ -17,7 +17,6 @@ import { COLORS, FONTS } from '../../constants/theme';
 import episodesApi from '../../api/episodes';
 import watchApi from '../../api/watch';
 import studioEpisioApi from '../../api/studioEpisio';
-import apiClient from '../../api/client';
 import useAuthStore from '../../store/useAuthStore';
 import resolveUrl from '../../utils/resolveUrl';
 import { assertGuestCanWatchSeries } from '../../utils/guestSeriesGate';
