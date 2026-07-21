@@ -21,7 +21,7 @@ This is the implementation of `WIAMEPISIO_QUALITY_PIPELINE_PLAN.md`. Every layer
 | **WebRTC VAD** | Google WebRTC | Dialogue presence + long silence gaps | “little/no dialogue detected” |
 | **pHash** | ImageHash | Fingerprint vs catalog — re-uploads / stolen content | “possible duplicate/stolen match” |
 
-**Bands (not hard pass/fail):** only **Poor** auto-rejects; **Excellent/Good** can auto-clear (if founder enables); **Borderline** goes to human on the website. That is the Netflix-style routing the plan described.
+**Bands (Netflix-style routing):** with **founder-first** ON (default), Poor/Borderline go to `pending_founder` — creators still see “In review”. You get a founder notify. Creators only see Needs Changes after you press **Changes Required**, or after trust-tier SLA expires with no founder action. **There is no romance/NSFW video classifier** — kissing/hugging/romance are not auto-flagged. Hard creator fails stay technical: wrong aspect, duration, missing assets, stolen duplicates. VMAF/SSIM/watermark are founder advisory (encode health), not automatic creator rejects.
 
 Cover + banner are presence-checked; trailer + **every** episode run the full video/audio stack.
 
@@ -39,22 +39,25 @@ enqueue SeasonQualityJob (status=queued)
 run_season_qc_job()  [same process or founder "Run queue"]
         ↓
 For cover, banner, trailer, EACH episode:
-  Stage 1 technical → watermark
+  Stage 1 technical → watermark (advisory)
   Stage 2 scene sample
-  Stage 3 OpenCV + black/freeze + VMAF + SSIM
+  Stage 3 OpenCV + black/freeze + VMAF/SSIM (founder advisory)
   Stage 4 ebur128 + VAD
   Stage 5 pHash vs w_content_fingerprints
         ↓
 Aggregate worst band across assets
         ↓
-Poor → auto Needs Changes (structured fix list)
-Borderline → founder queue
+Poor/Borderline + founder-first → pending_founder (notify founder only)
 Good/Excellent → under_review for light human publish
         ↓
-Founder website: Publish OR Changes Required
+Founder website: Approve & Publish OR Changes Required (then creator sees fix list)
+        ↓
+SLA expiry (if founder absent): Good→auto-publish · else Needs Changes
         ↓
 ONLY founder/system publish flips series live (creator cannot)
 ```
+
+**Content policy (human):** Romance, kissing, hugging = allowed drama. Explicit genitals / open sex = reject manually in founder review (machine does not scan for this yet — add only if you want a separate safety layer).
 
 **Tables:** `w_season_quality_jobs`, `w_season_asset_quality_reports` (per-asset checks JSON), `w_content_fingerprints`.
 

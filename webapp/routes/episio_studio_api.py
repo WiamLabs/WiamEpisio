@@ -158,7 +158,7 @@ def _pipeline_state(c: Content) -> str:
     qc = (getattr(c, 'season_qc_status', None) or '').lower()
     if qc in ('needs_changes', 'failed') or rev == 'revision_requested':
         return 'needs_changes'
-    if rev == 'under_review' or qc in ('queued', 'pending', 'running', 'borderline'):
+    if rev == 'under_review' or qc in ('queued', 'pending', 'running', 'borderline', 'pending_founder'):
         return 'in_review'
     if getattr(c, 'season_locked', False):
         return 'locked'
@@ -1056,14 +1056,11 @@ def studio_series_detail(series_id):
                 ),
                 'can_request_removal': True,
             }), 403
-        # Soft-delete draft / building / in-review / needs-changes units completely from creator view
-        c.deleted_at = datetime.utcnow()
-        c.status = 'deleted'
-        for ep in Episode.query.filter_by(content_id=c.id).all():
-            ep.published = False
-        db.session.commit()
-        log.info('Creator soft-deleted series id=%s by user=%s', series_id, user.id)
-        return jsonify({'ok': True, 'deleted': True, 'series_id': series_id})
+        # Hard-delete draft / building / in-review / needs-changes units completely
+        from ..services.episio_purge import purge_series_unit
+        result = purge_series_unit(c)
+        log.info('Creator hard-deleted series id=%s by user=%s', series_id, user.id)
+        return jsonify(result)
 
     if request.method == 'PATCH':
         # Metadata edits blocked when locked unless pre-live fix window (assets only)
@@ -1349,8 +1346,10 @@ def studio_create_episode(series_id):
         num = (last.episode_number + 1) if last else 1
     num = int(num)
     planned = int(getattr(c, 'planned_episode_count', 0) or 0)
+    # Creators may grow the season — auto-raise planned count instead of blocking.
     if planned and num > planned:
-        return jsonify({'error': 'beyond_planned', 'message': f'Planned season is {planned} episodes.'}), 400
+        c.planned_episode_count = num
+        planned = num
     if Episode.query.filter_by(content_id=c.id, episode_number=num).first():
         return jsonify({'error': f'Episode {num} already exists'}), 400
 

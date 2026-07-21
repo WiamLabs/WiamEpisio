@@ -7,9 +7,9 @@ import {
   View, Text, StyleSheet, TouchableOpacity, TextInput,
   ActivityIndicator, Alert, Image,
 } from 'react-native';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import {
-  ChevronRight, FileText, HelpCircle, Star, Wallet, Banknote, LogOut,
+  ChevronRight, FileText, HelpCircle, Star, Wallet, Banknote, LogOut, Camera,
 } from 'lucide-react-native';
 import EpisioScreenShell from '../../components/episio/EpisioScreenShell';
 import EpisioGoldButton from '../../components/episio/EpisioGoldButton';
@@ -17,7 +17,7 @@ import { COLORS, FONTS } from '../../constants/theme';
 import useAuthStore from '../../store/useAuthStore';
 import studioEpisioApi from '../../api/studioEpisio';
 import resolveUrl from '../../utils/resolveUrl';
-import { pickCroppedImage } from '../../utils/pickMedia';
+import { pickCroppedImage, pickImageAsIs } from '../../utils/pickMedia';
 
 const Row = ({ icon: Icon, label, value, onPress, tag }) => (
   <TouchableOpacity style={styles.row} onPress={onPress} disabled={!onPress}>
@@ -47,6 +47,7 @@ const Field = ({ label, value, onChange, placeholder, multiline }) => (
 
 const StudioSettingsScreen = () => {
   const navigation = useNavigation();
+  const route = useRoute();
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const [tier, setTier] = useState(null);
@@ -100,19 +101,42 @@ const StudioSettingsScreen = () => {
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
+  useFocusEffect(useCallback(() => {
+    const cropped = route.params?.croppedUri;
+    if (!cropped) return;
+    navigation.setParams({ croppedUri: undefined });
+    (async () => {
+      setSaving(true);
+      try {
+        const data = await studioEpisioApi.uploadChannelAvatar(cropped);
+        setProfile((p) => ({ ...p, avatar_url: data?.avatar_url || p.avatar_url }));
+        Alert.alert('Uploaded', 'Channel photo updated.');
+      } catch (e) {
+        Alert.alert('Upload', e?.message || 'Failed');
+      } finally {
+        setSaving(false);
+      }
+    })();
+  }, [route.params?.croppedUri, navigation]));
+
   const pickAndUpload = async (kind) => {
-    const uri = await pickCroppedImage(kind === 'banner' ? 'banner' : 'avatar');
+    if (kind === 'avatar') {
+      const uri = await pickImageAsIs();
+      if (!uri) return;
+      navigation.navigate('CircularAvatarCrop', {
+        uri,
+        returnScreen: 'StudioSettings',
+        returnKey: 'croppedUri',
+      });
+      return;
+    }
+    const uri = await pickCroppedImage('banner');
     if (!uri) return;
     setSaving(true);
     try {
-      if (kind === 'avatar') {
-        const data = await studioEpisioApi.uploadChannelAvatar(uri);
-        setProfile((p) => ({ ...p, avatar_url: data?.avatar_url || p.avatar_url }));
-      } else {
-        const data = await studioEpisioApi.uploadChannelBanner(uri);
-        setProfile((p) => ({ ...p, banner_url: data?.banner_url || p.banner_url }));
-      }
-      Alert.alert('Uploaded', kind === 'avatar' ? 'Channel photo updated.' : 'Channel banner updated.');
+      const data = await studioEpisioApi.uploadChannelBanner(uri);
+      setProfile((p) => ({ ...p, banner_url: data?.banner_url || p.banner_url }));
+      Alert.alert('Uploaded', 'Channel banner updated.');
     } catch (e) {
       Alert.alert('Upload', e?.message || 'Failed');
     } finally {
@@ -165,28 +189,32 @@ const StudioSettingsScreen = () => {
       )}
     >
       <View style={styles.studioCard}>
-        <TouchableOpacity style={styles.avatar} onPress={() => pickAndUpload('avatar')}>
-          {profile.avatar_url ? (
-            <Image source={{ uri: resolveUrl(profile.avatar_url) }} style={styles.avatarImg} />
-          ) : (
-            <Text style={styles.avatarText}>{initial}</Text>
-          )}
+        <TouchableOpacity style={styles.avatarWrap} onPress={() => pickAndUpload('avatar')} activeOpacity={0.85}>
+          <View style={styles.avatar}>
+            {profile.avatar_url ? (
+              <Image source={{ uri: resolveUrl(profile.avatar_url) }} style={styles.avatarImg} />
+            ) : (
+              <Text style={styles.avatarText}>{initial}</Text>
+            )}
+          </View>
+          <View style={styles.camBadge}>
+            <Camera size={12} color={COLORS.navy} />
+          </View>
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
           <Text style={styles.cardName}>{displayName}</Text>
           <Text style={styles.cardSub}>
             @{user?.username || 'creator'} · {tierLabel}
           </Text>
-          <Text style={styles.tapHint}>Tap photo · crop square first</Text>
         </View>
       </View>
 
-      <Text style={styles.groupTitle}>Channel banner (required)</Text>
+      <Text style={styles.groupTitle}>Channel banner (required · 16:9)</Text>
       <TouchableOpacity style={styles.bannerBox} onPress={() => pickAndUpload('banner')} activeOpacity={0.9}>
         {profile.banner_url ? (
           <Image source={{ uri: resolveUrl(profile.banner_url) }} style={styles.bannerImg} />
         ) : (
-          <Text style={styles.bannerHint}>Upload a wide banner · crop 16:9 first</Text>
+          <Text style={styles.bannerHint}>Upload a wide 16:9 banner to cover the channel header</Text>
         )}
       </TouchableOpacity>
       {profile.banner_url ? (
@@ -268,15 +296,20 @@ const styles = StyleSheet.create({
     width: 48, height: 48, borderRadius: 24, backgroundColor: COLORS.gold,
     alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
   },
+  avatarWrap: { width: 48, height: 48 },
+  camBadge: {
+    position: 'absolute', right: -2, bottom: -2, width: 22, height: 22, borderRadius: 11,
+    backgroundColor: COLORS.gold, alignItems: 'center', justifyContent: 'center',
+    borderWidth: 2, borderColor: COLORS.navyCard,
+  },
   avatarImg: { width: 48, height: 48 },
   avatarText: { fontFamily: FONTS.bold, color: COLORS.navy, fontSize: 18 },
   cardName: { color: '#fff', fontFamily: FONTS.bold, fontSize: 16 },
   cardSub: { color: COLORS.textDim, fontFamily: FONTS.regular, fontSize: 12, marginTop: 2 },
-  tapHint: { color: COLORS.gold, fontFamily: FONTS.medium, fontSize: 10, marginTop: 4 },
   bannerBox: {
     height: 110, borderRadius: 14, overflow: 'hidden', marginBottom: 8,
     backgroundColor: COLORS.navyCard, borderWidth: 1, borderColor: COLORS.navyLine,
-    alignItems: 'center', justifyContent: 'center',
+    alignItems: 'center', justifyContent: 'center', aspectRatio: undefined,
   },
   bannerImg: { width: '100%', height: '100%' },
   bannerHint: { color: COLORS.textFaint, fontFamily: FONTS.medium, fontSize: 12, paddingHorizontal: 16, textAlign: 'center' },

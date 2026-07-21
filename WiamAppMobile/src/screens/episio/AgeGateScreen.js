@@ -85,7 +85,7 @@ const AgeGateScreen = () => {
     setError(null);
     const typed = parseInt(String(ageText).replace(/\D/g, ''), 10);
     if (!typed || typed < 1 || typed > 120) {
-      setError('Enter your age in years');
+      setError('Enter your age and continue');
       return;
     }
     if (typed < MIN_AGE) {
@@ -123,6 +123,7 @@ const AgeGateScreen = () => {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <View style={styles.glowBg} />
+      <View style={styles.glowBg2} />
       <ScrollView
         contentContainerStyle={styles.wrap}
         keyboardShouldPersistTaps="handled"
@@ -141,7 +142,7 @@ const AgeGateScreen = () => {
             style={styles.ageInput}
             value={ageText}
             onChangeText={setAgeText}
-            placeholder="e.g. 22"
+            placeholder=""
             placeholderTextColor={COLORS.textFaint}
             keyboardType="number-pad"
             maxLength={3}
@@ -178,12 +179,21 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: COLORS.navy },
   glowBg: {
     position: 'absolute',
-    top: 40,
-    alignSelf: 'center',
-    width: 420,
-    height: 420,
-    borderRadius: 210,
-    backgroundColor: 'rgba(212,160,23,0.16)',
+    top: -80,
+    left: -60,
+    width: 280,
+    height: 280,
+    borderRadius: 140,
+    backgroundColor: 'rgba(212,160,23,0.08)',
+  },
+  glowBg2: {
+    position: 'absolute',
+    bottom: 40,
+    right: -80,
+    width: 260,
+    height: 260,
+    borderRadius: 130,
+    backgroundColor: 'rgba(114,47,55,0.18)',
   },
   wrap: {
     alignItems: 'center',
@@ -197,7 +207,7 @@ const styles = StyleSheet.create({
     fontSize: 20, fontFamily: FONTS.extraBold, color: '#fff', marginTop: 22, marginBottom: 10, textAlign: 'center',
   },
   sub: {
-    fontSize: 12.5, color: '#7D7D97', lineHeight: 20, textAlign: 'center', maxWidth: 300, marginBottom: 20,
+    fontSize: 12.5, color: COLORS.textDim, lineHeight: 20, textAlign: 'center', maxWidth: 300, marginBottom: 20,
   },
   yearLabel: {
     alignSelf: 'stretch', textAlign: 'center', fontSize: 10, color: COLORS.textFaint,
@@ -231,7 +241,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     marginBottom: 26,
   },
-  privacyText: { flex: 1, fontSize: 10.5, color: '#7D7D97', lineHeight: 16.3 },
+  privacyText: { flex: 1, fontSize: 10.5, color: COLORS.textDim, lineHeight: 16.3 },
   error: { color: COLORS.error, fontFamily: FONTS.medium, fontSize: 12, marginBottom: 10, textAlign: 'center' },
   declineLink: { fontSize: 12, color: COLORS.textFaint, fontFamily: FONTS.semi },
 });

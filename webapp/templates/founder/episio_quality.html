@@ -65,8 +65,9 @@
         ('ff_season_qc_watermark', 'Corner watermark detector', cfg.ff_season_qc_watermark),
         ('ff_season_qc_blackdetect', 'FFmpeg blackdetect / freezedetect', cfg.ff_season_qc_blackdetect),
         ('ff_season_qc_integrity', 'Integrity aggregate layer', cfg.ff_season_qc_integrity),
-        ('ff_season_qc_auto_reject_poor', 'Auto-reject Poor band', cfg.ff_season_qc_auto_reject_poor),
+        ('ff_season_qc_auto_reject_poor', 'Auto-reject Poor band (OFF when founder-first holds flags)', cfg.ff_season_qc_auto_reject_poor),
         ('ff_season_qc_auto_clear_good', 'Auto-clear Good/Excellent (still founder publish)', cfg.ff_season_qc_auto_clear_good),
+        ('ff_season_qc_founder_first', 'FOUNDER-FIRST — QC flags notify you before creators see Needs Changes', getattr(cfg, 'ff_season_qc_founder_first', True)),
         ('ff_season_qc_sla_auto_decide', 'SLA auto: after 72/48/24/12h — Good→publish, else Needs Changes', cfg.ff_season_qc_sla_auto_decide),
       ] %}
       {% for key, label, val in flags %}

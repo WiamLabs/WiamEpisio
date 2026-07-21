@@ -1,32 +1,46 @@
 /**
- * Push permission prompt
+ * Push permission prompt — no static expo-notifications import (Expo Go safe).
  */
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, Linking } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import * as Notifications from 'expo-notifications';
 import { Bell } from 'lucide-react-native';
 import EpisioScreenShell from '../../components/episio/EpisioScreenShell';
 import { COLORS, FONTS, RADIUS } from '../../constants/theme';
+import { registerForPushNotifications } from '../../services/pushNotifications';
+import Constants from 'expo-constants';
+
+const isExpoGo = () => (
+  Constants.appOwnership === 'expo'
+  || Constants.executionEnvironment === 'storeClient'
+);
 
 const PushPermissionPromptScreen = () => {
   const navigation = useNavigation();
 
   const enable = async () => {
+    if (isExpoGo()) {
+      Alert.alert(
+        'Development build needed',
+        'Push alerts need a WiamEpisio development or store build. Expo Go cannot receive them on Android.',
+        [{ text: 'OK', onPress: () => navigation.goBack() }],
+      );
+      return;
+    }
     try {
-      const { status } = await Notifications.requestPermissionsAsync();
-      if (status === 'granted') {
+      const token = await registerForPushNotifications();
+      if (token) {
         navigation.goBack();
-      } else {
-        Alert.alert(
-          'Notifications',
-          'Enable notifications in system Settings to get episode drops and coin alerts.',
-          [
-            { text: 'Open Settings', onPress: () => Linking.openSettings() },
-            { text: 'Later', onPress: () => navigation.goBack() },
-          ],
-        );
+        return;
       }
+      Alert.alert(
+        'Notifications',
+        'Enable notifications in system Settings to get episode drops and coin alerts.',
+        [
+          { text: 'Open Settings', onPress: () => Linking.openSettings() },
+          { text: 'Later', onPress: () => navigation.goBack() },
+        ],
+      );
     } catch {
       Alert.alert('Notifications', 'Could not request permission.');
       navigation.goBack();

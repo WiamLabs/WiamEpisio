@@ -3110,6 +3110,10 @@ def creator_profile(creator_id):
         cid = None
     if not user:
         user = User.query.filter_by(wiam_id=str(creator_id)).first()
+    if not user:
+        handle = str(creator_id or '').lstrip('@').strip()
+        if handle:
+            user = User.query.filter(User.username.ilike(handle)).first()
     if not user or not user.is_creator:
         return jsonify({'error': 'Creator not found'}), 404
 

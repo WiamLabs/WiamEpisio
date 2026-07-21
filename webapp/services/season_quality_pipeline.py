@@ -750,9 +750,11 @@ def _score_asset(
         checks['watermark'] = {k: v for k, v in wm.items()}
         if wm.get('checked'):
             checks['tools_run'].append('watermark')
+        # Advisory only — corner heuristics false-fire on titles/UI; founder sees it,
+        # creators are not auto-failed for possible watermarks alone.
         if wm.get('suspect_watermark'):
-            fails.append(f'{kind}: possible platform watermark in corner — re-export clean')
-            score -= 0.3
+            checks['watermark_advisory'] = 'possible corner logo — founder should eye-check'
+            score -= 0.05
 
         bf = _ffmpeg_black_freeze(path)
         checks['black_freeze'] = bf
@@ -771,14 +773,16 @@ def _score_asset(
                 vmaf = _vmaf_score(path, proxy)
                 if vmaf is not None:
                     checks['tools_run'].append('vmaf')
-                    checks['vmaf'] = {'score': round(vmaf, 2), 'source': 'delivery_proxy'}
-                    # Netflix bands from plan: 80+ excellent, 60–79 good, 40–59 borderline, <40 poor
+                    # Source-vs-our-proxy is encode-health for founders — not a creator reject.
+                    checks['vmaf'] = {
+                        'score': round(vmaf, 2),
+                        'source': 'delivery_proxy',
+                        'creator_facing': False,
+                    }
                     if vmaf < 40:
-                        fails.append(f'{kind}: VMAF {vmaf:.0f} — video quality below threshold')
-                        score -= 0.35
                         checks['vmaf_band'] = 'poor'
+                        score -= 0.05
                     elif vmaf < 60:
-                        score -= 0.12
                         checks['vmaf_band'] = 'borderline'
                     elif vmaf < 80:
                         checks['vmaf_band'] = 'good'
@@ -790,13 +794,12 @@ def _score_asset(
                 ssim = _ssim_score(path, proxy)
                 if ssim is not None:
                     checks['tools_run'].append('ssim')
-                    checks['ssim'] = {'score': round(ssim, 3)}
+                    checks['ssim'] = {'score': round(ssim, 3), 'creator_facing': False}
                     if ssim < 0.75:
-                        fails.append(f'{kind}: SSIM {ssim:.2f} — structural quality weak after delivery encode')
-                        score -= 0.15
                         checks['ssim_band'] = 'poor'
-                    elif ssim < 0.88:
                         score -= 0.05
+                    elif ssim < 0.88:
+                        score -= 0.02
                         checks['ssim_band'] = 'borderline'
                     else:
                         checks['ssim_band'] = 'good'
@@ -882,11 +885,11 @@ def _score_asset(
     band = _band_from_score(score)
     if fails and band in ('excellent', 'good'):
         band = 'borderline'
+    # Hard creator-facing fails: wrong aspect, duration, missing files, stolen dupes.
+    # Soft/romance-safe: no NSFW classifier — kissing/hugging never auto-flagged.
     if any('must be 9:16' in f or 'missing duration' in f or 'outside' in f for f in fails):
         if score < 0.4:
             band = 'poor'
-    if any('VMAF' in f and 'below threshold' in f for f in fails):
-        band = 'poor'
     if any('duplicate/stolen' in f for f in fails):
         band = 'poor'
     return score, band, checks, fails
@@ -1031,14 +1034,21 @@ def run_season_qc_job(job_id: int) -> SeasonQualityJob:
 
     auto_reject = _flag('ff_season_qc_auto_reject_poor', True)
     auto_clear = _flag('ff_season_qc_auto_clear_good', False)
+    # Founder-first: never push Needs Changes to creators until founder decides or SLA fires.
+    founder_first = _flag('ff_season_qc_founder_first', True)
 
-    if overall_band == 'poor' and auto_reject:
+    if overall_band == 'poor' and auto_reject and not founder_first:
         job.status = 'failed'
         content.season_qc_status = 'failed'
         content.review_status = 'revision_requested'
     elif overall_band in ('excellent', 'good') and auto_clear:
         job.status = 'passed'
         content.season_qc_status = 'passed'
+        content.review_status = 'under_review'
+    elif founder_first and overall_band in ('poor', 'borderline'):
+        # Hold for founder/team final check — creator stays "in review"
+        job.status = 'borderline' if overall_band == 'borderline' else 'failed'
+        content.season_qc_status = 'pending_founder'
         content.review_status = 'under_review'
     elif overall_band == 'borderline' or (overall_band in ('excellent', 'good') and not auto_clear):
         job.status = 'borderline'
@@ -1057,8 +1067,9 @@ def run_season_qc_job(job_id: int) -> SeasonQualityJob:
     job.assets_borderline = borderline
     job.failure_reasons = '; '.join(all_fails[:40])
 
-    if content.season_qc_status in ('failed', 'needs_changes') or overall_band in ('poor', 'borderline'):
-        items = []
+    # Draft fix cards for founder — only publish to creator review_change_items when not founder-first
+    draft_items = []
+    if content.season_qc_status in ('failed', 'needs_changes', 'pending_founder') or overall_band in ('poor', 'borderline'):
         for a in SeasonAssetQualityReport.query.filter_by(job_id=job.id).all():
             if (a.status or '') not in ('failed', 'borderline'):
                 continue
@@ -1072,7 +1083,7 @@ def run_season_qc_job(job_id: int) -> SeasonQualityJob:
             else:
                 title = f'{kind.title()} needs a fix'
                 fix = 'cover' if kind in ('cover', 'banner') else 'episodes'
-            items.append({
+            draft_items.append({
                 'tag': kind.upper(),
                 'title': title,
                 'text': (a.failure_reasons or 'Re-export and re-upload.').strip(),
@@ -1081,8 +1092,8 @@ def run_season_qc_job(job_id: int) -> SeasonQualityJob:
                 'episode_number': a.episode_number,
                 'band': a.band,
             })
-        if items:
-            content.review_change_items = json.dumps(items)
+        if draft_items and not founder_first:
+            content.review_change_items = json.dumps(draft_items)
 
     timing = estimate_season_review(len(episodes), has_trailer=True)
     job.summary_json = json.dumps({
@@ -1093,6 +1104,8 @@ def run_season_qc_job(job_id: int) -> SeasonQualityJob:
         'tools_run': tools_seen,
         'tool_catalog': review_tool_catalog(),
         'timing': timing,
+        'founder_first': founder_first,
+        'draft_change_items': draft_items,
         'flags': {
             'technical': _flag('ff_season_qc_technical', True),
             'visual': _flag('ff_season_qc_visual', True),
@@ -1109,6 +1122,19 @@ def run_season_qc_job(job_id: int) -> SeasonQualityJob:
     })
     job.completed_at = datetime.utcnow()
     db.session.commit()
+
+    if founder_first and overall_band in ('poor', 'borderline'):
+        try:
+            from .platform_notify import notify_episio_qc_flags_ready
+            notify_episio_qc_flags_ready(
+                getattr(content, 'title', None) or f'Series {content.id}',
+                content.id,
+                overall_band,
+                len(draft_items),
+            )
+        except Exception:
+            pass
+
     return job
 
 

@@ -129,6 +129,7 @@ const StudioEpisodeListScreen = () => {
         <Text style={styles.progressText}>
           <Text style={{ fontFamily: FONTS.bold, color: '#fff' }}>{uploaded}</Text>
           {' of '}{planned || '?'} episodes uploaded
+          {planned ? ' · Add more anytime if your story grows' : ''}
         </Text>
         <View style={styles.barTrack}>
           <View style={[styles.barFill, { width: `${planned ? Math.min(100, (uploaded / planned) * 100) : 0}%` }]} />

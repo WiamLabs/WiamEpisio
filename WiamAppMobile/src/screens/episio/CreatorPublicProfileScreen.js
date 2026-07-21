@@ -23,6 +23,7 @@ const CreatorPublicProfileScreen = () => {
   const route = useRoute();
   const navigation = useNavigation();
   const creatorId = route.params?.creatorId;
+  const usernameParam = route.params?.username;
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const myId = useAuthStore((s) => s.user?.id);
   const myWiam = useAuthStore((s) => s.user?.wiam_id);
@@ -32,10 +33,15 @@ const CreatorPublicProfileScreen = () => {
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
-    if (!creatorId) return;
+    if (!creatorId && !usernameParam) return;
     setLoading(true);
     try {
-      const { data } = await apiClient.get(`/creators/${creatorId}`);
+      let data;
+      if (creatorId) {
+        ({ data } = await apiClient.get(`/creators/${creatorId}`));
+      } else {
+        ({ data } = await apiClient.get(`/creators/${encodeURIComponent(String(usernameParam).replace(/^@/, ''))}`));
+      }
       setCreator(data);
       setFollowing(!!data?.is_following);
     } catch {
@@ -43,7 +49,7 @@ const CreatorPublicProfileScreen = () => {
     } finally {
       setLoading(false);
     }
-  }, [creatorId]);
+  }, [creatorId, usernameParam]);
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
 

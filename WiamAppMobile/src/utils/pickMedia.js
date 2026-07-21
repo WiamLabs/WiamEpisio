@@ -27,8 +27,8 @@ export async function pickImageAsIs() {
 }
 
 /**
- * @param {'avatar'|'banner'|number[]} kindOrAspect
- * @returns {Promise<string|null>} local uri after crop, or null if cancelled
+ * Banner: wide 16:9 crop (not circular).
+ * Avatar: prefer CircularAvatarCropScreen after pickImageAsIs — this square crop is fallback only.
  */
 export async function pickCroppedImage(kindOrAspect = 'avatar') {
   if (!(await ensureLibraryPermission())) return null;

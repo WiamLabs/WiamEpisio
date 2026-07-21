@@ -226,6 +226,29 @@ def notify_episio_series_submitted(series_title, series_id, creator_name, episod
     _notify_founder(title, message, link, f'Review: {series_title} — WiamEpisio', email_body)
 
 
+def notify_episio_qc_flags_ready(series_title, series_id, band, flag_count):
+    """QC finished with flags — founder decides before creator Needs Changes."""
+    url = _app_url()
+    title = 'WiamEpisio QC flags need your decision'
+    message = (
+        f'“{series_title}” QC band={band} with {flag_count} flagged item(s). '
+        f'Review before creators are asked to fix. After SLA, system may notify them.'
+    )
+    link = f'{url}/founder/episio-quality'
+    email_body = _email_card(
+        'QC flags ready for founder decision',
+        [
+            ('Series', series_title),
+            ('Series ID', series_id),
+            ('Band', band),
+            ('Flagged items', flag_count),
+            ('Note', 'Approve / reject before creator Needs Changes is published.'),
+        ],
+        'Open Quality Panel', link,
+    )
+    _notify_founder(title, message, link, f'QC flags: {series_title} — WiamEpisio', email_body)
+
+
 def notify_creator_application_if_pending(user, pen_name):
     """After submit + auto-rules: email/founder only if still in manual review queue."""
     if not user:

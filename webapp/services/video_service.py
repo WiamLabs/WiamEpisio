@@ -289,6 +289,20 @@ class CloudflareR2Provider(VideoProvider):
     def get_status(self, *, storage_key: str) -> dict:
         return self.get_playback(storage_key=storage_key)
 
+    def delete_object(self, *, storage_key: Optional[str] = None, public_url: Optional[str] = None) -> bool:
+        """Best-effort R2 object delete by key or public URL under our base."""
+        key = (storage_key or '').strip().lstrip('/')
+        if not key and public_url and self.public_base and str(public_url).startswith(self.public_base):
+            key = str(public_url)[len(self.public_base):].lstrip('/')
+        if not key:
+            return False
+        try:
+            self._client.delete_object(Bucket=self.bucket, Key=key)
+            return True
+        except Exception as exc:
+            log.warning('R2 delete_object failed key=%s: %s', key, exc)
+            return False
+
 
 def get_video_service() -> VideoProvider:
     """Factory — VIDEO_PROVIDER=stub|r2|cloudflare."""

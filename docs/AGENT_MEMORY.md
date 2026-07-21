@@ -2,7 +2,9 @@
 
 Living journal the AI agent reads at the start of every session and updates as work progresses. Mutable — overwrite freely. Durable project facts live in `.cursor/rules/project-context.mdc` instead.
 
-**Last updated:** 2026-07-21 — **Finish polish Wave A+B.** Studio: probe chips + override, soft-interest/QC gate truth, Settings/Cover/Banner shell+KAV, trailer honesty, hub Assets/Publish/After-live groups. Watch: honest Home empties, real fullscreen via Player, Like→remind (no `/books/favorite`), BuyCoins→Paystack CheckoutWeb, VIP offer no fake timer/prices, Discover feed index not cosmetic dots.
+**Last updated:** 2026-07-21 — **Studio UX + founder-first QC + hard-delete.** Hard-purge workspace (DB + Cloudinary + R2). Friendly Studio timeout copy. Circular avatar crop (watcher + channel) + 16:9 banner. Profile: tap @username to copy; no verify chips. Comments @mention autocomplete from following. AgeGate brand bg / empty age copy. Episodes can grow past planned count. Expo Go skips push module. QC: `ff_season_qc_founder_first` → `pending_founder` before creator Needs Changes; watermark/VMAF/SSIM advisory; no romance NSFW classifier.
+
+**Previous — Finish polish Wave A+B.** Studio: probe chips + override, soft-interest/QC gate truth, Settings/Cover/Banner shell+KAV, trailer honesty, hub Assets/Publish/After-live groups. Watch: honest Home empties, real fullscreen via Player, Like→remind (no `/books/favorite`), BuyCoins→Paystack CheckoutWeb, VIP offer no fake timer/prices, Discover feed index not cosmetic dots.
 
 **Previous — Episode covers + keyboard.** Per-episode cover required (`POST …/episodes/:id/cover`, `poster_url`); list/detail show covers; mark-final blocked without cover. Upload screen: cover picker + 9:16 copy. `EpisioScreenShell` KeyboardAvoidingView so Validate CTAs stay reachable.
 

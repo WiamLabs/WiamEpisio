@@ -7,14 +7,35 @@
 {% block dash_content %}
 <div class="dash-header">
   <h1>Season QC #{{ job.id }}</h1>
-  <p>{{ series.title if series else 'Series' }} · status <b>{{ job.status }}</b> · band <b>{{ job.overall_band or '—' }}</b> · score {{ '%.2f'|format(job.overall_score or 0) }}</p>
-  <p style="font-size:0.8rem;color:var(--text-muted);">Checked: trailer + every episode + cover/banner. Your job = light final check, then Publish (platform publishes, not the creator). <b>Changes Required</b> opens a pre-live fix window so the creator can re-upload only failed assets (not a live Revision Request).</p>
+  <p>{{ series.title if series else 'Series' }} · job <b>{{ job.status }}</b> · band <b>{{ job.overall_band or '—' }}</b> · score {{ '%.2f'|format(job.overall_score or 0) }}</p>
+  {% if series %}
+  <p style="font-size:0.85rem;">
+    Series QC status: <b>{{ series.season_qc_status or '—' }}</b>
+    · review: <b>{{ series.review_status or '—' }}</b>
+    {% if (series.season_qc_status or '') == 'pending_founder' %}
+    <span style="margin-left:8px;padding:3px 10px;border-radius:999px;background:rgba(212,160,23,0.2);color:var(--gold);font-weight:700;">Awaiting your decision — creator still sees “In review”</span>
+    {% endif %}
+  </p>
+  {% endif %}
+  <p style="font-size:0.8rem;color:var(--text-muted);">Machine QC is technical only (aspect, duration, blur, audio, duplicates). It does <b>not</b> flag kissing/romance. You decide Publish or Changes Required. After trust-tier SLA, the system may release Needs Changes if nobody acts.</p>
 </div>
 
 {% if job.failure_reasons %}
 <div class="dash-card" style="border:1px solid rgba(239,68,68,0.35);margin-bottom:16px;">
-  <h3 style="color:#f87171;">Issues</h3>
+  <h3 style="color:#f87171;">Machine notes</h3>
   <p style="font-size:0.85rem;line-height:1.5;">{{ job.failure_reasons }}</p>
+</div>
+{% endif %}
+
+{% if draft_items %}
+<div class="dash-card" style="border:1px solid rgba(212,160,23,0.35);margin-bottom:16px;">
+  <h3 style="color:var(--gold);">Draft flags (not shown to creator yet)</h3>
+  <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:10px;">These become the creator’s Needs Changes list only when you press <b>Changes Required</b> (or SLA auto-releases).</p>
+  <ul style="margin:0;padding-left:18px;font-size:0.85rem;line-height:1.55;">
+    {% for item in draft_items %}
+    <li><b>{{ item.tag or 'FLAG' }}</b> — {{ item.title }}{% if item.text %}: {{ item.text }}{% endif %}</li>
+    {% endfor %}
+  </ul>
 </div>
 {% endif %}
 
@@ -49,7 +70,7 @@
 </div>
 
 <div class="dash-card">
-  <h3>Founder decision</h3>
+  <h3>Your final decision</h3>
   <form method="post" action="{{ url_for('founder_dash.episio_quality_decide', job_id=job.id) }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <textarea name="note" rows="3" placeholder="Optional note to creator / internal" style="width:100%;padding:10px;border-radius:10px;background:var(--bg);border:1px solid var(--border-subtle);color:var(--text);margin-bottom:12px;"></textarea>
@@ -57,8 +78,8 @@
       <input type="checkbox" name="publish_all" value="1"> Publish all episodes now (else free-first-N only)
     </label>
     <div style="display:flex;gap:10px;flex-wrap:wrap;">
-      <button type="submit" name="decision" value="publish" style="padding:12px 22px;background:var(--gold);color:#000;border:none;border-radius:10px;font-weight:800;cursor:pointer;">Publish for creator</button>
-      <button type="submit" name="decision" value="changes_required" style="padding:12px 22px;background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.35);border-radius:10px;font-weight:700;cursor:pointer;">Changes Required</button>
+      <button type="submit" name="decision" value="publish" style="padding:12px 22px;background:var(--gold);color:#000;border:none;border-radius:10px;font-weight:800;cursor:pointer;">Approve &amp; Publish</button>
+      <button type="submit" name="decision" value="changes_required" style="padding:12px 22px;background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.35);border-radius:10px;font-weight:700;cursor:pointer;">Reject → Needs Changes (notify creator)</button>
       <a href="{{ url_for('founder_dash.episio_quality') }}" style="padding:12px 18px;color:var(--text-muted);">← Back</a>
     </div>
   </form>

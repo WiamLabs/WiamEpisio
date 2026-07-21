@@ -68,9 +68,9 @@ def _latest_job(content_id: int) -> Optional[SeasonQualityJob]:
 
 
 def _is_good_enough(content: Content, job: Optional[SeasonQualityJob]) -> bool:
-    """Auto-publish only when QC is clean — no poor/failed/borderline problems."""
+    """Auto-publish only when QC is clean — no poor/failed/borderline/pending_founder."""
     qc = (getattr(content, 'season_qc_status', None) or '').lower()
-    if qc in ('failed', 'needs_changes'):
+    if qc in ('failed', 'needs_changes', 'pending_founder'):
         return False
     if job:
         if job.founder_decision:
@@ -150,51 +150,59 @@ def _build_fix_items_from_job(job: Optional[SeasonQualityJob], note: str = '') -
     """
     Track WHERE the problem is — one card per failed/borderline asset
     so the creator opens Trailer / EP N / Cover, not a vague reject.
+    Prefer draft_change_items held for founder-first when present.
     """
     items = []
     if job:
-        assets = (
-            SeasonAssetQualityReport.query.filter_by(job_id=job.id)
-            .order_by(SeasonAssetQualityReport.id.asc())
-            .all()
-        )
-        for a in assets:
-            if (a.status or '') not in ('failed', 'borderline'):
-                continue
-            kind = (a.asset_kind or 'episode').lower()
-            reasons = (a.failure_reasons or '').strip()
-            if kind == 'episode' and a.episode_number:
-                title = f'Episode {a.episode_number} — fix this file'
-                fix = 'episodes'
-                tag = 'EPISODE'
-            elif kind == 'trailer':
-                title = 'Trailer — fix this file'
-                fix = 'trailer'
-                tag = 'TRAILER'
-            elif kind == 'cover':
-                title = 'Cover / poster — replace this image'
-                fix = 'cover'
-                tag = 'COVER'
-            elif kind == 'banner':
-                title = 'Banner — replace this image'
-                fix = 'cover'
-                tag = 'BANNER'
-            else:
-                title = f'{kind.title()} — needs a fix'
-                fix = 'episodes'
-                tag = kind.upper()
-            # Unpack multi-reason strings into readable text
-            text = reasons or f'{kind} scored {(a.band or "poor").upper()} — re-export clean 9:16 and re-upload.'
-            items.append({
-                'tag': tag,
-                'title': title,
-                'text': text,
-                'fix_target': fix,
-                'episode_id': a.episode_id,
-                'episode_number': a.episode_number,
-                'band': a.band,
-                'asset_kind': kind,
-            })
+        try:
+            summary = json.loads(job.summary_json or '{}')
+            draft = summary.get('draft_change_items') or []
+            if draft:
+                items = list(draft)
+        except Exception:
+            items = []
+        if not items:
+            assets = (
+                SeasonAssetQualityReport.query.filter_by(job_id=job.id)
+                .order_by(SeasonAssetQualityReport.id.asc())
+                .all()
+            )
+            for a in assets:
+                if (a.status or '') not in ('failed', 'borderline'):
+                    continue
+                kind = (a.asset_kind or 'episode').lower()
+                reasons = (a.failure_reasons or '').strip()
+                if kind == 'episode' and a.episode_number:
+                    title = f'Episode {a.episode_number} — fix this file'
+                    fix = 'episodes'
+                    tag = 'EPISODE'
+                elif kind == 'trailer':
+                    title = 'Trailer — fix this file'
+                    fix = 'trailer'
+                    tag = 'TRAILER'
+                elif kind == 'cover':
+                    title = 'Cover / poster — replace this image'
+                    fix = 'cover'
+                    tag = 'COVER'
+                elif kind == 'banner':
+                    title = 'Banner — replace this image'
+                    fix = 'cover'
+                    tag = 'BANNER'
+                else:
+                    title = f'{kind.title()} — needs a fix'
+                    fix = 'episodes'
+                    tag = kind.upper()
+                text = reasons or f'{kind} scored {(a.band or "poor").upper()} — re-export clean 9:16 and re-upload.'
+                items.append({
+                    'tag': tag,
+                    'title': title,
+                    'text': text,
+                    'fix_target': fix,
+                    'episode_id': a.episode_id,
+                    'episode_number': a.episode_number,
+                    'band': a.band,
+                    'asset_kind': kind,
+                })
     if note:
         items.insert(0, {
             'tag': 'REVIEW',

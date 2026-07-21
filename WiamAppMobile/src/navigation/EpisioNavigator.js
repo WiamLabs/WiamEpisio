@@ -80,6 +80,7 @@ import CreatorApplyAcceptedScreen from '../screens/episio/CreatorApplyAcceptedSc
 import CreatorApplyRejectedScreen from '../screens/episio/CreatorApplyRejectedScreen';
 import CreatorPublicProfileScreen from '../screens/episio/CreatorPublicProfileScreen';
 import EditProfileScreen from '../screens/episio/EditProfileScreen';
+import CircularAvatarCropScreen from '../screens/episio/CircularAvatarCropScreen';
 import ShareSheetScreen from '../screens/episio/ShareSheetScreen';
 import RateSeriesScreen from '../screens/episio/RateSeriesScreen';
 import SeriesCommentsScreen from '../screens/episio/SeriesCommentsScreen';
@@ -302,6 +303,7 @@ const EpisioNavigator = () => {
 
         <Stack.Screen name="CreatorPublicProfile" component={CreatorPublicProfileScreen} />
         <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+        <Stack.Screen name="CircularAvatarCrop" component={CircularAvatarCropScreen} options={{ presentation: 'fullScreenModal' }} />
         <Stack.Screen name="ShareSheet" component={ShareSheetScreen} options={{ presentation: 'modal' }} />
         <Stack.Screen name="RateSeries" component={RateSeriesScreen} options={{ presentation: 'modal' }} />
         <Stack.Screen name="SeriesComments" component={SeriesCommentsScreen} options={{ presentation: 'modal' }} />

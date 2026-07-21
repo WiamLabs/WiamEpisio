@@ -1,13 +1,13 @@
 /**
  * Watcher / creator personal profile editor — avatar + bio.
- * Crop required before upload (square → shown circular).
+ * Circular crop with pinch zoom before upload.
  */
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View, Text, StyleSheet, TextInput, TouchableOpacity, Image, Alert, ActivityIndicator, ScrollView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import { ChevronLeft, Camera } from 'lucide-react-native';
 import { COLORS, FONTS } from '../../constants/theme';
 import EpisioGoldButton from '../../components/episio/EpisioGoldButton';
@@ -15,11 +15,12 @@ import authApi from '../../api/auth';
 import useAuthStore from '../../store/useAuthStore';
 import resolveUrl from '../../utils/resolveUrl';
 import apiClient from '../../api/client';
-import { pickCroppedImage } from '../../utils/pickMedia';
+import { pickImageAsIs } from '../../utils/pickMedia';
 
 const EditProfileScreen = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
+  const route = useRoute();
   const user = useAuthStore((s) => s.user);
   const patchUser = useAuthStore((s) => s.patchUser);
   const [displayName, setDisplayName] = useState(user?.display_name || user?.first_name || '');
@@ -27,8 +28,7 @@ const EditProfileScreen = () => {
   const [avatar, setAvatar] = useState(resolveUrl(user?.avatar_url));
   const [busy, setBusy] = useState(false);
 
-  const pickAvatar = async () => {
-    const uri = await pickCroppedImage('avatar');
+  const uploadCropped = useCallback(async (uri) => {
     if (!uri) return;
     setBusy(true);
     try {
@@ -42,6 +42,24 @@ const EditProfileScreen = () => {
     } finally {
       setBusy(false);
     }
+  }, [patchUser]);
+
+  useFocusEffect(useCallback(() => {
+    const cropped = route.params?.croppedUri;
+    if (cropped) {
+      navigation.setParams({ croppedUri: undefined });
+      uploadCropped(cropped);
+    }
+  }, [route.params?.croppedUri, navigation, uploadCropped]));
+
+  const pickAvatar = async () => {
+    const uri = await pickImageAsIs();
+    if (!uri) return;
+    navigation.navigate('CircularAvatarCrop', {
+      uri,
+      returnScreen: 'EditProfile',
+      returnKey: 'croppedUri',
+    });
   };
 
   const deleteAvatar = async () => {

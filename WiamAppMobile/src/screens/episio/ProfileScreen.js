@@ -5,7 +5,7 @@
  */
 import React, { useCallback, useState } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, RefreshControl,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, RefreshControl, Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
@@ -14,6 +14,7 @@ import {
   CircleHelp as HelpIcon, LogOut, User, Play, Download, MonitorPlay, Clapperboard,
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as Clipboard from 'expo-clipboard';
 import { COLORS, FONTS } from '../../constants/theme';
 import useAuthStore from '../../store/useAuthStore';
 import coinsApi from '../../api/coins';
@@ -261,20 +262,29 @@ const ProfileScreen = () => {
         )}
         <View style={{ flex: 1 }}>
           <Text style={styles.name} numberOfLines={1}>{name}</Text>
-          <Text style={styles.handle} numberOfLines={1}>
-            @{user?.username || 'username'}
-          </Text>
+          <TouchableOpacity
+            onPress={async () => {
+              const handle = user?.username;
+              if (!handle) return;
+              try {
+                await Clipboard.setStringAsync(`@${handle}`);
+                Alert.alert('Username copied', `@${handle}`);
+              } catch {
+                Alert.alert('Copy failed', 'Could not copy username.');
+              }
+            }}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.handle} numberOfLines={1}>
+              @{user?.username || 'username'}
+            </Text>
+          </TouchableOpacity>
           {user?.privacy_show_email && user?.email ? (
             <Text style={styles.handleMeta} numberOfLines={1}>{user.email}</Text>
           ) : null}
           {user?.privacy_show_phone && user?.phone ? (
             <Text style={styles.handleMeta} numberOfLines={1}>{user.phone}</Text>
           ) : null}
-          <Text style={styles.verifyMeta}>
-            {isEmailVerified(user) ? 'Email verified' : 'Email not verified'}
-            {' · '}
-            {isAgeConfirmed(user) ? 'Age confirmed' : 'Age not confirmed'}
-          </Text>
           {isMember ? (
             <View style={styles.memberBadge}>
               <Crown size={10} color={COLORS.gold} fill={COLORS.gold} />

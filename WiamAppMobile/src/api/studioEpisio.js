@@ -1,9 +1,19 @@
 import apiClient from './client';
 
-function fmt(error, fallback) {
+def fmt(error, fallback) {
+  const raw = error?.message || '';
+  const code = error?.code || error?.response?.status;
+  const isTimeout = code === 'ECONNABORTED'
+    || /timeout/i.test(raw)
+    || /exceeded/i.test(raw);
   let msg = error.response?.data?.error || error.response?.data?.message || error.message || fallback;
-  if (msg != null && typeof msg !== 'string') {
+  if (isTimeout) {
+    msg = 'Studio is taking a moment to wake up. Pull to refresh — your work is safe.';
+  } else if (msg != null && typeof msg !== 'string') {
     try { msg = JSON.stringify(msg); } catch { msg = String(msg); }
+  }
+  if (typeof msg === 'string' && /timeout of \d+ms exceeded/i.test(msg)) {
+    msg = 'Studio is taking a moment to wake up. Pull to refresh — your work is safe.';
   }
   const err = new Error(msg || fallback);
   err.data = error.response?.data;

@@ -4714,6 +4714,7 @@ def episio_quality_flags():
         'ff_season_qc_scenedetect', 'ff_season_qc_vad', 'ff_season_qc_phash',
         'ff_season_qc_watermark', 'ff_season_qc_blackdetect', 'ff_season_qc_integrity',
         'ff_season_qc_auto_reject_poor', 'ff_season_qc_auto_clear_good',
+        'ff_season_qc_founder_first',
         'ff_season_qc_sla_auto_decide',
         'ff_trailer_quality_gate', 'ff_require_complete_series',
     ):
@@ -4745,6 +4746,7 @@ def episio_quality_run_queue():
 @founder_required
 def episio_quality_job(job_id):
     from ..models import SeasonQualityJob, SeasonAssetQualityReport, Content
+    import json as _json
     job = SeasonQualityJob.query.get_or_404(job_id)
     assets = (
         SeasonAssetQualityReport.query.filter_by(job_id=job.id)
@@ -4752,11 +4754,18 @@ def episio_quality_job(job_id):
         .all()
     )
     series = Content.query.get(job.content_id)
+    draft_items = []
+    try:
+        summary = _json.loads(job.summary_json or '{}')
+        draft_items = summary.get('draft_change_items') or []
+    except Exception:
+        draft_items = []
     return render_template(
         'founder/episio_quality_job.html',
         job=job,
         assets=assets,
         series=series,
+        draft_items=draft_items,
     )
 
 
@@ -4787,42 +4796,48 @@ def episio_quality_decide(job_id):
         job.status = 'needs_changes'
         series.season_qc_status = 'needs_changes'
         series.review_status = 'revision_requested'
-        # Build structured change items for creator Needs-Changes screen
-        assets = (
-            SeasonAssetQualityReport.query.filter_by(job_id=job.id)
-            .order_by(SeasonAssetQualityReport.id.asc())
-            .all()
-        )
+        # Prefer draft flags held from founder-first QC, else rebuild from assets
         items = []
-        for a in assets:
-            if (a.status or '') not in ('failed', 'borderline') and not (a.failure_reasons or '').strip():
-                continue
-            kind = (a.asset_kind or 'episode').lower()
-            tag = kind.upper()
-            if kind == 'episode' and a.episode_number:
-                title = f'Episode {a.episode_number} needs a fix'
-                fix = 'episodes'
-            elif kind == 'trailer':
-                title = 'Trailer needs a fix'
-                fix = 'trailer'
-            elif kind == 'cover':
-                title = 'Cover / poster needs a fix'
-                fix = 'cover'
-            elif kind == 'banner':
-                title = 'Banner needs a fix'
-                fix = 'cover'
-            else:
-                title = f'{kind} needs a fix'
-                fix = 'episodes'
-            items.append({
-                'tag': tag,
-                'title': title,
-                'text': (a.failure_reasons or note or 'Re-export and re-upload this asset.').strip(),
-                'fix_target': fix,
-                'episode_id': a.episode_id,
-                'episode_number': a.episode_number,
-                'band': a.band,
-            })
+        try:
+            summary = _json.loads(job.summary_json or '{}')
+            items = list(summary.get('draft_change_items') or [])
+        except Exception:
+            items = []
+        if not items:
+            assets = (
+                SeasonAssetQualityReport.query.filter_by(job_id=job.id)
+                .order_by(SeasonAssetQualityReport.id.asc())
+                .all()
+            )
+            for a in assets:
+                if (a.status or '') not in ('failed', 'borderline') and not (a.failure_reasons or '').strip():
+                    continue
+                kind = (a.asset_kind or 'episode').lower()
+                tag = kind.upper()
+                if kind == 'episode' and a.episode_number:
+                    title = f'Episode {a.episode_number} needs a fix'
+                    fix = 'episodes'
+                elif kind == 'trailer':
+                    title = 'Trailer needs a fix'
+                    fix = 'trailer'
+                elif kind == 'cover':
+                    title = 'Cover / poster needs a fix'
+                    fix = 'cover'
+                elif kind == 'banner':
+                    title = 'Banner needs a fix'
+                    fix = 'cover'
+                else:
+                    title = f'{kind} needs a fix'
+                    fix = 'episodes'
+                items.append({
+                    'tag': tag,
+                    'title': title,
+                    'text': (a.failure_reasons or note or 'Re-export and re-upload this asset.').strip(),
+                    'fix_target': fix,
+                    'episode_id': a.episode_id,
+                    'episode_number': a.episode_number,
+                    'band': a.band,
+                })
         team_intro = (
             'The WiamEpisio team has reviewed your series and flagged problems. '
             'Your whole series/season stays offline — no episode is live until everything is fixed. '
@@ -4843,7 +4858,7 @@ def episio_quality_decide(job_id):
             'text': team_intro,
             'fix_target': 'episodes',
         })
-        if len(items) <= 2 and not any(a for a in assets if (a.status or '') in ('failed', 'borderline')):
+        if len(items) <= 2:
             items.append({
                 'tag': 'REVIEW',
                 'title': 'Changes required before going live',
@@ -4852,7 +4867,7 @@ def episio_quality_decide(job_id):
             })
         series.review_change_items = _json.dumps(items)
         db.session.commit()
-        flash('Needs Changes — whole series unpublished; creator sees fix list.', 'success')
+        flash('Needs Changes — whole series unpublished; creator now sees the fix list.', 'success')
         return redirect(url_for('founder_dash.episio_quality_job', job_id=job.id))
 
     if decision != 'publish':
