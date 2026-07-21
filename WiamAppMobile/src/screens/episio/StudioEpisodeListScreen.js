@@ -1,18 +1,23 @@
 /**
  * Layout: WiamStudio-Episode-List.html
- * API: GET series detail · navigate upload / reject / mark-final
+ * List · delete failed · arrange/reorder · continue CTA
  */
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
-  View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl, Image, Alert,
+  View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator,
+  RefreshControl, Image, Alert, LayoutAnimation, Platform, UIManager,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
-import { ChevronLeft, Plus, Trash2 } from 'lucide-react-native';
+import { ChevronLeft, Plus, Trash2, GripVertical, ChevronUp, ChevronDown } from 'lucide-react-native';
 import { COLORS, FONTS } from '../../constants/theme';
 import studioEpisioApi from '../../api/studioEpisio';
 import QualityRejectedBanner from '../../components/episio/QualityRejectedBanner';
 import resolveUrl from '../../utils/resolveUrl';
+
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 const fmtDur = (sec) => {
   const s = Number(sec) || 0;
@@ -46,12 +51,20 @@ const StudioEpisodeListScreen = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [arrange, setArrange] = useState(false);
+  const [order, setOrder] = useState([]); // episode objects in display order
+  const [savingOrder, setSavingOrder] = useState(false);
 
   const load = useCallback(async (soft) => {
     if (!seriesId) return;
     if (!soft) setLoading(true);
     try {
-      setData(await studioEpisioApi.getSeries(seriesId));
+      const next = await studioEpisioApi.getSeries(seriesId);
+      setData(next);
+      const eps = [...(next?.episodes || [])].sort(
+        (a, b) => (a.episode_number || 0) - (b.episode_number || 0),
+      );
+      setOrder(eps);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -61,29 +74,40 @@ const StudioEpisodeListScreen = () => {
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
   const series = data?.series;
-  const eps = data?.episodes || [];
   const planned = series?.planned_episode_count || 0;
   const uploaded = series?.ready_episodes || 0;
   const locked = !!series?.season_locked && !series?.fix_window_open;
-  const rejected = eps.filter((e) => e.rejected);
+  const rejected = order.filter((e) => e.rejected);
 
-  const rows = [];
-  const byNum = Object.fromEntries(eps.map((e) => [e.episode_number, e]));
-  const maxShow = Math.max(planned, eps.length, 1);
-  for (let n = 1; n <= maxShow; n += 1) {
-    rows.push(byNum[n] || {
-      id: `slot-${n}`,
-      episode_number: n,
-      title: `Episode ${n}`,
-      transcode_status: 'draft',
-      duration_seconds: 0,
-      is_final: false,
-      rejected: false,
-      slot: true,
-    });
-  }
+  // Real episodes first (contiguous numbers from server), empty plan slots only at the end
+  const rows = useMemo(() => {
+    const list = arrange ? order : [...order].sort(
+      (a, b) => (a.episode_number || 0) - (b.episode_number || 0),
+    );
+    const out = list.map((ep, idx) => (
+      arrange ? { ...ep, episode_number: idx + 1 } : ep
+    ));
+    if (!arrange) {
+      const need = Math.max(0, planned - list.length);
+      for (let i = 0; i < need; i += 1) {
+        const n = list.length + i + 1;
+        out.push({
+          id: `slot-${n}`,
+          episode_number: n,
+          title: `Episode ${n}`,
+          transcode_status: 'draft',
+          duration_seconds: 0,
+          is_final: false,
+          rejected: false,
+          slot: true,
+        });
+      }
+    }
+    return out;
+  }, [order, planned, arrange]);
 
   const openEp = (ep) => {
+    if (arrange) return;
     if (ep.rejected) {
       navigation.navigate('StudioEpisodeReject', { seriesId, episodeId: ep.id, episodeNumber: ep.episode_number });
       return;
@@ -108,7 +132,7 @@ const StudioEpisodeListScreen = () => {
     if (!ep?.id || ep.slot) return;
     Alert.alert(
       'Delete failed episode?',
-      `Remove EP ${ep.episode_number}? This clears the failed upload completely so you can add a correct file.`,
+      `Remove EP ${ep.episode_number}? The list will close the gap and renumber automatically.`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -117,6 +141,7 @@ const StudioEpisodeListScreen = () => {
           onPress: async () => {
             try {
               await studioEpisioApi.deleteEpisode(ep.id);
+              LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
               await load(true);
             } catch (e) {
               Alert.alert('Could not delete', e?.message || 'Try again');
@@ -127,21 +152,106 @@ const StudioEpisodeListScreen = () => {
     );
   };
 
+  const moveEp = (index, dir) => {
+    const next = index + dir;
+    if (next < 0 || next >= order.length) return;
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setOrder((prev) => {
+      const copy = [...prev];
+      const tmp = copy[index];
+      copy[index] = copy[next];
+      copy[next] = tmp;
+      return copy;
+    });
+  };
+
+  const saveOrder = async () => {
+    if (!seriesId || !order.length) {
+      setArrange(false);
+      return;
+    }
+    setSavingOrder(true);
+    try {
+      const dataOut = await studioEpisioApi.reorderEpisodes(
+        seriesId,
+        order.map((e) => e.id),
+      );
+      if (dataOut?.episodes) {
+        setOrder(dataOut.episodes);
+        setData((d) => ({ ...d, episodes: dataOut.episodes, series: dataOut.series || d?.series }));
+      } else {
+        await load(true);
+      }
+      setArrange(false);
+    } catch (e) {
+      Alert.alert('Could not save order', e?.message || 'Try again');
+    } finally {
+      setSavingOrder(false);
+    }
+  };
+
+  const toggleArrange = () => {
+    if (locked) {
+      Alert.alert('Season locked', 'Reorder opens again when Needs Changes unlocks edits.');
+      return;
+    }
+    if (arrange) {
+      saveOrder();
+      return;
+    }
+    if (order.length < 2) {
+      Alert.alert('Arrange', 'Add at least two episodes to rearrange.');
+      return;
+    }
+    setArrange(true);
+  };
+
   const planMet = planned > 0 && uploaded >= planned;
   const hasReady = uploaded > 0;
-  const canContinue = hasReady && !rejected.length && !locked;
+  const canContinue = hasReady && !rejected.length && !locked && !arrange;
 
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
       <View style={styles.topbar}>
-        <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.goBack()}>
+        <TouchableOpacity
+          style={styles.iconBtn}
+          onPress={() => {
+            if (arrange) {
+              Alert.alert('Discard arrange?', 'Leave without saving the new order?', [
+                { text: 'Keep arranging', style: 'cancel' },
+                {
+                  text: 'Discard',
+                  style: 'destructive',
+                  onPress: () => { setArrange(false); load(true); },
+                },
+              ]);
+              return;
+            }
+            navigation.goBack();
+          }}
+        >
           <ChevronLeft size={15} color="#fff" />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
-          <Text style={styles.h1}>Episodes</Text>
-          <Text style={styles.sub}>{series?.title || 'Series'}</Text>
+          <Text style={styles.h1}>{arrange ? 'Arrange episodes' : 'Episodes'}</Text>
+          <Text style={styles.sub}>
+            {arrange ? 'Move up / down · tap Done to save' : (series?.title || 'Series')}
+          </Text>
         </View>
         {!locked ? (
+          <TouchableOpacity
+            style={[styles.addBtn, arrange && styles.doneBtn]}
+            onPress={arrange ? saveOrder : toggleArrange}
+            disabled={savingOrder}
+          >
+            {savingOrder ? (
+              <ActivityIndicator color={COLORS.navy} size="small" />
+            ) : (
+              <Text style={styles.addText}>{arrange ? 'Done' : 'Arrange'}</Text>
+            )}
+          </TouchableOpacity>
+        ) : null}
+        {!locked && !arrange ? (
           <TouchableOpacity
             style={styles.addBtn}
             onPress={() => navigation.navigate('StudioEpisodeUpload', { seriesId })}
@@ -152,18 +262,24 @@ const StudioEpisodeListScreen = () => {
         ) : null}
       </View>
 
-      <View style={styles.progress}>
-        <Text style={styles.progressText}>
-          <Text style={{ fontFamily: FONTS.bold, color: '#fff' }}>{uploaded}</Text>
-          {' of '}{planned || '?'} episodes uploaded
-          {planned ? ' · Add more anytime if your story grows' : ''}
-        </Text>
-        <View style={styles.barTrack}>
-          <View style={[styles.barFill, { width: `${planned ? Math.min(100, (uploaded / planned) * 100) : 0}%` }]} />
+      {!arrange ? (
+        <View style={styles.progress}>
+          <Text style={styles.progressText}>
+            <Text style={{ fontFamily: FONTS.bold, color: '#fff' }}>{uploaded}</Text>
+            {' of '}{planned || '?'} episodes uploaded
+            {planned ? ' · Add more anytime if your story grows' : ''}
+          </Text>
+          <View style={styles.barTrack}>
+            <View style={[styles.barFill, { width: `${planned ? Math.min(100, (uploaded / planned) * 100) : 0}%` }]} />
+          </View>
         </View>
-      </View>
+      ) : (
+        <Text style={styles.arrangeHint}>
+          Swap positions like a playlist — EP numbers update when you tap Done.
+        </Text>
+      )}
 
-      {rejected.length ? (
+      {!arrange && rejected.length ? (
         <View style={{ paddingHorizontal: 20 }}>
           <QualityRejectedBanner
             variant="full"
@@ -181,23 +297,58 @@ const StudioEpisodeListScreen = () => {
           keyExtractor={(item) => String(item.id)}
           contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: canContinue ? 140 : 40 }}
           refreshControl={(
-            <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(true); }} tintColor={COLORS.gold} />
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={() => { setRefreshing(true); load(true); }}
+              tintColor={COLORS.gold}
+              enabled={!arrange}
+            />
           )}
-          ListFooterComponent={planMet && !rejected.length ? (
+          ListFooterComponent={planMet && !rejected.length && !arrange ? (
             <Text style={styles.nextHint}>
               Planned count reached. Next: Completeness checklist → trailer/cover → Submit for live.
             </Text>
           ) : null}
-          renderItem={({ item: ep }) => {
+          renderItem={({ item: ep, index }) => {
             const st = statusMeta(ep);
             const thumb = resolveUrl(ep.poster_url || ep.thumbnail_url);
-            const showDelete = !ep.slot && !!ep.id && !!ep.rejected;
+            const showDelete = !arrange && !ep.slot && !!ep.id && !!ep.rejected;
+            const realIndex = arrange ? index : -1;
             return (
-              <View style={[styles.row, ep.slot && styles.rowSlot, ep.rejected && styles.rowReject]}>
+              <View style={[
+                styles.row,
+                ep.slot && styles.rowSlot,
+                ep.rejected && styles.rowReject,
+                arrange && styles.rowArrange,
+              ]}
+              >
+                {arrange && !ep.slot ? (
+                  <View style={styles.gripCol}>
+                    <GripVertical size={16} color={COLORS.gold} />
+                    <View style={styles.moveCol}>
+                      <TouchableOpacity
+                        style={[styles.moveBtn, realIndex === 0 && styles.moveBtnOff]}
+                        onPress={() => moveEp(realIndex, -1)}
+                        disabled={realIndex === 0}
+                      >
+                        <ChevronUp size={16} color={realIndex === 0 ? COLORS.textFaint : '#fff'} />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[styles.moveBtn, realIndex >= order.length - 1 && styles.moveBtnOff]}
+                        onPress={() => moveEp(realIndex, 1)}
+                        disabled={realIndex >= order.length - 1}
+                      >
+                        <ChevronDown size={16} color={realIndex >= order.length - 1 ? COLORS.textFaint : '#fff'} />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ) : null}
+
                 <TouchableOpacity
                   style={styles.rowMain}
                   onPress={() => openEp(ep)}
-                  activeOpacity={0.85}
+                  activeOpacity={arrange ? 1 : 0.85}
+                  disabled={arrange}
                 >
                   {thumb ? (
                     <Image source={{ uri: thumb }} style={styles.thumb} />
@@ -218,7 +369,7 @@ const StudioEpisodeListScreen = () => {
                           : `${fmtDur(ep.duration_seconds)} · ${st.label}${ep.is_final ? ' · Final' : ''}`}
                     </Text>
                   </View>
-                  {st.pill ? (
+                  {!arrange && st.pill ? (
                     <View style={[
                       styles.pill,
                       st.pill === 'ready' && styles.pillReady,
@@ -229,9 +380,7 @@ const StudioEpisodeListScreen = () => {
                     >
                       <Text style={[styles.pillText, { color: st.color }]}>{st.label}</Text>
                     </View>
-                  ) : (
-                    <View style={[styles.dot, { backgroundColor: st.color }]} />
-                  )}
+                  ) : null}
                 </TouchableOpacity>
                 {showDelete ? (
                   <TouchableOpacity
@@ -276,7 +425,7 @@ const StudioEpisodeListScreen = () => {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: COLORS.navy },
-  topbar: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingBottom: 12 },
+  topbar: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingBottom: 12 },
   iconBtn: {
     width: 34, height: 34, borderRadius: 17, backgroundColor: COLORS.navyCard,
     alignItems: 'center', justifyContent: 'center',
@@ -287,17 +436,30 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 4,
     backgroundColor: COLORS.gold, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 7,
   },
+  doneBtn: { backgroundColor: '#3BB273' },
   addText: { fontFamily: FONTS.bold, color: COLORS.navy, fontSize: 12 },
   progress: { paddingHorizontal: 20, marginBottom: 12 },
   progressText: { fontFamily: FONTS.regular, color: COLORS.textDim, fontSize: 12, marginBottom: 8 },
   barTrack: { height: 6, borderRadius: 4, backgroundColor: COLORS.navyCard, overflow: 'hidden' },
   barFill: { height: '100%', backgroundColor: COLORS.gold },
+  arrangeHint: {
+    marginHorizontal: 20, marginBottom: 12, fontFamily: FONTS.medium,
+    color: COLORS.gold, fontSize: 12, lineHeight: 17,
+  },
   row: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
     backgroundColor: COLORS.navyCard, borderRadius: 14, padding: 11, marginBottom: 10,
     borderWidth: 1, borderColor: COLORS.navyLine,
   },
+  rowArrange: { borderColor: 'rgba(212,160,23,0.35)' },
   rowMain: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  gripCol: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  moveCol: { gap: 2 },
+  moveBtn: {
+    width: 28, height: 26, borderRadius: 8, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: COLORS.navySoft,
+  },
+  moveBtnOff: { opacity: 0.35 },
   trashBtn: {
     width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center',
     backgroundColor: 'rgba(228,87,61,0.12)',
@@ -311,7 +473,6 @@ const styles = StyleSheet.create({
   thumbSlot: { borderWidth: 1, borderColor: COLORS.navyLine, borderStyle: 'dashed' },
   epTitle: { fontFamily: FONTS.bold, color: '#fff', fontSize: 12 },
   epMeta: { marginTop: 3, fontFamily: FONTS.regular, color: COLORS.textFaint, fontSize: 11 },
-  dot: { width: 8, height: 8, borderRadius: 4 },
   pill: { paddingHorizontal: 7, paddingVertical: 3, borderRadius: 6 },
   pillReady: { backgroundColor: 'rgba(59,178,115,0.14)' },
   pillProc: { backgroundColor: 'rgba(110,168,254,0.14)' },

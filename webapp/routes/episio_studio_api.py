@@ -221,6 +221,44 @@ def _owns(user, c: Content) -> bool:
     return c.creator_wiam_id in (uid, user.wiam_id, user.id)
 
 
+def _renumber_episodes_contiguous(content_id: int, ordered_ids=None):
+    """
+    Collapse gaps so episode_number is always 1..N with no holes.
+    If ordered_ids is provided, apply that order first (playlist reorder).
+    Uses temp numbers to satisfy unique (content_id, episode_number).
+    """
+    q = Episode.query.filter_by(content_id=content_id)
+    if ordered_ids:
+        by_id = {e.id: e for e in q.all()}
+        eps = []
+        seen = set()
+        for eid in ordered_ids:
+            try:
+                eid = int(eid)
+            except (TypeError, ValueError):
+                continue
+            if eid in by_id and eid not in seen:
+                eps.append(by_id[eid])
+                seen.add(eid)
+        # Append any missing (safety)
+        for e in sorted(by_id.values(), key=lambda x: (x.episode_number or 0, x.id)):
+            if e.id not in seen:
+                eps.append(e)
+    else:
+        eps = q.order_by(Episode.episode_number.asc(), Episode.id.asc()).all()
+
+    if not eps:
+        return []
+
+    for i, ep in enumerate(eps):
+        ep.episode_number = 100000 + i
+    db.session.flush()
+    for i, ep in enumerate(eps):
+        ep.episode_number = i + 1
+    db.session.flush()
+    return eps
+
+
 def _validate_aspect(width, height):
     """Accept vertical 9:16 OR landscape 16:9."""
     try:
@@ -1553,6 +1591,8 @@ def studio_patch_episode(episode_id):
         except Exception:
             pass
         db.session.delete(ep)
+        db.session.flush()
+        _renumber_episodes_contiguous(c.id)
         refresh_completeness(c)
         db.session.commit()
         try:
@@ -1587,7 +1627,9 @@ def studio_patch_episode(episode_id):
             'deleted': True,
             'episode_id': eid,
             'purged': True,
+            'renumbered': True,
             'series': _series_card(c, user),
+            'episodes': [_ep_json(e) for e in Episode.query.filter_by(content_id=c.id).order_by(Episode.episode_number.asc()).all()],
         })
 
     if _locked_blocks_write(c, user):
@@ -1611,6 +1653,61 @@ def studio_patch_episode(episode_id):
         ep.is_final = bool(data['is_final'])
     db.session.commit()
     return jsonify({'ok': True, 'episode': _ep_json(ep), 'series': _series_card(c, user)})
+
+
+@episio_studio_api.route('/creator/studio/series/<int:series_id>/episodes/reorder', methods=['POST'])
+@jwt_required
+def studio_reorder_episodes(series_id):
+    """Playlist-style reorder — body: { episode_ids: [id in new order] }."""
+    forbid = _creator_api_forbidden()
+    if forbid:
+        return forbid
+    user = request.api_user
+    c = Content.query.get(series_id)
+    if not c or c.is_deleted:
+        return jsonify({'error': 'not_found'}), 404
+    if not _owns(user, c):
+        return jsonify({'error': 'forbidden'}), 403
+    if _unit_is_live(c):
+        return jsonify({
+            'error': 'live_locked',
+            'message': 'Live series episode order is frozen. Use a Revision Request if needed.',
+        }), 403
+    if _locked_blocks_write(c, user):
+        return jsonify({
+            'error': 'season_locked',
+            'message': 'Season locked — reorder opens again on Needs Changes.',
+        }), 400
+
+    data = request.get_json(silent=True) or {}
+    ids = data.get('episode_ids') or data.get('order') or []
+    if not isinstance(ids, list) or not ids:
+        return jsonify({'error': 'episode_ids required'}), 400
+
+    existing = {e.id for e in Episode.query.filter_by(content_id=c.id).all()}
+    cleaned = []
+    for x in ids:
+        try:
+            eid = int(x)
+        except (TypeError, ValueError):
+            continue
+        if eid in existing and eid not in cleaned:
+            cleaned.append(eid)
+    if set(cleaned) != existing:
+        return jsonify({
+            'error': 'incomplete_order',
+            'message': 'Send every episode id for this series, in the new order.',
+        }), 400
+
+    _renumber_episodes_contiguous(c.id, ordered_ids=cleaned)
+    refresh_completeness(c)
+    db.session.commit()
+    eps = Episode.query.filter_by(content_id=c.id).order_by(Episode.episode_number.asc()).all()
+    return jsonify({
+        'ok': True,
+        'series': _series_card(c, user),
+        'episodes': [_ep_json(e) for e in eps],
+    })
 
 
 @episio_studio_api.route('/creator/studio/episodes/<int:episode_id>/mark-final', methods=['POST'])

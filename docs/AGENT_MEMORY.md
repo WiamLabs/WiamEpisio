@@ -2,7 +2,7 @@
 
 Living journal the AI agent reads at the start of every session and updates as work progresses. Mutable — overwrite freely. Durable project facts live in `.cursor/rules/project-context.mdc` instead.
 
-**Last updated:** 2026-07-22 — **Episode delete = warning-only.** READY/Final cannot be deleted. Only failed / wrong-size / QC-failed episodes deletable; hard-purge DB + media. No third-party style copy in creator UI.
+**Last updated:** 2026-07-22 — **Episode arrange + gap close.** Delete failed ep → auto-renumber 1..N (no holes). Studio **Arrange** mode (up/down playlist swap) + `POST …/episodes/reorder`. Empty plan slots only at end of list.
 
 **Martin law (memory):** Do not defer “build later.” Also: never name competitor apps (TikTok, etc.) in user-facing product copy — describe specs in WiamEpisio words only.
 
