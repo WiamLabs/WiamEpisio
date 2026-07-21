@@ -15,7 +15,7 @@ const FAQS = [
   {
     chip: 'Specs',
     q: 'What video specs pass review?',
-    a: 'Episodes may be 9:16 vertical or 16:9 landscape (TikTok-style), preferred 1080×1920 or 1920×1080, 4–5 minutes, H.264 + AAC MP4. Trailer 15–60 seconds.',
+    a: 'Episodes may be 9:16 vertical or 16:9 landscape, preferred 1080×1920 or 1920×1080, 4–5 minutes, H.264 + AAC MP4. Trailer 15–60 seconds.',
   },
   {
     chip: 'Rejections',

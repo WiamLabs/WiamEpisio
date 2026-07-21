@@ -142,11 +142,11 @@ def review_tool_catalog() -> List[Dict[str, Any]]:
     avail = tool_availability()
     return [
         {'id': 'ffprobe', 'name': 'FFprobe', 'catches': 'Wrong resolution, aspect, codec, duration, corrupt file', 'when': 'Stage 1 — instant reject', 'installed': avail['ffprobe']['installed']},
-        {'id': 'watermark', 'name': 'Watermark detector', 'catches': 'TikTok/CapCut corner watermarks used as final', 'when': 'Stage 1', 'installed': avail['opencv']['installed']},
+        {'id': 'watermark', 'name': 'Watermark detector', 'catches': 'Corner logos / export watermarks used as final', 'when': 'Stage 1', 'installed': avail['opencv']['installed']},
         {'id': 'pyscenedetect', 'name': 'PySceneDetect', 'catches': 'Missed quality at real cuts (smart sampling)', 'when': 'Stage 2', 'installed': avail['pyscenedetect']['installed']},
         {'id': 'opencv_visual', 'name': 'OpenCV visual', 'catches': 'Blur, dark/blown exposure, unusable shake', 'when': 'Stage 3', 'installed': avail['opencv']['installed']},
         {'id': 'blackdetect', 'name': 'FFmpeg blackdetect/freezedetect', 'catches': 'Black/frozen frames, broken exports', 'when': 'Stage 3', 'installed': avail['ffmpeg']['installed']},
-        {'id': 'vmaf', 'name': 'VMAF (Netflix)', 'catches': 'Our delivery encode degrading creator footage', 'when': 'Stage 3', 'installed': avail['vmaf_netflix']['installed']},
+        {'id': 'vmaf', 'name': 'VMAF', 'catches': 'Delivery encode degrading creator footage', 'when': 'Stage 3', 'installed': avail['vmaf_netflix']['installed']},
         {'id': 'ssim', 'name': 'SSIM', 'catches': 'Structural damage VMAF alone might miss', 'when': 'Stage 3', 'installed': avail['opencv']['installed']},
         {'id': 'ebur128', 'name': 'EBU R128 loudness', 'catches': 'Too quiet, clipping, inconsistent volume', 'when': 'Stage 4', 'installed': avail['ebur128']['installed']},
         {'id': 'webrtcvad', 'name': 'WebRTC VAD', 'catches': 'Dead air / missing dialogue where speech expected', 'when': 'Stage 4', 'installed': avail['webrtcvad']['installed']},

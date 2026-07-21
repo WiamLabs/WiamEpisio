@@ -11,7 +11,7 @@ This is the implementation of `WIAMEPISIO_QUALITY_PIPELINE_PLAN.md`. Every layer
 | Tool | Origin | What it reviews | Fail example shown to creator |
 |---|---|---|---|
 | **FFprobe** | FFmpeg | Container, codec, 9:16 aspect, ≥720×1280, duration (trailer 15–60s · episode 3–6 min) | “must be 9:16 vertical” |
-| **Watermark detector** | OpenCV corners | TikTok/CapCut-style logos in corners used as “final” | “possible platform watermark — re-export clean” |
+| **Watermark detector** | OpenCV corners | Corner logos / export watermarks used as “final” | “possible platform watermark — re-export clean” |
 | **PySceneDetect** | Open source | Finds real cuts so later checks sample *scenes*, not random frames | (sampling only — no direct reject) |
 | **OpenCV visual** | Open source | Sharpness (Laplacian), exposure/brightness, contrast, camera shake (optical flow) | “footage too soft/blurry” / “shake too high” |
 | **blackdetect / freezedetect** | FFmpeg | Black screens, frozen frames, broken exports | “black/frozen frames detected” |

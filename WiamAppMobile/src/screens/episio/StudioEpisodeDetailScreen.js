@@ -134,10 +134,33 @@ const StudioEpisodeDetailScreen = () => {
   };
 
   const confirmDelete = () => {
+    if (!episode?.id) return;
+    if (series?.status && ['published', 'live', 'upcoming', 'coming_soon'].includes(String(series.status).toLowerCase())) {
+      Alert.alert(
+        'Live series',
+        'Contact the WiamEpisio team if you need an episode removed after go-live.',
+      );
+      return;
+    }
     Alert.alert(
-      'Delete episode',
-      'Contact the WiamEpisio team if you need an episode removed after lock.',
-      [{ text: 'OK' }],
+      'Delete episode?',
+      `Remove Episode ${epNum}${episode.is_final ? ' (marked final)' : ''}? This cannot be undone — you can upload a new file afterward.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await studioEpisioApi.deleteEpisode(episode.id);
+              Alert.alert('Deleted', 'Episode removed.');
+              if (navigation.canGoBack()) navigation.goBack();
+            } catch (e) {
+              Alert.alert('Could not delete', e?.message || 'Try again');
+            }
+          },
+        },
+      ],
     );
   };
 

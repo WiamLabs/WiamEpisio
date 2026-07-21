@@ -237,7 +237,7 @@ const StudioEpisodeUploadScreen = () => {
       <View style={styles.specCallout}>
         <Text style={styles.specTitle}>9:16 or 16:9 · 4–5 min · MP4</Text>
         <Text style={styles.specSub}>
-          TikTok-style: vertical 9:16 (prefer 1080×1920) or landscape 16:9 (prefer 1920×1080). Both play.
+          Vertical 9:16 (prefer 1080×1920) or landscape 16:9 (prefer 1920×1080). Both play.
         </Text>
       </View>
 

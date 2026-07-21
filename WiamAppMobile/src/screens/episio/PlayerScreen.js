@@ -1,5 +1,5 @@
 /**
- * YouTube-style player from WiamEpisio-Player.html — contained frame + info panel.
+ * Contained player from WiamEpisio-Player.html — frame + info panel.
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {

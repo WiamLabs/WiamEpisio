@@ -2,9 +2,11 @@
 
 Living journal the AI agent reads at the start of every session and updates as work progresses. Mutable — overwrite freely. Durable project facts live in `.cursor/rules/project-context.mdc` instead.
 
-**Last updated:** 2026-07-21 — **Episodes Continue CTA · dual aspect · serious QC + AI safety.** Studio Episode List has Continue→Completeness. Upload/play accept **9:16 and 16:9**. Restored watermark/VMAF/SSIM/pHash as creator-facing fails. Wired **Gemini free vision** (`episio_visual_safety.py`, `ff_season_qc_ai_safety`) — romance OK, explicit genitals hard-fail + founder attention. Founder QC checklist required before decide. Fixed `studioEpisio.js` `def`→`function` (Metro crash). Player `replaceAsync` + Expo Go LogBox for push noise.
+**Last updated:** 2026-07-22 — **No third-party product style copy in creator UI** + **episode delete**. Removed “TikTok-style” / similar from Studio upload, help, API errors. Creators can delete warned / final episodes (trash on list + detail + reject) while series is not live. `DELETE /creator/studio/episodes/:id`.
 
-**Martin law (memory):** Do not defer “build later.” If he asks for a system (AI safety, QC, etc.), wire it now even if UI is thin — he will not circle back when money/time pressure hits.
+**Martin law (memory):** Do not defer “build later.” Also: never name competitor apps (TikTok, etc.) in user-facing product copy — describe specs in WiamEpisio words only.
+
+**Previous — Episodes Continue CTA · dual aspect · serious QC + AI safety.** Studio Episode List has Continue→Completeness. Upload/play accept **9:16 and 16:9**. Restored watermark/VMAF/SSIM/pHash as creator-facing fails. Wired **Gemini free vision** — romance OK, explicit genitals hard-fail + founder attention. Founder QC checklist required. Fixed `studioEpisio.js` syntax. Player `replaceAsync` + Expo Go LogBox.
 
 **Previous — Studio UX + founder-first QC + hard-delete.** Hard-purge workspace (DB + Cloudinary + R2). Friendly Studio timeout copy. Circular avatar crop (watcher + channel) + 16:9 banner. Profile: tap @username to copy; no verify chips. Comments @mention autocomplete from following. AgeGate brand bg / empty age copy. Episodes can grow past planned count. Expo Go skips push module. QC: `ff_season_qc_founder_first` → `pending_founder` before creator Needs Changes.
 

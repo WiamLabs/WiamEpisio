@@ -1,17 +1,48 @@
 /**
  * Layout: WiamStudio-Episode-Reject-Wrong-Size.html
  */
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { ChevronLeft, AlertTriangle } from 'lucide-react-native';
 import { COLORS, FONTS } from '../../constants/theme';
+import studioEpisioApi from '../../api/studioEpisio';
 
 const StudioEpisodeRejectScreen = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const { seriesId, episodeId, episodeNumber, message } = useRoute().params || {};
+  const [deleting, setDeleting] = useState(false);
+
+  const onDelete = () => {
+    if (!episodeId) {
+      navigation.goBack();
+      return;
+    }
+    Alert.alert(
+      'Delete episode?',
+      `Remove Episode ${episodeNumber || ''} permanently? You can add a new one after.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            setDeleting(true);
+            try {
+              await studioEpisioApi.deleteEpisode(episodeId);
+              navigation.navigate('StudioEpisodeList', { seriesId });
+            } catch (e) {
+              Alert.alert('Could not delete', e?.message || 'Try again');
+            } finally {
+              setDeleting(false);
+            }
+          },
+        },
+      ],
+    );
+  };
 
   return (
     <View style={[styles.root, { paddingTop: insets.top + 8, paddingHorizontal: 20 }]}>
@@ -36,6 +67,13 @@ const StudioEpisodeRejectScreen = () => {
         onPress={() => navigation.replace('StudioEpisodeUpload', { seriesId, episodeId, episodeNumber })}
       >
         <Text style={styles.ctaText}>Re-upload</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.deleteCta} onPress={onDelete} disabled={deleting}>
+        {deleting ? (
+          <ActivityIndicator color="#E4573D" />
+        ) : (
+          <Text style={styles.deleteText}>Delete episode</Text>
+        )}
       </TouchableOpacity>
       <TouchableOpacity onPress={() => navigation.navigate('StudioSpecs')}>
         <Text style={styles.link}>Open Specs guide</Text>
@@ -64,6 +102,11 @@ const styles = StyleSheet.create({
   cardText: { fontFamily: FONTS.regular, color: COLORS.text, lineHeight: 20 },
   cta: { backgroundColor: COLORS.gold, borderRadius: 14, padding: 15, alignItems: 'center' },
   ctaText: { fontFamily: FONTS.bold, color: COLORS.navy },
+  deleteCta: {
+    marginTop: 12, borderRadius: 14, padding: 14, alignItems: 'center',
+    borderWidth: 1, borderColor: 'rgba(228,87,61,0.45)',
+  },
+  deleteText: { fontFamily: FONTS.bold, color: '#E4573D' },
   link: { marginTop: 16, textAlign: 'center', color: COLORS.gold, fontFamily: FONTS.semi },
 });
 

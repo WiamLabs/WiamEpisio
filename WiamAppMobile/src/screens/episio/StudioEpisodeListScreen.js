@@ -4,11 +4,11 @@
  */
 import React, { useCallback, useState } from 'react';
 import {
-  View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl, Image,
+  View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl, Image, Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
-import { ChevronLeft, Plus } from 'lucide-react-native';
+import { ChevronLeft, Plus, Trash2 } from 'lucide-react-native';
 import { COLORS, FONTS } from '../../constants/theme';
 import studioEpisioApi from '../../api/studioEpisio';
 import QualityRejectedBanner from '../../components/episio/QualityRejectedBanner';
@@ -104,6 +104,29 @@ const StudioEpisodeListScreen = () => {
     });
   };
 
+  const confirmDeleteEp = (ep) => {
+    if (!ep?.id || ep.slot) return;
+    Alert.alert(
+      'Delete episode?',
+      `Remove EP ${ep.episode_number}${ep.is_final ? ' (marked final)' : ''}? You can upload again anytime.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await studioEpisioApi.deleteEpisode(ep.id);
+              await load(true);
+            } catch (e) {
+              Alert.alert('Could not delete', e?.message || 'Try again');
+            }
+          },
+        },
+      ],
+    );
+  };
+
   const planMet = planned > 0 && uploaded >= planned;
   const hasReady = uploaded > 0;
   const canContinue = hasReady && !rejected.length && !locked;
@@ -168,46 +191,58 @@ const StudioEpisodeListScreen = () => {
           renderItem={({ item: ep }) => {
             const st = statusMeta(ep);
             const thumb = resolveUrl(ep.poster_url || ep.thumbnail_url);
+            const showDelete = !ep.slot && !!ep.id && (!locked || !!ep.rejected);
             return (
-              <TouchableOpacity
-                style={[styles.row, ep.slot && styles.rowSlot, ep.rejected && styles.rowReject]}
-                onPress={() => openEp(ep)}
-                activeOpacity={0.85}
-              >
-                {thumb ? (
-                  <Image source={{ uri: thumb }} style={styles.thumb} />
-                ) : (
-                  <View style={[styles.thumb, ep.slot && styles.thumbSlot]}>
-                    {ep.slot ? <Plus size={14} color={COLORS.textFaint} /> : null}
+              <View style={[styles.row, ep.slot && styles.rowSlot, ep.rejected && styles.rowReject]}>
+                <TouchableOpacity
+                  style={styles.rowMain}
+                  onPress={() => openEp(ep)}
+                  activeOpacity={0.85}
+                >
+                  {thumb ? (
+                    <Image source={{ uri: thumb }} style={styles.thumb} />
+                  ) : (
+                    <View style={[styles.thumb, ep.slot && styles.thumbSlot]}>
+                      {ep.slot ? <Plus size={14} color={COLORS.textFaint} /> : null}
+                    </View>
+                  )}
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.epTitle, ep.slot && { color: COLORS.textFaint }]}>
+                      EP {ep.episode_number} — {ep.slot ? 'Not uploaded' : (ep.title || 'Untitled')}
+                    </Text>
+                    <Text style={styles.epMeta}>
+                      {ep.slot
+                        ? 'Draft slot · Tap to upload'
+                        : ep.rejected
+                          ? (ep.reject_message || 'Wrong size — tap to fix or delete.')
+                          : `${fmtDur(ep.duration_seconds)} · ${st.label}${ep.is_final ? ' · Final' : ''}`}
+                    </Text>
                   </View>
-                )}
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.epTitle, ep.slot && { color: COLORS.textFaint }]}>
-                    EP {ep.episode_number} — {ep.slot ? 'Not uploaded' : (ep.title || 'Untitled')}
-                  </Text>
-                  <Text style={styles.epMeta}>
-                    {ep.slot
-                      ? 'Draft slot · Tap to upload'
-                      : ep.rejected
-                        ? (ep.reject_message || 'Video must be 9:16 or 16:9. Tap to fix.')
-                        : `${fmtDur(ep.duration_seconds)} · ${st.label}${ep.is_final ? ' · Final' : ''}`}
-                  </Text>
-                </View>
-                {st.pill ? (
-                  <View style={[
-                    styles.pill,
-                    st.pill === 'ready' && styles.pillReady,
-                    st.pill === 'proc' && styles.pillProc,
-                    st.pill === 'reject' && styles.pillReject,
-                    st.pill === 'up' && styles.pillUp,
-                  ]}
+                  {st.pill ? (
+                    <View style={[
+                      styles.pill,
+                      st.pill === 'ready' && styles.pillReady,
+                      st.pill === 'proc' && styles.pillProc,
+                      st.pill === 'reject' && styles.pillReject,
+                      st.pill === 'up' && styles.pillUp,
+                    ]}
+                    >
+                      <Text style={[styles.pillText, { color: st.color }]}>{st.label}</Text>
+                    </View>
+                  ) : (
+                    <View style={[styles.dot, { backgroundColor: st.color }]} />
+                  )}
+                </TouchableOpacity>
+                {showDelete ? (
+                  <TouchableOpacity
+                    style={styles.trashBtn}
+                    onPress={() => confirmDeleteEp(ep)}
+                    hitSlop={10}
                   >
-                    <Text style={[styles.pillText, { color: st.color }]}>{st.label}</Text>
-                  </View>
-                ) : (
-                  <View style={[styles.dot, { backgroundColor: st.color }]} />
-                )}
-              </TouchableOpacity>
+                    <Trash2 size={15} color="#E4573D" />
+                  </TouchableOpacity>
+                ) : null}
+              </View>
             );
           }}
         />
@@ -258,9 +293,14 @@ const styles = StyleSheet.create({
   barTrack: { height: 6, borderRadius: 4, backgroundColor: COLORS.navyCard, overflow: 'hidden' },
   barFill: { height: '100%', backgroundColor: COLORS.gold },
   row: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
+    flexDirection: 'row', alignItems: 'center', gap: 8,
     backgroundColor: COLORS.navyCard, borderRadius: 14, padding: 11, marginBottom: 10,
     borderWidth: 1, borderColor: COLORS.navyLine,
+  },
+  rowMain: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  trashBtn: {
+    width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: 'rgba(228,87,61,0.12)',
   },
   rowSlot: { borderStyle: 'dashed', opacity: 0.92 },
   rowReject: { borderColor: 'rgba(228,87,61,0.45)', backgroundColor: 'rgba(228,87,61,0.06)' },

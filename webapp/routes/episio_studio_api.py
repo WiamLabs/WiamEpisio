@@ -203,6 +203,12 @@ def _ep_json(e: Episode):
         'rejected': (e.transcode_status == 'failed') or (
             (getattr(e, 'asset_qc_status', None) or '') == 'failed'
         ),
+        'reject_message': (
+            'Video must be 9:16 or 16:9. Tap to fix or delete.'
+            if (e.transcode_status == 'failed') or ((getattr(e, 'asset_qc_status', None) or '') == 'failed')
+            else None
+        ),
+        'can_delete': True,  # client also checks series live/lock; API enforces
     }
 
 
@@ -214,7 +220,7 @@ def _owns(user, c: Content) -> bool:
 
 
 def _validate_aspect(width, height):
-    """TikTok-style: accept vertical 9:16 OR landscape 16:9."""
+    """Accept vertical 9:16 OR landscape 16:9."""
     try:
         w, h = int(width or 0), int(height or 0)
     except (TypeError, ValueError):
@@ -232,7 +238,7 @@ def _validate_aspect(width, height):
         if w < 1280 or h < 720:
             return False, f'Resolution too low ({w}x{h}). Landscape min 1280×720, prefer 1920×1080.'
         return True, None
-    return False, f'Video must be 9:16 vertical or 16:9 landscape (TikTok-style). Got {w}x{h}.'
+    return False, f'Video must be 9:16 vertical or 16:9 landscape. Got {w}x{h}.'
 
 
 def _validate_duration(seconds, kind='episode'):
@@ -1487,10 +1493,10 @@ def studio_complete_episode_upload(episode_id):
     })
 
 
-@episio_studio_api.route('/creator/studio/episodes/<int:episode_id>', methods=['PATCH'])
+@episio_studio_api.route('/creator/studio/episodes/<int:episode_id>', methods=['PATCH', 'DELETE'])
 @jwt_required
 def studio_patch_episode(episode_id):
-    """Edit episode title/synopsis while building (or pre-live fix window)."""
+    """Edit or delete an episode while building (finals with warnings included)."""
     forbid = _creator_api_forbidden()
     if forbid:
         return forbid
@@ -1501,6 +1507,79 @@ def studio_patch_episode(episode_id):
     c = Content.query.get(ep.content_id)
     if not c or not _owns(user, c):
         return jsonify({'error': 'forbidden'}), 403
+
+    if request.method == 'DELETE':
+        if _unit_is_live(c):
+            return jsonify({
+                'error': 'live_locked',
+                'message': (
+                    'This series is live. You cannot delete episodes yourself. '
+                    'Send a removal request to the WiamEpisio team.'
+                ),
+            }), 403
+        # Locked seasons: still allow deleting failed / QC-failed / any non-published episode
+        # so creators can clear wrong uploads even after mark-final.
+        failed = (ep.transcode_status == 'failed') or (
+            (getattr(ep, 'asset_qc_status', None) or '') == 'failed'
+        )
+        if _locked_blocks_write(c, user) and not failed and not getattr(user, 'is_founder', False):
+            return jsonify({
+                'error': 'season_locked',
+                'message': 'Season locked — delete failed episodes, or wait for Needs Changes to reopen edits.',
+            }), 400
+
+        # Purge related rows + media
+        eid = ep.id
+        urls = []
+        for attr in ('poster_url', 'video_url', 'hls_manifest_url'):
+            u = getattr(ep, attr, None)
+            if u and isinstance(u, str):
+                urls.append(u)
+        sk = getattr(ep, 'storage_key', None)
+        try:
+            from ..models import EpisodeUnlock, VideoAsset, CreatorVideoUploadJob
+            EpisodeUnlock.query.filter_by(episode_id=eid).delete(synchronize_session=False)
+            VideoAsset.query.filter_by(episode_id=eid).delete(synchronize_session=False)
+            CreatorVideoUploadJob.query.filter_by(episode_id=eid).delete(synchronize_session=False)
+        except Exception:
+            pass
+        db.session.delete(ep)
+        refresh_completeness(c)
+        db.session.commit()
+        try:
+            from ..services.image_service import delete_image_url
+            for u in urls:
+                if str(u).startswith('http'):
+                    try:
+                        delete_image_url(u)
+                    except Exception:
+                        pass
+        except Exception:
+            pass
+        try:
+            from ..services.video_service import get_video_service
+            vs = get_video_service()
+            deleter = getattr(vs, 'delete_object', None)
+            if callable(deleter):
+                for u in urls:
+                    try:
+                        deleter(
+                            storage_key=None if str(u).startswith('http') else u,
+                            public_url=u if str(u).startswith('http') else None,
+                        )
+                    except Exception:
+                        pass
+                if sk:
+                    deleter(storage_key=sk)
+        except Exception:
+            pass
+        return jsonify({
+            'ok': True,
+            'deleted': True,
+            'episode_id': eid,
+            'series': _series_card(c, user),
+        })
+
     if _locked_blocks_write(c, user):
         return jsonify({
             'error': 'season_locked',

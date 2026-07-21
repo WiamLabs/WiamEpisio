@@ -212,6 +212,11 @@ const studioEpisioApi = {
       return (await apiClient.patch(`/creator/studio/episodes/${episodeId}`, payload)).data;
     } catch (e) { throw fmt(e, 'Could not update episode'); }
   },
+  deleteEpisode: async (episodeId) => {
+    try {
+      return (await apiClient.delete(`/creator/studio/episodes/${episodeId}`)).data;
+    } catch (e) { throw fmt(e, 'Could not delete episode'); }
+  },
   reviewStatus: async (seriesId) => {
     try { return (await apiClient.get(`/creator/studio/series/${seriesId}/review-status`)).data; }
     catch (e) { throw fmt(e, 'Failed to load review status'); }
