@@ -84,7 +84,7 @@ const StudioEpisodeListScreen = () => {
   const locked = !!series?.season_locked && !series?.fix_window_open;
   const rejected = order.filter((e) => e.rejected);
 
-  // Real episodes first (contiguous numbers from server), empty plan slots only at the end
+  // Real episodes first; empty plan slots at the end (shown in list + Arrange so gaps can be removed)
   const rows = useMemo(() => {
     const list = arrange ? order : [...order].sort(
       (a, b) => (a.episode_number || 0) - (b.episode_number || 0),
@@ -92,21 +92,19 @@ const StudioEpisodeListScreen = () => {
     const out = list.map((ep, idx) => (
       arrange ? { ...ep, episode_number: idx + 1 } : ep
     ));
-    if (!arrange) {
-      const need = Math.max(0, planned - list.length);
-      for (let i = 0; i < need; i += 1) {
-        const n = list.length + i + 1;
-        out.push({
-          id: `slot-${n}`,
-          episode_number: n,
-          title: `Episode ${n}`,
-          transcode_status: 'draft',
-          duration_seconds: 0,
-          is_final: false,
-          rejected: false,
-          slot: true,
-        });
-      }
+    const need = Math.max(0, planned - list.length);
+    for (let i = 0; i < need; i += 1) {
+      const n = list.length + i + 1;
+      out.push({
+        id: `slot-${n}`,
+        episode_number: n,
+        title: `Episode ${n}`,
+        transcode_status: 'draft',
+        duration_seconds: 0,
+        is_final: false,
+        rejected: false,
+        slot: true,
+      });
     }
     return out;
   }, [order, planned, arrange]);
@@ -150,6 +148,46 @@ const StudioEpisodeListScreen = () => {
               await load(true);
             } catch (e) {
               Alert.alert('Could not delete', e?.message || 'Try again');
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  /** Empty plan slots are not DB rows — remove by shrinking planned_episode_count. */
+  const confirmRemoveSlot = (ep) => {
+    if (!ep?.slot || !seriesId) return;
+    const newPlanned = Math.max(order.length, Number(ep.episode_number) - 1);
+    if (newPlanned >= planned) return;
+    const from = ep.episode_number;
+    const to = planned;
+    const range = from === to ? `EP ${from}` : `EP ${from}–${to}`;
+    Alert.alert(
+      'Remove empty slots?',
+      `Clear ${range} from your plan? Uploaded episodes stay. You can add more anytime.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Remove',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const out = await studioEpisioApi.patchSeries(seriesId, {
+                planned_episode_count: Math.max(order.length, newPlanned),
+              });
+              animateList();
+              if (out?.series) {
+                setData((d) => ({
+                  ...d,
+                  series: { ...(d?.series || {}), ...out.series },
+                  episodes: out.episodes || d?.episodes,
+                }));
+              } else {
+                await load(true);
+              }
+            } catch (e) {
+              Alert.alert('Could not remove', e?.message || 'Try again');
             }
           },
         },
@@ -204,8 +242,9 @@ const StudioEpisodeListScreen = () => {
       saveOrder();
       return;
     }
-    if (order.length < 2) {
-      Alert.alert('Arrange', 'Add at least two episodes to rearrange.');
+    const emptySlots = Math.max(0, planned - order.length);
+    if (order.length < 2 && emptySlots < 1) {
+      Alert.alert('Arrange', 'Add at least two episodes to rearrange, or empty slots to remove.');
       return;
     }
     setArrange(true);
@@ -280,7 +319,7 @@ const StudioEpisodeListScreen = () => {
         </View>
       ) : (
         <Text style={styles.arrangeHint}>
-          Swap positions like a playlist — EP numbers update when you tap Done.
+          Swap positions. Tap the trash on empty slots to clear them from your plan.
         </Text>
       )}
 
@@ -317,8 +356,12 @@ const StudioEpisodeListScreen = () => {
           renderItem={({ item: ep, index }) => {
             const st = statusMeta(ep);
             const thumb = resolveUrl(ep.poster_url || ep.thumbnail_url);
-            const showDelete = !arrange && !ep.slot && !!ep.id && !!ep.rejected;
-            const realIndex = arrange ? index : -1;
+            const canDeleteFailed = !ep.slot && !!ep.id && !!ep.rejected;
+            const canRemoveSlot = !!ep.slot && arrange;
+            const showRemove = arrange
+              ? (canRemoveSlot || canDeleteFailed)
+              : canDeleteFailed;
+            const realIndex = arrange && !ep.slot ? index : -1;
             return (
               <View style={[
                 styles.row,
@@ -368,7 +411,7 @@ const StudioEpisodeListScreen = () => {
                     </Text>
                     <Text style={styles.epMeta}>
                       {ep.slot
-                        ? 'Draft slot · Tap to upload'
+                        ? (arrange ? 'Empty slot · Remove to clear from plan' : 'Draft slot · Tap to upload')
                         : ep.rejected
                           ? (ep.reject_message || 'Wrong size — tap to fix or delete.')
                           : `${fmtDur(ep.duration_seconds)} · ${st.label}${ep.is_final ? ' · Final' : ''}`}
@@ -387,11 +430,12 @@ const StudioEpisodeListScreen = () => {
                     </View>
                   ) : null}
                 </TouchableOpacity>
-                {showDelete ? (
+                {showRemove ? (
                   <TouchableOpacity
                     style={styles.trashBtn}
-                    onPress={() => confirmDeleteEp(ep)}
+                    onPress={() => (ep.slot ? confirmRemoveSlot(ep) : confirmDeleteEp(ep))}
                     hitSlop={10}
+                    accessibilityLabel={ep.slot ? 'Remove empty slot' : 'Delete failed episode'}
                   >
                     <Trash2 size={15} color="#E4573D" />
                   </TouchableOpacity>

@@ -2,7 +2,9 @@
 
 Living journal the AI agent reads at the start of every session and updates as work progresses. Mutable — overwrite freely. Durable project facts live in `.cursor/rules/project-context.mdc` instead.
 
-**Last updated:** 2026-07-22 — **LayoutAnimation New Arch warning silenced** (`585d8aa`). Removed `UIManager.setLayoutAnimationEnabledExperimental` (no-op that warns on Fabric) from Episode List + Help Center; kept `configureNext` in try/catch. Help FAQ aspect copy = 9:16 or 16:9.
+**Last updated:** 2026-07-22 — **Arrange: empty slots + Remove.** Empty plan slots (post-delete gaps) show in Arrange; trash shrinks `planned_episode_count`. Hint = “Swap positions” (no playlist). Failed eps still deletable in Arrange.
+
+**Previous — LayoutAnimation New Arch warning silenced** (`585d8aa`). Removed `UIManager.setLayoutAnimationEnabledExperimental` (no-op that warns on Fabric) from Episode List + Help Center; kept `configureNext` in try/catch. Help FAQ aspect copy = 9:16 or 16:9.
 
 **Previous — Episode arrange + gap close.** Delete failed ep → auto-renumber 1..N (no holes). Studio **Arrange** mode (up/down playlist swap) + `POST …/episodes/reorder`. Empty plan slots only at end of list.
 
