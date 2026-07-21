@@ -135,16 +135,19 @@ const StudioEpisodeDetailScreen = () => {
 
   const confirmDelete = () => {
     if (!episode?.id) return;
-    if (series?.status && ['published', 'live', 'upcoming', 'coming_soon'].includes(String(series.status).toLowerCase())) {
+    const failed = episode.rejected
+      || episode.transcode_status === 'failed'
+      || episode.asset_qc_status === 'failed';
+    if (!failed) {
       Alert.alert(
-        'Live series',
-        'Contact the WiamEpisio team if you need an episode removed after go-live.',
+        'Cannot delete',
+        'Ready / Final episodes stay. Only uploads with a wrong-size or QC warning can be deleted.',
       );
       return;
     }
     Alert.alert(
-      'Delete episode?',
-      `Remove Episode ${epNum}${episode.is_final ? ' (marked final)' : ''}? This cannot be undone — you can upload a new file afterward.`,
+      'Delete failed episode?',
+      `Remove Episode ${epNum}? This deletes it completely from your series so you can re-upload.`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -153,7 +156,7 @@ const StudioEpisodeDetailScreen = () => {
           onPress: async () => {
             try {
               await studioEpisioApi.deleteEpisode(episode.id);
-              Alert.alert('Deleted', 'Episode removed.');
+              Alert.alert('Deleted', 'Failed episode removed.');
               if (navigation.canGoBack()) navigation.goBack();
             } catch (e) {
               Alert.alert('Could not delete', e?.message || 'Try again');
@@ -183,6 +186,10 @@ const StudioEpisodeDetailScreen = () => {
     );
   }
 
+  const failed = episode.rejected
+    || episode.transcode_status === 'failed'
+    || episode.asset_qc_status === 'failed';
+
   return (
     <EpisioScreenShell
       title={`Episode ${epNum}`}
@@ -191,11 +198,13 @@ const StudioEpisodeDetailScreen = () => {
         <EpisioGoldButton label="Save Changes" onPress={save} loading={saving} />
       )}
     >
-      <View style={styles.deleteRow}>
-        <TouchableOpacity style={styles.iconBtn} onPress={confirmDelete}>
-          <Trash2 size={15} color="#E4573D" />
-        </TouchableOpacity>
-      </View>
+      {failed ? (
+        <View style={styles.deleteRow}>
+          <TouchableOpacity style={styles.iconBtn} onPress={confirmDelete}>
+            <Trash2 size={15} color="#E4573D" />
+          </TouchableOpacity>
+        </View>
+      ) : null}
 
       <View style={styles.previewBlock}>
         <View style={styles.thumb}>

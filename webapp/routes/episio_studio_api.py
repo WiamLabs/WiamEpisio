@@ -208,7 +208,9 @@ def _ep_json(e: Episode):
             if (e.transcode_status == 'failed') or ((getattr(e, 'asset_qc_status', None) or '') == 'failed')
             else None
         ),
-        'can_delete': True,  # client also checks series live/lock; API enforces
+        'can_delete': (e.transcode_status == 'failed') or (
+            (getattr(e, 'asset_qc_status', None) or '') == 'failed'
+        ),
     }
 
 
@@ -1517,30 +1519,37 @@ def studio_patch_episode(episode_id):
                     'Send a removal request to the WiamEpisio team.'
                 ),
             }), 403
-        # Locked seasons: still allow deleting failed / QC-failed / any non-published episode
-        # so creators can clear wrong uploads even after mark-final.
+        # Only warning / failed episodes may be deleted — READY + Final stay.
         failed = (ep.transcode_status == 'failed') or (
             (getattr(ep, 'asset_qc_status', None) or '') == 'failed'
         )
-        if _locked_blocks_write(c, user) and not failed and not getattr(user, 'is_founder', False):
+        if not failed and not getattr(user, 'is_founder', False):
             return jsonify({
-                'error': 'season_locked',
-                'message': 'Season locked — delete failed episodes, or wait for Needs Changes to reopen edits.',
+                'error': 'not_deletable',
+                'message': (
+                    'Ready / Final episodes cannot be deleted. '
+                    'Only uploads that failed validation (wrong size / QC warning) can be removed.'
+                ),
             }), 400
 
-        # Purge related rows + media
+        # Full purge: DB rows + cloud media
         eid = ep.id
         urls = []
         for attr in ('poster_url', 'video_url', 'hls_manifest_url'):
             u = getattr(ep, attr, None)
             if u and isinstance(u, str):
                 urls.append(u)
-        sk = getattr(ep, 'storage_key', None)
+        sk = getattr(ep, 'storage_key', None) or (
+            ep.video_url if ep.video_url and not str(ep.video_url).startswith('http') else None
+        )
         try:
-            from ..models import EpisodeUnlock, VideoAsset, CreatorVideoUploadJob
+            from ..models import (
+                EpisodeUnlock, VideoAsset, CreatorVideoUploadJob, SeasonAssetQualityReport,
+            )
             EpisodeUnlock.query.filter_by(episode_id=eid).delete(synchronize_session=False)
             VideoAsset.query.filter_by(episode_id=eid).delete(synchronize_session=False)
             CreatorVideoUploadJob.query.filter_by(episode_id=eid).delete(synchronize_session=False)
+            SeasonAssetQualityReport.query.filter_by(episode_id=eid).delete(synchronize_session=False)
         except Exception:
             pass
         db.session.delete(ep)
@@ -1577,6 +1586,7 @@ def studio_patch_episode(episode_id):
             'ok': True,
             'deleted': True,
             'episode_id': eid,
+            'purged': True,
             'series': _series_card(c, user),
         })
 

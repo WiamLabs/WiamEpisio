@@ -107,8 +107,8 @@ const StudioEpisodeListScreen = () => {
   const confirmDeleteEp = (ep) => {
     if (!ep?.id || ep.slot) return;
     Alert.alert(
-      'Delete episode?',
-      `Remove EP ${ep.episode_number}${ep.is_final ? ' (marked final)' : ''}? You can upload again anytime.`,
+      'Delete failed episode?',
+      `Remove EP ${ep.episode_number}? This clears the failed upload completely so you can add a correct file.`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -191,7 +191,7 @@ const StudioEpisodeListScreen = () => {
           renderItem={({ item: ep }) => {
             const st = statusMeta(ep);
             const thumb = resolveUrl(ep.poster_url || ep.thumbnail_url);
-            const showDelete = !ep.slot && !!ep.id && (!locked || !!ep.rejected);
+            const showDelete = !ep.slot && !!ep.id && !!ep.rejected;
             return (
               <View style={[styles.row, ep.slot && styles.rowSlot, ep.rejected && styles.rowReject]}>
                 <TouchableOpacity
