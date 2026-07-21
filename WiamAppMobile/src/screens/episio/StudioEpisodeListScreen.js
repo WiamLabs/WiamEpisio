@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator,
-  RefreshControl, Image, Alert, LayoutAnimation, Platform, UIManager,
+  RefreshControl, Image, Alert, LayoutAnimation,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
@@ -15,9 +15,14 @@ import studioEpisioApi from '../../api/studioEpisio';
 import QualityRejectedBanner from '../../components/episio/QualityRejectedBanner';
 import resolveUrl from '../../utils/resolveUrl';
 
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
+/** Soft list motion — skip deprecated Android experimental flag (no-op / warns on New Architecture). */
+const animateList = () => {
+  try {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+  } catch {
+    /* ignore */
+  }
+};
 
 const fmtDur = (sec) => {
   const s = Number(sec) || 0;
@@ -141,7 +146,7 @@ const StudioEpisodeListScreen = () => {
           onPress: async () => {
             try {
               await studioEpisioApi.deleteEpisode(ep.id);
-              LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+              animateList();
               await load(true);
             } catch (e) {
               Alert.alert('Could not delete', e?.message || 'Try again');
@@ -155,7 +160,7 @@ const StudioEpisodeListScreen = () => {
   const moveEp = (index, dir) => {
     const next = index + dir;
     if (next < 0 || next >= order.length) return;
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    animateList();
     setOrder((prev) => {
       const copy = [...prev];
       const tmp = copy[index];

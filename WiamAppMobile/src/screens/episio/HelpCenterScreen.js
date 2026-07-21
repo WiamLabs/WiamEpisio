@@ -3,7 +3,7 @@
  */
 import React, { useMemo, useState } from 'react';
 import {
-  View, Text, StyleSheet, TextInput, TouchableOpacity, Linking, LayoutAnimation, Platform, UIManager,
+  View, Text, StyleSheet, TextInput, TouchableOpacity, Linking, LayoutAnimation,
 } from 'react-native';
 import {
   Coins, Play, User, Clapperboard, MessageCircle, ChevronDown, Search,
@@ -11,10 +11,6 @@ import {
 import EpisioScreenShell from '../../components/episio/EpisioScreenShell';
 import { COLORS, FONTS, RADIUS } from '../../constants/theme';
 import { legalOrigin } from '../../utils/siteOrigin';
-
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
 
 const CATEGORIES = [
   { id: 'coins', title: 'Coins & Payments', sub: 'Purchases, refunds', Icon: Coins },
@@ -58,7 +54,7 @@ const FAQS = [
     id: 'video-size',
     cat: 'creator',
     q: 'What video size do creators upload?',
-    a: 'Vertical 9:16 only — prefer 1080×1920. Episodes must be 4–5 minutes. Soft, blurry, or wrong-size uploads are rejected.',
+    a: '9:16 vertical or 16:9 landscape — prefer 1080×1920 or 1920×1080. Episodes must be 4–5 minutes. Soft, blurry, or wrong-size uploads are rejected.',
   },
   {
     id: 'become-creator',
@@ -84,7 +80,9 @@ const HelpCenterScreen = () => {
   }, [query, activeCat]);
 
   const toggleFaq = (id) => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    try {
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    } catch { /* ignore */ }
     setOpenId((prev) => (prev === id ? null : id));
   };
 
