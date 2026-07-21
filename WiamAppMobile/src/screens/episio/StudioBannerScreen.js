@@ -4,11 +4,11 @@
  */
 import React, { useCallback, useState } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ActivityIndicator, Alert,
+  View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator, Alert,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
-import { ChevronLeft, BarChart2, Monitor } from 'lucide-react-native';
+import { BarChart2, Monitor } from 'lucide-react-native';
+import EpisioScreenShell from '../../components/episio/EpisioScreenShell';
 import EpisioGoldButton from '../../components/episio/EpisioGoldButton';
 import { COLORS, FONTS } from '../../constants/theme';
 import studioEpisioApi from '../../api/studioEpisio';
@@ -21,7 +21,6 @@ const WHERE_USED = [
 ];
 
 const StudioBannerScreen = () => {
-  const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const seriesId = useRoute().params?.seriesId;
   const [series, setSeries] = useState(null);
@@ -69,21 +68,21 @@ const StudioBannerScreen = () => {
   };
 
   return (
-    <View style={[styles.root, { paddingTop: insets.top }]}>
-      <View style={styles.topbar}>
-        <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.goBack()}>
-          <ChevronLeft size={15} color="#fff" />
-        </TouchableOpacity>
-        <View>
-          <Text style={styles.h1}>Featured Banner</Text>
-          <Text style={styles.seriesName}>{series?.title || 'Your series'}</Text>
-        </View>
-      </View>
-
+    <EpisioScreenShell
+      title="Featured Banner"
+      subtitle={series?.title || 'Your series'}
+      footer={(
+        <>
+          <EpisioGoldButton label="Upload Banner" onPress={pickBanner} loading={busy} />
+          <View style={{ height: 10 }} />
+          <EpisioGoldButton label="Save & Continue" onPress={() => navigation.goBack()} variant="ghost" />
+        </>
+      )}
+    >
       {loading ? (
         <ActivityIndicator color={COLORS.gold} style={{ marginTop: 40 }} />
       ) : (
-        <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 20 }}>
+        <>
           <Text style={styles.optionalTag}>OPTIONAL · 16:9</Text>
           <Text style={styles.uploadHint}>Upload your full wide flyer — no crop. We validate size and ratio on upload.</Text>
 
@@ -113,33 +112,16 @@ const StudioBannerScreen = () => {
             ))}
           </View>
 
-          <View style={styles.uploadRow}>
-            <View style={{ flex: 1 }}>
-              <EpisioGoldButton label="Upload Banner" onPress={pickBanner} loading={busy} />
-            </View>
-            <TouchableOpacity style={styles.skipBtn} onPress={() => navigation.goBack()}>
-              <Text style={styles.skipText}>Skip for now</Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <Text style={styles.skipText}>Skip for now</Text>
+          </TouchableOpacity>
+        </>
       )}
-
-      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 20) }]}>
-        <EpisioGoldButton label="Save & Continue" onPress={() => navigation.goBack()} />
-      </View>
-    </View>
+    </EpisioScreenShell>
   );
 };
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: COLORS.navy },
-  topbar: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingBottom: 14 },
-  iconBtn: {
-    width: 34, height: 34, borderRadius: 17, backgroundColor: COLORS.navyCard,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  h1: { fontSize: 16, fontFamily: FONTS.extraBold, color: '#fff' },
-  seriesName: { fontSize: 10.5, fontFamily: FONTS.semi, color: COLORS.textFaint, marginTop: 1 },
   optionalTag: {
     alignSelf: 'flex-start', fontSize: 9.5, fontFamily: FONTS.extraBold, color: COLORS.gold,
     backgroundColor: 'rgba(212,160,23,0.14)', paddingHorizontal: 9, paddingVertical: 3,
@@ -166,20 +148,9 @@ const styles = StyleSheet.create({
   whereTitle: { fontSize: 12.5, fontFamily: FONTS.bold, color: '#fff', marginBottom: 10 },
   whereRow: { flexDirection: 'row', gap: 10, marginBottom: 10, alignItems: 'flex-start' },
   whereText: { flex: 1, fontSize: 11, fontFamily: FONTS.regular, color: COLORS.textDim, lineHeight: 17 },
-  uploadRow: { flexDirection: 'row', gap: 10 },
-  browseBtn: {
-    flex: 1, padding: 12, borderRadius: 12, backgroundColor: COLORS.gold, alignItems: 'center',
+  skipText: {
+    textAlign: 'center', fontSize: 12.5, fontFamily: FONTS.bold, color: '#C9C9DE', paddingVertical: 8,
   },
-  browseText: { fontSize: 12.5, fontFamily: FONTS.extraBold, color: COLORS.navy },
-  skipBtn: {
-    paddingHorizontal: 18, paddingVertical: 12, borderRadius: 12,
-    backgroundColor: COLORS.navyCard, borderWidth: 1, borderColor: COLORS.navyLine,
-    justifyContent: 'center',
-  },
-  skipText: { fontSize: 12.5, fontFamily: FONTS.bold, color: '#C9C9DE' },
-  footer: { paddingHorizontal: 20, paddingTop: 12 },
-  cta: { padding: 16, borderRadius: 16, backgroundColor: COLORS.gold, alignItems: 'center' },
-  ctaText: { fontSize: 15, fontFamily: FONTS.extraBold, color: COLORS.navy },
 });
 
 export default StudioBannerScreen;

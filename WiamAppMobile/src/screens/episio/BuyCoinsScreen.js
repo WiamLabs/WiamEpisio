@@ -5,7 +5,7 @@
 import React, { useCallback, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  ActivityIndicator, RefreshControl, Alert, Platform,
+  ActivityIndicator, RefreshControl, Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
@@ -71,6 +71,43 @@ const BuyCoinsScreen = () => {
   }, [isAuthenticated, user?.wiam_id, user?.country]);
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
+
+  const buyServerPack = async (pkg) => {
+    if (!isAuthenticated) {
+      navigation.navigate('LoginRequiredSheet', {
+        title: 'Quick email signup to buy',
+        message: 'Guests can buy coins — a free account keeps them on your wallet. Then you return here to checkout.',
+        returnTo: 'BuyCoins',
+      });
+      return;
+    }
+    if (!pkg?.id) {
+      Alert.alert('Unavailable', 'This pack cannot be purchased right now.');
+      return;
+    }
+    setBuying(pkg.id);
+    setError(null);
+    try {
+      const data = await coinsApi.buyCoins(pkg.id);
+      const url = data?.authorization_url || data?.checkout_url || data?.url;
+      if (!url) {
+        throw new Error(data?.error || data?.message || 'Checkout unavailable');
+      }
+      navigation.navigate('CheckoutWeb', {
+        checkoutUrl: url,
+        reference: data?.reference,
+        packLabel: `${pkg.coins || ''} coins`.trim(),
+        totalLabel: pkg.display_price,
+        returnTo: 'BuyCoins',
+      });
+    } catch (e) {
+      const msg = e?.response?.data?.message || e?.response?.data?.error || e?.message || 'Could not start checkout';
+      setError(msg);
+      Alert.alert('Buy coins', msg);
+    } finally {
+      setBuying(null);
+    }
+  };
 
   const buyIap = async (product) => {
     if (!isAuthenticated) {
@@ -167,20 +204,7 @@ const BuyCoinsScreen = () => {
                 style={[styles.pack, pkg.popular && styles.packPopular]}
                 onPress={() => {
                   if (pkg._iap) buyIap(pkg._iap);
-                  else if (!isAuthenticated) {
-                    navigation.navigate('LoginRequiredSheet', {
-                      title: 'Quick email signup to buy',
-                      message: 'Guests can buy coins — a free account keeps them on your wallet. Then you return here to checkout.',
-                      returnTo: 'BuyCoins',
-                    });
-                  } else {
-                    Alert.alert(
-                      'Packs loading',
-                      Platform.OS === 'web'
-                        ? 'Coin packs buy on the WiamEpisio website later — not in this app build.'
-                        : 'Coin packs are not ready in this build yet. Try again after a production install.',
-                    );
-                  }
+                  else buyServerPack(pkg);
                 }}
                 disabled={buying === pkg.id}
                 activeOpacity={0.85}

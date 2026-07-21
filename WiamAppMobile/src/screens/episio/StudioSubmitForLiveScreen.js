@@ -50,7 +50,7 @@ const StudioSubmitForLiveScreen = () => {
   const epsOk = gateOk('episodes')
     ?? ((series?.ready_episodes || 0) >= (series?.planned_episode_count || 0) && (series?.planned_episode_count || 0) > 0);
   const lockOk = !!series?.season_locked;
-  const softOk = !!soft.soft_ok;
+  const softOk = true; // optional — never red on submit summary
 
   const rows = [
     {
@@ -74,15 +74,15 @@ const StudioSubmitForLiveScreen = () => {
       ok: metaOk,
     },
     {
+      label: 'Rights / season lock',
+      value: lockOk ? 'Locked & signed' : 'Not locked',
+      ok: lockOk,
+    },
+    {
       label: 'Soft interest (optional)',
       value: `${soft.followers || 0} followers · ${soft.remind_count || 0} reminds`,
       ok: softOk,
       optional: true,
-    },
-    {
-      label: 'Rights / season lock',
-      value: lockOk ? 'Locked & signed' : 'Not locked',
-      ok: lockOk,
     },
   ];
 
@@ -163,12 +163,12 @@ const StudioSubmitForLiveScreen = () => {
           <View style={[styles.flowCard, styles.lockCard]}>
             <View style={styles.flowTitle}>
               <Lock size={15} color="#E4573D" />
-              <Text style={styles.flowTitleText}>This locks your season</Text>
+              <Text style={styles.flowTitleText}>Submit queues QC</Text>
             </View>
             <Text style={[styles.flowText, { color: '#E0A79A' }]}>
-              After submitting, episodes{' '}
-              <Text style={{ color: '#E4573D', fontFamily: FONTS.bold }}>cannot be edited or replaced</Text>
-              . Fixes only happen through a Revision Request on the changed part.
+              Your {series?.season_locked ? 'season is already locked. ' : ''}
+              Submitting freezes further edits and starts full-season quality review.
+              Pre-live fixes come through Needs Changes; after live, use a Revision Request.
             </Text>
           </View>
 

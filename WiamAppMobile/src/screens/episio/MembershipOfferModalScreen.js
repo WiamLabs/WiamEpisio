@@ -1,8 +1,8 @@
 /**
- * WiamEpisio-Membership-Offer-Modal.html — richer bottom-sheet VIP upsell.
- * Params: price, oldPrice, discountLabel, couponText, expiresIn (optional).
+ * WiamEpisio-Membership-Offer-Modal.html — VIP upsell sheet.
+ * Only shows price / discount / timer when the caller passes real values.
  */
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Crown, X, Check } from 'lucide-react-native';
@@ -18,15 +18,6 @@ const PERKS = [
   'Daily coin bonus for members',
 ];
 
-function formatTimer(totalSec) {
-  const s = Math.max(0, totalSec);
-  const h = Math.floor(s / 3600);
-  const m = Math.floor((s % 3600) / 60);
-  const sec = s % 60;
-  const pad = (n) => String(n).padStart(2, '0');
-  return [pad(h), pad(m), pad(sec)];
-}
-
 const MembershipOfferModalScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
@@ -34,24 +25,16 @@ const MembershipOfferModalScreen = () => {
   const {
     price,
     oldPrice,
-    discountLabel = 'GHS 10 OFF',
-    couponText = 'A one-time discount for your first\n3 weeks of membership',
-    expiresIn = 3600,
+    discountLabel,
+    couponText,
   } = route.params || {};
 
-  const [remain, setRemain] = useState(Number(expiresIn) || 3600);
-
-  useEffect(() => {
-    const t = setInterval(() => setRemain((r) => Math.max(0, r - 1)), 1000);
-    return () => clearInterval(t);
-  }, []);
-
-  const [hh, mm, ss] = formatTimer(remain);
+  const showCoupon = !!(price || oldPrice || discountLabel);
 
   const goPlans = () => {
     navigation.goBack();
     setTimeout(() => {
-      navigation.navigate('Main', { screen: 'Member' });
+      navigation.navigate('VipCheckout');
     }, 80);
   };
 
@@ -72,12 +55,12 @@ const MembershipOfferModalScreen = () => {
           Watch without limits — exclusive series, early drops, and ad-free playback.
         </Text>
 
-        {(price || discountLabel) ? (
+        {showCoupon ? (
           <LinearGradient colors={[COLORS.gold, COLORS.goldDark]} style={styles.coupon}>
             <View style={styles.couponNotchL} />
             <View style={styles.couponNotchR} />
-            <Text style={styles.couponText}>{couponText}</Text>
-            <Text style={styles.couponAmount}>{discountLabel}</Text>
+            {couponText ? <Text style={styles.couponText}>{couponText}</Text> : null}
+            {discountLabel ? <Text style={styles.couponAmount}>{discountLabel}</Text> : null}
             {(price || oldPrice) ? (
               <View style={styles.priceRow}>
                 {price ? <Text style={styles.couponNew}>{price}</Text> : null}
@@ -86,15 +69,6 @@ const MembershipOfferModalScreen = () => {
             ) : null}
           </LinearGradient>
         ) : null}
-
-        <View style={styles.timerRow}>
-          <Text style={styles.timerLabel}>Expires in</Text>
-          <Text style={styles.timerBox}>{hh}</Text>
-          <Text style={styles.timerColon}>:</Text>
-          <Text style={styles.timerBox}>{mm}</Text>
-          <Text style={styles.timerColon}>:</Text>
-          <Text style={styles.timerBox}>{ss}</Text>
-        </View>
 
         <View style={styles.perks}>
           {PERKS.map((p) => (
@@ -107,7 +81,9 @@ const MembershipOfferModalScreen = () => {
 
         {price ? (
           <Text style={styles.priceHint}>From {price} · Cancel anytime</Text>
-        ) : null}
+        ) : (
+          <Text style={styles.priceHint}>See live plan prices on the next screen · Cancel anytime</Text>
+        )}
 
         <EpisioGoldButton label="See VIP plans" onPress={goPlans} style={{ alignSelf: 'stretch' }} />
         <TouchableOpacity style={styles.skip} onPress={() => navigation.goBack()}>
@@ -166,15 +142,6 @@ const styles = StyleSheet.create({
   couponOld: {
     fontSize: 13, color: '#5A4200', textDecorationLine: 'line-through', fontFamily: FONTS.regular,
   },
-  timerRow: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 16,
-  },
-  timerLabel: { fontSize: 12, color: COLORS.textDim, fontFamily: FONTS.regular, marginRight: 4 },
-  timerBox: {
-    fontSize: 13, fontFamily: FONTS.bold, color: '#fff',
-    backgroundColor: COLORS.navyLine, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6,
-  },
-  timerColon: { color: COLORS.textDim, fontFamily: FONTS.bold },
   perks: { alignSelf: 'stretch', gap: 10, marginBottom: 14 },
   perkRow: { flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
   perk: { flex: 1, fontFamily: FONTS.regular, fontSize: 12, color: '#E7E7F2', lineHeight: 18 },

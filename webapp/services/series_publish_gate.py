@@ -88,7 +88,7 @@ def soft_interest_counts(content: Content) -> dict:
     }
 
 
-def build_completeness_gates(content: Content) -> List[dict]:
+def build_completeness_gates(content: Content, soft_required: bool = False) -> List[dict]:
     """Full-season checklist: episodes + trailer + cover/banner + meta + rights + lock."""
     refresh_completeness(content)
     planned = int(getattr(content, 'planned_episode_count', 0) or 0)
@@ -109,6 +109,8 @@ def build_completeness_gates(content: Content) -> List[dict]:
     finals_ok = planned > 0 and final_n >= planned and ready >= planned
     structure = getattr(content, 'structure_mode', None) or 'series'
     unit = 'Season' if structure == 'season' else 'Series'
+
+    soft_ok_gate = True if not soft_required else bool(soft['soft_ok'])
 
     gates = [
         {
@@ -171,25 +173,33 @@ def build_completeness_gates(content: Content) -> List[dict]:
         },
         {
             'key': 'soft_interest',
-            'title': 'Soft interest (optional)',
-            'ok': soft['soft_ok'],
+            'title': 'Soft interest (optional)' if not soft_required else 'Soft interest',
+            'ok': soft_ok_gate,
+            'optional': not soft_required,
             'detail': (
                 f"{soft['followers']} followers · {soft['remind_count']} remind-me"
-                ' — optional; counts after Coming Soon listing'
+                + (
+                    ' — optional demand signal (does not block submit)'
+                    if not soft_required
+                    else (' — met' if soft_ok_gate else ' — need 50 followers or 200 reminds')
+                )
             ),
-            'fix': 'soft_interest',
+            'fix': None if not soft_required else 'soft_interest',
         },
         {
             'key': 'season_qc',
             'title': 'Full-season quality pipeline',
-            'ok': qc in ('passed', 'queued', 'pending', 'needs_changes'),
+            # Informational until submit queues QC — never a pre-submit red fail.
+            'ok': True,
+            'informational': True,
             'detail': (
                 'Queued/running: trailer + EVERY episode + cover/banner'
-                if qc in ('queued', 'pending')
+                if qc in ('queued', 'pending', 'running')
                 else (
                     'Passed full-season QC' if qc == 'passed'
                     else ('Changes required after QC' if qc == 'needs_changes'
-                          else ('Failed QC' if qc == 'failed' else 'Runs on submit — not trailer-only'))
+                          else ('Failed QC — fix via Needs Changes' if qc == 'failed'
+                                else 'Runs automatically when you Submit for Live'))
                 )
             ),
             'fix': None,

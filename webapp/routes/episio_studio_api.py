@@ -1106,8 +1106,9 @@ def studio_series_detail(series_id):
         soft_required = False
     ok_submit, reason_submit, details_submit = can_submit_for_review(c, soft_required=soft_required)
     soft = soft_interest_counts(c)
-    gates = build_completeness_gates(c)
-    green = sum(1 for g in gates if g['ok'])
+    gates = build_completeness_gates(c, soft_required=soft_required)
+    hard_gates = [g for g in gates if not g.get('optional') and not g.get('informational')]
+    green = sum(1 for g in hard_gates if g['ok'])
     eps = Episode.query.filter_by(content_id=c.id).order_by(Episode.episode_number.asc()).all()
     return jsonify({
         'series': _series_card(c, user),
@@ -1122,7 +1123,7 @@ def studio_series_detail(series_id):
             'trailer_gate_on': gate_enabled(),
             'gates': gates,
             'gates_green': green,
-            'gates_total': len(gates),
+            'gates_total': len(hard_gates),
             'soft_interest': soft,
         },
         'episodes': [_ep_json(e) for e in eps],
@@ -1261,18 +1262,19 @@ def studio_completeness(series_id):
     if not _owns(user, c):
         return jsonify({'error': 'forbidden'}), 403
     refresh_completeness(c)
-    gates = build_completeness_gates(c)
-    soft = soft_interest_counts(c)
     soft_required = (os.environ.get('EPISIO_SOFT_INTEREST') or '0').strip() == '1'
     if getattr(user, 'is_founder', False):
         soft_required = False
     ok_submit, reason, _ = can_submit_for_review(c, soft_required=soft_required)
-    green = sum(1 for g in gates if g['ok'])
+    gates = build_completeness_gates(c, soft_required=soft_required)
+    soft = soft_interest_counts(c)
+    hard_gates = [g for g in gates if not g.get('optional') and not g.get('informational')]
+    green = sum(1 for g in hard_gates if g['ok'])
     return jsonify({
         'series': _series_card(c, user),
         'gates': gates,
         'gates_green': green,
-        'gates_total': len(gates),
+        'gates_total': len(hard_gates),
         'soft_interest': soft,
         'can_submit': ok_submit,
         'can_lock': can_go_live(c)[0] and not getattr(c, 'season_locked', False),

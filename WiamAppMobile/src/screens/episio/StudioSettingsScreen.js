@@ -4,14 +4,14 @@
  */
 import React, { useCallback, useState } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput,
+  View, Text, StyleSheet, TouchableOpacity, TextInput,
   ActivityIndicator, Alert, Image,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import {
-  ChevronLeft, ChevronRight, FileText, HelpCircle, Star, Wallet, Banknote, LogOut, Save,
+  ChevronRight, FileText, HelpCircle, Star, Wallet, Banknote, LogOut,
 } from 'lucide-react-native';
+import EpisioScreenShell from '../../components/episio/EpisioScreenShell';
 import EpisioGoldButton from '../../components/episio/EpisioGoldButton';
 import { COLORS, FONTS } from '../../constants/theme';
 import useAuthStore from '../../store/useAuthStore';
@@ -46,7 +46,6 @@ const Field = ({ label, value, onChange, placeholder, multiline }) => (
 );
 
 const StudioSettingsScreen = () => {
-  const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
@@ -158,127 +157,109 @@ const StudioSettingsScreen = () => {
   }[tier?.tier || 'new'];
 
   return (
-    <View style={[styles.root, { paddingTop: insets.top }]}>
-      <View style={styles.topbar}>
-        <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.goBack()}>
-          <ChevronLeft size={15} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.h1}>Studio Settings</Text>
-        <TouchableOpacity style={styles.saveBtn} onPress={saveProfile} disabled={saving}>
-          {saving ? <ActivityIndicator color={COLORS.navy} /> : <Save size={14} color={COLORS.navy} />}
-        </TouchableOpacity>
-      </View>
-
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }}>
-        <View style={styles.studioCard}>
-          <TouchableOpacity style={styles.avatar} onPress={() => pickAndUpload('avatar')}>
-            {profile.avatar_url ? (
-              <Image source={{ uri: resolveUrl(profile.avatar_url) }} style={styles.avatarImg} />
-            ) : (
-              <Text style={styles.avatarText}>{initial}</Text>
-            )}
-          </TouchableOpacity>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.cardName}>{displayName}</Text>
-            <Text style={styles.cardSub}>
-              @{user?.username || 'creator'} · {tierLabel}
-            </Text>
-            <Text style={styles.tapHint}>Tap photo · crop square first</Text>
-          </View>
-        </View>
-
-        <Text style={styles.groupTitle}>Channel banner (required)</Text>
-        <TouchableOpacity style={styles.bannerBox} onPress={() => pickAndUpload('banner')} activeOpacity={0.9}>
-          {profile.banner_url ? (
-            <Image source={{ uri: resolveUrl(profile.banner_url) }} style={styles.bannerImg} />
+    <EpisioScreenShell
+      title="Studio Settings"
+      subtitle="Channel & payouts"
+      footer={(
+        <EpisioGoldButton label="Save public profile" onPress={saveProfile} loading={saving} />
+      )}
+    >
+      <View style={styles.studioCard}>
+        <TouchableOpacity style={styles.avatar} onPress={() => pickAndUpload('avatar')}>
+          {profile.avatar_url ? (
+            <Image source={{ uri: resolveUrl(profile.avatar_url) }} style={styles.avatarImg} />
           ) : (
-            <Text style={styles.bannerHint}>Upload a wide banner · crop 16:9 first</Text>
+            <Text style={styles.avatarText}>{initial}</Text>
           )}
         </TouchableOpacity>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.cardName}>{displayName}</Text>
+          <Text style={styles.cardSub}>
+            @{user?.username || 'creator'} · {tierLabel}
+          </Text>
+          <Text style={styles.tapHint}>Tap photo · crop square first</Text>
+        </View>
+      </View>
+
+      <Text style={styles.groupTitle}>Channel banner (required)</Text>
+      <TouchableOpacity style={styles.bannerBox} onPress={() => pickAndUpload('banner')} activeOpacity={0.9}>
         {profile.banner_url ? (
-          <TouchableOpacity
-            onPress={async () => {
-              try {
-                await studioEpisioApi.deleteChannelBanner();
-                setProfile((p) => ({ ...p, banner_url: '' }));
-              } catch (e) {
-                Alert.alert('Delete', e?.message || 'Failed');
-              }
-            }}
-          >
-            <Text style={styles.deleteLink}>Remove banner</Text>
-          </TouchableOpacity>
-        ) : null}
-
-        <Text style={styles.groupTitle}>Public channel (viewers see this)</Text>
-        <View style={styles.formCard}>
-          <Field label="Channel name" value={profile.channel_name} onChange={(v) => setProfile((p) => ({ ...p, channel_name: v }))} placeholder="Your studio / channel name" />
-          <Field label="Tagline" value={profile.tagline} onChange={(v) => setProfile((p) => ({ ...p, tagline: v }))} placeholder="One-line hook for your page" />
-          <Field label="Bio" value={profile.bio} onChange={(v) => setProfile((p) => ({ ...p, bio: v }))} placeholder="Tell viewers who you are" multiline />
-          <Field label="Genres" value={profile.genres} onChange={(v) => setProfile((p) => ({ ...p, genres: v }))} placeholder="Romance, Thriller, Comedy" />
-          <Field label="Country" value={profile.country} onChange={(v) => setProfile((p) => ({ ...p, country: v }))} placeholder="Your country" />
-          <Field label="City" value={profile.city} onChange={(v) => setProfile((p) => ({ ...p, city: v }))} placeholder="City" />
-          <Field label="Website" value={profile.website_url} onChange={(v) => setProfile((p) => ({ ...p, website_url: v }))} placeholder="https://" />
-          <Field label="Instagram" value={profile.instagram} onChange={(v) => setProfile((p) => ({ ...p, instagram: v }))} placeholder="@handle or URL" />
-          <Field label="TikTok" value={profile.tiktok} onChange={(v) => setProfile((p) => ({ ...p, tiktok: v }))} placeholder="@handle or URL" />
-          <Field label="YouTube" value={profile.youtube} onChange={(v) => setProfile((p) => ({ ...p, youtube: v }))} placeholder="Channel URL" />
-          <Field label="X / Twitter" value={profile.twitter_x} onChange={(v) => setProfile((p) => ({ ...p, twitter_x: v }))} placeholder="@handle" />
-          <Field label="Facebook" value={profile.facebook} onChange={(v) => setProfile((p) => ({ ...p, facebook: v }))} placeholder="Page URL" />
-          <Field label="Public contact email" value={profile.contact_email_public} onChange={(v) => setProfile((p) => ({ ...p, contact_email_public: v }))} placeholder="Optional" />
-          <EpisioGoldButton label="Save public profile" onPress={saveProfile} loading={saving} />
-          {user?.id ? (
-            <TouchableOpacity
-              style={styles.previewLink}
-              onPress={() => navigation.navigate('CreatorPublicProfile', { creatorId: user.id })}
-            >
-              <Text style={styles.previewLinkText}>Preview public profile</Text>
-            </TouchableOpacity>
-          ) : null}
-        </View>
-
-        <Text style={styles.groupTitle}>Publishing help</Text>
-        <View style={styles.rowCard}>
-          <Row icon={FileText} label="Specs guide" onPress={() => navigation.navigate('StudioSpecs')} />
-          <Row icon={HelpCircle} label="Quality & review help" onPress={() => navigation.navigate('StudioHelpQuality')} />
-          <Row icon={Star} label="Creator Trust Tier" value={tierLabel} onPress={() => navigation.navigate('CreatorTrustTier')} />
-        </View>
-
-        <Text style={styles.groupTitle}>Payouts</Text>
-        <View style={styles.rowCard}>
-          <Row icon={Wallet} label="Identity Verification" tag={user?.is_creator ? 'OPEN' : undefined} onPress={() => navigation.navigate('StudioPayoutKyc')} />
-          <Row icon={Banknote} label="Bank account for payouts" onPress={() => navigation.navigate('StudioPayoutKyc')} />
-          <Row icon={Banknote} label="Earnings overview" onPress={() => navigation.navigate('StudioEarnings', {})} />
-        </View>
-
-        {loading ? <ActivityIndicator color={COLORS.gold} style={{ marginTop: 16 }} /> : null}
-
+          <Image source={{ uri: resolveUrl(profile.banner_url) }} style={styles.bannerImg} />
+        ) : (
+          <Text style={styles.bannerHint}>Upload a wide banner · crop 16:9 first</Text>
+        )}
+      </TouchableOpacity>
+      {profile.banner_url ? (
         <TouchableOpacity
-          style={styles.signoutBtn}
-          onPress={() => {
-            logout();
-            navigation.navigate('Main');
+          onPress={async () => {
+            try {
+              await studioEpisioApi.deleteChannelBanner();
+              setProfile((p) => ({ ...p, banner_url: '' }));
+            } catch (e) {
+              Alert.alert('Delete', e?.message || 'Failed');
+            }
           }}
         >
-          <LogOut size={16} color="#E4573D" style={{ marginRight: 8 }} />
-          <Text style={styles.signoutText}>Exit WiamStudio</Text>
+          <Text style={styles.deleteLink}>Remove banner</Text>
         </TouchableOpacity>
-      </ScrollView>
-    </View>
+      ) : null}
+
+      <Text style={styles.groupTitle}>Public channel (viewers see this)</Text>
+      <View style={styles.formCard}>
+        <Field label="Channel name" value={profile.channel_name} onChange={(v) => setProfile((p) => ({ ...p, channel_name: v }))} placeholder="Your studio / channel name" />
+        <Field label="Tagline" value={profile.tagline} onChange={(v) => setProfile((p) => ({ ...p, tagline: v }))} placeholder="One-line hook for your page" />
+        <Field label="Bio" value={profile.bio} onChange={(v) => setProfile((p) => ({ ...p, bio: v }))} placeholder="Tell viewers who you are" multiline />
+        <Field label="Genres" value={profile.genres} onChange={(v) => setProfile((p) => ({ ...p, genres: v }))} placeholder="Romance, Thriller, Comedy" />
+        <Field label="Country" value={profile.country} onChange={(v) => setProfile((p) => ({ ...p, country: v }))} placeholder="Your country" />
+        <Field label="City" value={profile.city} onChange={(v) => setProfile((p) => ({ ...p, city: v }))} placeholder="City" />
+        <Field label="Website" value={profile.website_url} onChange={(v) => setProfile((p) => ({ ...p, website_url: v }))} placeholder="https://" />
+        <Field label="Instagram" value={profile.instagram} onChange={(v) => setProfile((p) => ({ ...p, instagram: v }))} placeholder="@handle or URL" />
+        <Field label="TikTok" value={profile.tiktok} onChange={(v) => setProfile((p) => ({ ...p, tiktok: v }))} placeholder="@handle or URL" />
+        <Field label="YouTube" value={profile.youtube} onChange={(v) => setProfile((p) => ({ ...p, youtube: v }))} placeholder="Channel URL" />
+        <Field label="X / Twitter" value={profile.twitter_x} onChange={(v) => setProfile((p) => ({ ...p, twitter_x: v }))} placeholder="@handle" />
+        <Field label="Facebook" value={profile.facebook} onChange={(v) => setProfile((p) => ({ ...p, facebook: v }))} placeholder="Page URL" />
+        <Field label="Public contact email" value={profile.contact_email_public} onChange={(v) => setProfile((p) => ({ ...p, contact_email_public: v }))} placeholder="Optional" />
+        {user?.id ? (
+          <TouchableOpacity
+            style={styles.previewLink}
+            onPress={() => navigation.navigate('CreatorPublicProfile', { creatorId: user.id })}
+          >
+            <Text style={styles.previewLinkText}>Preview public profile</Text>
+          </TouchableOpacity>
+        ) : null}
+      </View>
+
+      <Text style={styles.groupTitle}>Publishing help</Text>
+      <View style={styles.rowCard}>
+        <Row icon={FileText} label="Specs guide" onPress={() => navigation.navigate('StudioSpecs')} />
+        <Row icon={HelpCircle} label="Quality & review help" onPress={() => navigation.navigate('StudioHelpQuality')} />
+        <Row icon={Star} label="Creator Trust Tier" value={tierLabel} onPress={() => navigation.navigate('CreatorTrustTier')} />
+      </View>
+
+      <Text style={styles.groupTitle}>Payouts</Text>
+      <View style={styles.rowCard}>
+        <Row icon={Wallet} label="Identity Verification" tag={user?.is_creator ? 'OPEN' : undefined} onPress={() => navigation.navigate('StudioPayoutKyc')} />
+        <Row icon={Banknote} label="Bank account for payouts" onPress={() => navigation.navigate('StudioPayoutKyc')} />
+        <Row icon={Banknote} label="Earnings overview" onPress={() => navigation.navigate('StudioEarnings', {})} />
+      </View>
+
+      {loading ? <ActivityIndicator color={COLORS.gold} style={{ marginTop: 16 }} /> : null}
+
+      <TouchableOpacity
+        style={styles.signoutBtn}
+        onPress={() => {
+          logout();
+          navigation.navigate('Main');
+        }}
+      >
+        <LogOut size={16} color="#E4573D" style={{ marginRight: 8 }} />
+        <Text style={styles.signoutText}>Exit WiamStudio</Text>
+      </TouchableOpacity>
+    </EpisioScreenShell>
   );
 };
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: COLORS.navy },
-  topbar: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingVertical: 12 },
-  iconBtn: {
-    width: 36, height: 36, borderRadius: 18, backgroundColor: COLORS.navyCard,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  saveBtn: {
-    marginLeft: 'auto', width: 36, height: 36, borderRadius: 18, backgroundColor: COLORS.gold,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  h1: { fontSize: 18, fontFamily: FONTS.bold, color: '#fff' },
   studioCard: {
     flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: COLORS.navyCard,
     borderRadius: 16, padding: 14, borderWidth: 1, borderColor: COLORS.navyLine, marginBottom: 18,
@@ -312,11 +293,7 @@ const styles = StyleSheet.create({
     color: '#fff', paddingHorizontal: 12, paddingVertical: 10, fontFamily: FONTS.regular, fontSize: 13.5,
   },
   fieldMulti: { minHeight: 80, textAlignVertical: 'top' },
-  primarySave: {
-    marginTop: 6, backgroundColor: COLORS.gold, borderRadius: 14, paddingVertical: 14, alignItems: 'center',
-  },
-  primarySaveText: { color: COLORS.navy, fontFamily: FONTS.bold, fontSize: 14 },
-  previewLink: { marginTop: 12, alignItems: 'center' },
+  previewLink: { marginTop: 4, alignItems: 'center' },
   previewLinkText: { color: COLORS.gold, fontFamily: FONTS.semi, fontSize: 13 },
   rowCard: {
     backgroundColor: COLORS.navyCard, borderRadius: 16, marginBottom: 16,

@@ -48,19 +48,20 @@ const StudioCompletenessScreen = () => {
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
   const gates = data?.gates || [];
-  const green = data?.gates_green || 0;
-  const total = data?.gates_total || gates.length || 1;
+  const hardGates = gates.filter((g) => !g.optional && !g.informational);
+  const green = data?.gates_green ?? hardGates.filter((g) => g.ok).length;
+  const total = data?.gates_total || hardGates.length || 1;
   const canSubmit = !!data?.can_submit;
   const canLock = !!data?.can_lock;
   const series = data?.series;
   const unit = series?.unit_label || (series?.structure_mode === 'season' ? 'season' : 'series');
   const unitCap = unit.charAt(0).toUpperCase() + unit.slice(1);
-  const blocked = gates.find((g) => !g.ok);
-  const blockedCount = gates.filter((g) => !g.ok).length;
+  const blocked = hardGates.find((g) => !g.ok);
+  const blockedCount = hardGates.filter((g) => !g.ok).length;
   const ringPct = total ? Math.min(100, (green / total) * 100) : 0;
 
   const onFix = (gate) => {
-    if (!gate || gate.ok) return;
+    if (!gate || gate.ok || gate.optional || gate.informational || !gate.fix) return;
     if (gate.key === 'rights' || gate.fix === 'rights') {
       Alert.alert(
         'Confirm rights',
@@ -151,24 +152,35 @@ const StudioCompletenessScreen = () => {
             </Text>
           </View>
 
-          {gates.map((g) => (
-            <TouchableOpacity
-              key={g.key || g.title}
-              style={[styles.gateItem, !g.ok && styles.gateBlocked]}
-              onPress={() => onFix(g)}
-              disabled={g.ok}
-              activeOpacity={0.85}
-            >
-              <View style={[styles.gateIcon, g.ok ? styles.ok : styles.bad]}>
-                {g.ok ? <Check size={17} color="#fff" /> : <X size={17} color="#fff" />}
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.gateTitle}>{g.title}</Text>
-                <Text style={[styles.gateSub, !g.ok && styles.gateSubBad]}>{g.detail}</Text>
-              </View>
-              {!g.ok ? <Text style={styles.fix}>Fix →</Text> : null}
-            </TouchableOpacity>
-          ))}
+          {gates.map((g) => {
+            const softOrInfo = !!(g.optional || g.informational);
+            const showFix = !g.ok && !softOrInfo && !!g.fix;
+            return (
+              <TouchableOpacity
+                key={g.key || g.title}
+                style={[styles.gateItem, !g.ok && !softOrInfo && styles.gateBlocked]}
+                onPress={() => onFix(g)}
+                disabled={!showFix}
+                activeOpacity={0.85}
+              >
+                <View style={[
+                  styles.gateIcon,
+                  softOrInfo ? styles.info : (g.ok ? styles.ok : styles.bad),
+                ]}
+                >
+                  {g.ok || softOrInfo
+                    ? <Check size={17} color="#fff" />
+                    : <X size={17} color="#fff" />}
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.gateTitle}>{g.title}</Text>
+                  <Text style={[styles.gateSub, !g.ok && !softOrInfo && styles.gateSubBad]}>{g.detail}</Text>
+                </View>
+                {showFix ? <Text style={styles.fix}>Fix →</Text> : null}
+                {softOrInfo ? <Text style={styles.optBadge}>{g.optional ? 'Optional' : 'Info'}</Text> : null}
+              </TouchableOpacity>
+            );
+          })}
         </>
       )}
     </EpisioScreenShell>
@@ -211,10 +223,12 @@ const styles = StyleSheet.create({
   gateIcon: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
   ok: { backgroundColor: '#3BB273' },
   bad: { backgroundColor: '#E4573D' },
+  info: { backgroundColor: 'rgba(212,160,23,0.55)' },
   gateTitle: { fontSize: 13, fontFamily: FONTS.bold, color: '#fff' },
   gateSub: { marginTop: 3, fontSize: 11.5, color: COLORS.textDim, fontFamily: FONTS.regular },
   gateSubBad: { color: '#E0A79A' },
   fix: { color: COLORS.gold, fontFamily: FONTS.bold, fontSize: 12 },
+  optBadge: { color: COLORS.textFaint, fontFamily: FONTS.semi, fontSize: 10 },
   note: {
     textAlign: 'center', color: COLORS.textFaint, fontSize: 11,
     fontFamily: FONTS.regular, lineHeight: 16, marginTop: 10,

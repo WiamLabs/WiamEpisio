@@ -161,17 +161,23 @@ const StudioSeriesDetailScreen = () => {
     );
   };
 
-  const hubActions = [
+  const assetActions = [
     { key: 'episodes', label: 'Episodes', detail: `${series?.ready_episodes || 0}/${series?.planned_episode_count || 0} ready · ${series?.final_episodes || 0} final`, onPress: () => navigation.navigate('StudioEpisodeList', { seriesId }) },
     { key: 'trailer', label: 'Trailer + QA', detail: `Status: ${series?.trailer_qa_status || 'none'}`, onPress: () => navigation.navigate('StudioTrailer', { seriesId }) },
-    { key: 'teaser', label: 'Teaser public preview', detail: 'How soft-interest viewers see you', onPress: () => navigation.navigate('StudioTeaserPreview', { seriesId }) },
     { key: 'cover', label: 'Cover (2:3)', detail: hasCover ? 'Uploaded' : 'Required', onPress: () => navigation.navigate('StudioCover', { seriesId }), disabled: locked && !fixOpen },
     { key: 'banner', label: 'Banner / hero', detail: hasBanner ? 'Uploaded' : 'Add banner', onPress: () => navigation.navigate('StudioBanner', { seriesId }), disabled: locked && !fixOpen },
     { key: 'rights', label: 'Confirm rights', detail: series?.rights_confirmed ? 'Confirmed' : 'Required before lock', onPress: confirmRights, busyKey: 'rights' },
+  ];
+
+  const publishActions = [
     { key: 'complete', label: 'Completeness gate', detail: `${gatesGreen}/${gatesTotal} green`, onPress: () => navigation.navigate('StudioCompleteness', { seriesId }) },
     { key: 'lock', label: locked ? `${unit} locked ✓` : `Lock complete ${unit}`, detail: locked ? 'Before live: Needs Changes. After live: Revision Request (legal/rights/factual)' : 'Irreversible commitment to the WiamEpisio team', onPress: () => navigation.navigate('StudioSeasonLock', { seriesId }) },
-    { key: 'soft', label: 'Soft interest', detail: 'Followers / Remind-me before our team spends review time', onPress: () => navigation.navigate('StudioSoftInterest', { seriesId }) },
+    { key: 'soft', label: 'Soft interest (optional)', detail: 'Demand signal — does not block Submit', onPress: () => navigation.navigate('StudioSoftInterest', { seriesId }) },
+    { key: 'teaser', label: 'Teaser public preview', detail: 'How soft-interest viewers see you', onPress: () => navigation.navigate('StudioTeaserPreview', { seriesId }) },
     { key: 'submit', label: state === 'needs_changes' ? 'Resubmit to our team' : 'Submit for Live', detail: 'Our team reviews trailer + every episode, then publishes', onPress: () => navigation.navigate('StudioSubmitForLive', { seriesId }) },
+  ];
+
+  const afterLiveActions = [
     { key: 'revision', label: 'Revision Request (live only)', detail: 'Legal / rights / factual — scoped to one piece', onPress: () => navigation.navigate('StudioRevisionRequest', { seriesId }) },
     { key: 'analytics', label: 'Analytics', detail: 'After our team publishes', onPress: () => navigation.navigate('StudioAnalytics', { seriesId }) },
     { key: 'dashboard', label: 'Series dashboard', detail: state === 'live' ? 'Live stats' : 'Opens when live', onPress: () => navigation.navigate('StudioDashboard', { seriesId }) },
@@ -187,6 +193,25 @@ const StudioSeriesDetailScreen = () => {
       busyKey: 'delete',
     },
   ];
+
+  const renderHub = (items) => items.map((a) => (
+    <TouchableOpacity
+      key={a.key}
+      style={[
+        styles.action,
+        a.disabled && styles.actionDisabled,
+        a.key === 'delete' && styles.deleteAction,
+      ]}
+      onPress={a.onPress}
+      disabled={!!busy || a.disabled}
+    >
+      <View style={{ flex: 1 }}>
+        <Text style={[styles.actionText, a.key === 'delete' && styles.deleteText]}>{a.label}</Text>
+        <Text style={styles.actionDetail}>{a.detail}</Text>
+      </View>
+      {busy === a.busyKey ? <ActivityIndicator color={COLORS.navy} /> : null}
+    </TouchableOpacity>
+  ));
 
   return (
     <ScrollView style={[styles.root, { paddingTop: insets.top + 8 }]} contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 48 }}>
@@ -231,25 +256,12 @@ const StudioSeriesDetailScreen = () => {
             />
           ) : null}
 
-          <Text style={styles.section}>Workspace</Text>
-          {hubActions.map((a) => (
-            <TouchableOpacity
-              key={a.key}
-              style={[
-                styles.action,
-                a.disabled && styles.actionDisabled,
-                a.key === 'delete' && styles.deleteAction,
-              ]}
-              onPress={a.onPress}
-              disabled={!!busy || a.disabled}
-            >
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.actionText, a.key === 'delete' && styles.deleteText]}>{a.label}</Text>
-                <Text style={styles.actionDetail}>{a.detail}</Text>
-              </View>
-              {busy === a.busyKey ? <ActivityIndicator color={COLORS.navy} /> : null}
-            </TouchableOpacity>
-          ))}
+          <Text style={styles.section}>Assets</Text>
+          {renderHub(assetActions)}
+          <Text style={styles.section}>Publish path</Text>
+          {renderHub(publishActions)}
+          <Text style={styles.section}>After live</Text>
+          {renderHub(afterLiveActions)}
 
           {error ? <Text style={styles.error}>{error}</Text> : null}
         </>

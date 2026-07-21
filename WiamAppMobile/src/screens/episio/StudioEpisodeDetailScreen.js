@@ -69,7 +69,7 @@ const StudioEpisodeDetailScreen = () => {
   const ready = episode?.transcode_status === 'ready';
   const epNum = episode?.episode_number || episodeNumber;
   const freePreview = (epNum || 0) <= 5;
-  const thumb = resolveUrl(episode?.poster_url || episode?.poster_frame_url || episode?.thumbnail_url);
+  const thumb = resolveUrl(episode?.poster_url || episode?.thumbnail_url);
 
   const save = async () => {
     if (!episode?.id) {

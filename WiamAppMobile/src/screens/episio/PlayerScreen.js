@@ -30,13 +30,13 @@ const PlayerScreen = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const route = useRoute();
-  const { episodeId, seriesId, offlineUri } = route.params || {};
+  const { episodeId, seriesId, offlineUri, startFullscreen } = route.params || {};
   const [meta, setMeta] = useState(null);
   const [episodes, setEpisodes] = useState([]);
   const [streamUrl, setStreamUrl] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [fullscreen, setFullscreen] = useState(false);
+  const [fullscreen, setFullscreen] = useState(!!startFullscreen);
   const [liked, setLiked] = useState(false);
   const [listMsg, setListMsg] = useState(null);
   const [watchProgress, setWatchProgress] = useState(0);
@@ -223,10 +223,11 @@ const PlayerScreen = () => {
   const onLike = () => requireAuth(async () => {
     if (!seriesId) return;
     try {
-      const res = await apiClient.post(`/books/${seriesId}/favorite`);
-      setLiked(!!res.data?.favorited);
+      await studioEpisioApi.remind(seriesId);
+      setLiked(true);
+      Alert.alert('Saved', 'Added to My List reminders.');
     } catch (e) {
-      Alert.alert('Could not save like', e?.response?.data?.error || e.message || 'Try again');
+      Alert.alert('Could not save', e?.message || 'Try again');
     }
   });
 
@@ -326,7 +327,10 @@ const PlayerScreen = () => {
           <TouchableOpacity style={styles.vtBtn} onPress={() => navigation.goBack()}>
             <ChevronLeft size={18} color="#fff" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.vtBtn} onPress={() => setFullscreen((f) => !f)}>
+          <TouchableOpacity
+            style={styles.vtBtn}
+            onPress={() => setFullscreen((f) => !f)}
+          >
             <Maximize2 size={16} color="#fff" />
           </TouchableOpacity>
         </View>

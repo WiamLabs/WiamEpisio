@@ -35,7 +35,7 @@ const FAQS = [
   {
     chip: 'Specs',
     q: 'What about soft interest?',
-    a: 'Submit unlocks after 50 followers alone, or 200 combined followers + Remind Me taps. Hard quality (full season + trailer) still comes first.',
+    a: 'Soft interest (followers / Remind Me) is optional and does not block Submit. Hard quality — full season, trailer, cover, lock — still comes first. Counts show demand after a Coming Soon listing.',
   },
   {
     chip: 'Payouts',

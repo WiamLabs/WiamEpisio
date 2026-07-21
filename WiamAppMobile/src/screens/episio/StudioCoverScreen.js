@@ -4,11 +4,11 @@
  */
 import React, { useCallback, useState } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ActivityIndicator, Alert,
+  View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator, Alert,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
-import { ChevronLeft, Check } from 'lucide-react-native';
+import { Check } from 'lucide-react-native';
+import EpisioScreenShell from '../../components/episio/EpisioScreenShell';
 import EpisioGoldButton from '../../components/episio/EpisioGoldButton';
 import { COLORS, FONTS } from '../../constants/theme';
 import studioEpisioApi from '../../api/studioEpisio';
@@ -29,7 +29,6 @@ const TIPS = [
 ];
 
 const StudioCoverScreen = () => {
-  const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const seriesId = useRoute().params?.seriesId;
   const [series, setSeries] = useState(null);
@@ -78,96 +77,69 @@ const StudioCoverScreen = () => {
     }
   };
 
-  const next = () => navigation.navigate('StudioEpisodeList', { seriesId });
-
   return (
-    <View style={[styles.root, { paddingTop: insets.top }]}>
-      <View style={styles.topbar}>
-        <View style={styles.topRow}>
-          <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.goBack()}>
-            <ChevronLeft size={15} color="#fff" />
-          </TouchableOpacity>
-          <Text style={styles.stepLabel}>Step 2 of 4</Text>
-        </View>
-        <View style={styles.stepTrack}>
-          <View style={[styles.stepSeg, styles.stepDone]} />
-          <View style={[styles.stepSeg, styles.stepDone]} />
-          <View style={styles.stepSeg} />
-          <View style={styles.stepSeg} />
-        </View>
-        <Text style={styles.title}>Add your cover</Text>
-        <Text style={styles.sub}>Upload your full 2:3 flyer — no crop. We validate size and ratio on upload.</Text>
-      </View>
-
+    <EpisioScreenShell
+      title="Add your cover"
+      subtitle="Full 2:3 flyer — no crop. We validate size and ratio on upload."
+      footer={<EpisioGoldButton label="Next: Episodes" onPress={() => navigation.navigate('StudioEpisodeList', { seriesId })} />}
+    >
       {loading ? (
         <ActivityIndicator color={COLORS.gold} style={{ marginTop: 40 }} />
       ) : (
-        <ScrollView contentContainerStyle={styles.scroll}>
-          <View style={styles.left}>
-            <View style={styles.coverPreview}>
-              {previewUri ? (
-                <Image source={{ uri: previewUri }} style={StyleSheet.absoluteFillObject} resizeMode="cover" />
-              ) : null}
-              <View style={styles.coverOverlay}>
-                <Text style={styles.coverTitle}>{series?.title || 'Your series'}</Text>
+        <>
+          <View style={styles.stepTrack}>
+            <View style={[styles.stepSeg, styles.stepDone]} />
+            <View style={[styles.stepSeg, styles.stepDone]} />
+            <View style={styles.stepSeg} />
+            <View style={styles.stepSeg} />
+          </View>
+          <Text style={styles.stepLabel}>Step 2 of 4</Text>
+
+          <View style={styles.coverPreview}>
+            {previewUri ? (
+              <Image source={{ uri: previewUri }} style={StyleSheet.absoluteFillObject} resizeMode="cover" />
+            ) : null}
+            <View style={styles.coverOverlay}>
+              <Text style={styles.coverTitle}>{series?.title || 'Your series'}</Text>
+            </View>
+          </View>
+          <Text style={styles.dimBadge}>
+            1080 × 1620 · <Text style={{ color: '#3BB273' }}>{pass ? 'Pass' : 'Pending'}</Text>
+          </Text>
+          <TouchableOpacity style={styles.replaceBtn} onPress={pickCover} disabled={busy}>
+            {busy ? <ActivityIndicator color={COLORS.text} size="small" /> : (
+              <Text style={styles.replaceText}>Replace Cover</Text>
+            )}
+          </TouchableOpacity>
+
+          <View style={styles.checkCard}>
+            <Text style={styles.checkTitle}>Cover Checklist</Text>
+            {CHECKS.map((c) => (
+              <View key={c} style={styles.checkItem}>
+                <Check size={14} color="#3BB273" />
+                <Text style={styles.checkText}>{c}</Text>
               </View>
-            </View>
-            <Text style={styles.dimBadge}>
-              1080 × 1620 · <Text style={{ color: '#3BB273' }}>{pass ? 'Pass' : 'Pending'}</Text>
-            </Text>
-            <TouchableOpacity style={styles.replaceBtn} onPress={pickCover} disabled={busy}>
-              {busy ? <ActivityIndicator color={COLORS.text} size="small" /> : (
-                <Text style={styles.replaceText}>Replace Cover</Text>
-              )}
-            </TouchableOpacity>
+            ))}
           </View>
-
-          <View style={styles.right}>
-            <View style={styles.checkCard}>
-              <Text style={styles.checkTitle}>Cover Checklist</Text>
-              {CHECKS.map((c) => (
-                <View key={c} style={styles.checkItem}>
-                  <Check size={14} color="#3BB273" />
-                  <Text style={styles.checkText}>{c}</Text>
-                </View>
-              ))}
-            </View>
-            <View style={styles.tipsCard}>
-              <Text style={styles.tipsTitle}>Tips for a cover that gets clicks</Text>
-              {TIPS.map((t) => (
-                <Text key={t} style={styles.tipLine}>• {t}</Text>
-              ))}
-            </View>
+          <View style={styles.tipsCard}>
+            <Text style={styles.tipsTitle}>Tips for a cover that gets clicks</Text>
+            {TIPS.map((t) => (
+              <Text key={t} style={styles.tipLine}>• {t}</Text>
+            ))}
           </View>
-        </ScrollView>
+        </>
       )}
-
-      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 20) }]}>
-        <EpisioGoldButton label="Next: Genres & Episodes" onPress={next} />
-      </View>
-    </View>
+    </EpisioScreenShell>
   );
 };
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: COLORS.navy },
-  topbar: { paddingHorizontal: 20, paddingBottom: 16 },
-  topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
-  iconBtn: {
-    width: 34, height: 34, borderRadius: 17, backgroundColor: COLORS.navyCard,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  stepLabel: { fontSize: 11, fontFamily: FONTS.bold, color: COLORS.textFaint },
-  stepTrack: { flexDirection: 'row', gap: 6, marginBottom: 16 },
+  stepLabel: { fontSize: 11, fontFamily: FONTS.bold, color: COLORS.textFaint, marginBottom: 12 },
+  stepTrack: { flexDirection: 'row', gap: 6, marginBottom: 8 },
   stepSeg: { flex: 1, height: 4, borderRadius: 99, backgroundColor: COLORS.navyLine },
   stepDone: { backgroundColor: COLORS.gold },
-  title: { fontSize: 20, fontFamily: FONTS.extraBold, color: '#fff', marginBottom: 5 },
-  sub: { fontSize: 12.5, fontFamily: FONTS.regular, color: COLORS.textDim },
-  scroll: { flexDirection: 'row', paddingHorizontal: 20, paddingBottom: 20, gap: 18 },
-  left: { width: 140 },
-  right: { flex: 1, minWidth: 0 },
   coverPreview: {
-    width: 140, height: 210, borderRadius: 16, overflow: 'hidden',
+    width: 160, height: 240, alignSelf: 'center', borderRadius: 16, overflow: 'hidden',
     backgroundColor: '#3a1420', borderWidth: 1, borderColor: COLORS.navyLine, marginBottom: 12,
   },
   coverOverlay: {
@@ -177,10 +149,10 @@ const styles = StyleSheet.create({
   coverTitle: { fontSize: 12, fontFamily: FONTS.extraBold, color: '#fff' },
   dimBadge: { textAlign: 'center', fontSize: 10, color: COLORS.textFaint, marginBottom: 10 },
   replaceBtn: {
-    padding: 10, borderRadius: 11, backgroundColor: COLORS.navyCard,
+    padding: 12, borderRadius: 11, backgroundColor: COLORS.navyCard, marginBottom: 16,
     borderWidth: 1, borderColor: COLORS.navyLine, alignItems: 'center',
   },
-  replaceText: { fontSize: 11, fontFamily: FONTS.bold, color: '#C9C9DE' },
+  replaceText: { fontSize: 12, fontFamily: FONTS.bold, color: '#C9C9DE' },
   checkCard: {
     backgroundColor: COLORS.navyCard, borderWidth: 1, borderColor: COLORS.navyLine,
     borderRadius: 16, padding: 15, marginBottom: 14,
@@ -194,11 +166,6 @@ const styles = StyleSheet.create({
   },
   tipsTitle: { fontSize: 11.5, fontFamily: FONTS.extraBold, color: COLORS.gold, marginBottom: 8 },
   tipLine: { fontSize: 10.5, fontFamily: FONTS.regular, color: '#D9C89A', lineHeight: 17, marginBottom: 5 },
-  footer: { paddingHorizontal: 20, paddingTop: 12 },
-  cta: {
-    padding: 16, borderRadius: 16, backgroundColor: COLORS.gold, alignItems: 'center',
-  },
-  ctaText: { fontSize: 15, fontFamily: FONTS.extraBold, color: COLORS.navy },
 });
 
 export default StudioCoverScreen;

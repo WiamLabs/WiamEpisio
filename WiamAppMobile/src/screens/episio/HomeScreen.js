@@ -302,10 +302,7 @@ const HomeScreen = () => {
               }}
             />
           )) : (
-            <>
-              <EmptyPoster title="Start watching" tag="Your history" />
-              <EmptyPoster title="Pick a series" tag="Free first episodes" />
-            </>
+            <Text style={styles.emptyRail}>Nothing in progress yet — start a series from Trending.</Text>
           )}
         </ScrollView>
 
@@ -324,11 +321,7 @@ const HomeScreen = () => {
               onPress={() => openSeries(s.id)}
             />
           )) : (
-            <>
-              <EmptyPoster title="Coming to catalog" tag="Drama" />
-              <EmptyPoster title="Creators uploading" tag="Soon" />
-              <EmptyPoster title="Stay tuned" tag="WiamEpisio" />
-            </>
+            <Text style={styles.emptyRail}>Catalog is empty — check back when creators go live.</Text>
           )}
         </ScrollView>
 
@@ -347,10 +340,7 @@ const HomeScreen = () => {
               onPress={() => openSeries(s.id)}
             />
           )) : (
-            <>
-              <EmptyPoster title="Origin originals" tag="Wiam Origin" />
-              <EmptyPoster title="African stories" tag="Wiam Origin" />
-            </>
+            <Text style={styles.emptyRail}>Wiam Origin titles appear here when published.</Text>
           )}
         </ScrollView>
 
@@ -491,7 +481,11 @@ const styles = StyleSheet.create({
   },
   sectionTitle: { fontSize: 15, fontFamily: FONTS.bold, color: '#fff' },
   seeAll: { fontSize: 11.5, color: COLORS.gold, fontFamily: FONTS.medium },
-  posterRow: { paddingBottom: 4, marginBottom: 22 },
+  posterRow: { paddingBottom: 4, marginBottom: 22, paddingRight: 20, alignItems: 'center' },
+  emptyRail: {
+    color: COLORS.textFaint, fontFamily: FONTS.regular, fontSize: 12.5,
+    paddingVertical: 28, paddingRight: 20, maxWidth: 280, lineHeight: 18,
+  },
   posterTitle: {
     marginTop: 7,
     fontSize: 11.5,

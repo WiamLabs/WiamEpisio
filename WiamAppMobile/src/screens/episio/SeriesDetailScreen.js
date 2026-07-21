@@ -138,10 +138,17 @@ const SeriesDetailScreen = () => {
 
   const onFavorite = () => requireAuth(async () => {
     try {
-      const { data } = await apiClient.post(`/books/${seriesId}/favorite`);
-      setFavorited(!!data?.favorited);
+      if (favorited) {
+        await studioEpisioApi.unremind(seriesId);
+        setFavorited(false);
+        Alert.alert('My List', 'Removed from reminders.');
+      } else {
+        await studioEpisioApi.remind(seriesId);
+        setFavorited(true);
+        Alert.alert('My List', 'Saved — reminder set.');
+      }
     } catch (e) {
-      Alert.alert('Favorite', e?.response?.data?.error || e?.message || 'Try again');
+      Alert.alert('My List', e?.message || 'Could not update');
     }
   });
 
@@ -262,7 +269,7 @@ const SeriesDetailScreen = () => {
             </TouchableOpacity>
           </View>
           <Text style={styles.freeNote}>
-            First episodes are free on the server. Later episodes unlock with coins or VIP.
+            Episodes 1–5 are free. Later episodes unlock with coins or VIP.
           </Text>
         </View>
 
@@ -340,7 +347,9 @@ const SeriesDetailScreen = () => {
                     {ep.title || `Episode ${ep.episode_number}`}
                   </Text>
                   <Text style={styles.epSub} numberOfLines={1}>
-                    {ep.is_free_tier ? 'Free' : `${ep.unlock_price_coins || series?.unlock_price_coins || 0} coins`}
+                    {ep.is_free_tier
+                      ? 'Free'
+                      : `${ep.unlock_price_coins || series?.unlock_price_coins || 10} coins`}
                   </Text>
                 </View>
                 {ep.locked ? (

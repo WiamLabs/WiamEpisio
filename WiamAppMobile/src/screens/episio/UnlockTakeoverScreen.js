@@ -164,10 +164,7 @@ const UnlockTakeoverScreen = () => {
 
         <TouchableOpacity
           style={styles.vipHint}
-          onPress={() => navigation.navigate('MembershipOfferModal', {
-            price: 'From ₵35',
-            discountLabel: 'VIP unlocks all',
-          })}
+          onPress={() => navigation.navigate('MembershipOfferModal', {})}
         >
           <Text style={styles.vipHintText}>Or join VIP — watch without coins</Text>
         </TouchableOpacity>

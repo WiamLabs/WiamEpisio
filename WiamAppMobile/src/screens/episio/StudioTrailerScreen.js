@@ -79,10 +79,18 @@ const StudioTrailerScreen = () => {
   };
 
   const checks = [
-    { ok: passed || !!series?.trailer_url || !!pickedName, label: '9:16 aspect ratio confirmed' },
-    { ok: passed || !!series?.trailer_url || !!pickedName, label: 'Resolution 1080 × 1920' },
-    { ok: inRange || passed, label: 'Duration within 15–60s' },
-    { ok: passed, label: 'No black frames detected' },
+    {
+      ok: passed,
+      pending: !passed && (!!series?.trailer_url || !!pickedName),
+      label: passed ? '9:16 aspect ratio confirmed' : '9:16 aspect — pending server check',
+    },
+    {
+      ok: passed,
+      pending: !passed && (!!series?.trailer_url || !!pickedName),
+      label: passed ? 'Resolution 1080 × 1920' : 'Resolution — pending server check',
+    },
+    { ok: inRange || passed, pending: false, label: 'Duration within 15–60s' },
+    { ok: passed, pending: !passed && (!!series?.trailer_url || !!pickedName), label: 'No black frames detected' },
   ];
 
   return (
@@ -139,8 +147,8 @@ const StudioTrailerScreen = () => {
             </View>
             {checks.map((c) => (
               <View key={c.label} style={styles.checkRow}>
-                <Check size={14} color={c.ok ? '#3DDC97' : COLORS.textFaint} />
-                <Text style={[styles.checkText, !c.ok && { color: COLORS.textFaint }]}>{c.label}</Text>
+                <Check size={14} color={c.ok ? '#3DDC97' : (c.pending ? COLORS.gold : COLORS.textFaint)} />
+                <Text style={[styles.checkText, !c.ok && { color: c.pending ? COLORS.gold : COLORS.textFaint }]}>{c.label}</Text>
               </View>
             ))}
             <TouchableOpacity style={styles.refresh} onPress={pickAndUpload} disabled={busy || locked}>

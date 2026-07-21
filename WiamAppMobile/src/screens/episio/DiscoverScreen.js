@@ -84,9 +84,7 @@ const DiscoverScreen = () => {
             <LinearGradient colors={['#2a1a12', '#0d0d24', '#000']} style={StyleSheet.absoluteFill} />
           )}
           <View style={styles.swipeEdge}>
-            {[0, 1, 2, 3].map((d) => (
-              <View key={d} style={[styles.swipeDot, d === (index % 4) && styles.swipeDotActive]} />
-            ))}
+            <Text style={styles.feedIndex}>{index + 1}/{Math.max(items.length, 1)}</Text>
           </View>
           <View style={styles.centerPlay}>
             <Play size={22} color="#fff" fill="#fff" />
@@ -200,19 +198,14 @@ const styles = StyleSheet.create({
   },
   swipeEdge: {
     position: 'absolute',
-    top: 0,
-    bottom: 0,
-    right: 8,
-    justifyContent: 'center',
-    gap: 5,
+    top: 12,
+    right: 12,
   },
-  swipeDot: {
-    width: 3,
-    height: 14,
-    borderRadius: 999,
-    backgroundColor: 'rgba(255,255,255,0.25)',
+  feedIndex: {
+    fontFamily: FONTS.bold, fontSize: 11, color: 'rgba(255,255,255,0.7)',
+    backgroundColor: 'rgba(0,0,0,0.45)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8,
+    overflow: 'hidden',
   },
-  swipeDotActive: { backgroundColor: COLORS.gold },
   centerPlay: {
     position: 'absolute',
     top: '50%',

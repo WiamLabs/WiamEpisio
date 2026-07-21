@@ -25,9 +25,10 @@ const StudioEpisodeUploadScreen = () => {
   const [videoUri, setVideoUri] = useState(null);
   const [coverUri, setCoverUri] = useState(null);
   const [coverRemote, setCoverRemote] = useState(null);
-  const [width, setWidth] = useState('1080');
-  const [height, setHeight] = useState('1920');
-  const [duration, setDuration] = useState('270');
+  const [width, setWidth] = useState('');
+  const [height, setHeight] = useState('');
+  const [duration, setDuration] = useState('');
+  const [overrideProbe, setOverrideProbe] = useState(false);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState(null);
   const [episodeId, setEpisodeId] = useState(existingId || null);
@@ -61,11 +62,12 @@ const StudioEpisodeUploadScreen = () => {
         if (!alive || !ep) return;
         setEpisodeId(ep.id);
         if (ep.title) setTitle(ep.title);
-        const poster = resolveUrl(ep.poster_url || ep.thumbnail_url || ep.poster_frame_url);
+        const poster = resolveUrl(ep.poster_url || ep.thumbnail_url);
         if (poster) setCoverRemote(poster);
         if (ep.transcode_status === 'ready') {
           setResult(ep);
           setPickedName(ep.source_filename || `Episode ${ep.episode_number} (uploaded)`);
+          if (ep.duration_seconds) setDuration(String(ep.duration_seconds));
         }
       } catch { /* ignore */ }
     })();
@@ -152,12 +154,15 @@ const StudioEpisodeUploadScreen = () => {
         return;
       }
 
+      const w = Number(width) || 1080;
+      const h = Number(height) || 1920;
+      const dur = Number(duration) || 270;
       let done = { episode: result };
       if (videoUri) {
         done = await studioEpisioApi.completeUpload(epId, {
-          width: Number(width),
-          height: Number(height),
-          duration_seconds: Number(duration),
+          width: w,
+          height: h,
+          duration_seconds: dur,
           is_final: !!markFinal,
           storage_key: `stub/ep_${epId}`,
           hls_manifest_url: `https://stub.local/hls/ep_${epId}/master.m3u8`,
@@ -225,8 +230,7 @@ const StudioEpisodeUploadScreen = () => {
       <View style={styles.specCallout}>
         <Text style={styles.specTitle}>9:16 · 1080×1920 · 4–5 min · MP4</Text>
         <Text style={styles.specSub}>
-          Episodes are vertical phone video (like Shorts), not landscape YouTube 16:9.
-          Wrong aspect is auto-rejected.
+          Vertical 9:16 only (phone / Shorts-style). Landscape 16:9 will be rejected.
         </Text>
       </View>
 
@@ -286,15 +290,37 @@ const StudioEpisodeUploadScreen = () => {
         </View>
       </TouchableOpacity>
 
-      <Text style={styles.label}>Probe (width × height × duration)</Text>
-      <Text style={styles.hint}>
-        Filled from your file when available. Adjust only if the probe is wrong.
-      </Text>
-      <View style={styles.row}>
-        <TextInput style={[styles.input, { flex: 1 }]} value={width} onChangeText={setWidth} keyboardType="number-pad" placeholder="W" placeholderTextColor={COLORS.textFaint} />
-        <TextInput style={[styles.input, { flex: 1 }]} value={height} onChangeText={setHeight} keyboardType="number-pad" placeholder="H" placeholderTextColor={COLORS.textFaint} />
-        <TextInput style={[styles.input, { flex: 1 }]} value={duration} onChangeText={setDuration} keyboardType="number-pad" placeholder="sec" placeholderTextColor={COLORS.textFaint} />
-      </View>
+      {(videoUri || pickedName) ? (
+        <View style={styles.probeBlock}>
+          <Text style={styles.label}>Detected from your file</Text>
+          <View style={styles.chipRow}>
+            <View style={styles.chip}>
+              <Text style={styles.chipText}>
+                {width && height ? `${width} × ${height}` : 'Size pending'}
+              </Text>
+            </View>
+            <View style={styles.chip}>
+              <Text style={styles.chipText}>
+                {duration
+                  ? `${Math.floor(Number(duration) / 60)}:${String(Number(duration) % 60).padStart(2, '0')}`
+                  : 'Duration pending'}
+              </Text>
+            </View>
+          </View>
+          <TouchableOpacity onPress={() => setOverrideProbe((v) => !v)} style={styles.overrideLink}>
+            <Text style={styles.overrideText}>
+              {overrideProbe ? 'Hide override' : 'Override probe'}
+            </Text>
+          </TouchableOpacity>
+          {overrideProbe ? (
+            <View style={styles.row}>
+              <TextInput style={[styles.input, { flex: 1 }]} value={width} onChangeText={setWidth} keyboardType="number-pad" placeholder="W" placeholderTextColor={COLORS.textFaint} />
+              <TextInput style={[styles.input, { flex: 1 }]} value={height} onChangeText={setHeight} keyboardType="number-pad" placeholder="H" placeholderTextColor={COLORS.textFaint} />
+              <TextInput style={[styles.input, { flex: 1 }]} value={duration} onChangeText={setDuration} keyboardType="number-pad" placeholder="sec" placeholderTextColor={COLORS.textFaint} />
+            </View>
+          ) : null}
+        </View>
+      ) : null}
 
       {result ? (
         <View style={styles.resultCard}>
@@ -374,6 +400,15 @@ const styles = StyleSheet.create({
   },
   coverTitle: { fontFamily: FONTS.bold, color: '#fff', fontSize: 13, marginBottom: 3 },
   coverSub: { fontFamily: FONTS.regular, color: COLORS.textFaint, fontSize: 11 },
+  probeBlock: { marginBottom: 8 },
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 8 },
+  chip: {
+    backgroundColor: COLORS.navyCard, borderWidth: 1, borderColor: COLORS.navyLine,
+    borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8,
+  },
+  chipText: { fontFamily: FONTS.bold, color: '#fff', fontSize: 12 },
+  overrideLink: { marginBottom: 10 },
+  overrideText: { fontFamily: FONTS.semi, color: COLORS.gold, fontSize: 12 },
   row: { flexDirection: 'row', gap: 10 },
   resultCard: {
     marginTop: 4, padding: 12, borderRadius: 12,
