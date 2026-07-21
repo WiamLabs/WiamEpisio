@@ -281,6 +281,16 @@ def upload_episio_banner(image_bytes, series_id, content_type='image/jpeg'):
     )
 
 
+def upload_episio_episode_cover(image_bytes, episode_id, content_type='image/jpeg'):
+    return upload_image(
+        image_bytes,
+        folder='episio_episode_covers',
+        public_id=f'ep_cover_{episode_id}',
+        content_type=content_type,
+        scan_nsfw=True,
+    )
+
+
 def upload_creator_channel_banner(image_bytes, user_id, content_type='image/jpeg'):
     return upload_image(
         image_bytes,

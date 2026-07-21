@@ -178,6 +178,7 @@ def _locked_blocks_write(c: Content, user) -> bool:
 
 
 def _ep_json(e: Episode):
+    poster = _abs_url(e.poster_url) if getattr(e, 'poster_url', None) else None
     return {
         'id': e.id,
         'episode_number': e.episode_number,
@@ -186,7 +187,10 @@ def _ep_json(e: Episode):
         'duration_seconds': e.duration_seconds or 0,
         'transcode_status': e.transcode_status,
         'published': bool(e.published),
-        'poster_url': _abs_url(e.poster_url),
+        'poster_url': poster,
+        'thumbnail_url': poster,
+        'poster_frame_url': poster,
+        'has_cover': bool(getattr(e, 'poster_url', None)),
         'is_final': bool(getattr(e, 'is_final', False)),
         'asset_qc_status': getattr(e, 'asset_qc_status', None) or 'none',
         'asset_qc_band': getattr(e, 'asset_qc_band', None),
@@ -1437,7 +1441,14 @@ def studio_complete_episode_upload(episode_id):
         ep.hls_manifest_url = data['hls_manifest_url']
     ep.duration_seconds = int(duration)
     ep.transcode_status = 'ready'
-    ep.is_final = bool(data.get('is_final', False))
+    want_final = bool(data.get('is_final', False))
+    if want_final and not (ep.poster_url or '').strip():
+        return jsonify({
+            'error': 'cover_required',
+            'message': 'Upload an episode cover image before marking final. Every episode needs its own cover.',
+            'episode': _ep_json(ep),
+        }), 400
+    ep.is_final = want_final
     # Persist probe meta for full-season QC (trailer + every episode)
     ep.upload_probe_json = json.dumps({
         'width': int(width or 0),
@@ -1488,6 +1499,11 @@ def studio_patch_episode(episode_id):
     if 'is_final' in data:
         if ep.transcode_status != 'ready' and data.get('is_final'):
             return jsonify({'error': 'not_ready', 'message': 'Upload a valid file before marking final.'}), 400
+        if data.get('is_final') and not (ep.poster_url or '').strip():
+            return jsonify({
+                'error': 'cover_required',
+                'message': 'Upload an episode cover image before marking final.',
+            }), 400
         ep.is_final = bool(data['is_final'])
     db.session.commit()
     return jsonify({'ok': True, 'episode': _ep_json(ep), 'series': _series_card(c, user)})
@@ -1514,11 +1530,58 @@ def studio_mark_episode_final(episode_id):
         }), 400
     if ep.transcode_status != 'ready':
         return jsonify({'error': 'not_ready', 'message': 'Upload a valid episode file before marking final.'}), 400
+    if not (ep.poster_url or '').strip():
+        return jsonify({
+            'error': 'cover_required',
+            'message': 'Upload an episode cover image before marking final.',
+        }), 400
     data = request.get_json(silent=True) or {}
     ep.is_final = bool(data.get('is_final', True))
     refresh_completeness(c)
     db.session.commit()
     return jsonify({'ok': True, 'episode': _ep_json(ep), 'series': _series_card(c, user)})
+
+
+@episio_studio_api.route('/creator/studio/episodes/<int:episode_id>/cover', methods=['POST'])
+@jwt_required
+def studio_episode_cover(episode_id):
+    """Required portrait cover for each episode (shown in Studio list + player rails)."""
+    forbid = _creator_api_forbidden()
+    if forbid:
+        return forbid
+    user = request.api_user
+    ep = Episode.query.get(episode_id)
+    if not ep:
+        return jsonify({'error': 'not_found'}), 404
+    c = Content.query.get(ep.content_id)
+    if not c or not _owns(user, c):
+        return jsonify({'error': 'forbidden'}), 403
+    if _locked_blocks_write(c, user):
+        return jsonify({
+            'error': 'season_locked',
+            'message': 'Season locked — episode covers cannot be replaced right now.',
+        }), 400
+    f = request.files.get('cover') or request.files.get('file')
+    if not f:
+        return jsonify({'error': 'cover_required', 'message': 'Attach a cover image file.'}), 400
+    from ..services.episio_image_validate import validate_poster_image
+    from ..services.image_service import upload_episio_episode_cover, delete_image_url
+    ok, err, raw = validate_poster_image(f, kind='cover')
+    if not ok:
+        return jsonify({'error': 'invalid_cover', 'message': err}), 400
+    ct = getattr(f, 'content_type', None) or 'image/jpeg'
+    old = ep.poster_url
+    cloud_url = upload_episio_episode_cover(raw, episode_id, ct)
+    if not cloud_url:
+        return jsonify({'error': 'upload_failed', 'message': 'Could not store cover image.'}), 502
+    ep.poster_url = cloud_url
+    db.session.commit()
+    if old and old != cloud_url:
+        try:
+            delete_image_url(old)
+        except Exception:
+            pass
+    return jsonify({'ok': True, 'poster_url': _abs_url(ep.poster_url), 'episode': _ep_json(ep)})
 
 
 @episio_studio_api.route('/creator/studio/series/<int:series_id>/banner', methods=['POST'])

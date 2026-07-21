@@ -14,6 +14,7 @@ import EpisioGoldButton from '../../components/episio/EpisioGoldButton';
 import { COLORS, FONTS } from '../../constants/theme';
 import studioEpisioApi from '../../api/studioEpisio';
 import resolveUrl from '../../utils/resolveUrl';
+import { pickImageAsIs } from '../../utils/pickMedia';
 
 const fmtDuration = (sec) => {
   const s = Number(sec) || 0;
@@ -68,7 +69,7 @@ const StudioEpisodeDetailScreen = () => {
   const ready = episode?.transcode_status === 'ready';
   const epNum = episode?.episode_number || episodeNumber;
   const freePreview = (epNum || 0) <= 5;
-  const thumb = resolveUrl(episode?.poster_frame_url || episode?.thumbnail_url);
+  const thumb = resolveUrl(episode?.poster_url || episode?.poster_frame_url || episode?.thumbnail_url);
 
   const save = async () => {
     if (!episode?.id) {
@@ -99,13 +100,36 @@ const StudioEpisodeDetailScreen = () => {
     });
   };
 
+  const changeCover = async () => {
+    if (!episode?.id) {
+      Alert.alert('Upload first', 'Create the episode (upload video) before adding a cover.');
+      return;
+    }
+    if (locked) {
+      Alert.alert('Season locked', 'Replace covers only when Needs Changes opens a fix window.');
+      return;
+    }
+    const uri = await pickImageAsIs();
+    if (!uri) return;
+    try {
+      await studioEpisioApi.uploadEpisodeCover(episode.id, uri);
+      await load();
+    } catch (e) {
+      Alert.alert('Cover failed', e?.data?.message || e?.message || 'Try again');
+    }
+  };
+
   const toggleFinal = async (val) => {
     if (!episode?.id || !ready) return;
+    if (val && !(episode.poster_url || episode.has_cover || thumb)) {
+      Alert.alert('Cover required', 'Add an episode cover before marking final.');
+      return;
+    }
     try {
       await studioEpisioApi.markFinal(episode.id, val);
       await load();
     } catch (e) {
-      Alert.alert('Could not update', e?.message || 'Try again');
+      Alert.alert('Could not update', e?.data?.message || e?.message || 'Try again');
     }
   };
 
@@ -176,6 +200,13 @@ const StudioEpisodeDetailScreen = () => {
           disabled={locked}
           variant="ghost"
           style={{ marginTop: 4 }}
+        />
+        <EpisioGoldButton
+          label={thumb ? 'Change episode cover' : 'Add episode cover (required)'}
+          onPress={changeCover}
+          disabled={locked}
+          variant="ghost"
+          style={{ marginTop: 8 }}
         />
       </View>
 

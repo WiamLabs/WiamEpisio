@@ -2,7 +2,9 @@
 
 Living journal the AI agent reads at the start of every session and updates as work progresses. Mutable — overwrite freely. Durable project facts live in `.cursor/rules/project-context.mdc` instead.
 
-**Last updated:** 2026-07-21 — **Guest-until-verify + Studio truth + Brevo.** Unverified/no-age users stay Guest UI until email + age confirmed (persisted). Resend→Brevo→SMTP. Register @username from first+last; home logo larger; Daily Rewards/VIP chips removed. Studio: no cover crop, has_cover truth, Series/Season lock copy, min 5 eps, soft interest optional, founder series video preview, revision keyboard.
+**Last updated:** 2026-07-21 — **Episode covers + keyboard.** Per-episode cover required (`POST …/episodes/:id/cover`, `poster_url`); list/detail show covers; mark-final blocked without cover. Upload screen: cover picker + 9:16 copy. `EpisioScreenShell` KeyboardAvoidingView so Validate CTAs stay reachable.
+
+**Previous — Guest-until-verify + Studio truth + Brevo.** Unverified/no-age users stay Guest UI until email + age confirmed (persisted). Resend→Brevo→SMTP. Register @username from first+last; home logo larger; Daily Rewards/VIP chips removed. Studio: no cover crop, has_cover truth, Series/Season lock copy, min 5 eps, soft interest optional, founder series video preview, revision keyboard.
 
 **Standing order from Martin:** after finishing meaningful work, **commit + push to `master`** so Render auto-deploys. Do not leave shippable Episio/webapp changes only local.
 

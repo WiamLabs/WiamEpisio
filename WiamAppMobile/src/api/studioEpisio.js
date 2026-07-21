@@ -162,6 +162,16 @@ const studioEpisioApi = {
       })).data;
     } catch (e) { throw fmt(e, 'Cover upload failed'); }
   },
+  uploadEpisodeCover: async (episodeId, uri) => {
+    try {
+      const form = new FormData();
+      const name = uri.split('/').pop() || 'ep_cover.jpg';
+      form.append('cover', { uri, name, type: 'image/jpeg' });
+      return (await apiClient.post(`/creator/studio/episodes/${episodeId}/cover`, form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })).data;
+    } catch (e) { throw fmt(e, 'Episode cover upload failed'); }
+  },
   uploadBanner: async (seriesId, uri) => {
     try {
       const form = new FormData();

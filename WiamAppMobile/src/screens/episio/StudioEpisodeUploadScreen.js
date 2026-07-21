@@ -1,19 +1,20 @@
 /**
  * Layout: WiamStudio-Episode-Upload.html
- * Shows local video preview after pick. Validates 9:16 + duration via complete-upload.
+ * Vertical 9:16 preview + required episode cover + keyboard-safe Validate CTAs.
  */
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
-  View, Text, StyleSheet, TextInput, Alert, TouchableOpacity,
+  View, Text, StyleSheet, TextInput, Alert, TouchableOpacity, Image,
 } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import { useVideoPlayer, VideoView } from 'expo-video';
-import { Upload, Film } from 'lucide-react-native';
+import { Upload, Film, ImagePlus } from 'lucide-react-native';
 import EpisioScreenShell from '../../components/episio/EpisioScreenShell';
 import EpisioGoldButton from '../../components/episio/EpisioGoldButton';
 import { COLORS, FONTS } from '../../constants/theme';
 import studioEpisioApi from '../../api/studioEpisio';
-import { pickVideo } from '../../utils/pickMedia';
+import { pickVideo, pickImageAsIs } from '../../utils/pickMedia';
+import resolveUrl from '../../utils/resolveUrl';
 
 const StudioEpisodeUploadScreen = () => {
   const navigation = useNavigation();
@@ -22,11 +23,14 @@ const StudioEpisodeUploadScreen = () => {
   const [title, setTitle] = useState(episodeNumber ? `Episode ${episodeNumber}` : '');
   const [pickedName, setPickedName] = useState(null);
   const [videoUri, setVideoUri] = useState(null);
+  const [coverUri, setCoverUri] = useState(null);
+  const [coverRemote, setCoverRemote] = useState(null);
   const [width, setWidth] = useState('1080');
   const [height, setHeight] = useState('1920');
   const [duration, setDuration] = useState('270');
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState(null);
+  const [episodeId, setEpisodeId] = useState(existingId || null);
 
   const player = useVideoPlayer(videoUri || '', (p) => {
     p.loop = true;
@@ -45,6 +49,29 @@ const StudioEpisodeUploadScreen = () => {
     return undefined;
   }, [videoUri, player]);
 
+  useFocusEffect(useCallback(() => {
+    let alive = true;
+    (async () => {
+      if (!seriesId || (!existingId && !episodeNumber)) return;
+      try {
+        const data = await studioEpisioApi.getSeries(seriesId);
+        const eps = data?.episodes || [];
+        const ep = eps.find((e) => (existingId && e.id === existingId)
+          || (episodeNumber && e.episode_number === episodeNumber));
+        if (!alive || !ep) return;
+        setEpisodeId(ep.id);
+        if (ep.title) setTitle(ep.title);
+        const poster = resolveUrl(ep.poster_url || ep.thumbnail_url || ep.poster_frame_url);
+        if (poster) setCoverRemote(poster);
+        if (ep.transcode_status === 'ready') {
+          setResult(ep);
+          setPickedName(ep.source_filename || `Episode ${ep.episode_number} (uploaded)`);
+        }
+      } catch { /* ignore */ }
+    })();
+    return () => { alive = false; };
+  }, [seriesId, existingId, episodeNumber]));
+
   const onPickVideo = async () => {
     if (locked) {
       Alert.alert('Season locked', 'Replace files only when Needs Changes opens a fix window.');
@@ -62,19 +89,49 @@ const StudioEpisodeUploadScreen = () => {
     }
   };
 
+  const onPickCover = async () => {
+    if (locked) {
+      Alert.alert('Season locked', 'Replace covers only when Needs Changes opens a fix window.');
+      return;
+    }
+    const uri = await pickImageAsIs();
+    if (!uri) return;
+    setCoverUri(uri);
+    setCoverRemote(null);
+  };
+
+  const ensureEpisodeCover = async (epId) => {
+    if (coverUri) {
+      const up = await studioEpisioApi.uploadEpisodeCover(epId, coverUri);
+      const poster = resolveUrl(up?.poster_url || up?.episode?.poster_url);
+      if (poster) setCoverRemote(poster);
+      setCoverUri(null);
+      return true;
+    }
+    if (coverRemote) return true;
+    return false;
+  };
+
   const upload = async ({ markFinal }) => {
     if (locked) {
       Alert.alert('Season locked', 'Replace files only when Needs Changes opens a fix window.');
       return;
     }
-    if (!videoUri && !pickedName) {
+    if (!videoUri && !pickedName && !episodeId) {
       Alert.alert('Video required', 'Choose an episode video first.');
+      return;
+    }
+    if (markFinal && !coverUri && !coverRemote) {
+      Alert.alert(
+        'Cover required',
+        'Every episode needs its own cover image. Add a cover next to the title before marking final.',
+      );
       return;
     }
     setBusy(true);
     setResult(null);
     try {
-      let epId = existingId;
+      let epId = episodeId || existingId;
       if (!epId) {
         const created = await studioEpisioApi.createEpisode(seriesId, {
           episode_number: episodeNumber || undefined,
@@ -82,26 +139,44 @@ const StudioEpisodeUploadScreen = () => {
         });
         epId = created?.episode?.id;
         if (!epId) throw new Error('No episode id');
+        setEpisodeId(epId);
+      } else if (title.trim()) {
+        try {
+          await studioEpisioApi.patchEpisode(epId, { title: title.trim() });
+        } catch { /* non-blocking */ }
       }
-      const done = await studioEpisioApi.completeUpload(epId, {
-        width: Number(width),
-        height: Number(height),
-        duration_seconds: Number(duration),
-        is_final: !!markFinal,
-        storage_key: `stub/ep_${epId}`,
-        hls_manifest_url: `https://stub.local/hls/ep_${epId}/master.m3u8`,
-        source_filename: pickedName || undefined,
-        local_uri: videoUri || undefined,
-      });
+
+      const hasCover = await ensureEpisodeCover(epId);
+      if (markFinal && !hasCover) {
+        Alert.alert('Cover required', 'Upload an episode cover before marking final.');
+        return;
+      }
+
+      let done = { episode: result };
+      if (videoUri) {
+        done = await studioEpisioApi.completeUpload(epId, {
+          width: Number(width),
+          height: Number(height),
+          duration_seconds: Number(duration),
+          is_final: !!markFinal,
+          storage_key: `stub/ep_${epId}`,
+          hls_manifest_url: `https://stub.local/hls/ep_${epId}/master.m3u8`,
+          source_filename: pickedName || undefined,
+          local_uri: videoUri || undefined,
+        });
+      } else if (markFinal) {
+        done = await studioEpisioApi.markFinal(epId, true);
+      }
+
       if (markFinal && done?.episode && !done.episode.is_final) {
-        await studioEpisioApi.markFinal(epId, true);
+        done = await studioEpisioApi.markFinal(epId, true);
       }
-      setResult(done?.episode);
+      setResult(done?.episode || done);
       Alert.alert(
         markFinal ? 'Marked final' : 'Upload ready',
         markFinal
-          ? `EP ${done?.episode?.episode_number} is final for this season.`
-          : 'File validated (9:16 + duration). Mark final when the cut is locked.',
+          ? `EP ${done?.episode?.episode_number || episodeNumber} is final — cover + video saved.`
+          : 'File validated (9:16 + duration). Add cover + mark final when the cut is locked.',
       );
       if (markFinal) navigation.goBack();
     } catch (e) {
@@ -113,11 +188,17 @@ const StudioEpisodeUploadScreen = () => {
         });
         return;
       }
+      if (e?.data?.error === 'cover_required') {
+        Alert.alert('Cover required', e?.data?.message || 'Add an episode cover first.');
+        return;
+      }
       Alert.alert('Upload failed', e?.data?.message || e?.message || 'Try again');
     } finally {
       setBusy(false);
     }
   };
+
+  const coverPreview = coverUri || coverRemote;
 
   return (
     <EpisioScreenShell
@@ -144,7 +225,8 @@ const StudioEpisodeUploadScreen = () => {
       <View style={styles.specCallout}>
         <Text style={styles.specTitle}>9:16 · 1080×1920 · 4–5 min · MP4</Text>
         <Text style={styles.specSub}>
-          Anything outside 3:00–6:00 or the wrong aspect gets auto-rejected.
+          Episodes are vertical phone video (like Shorts), not landscape YouTube 16:9.
+          Wrong aspect is auto-rejected.
         </Text>
       </View>
 
@@ -154,7 +236,7 @@ const StudioEpisodeUploadScreen = () => {
             <VideoView
               style={styles.preview}
               player={player}
-              contentFit="cover"
+              contentFit="contain"
               nativeControls={false}
             />
             <View style={styles.previewBadge}>
@@ -184,6 +266,26 @@ const StudioEpisodeUploadScreen = () => {
         placeholder="Episode title"
       />
 
+      <Text style={styles.label}>Episode cover (required)</Text>
+      <Text style={styles.hint}>
+        Portrait image shown in the episode list and lock rails. Every episode needs its own cover.
+      </Text>
+      <TouchableOpacity style={styles.coverPick} onPress={onPickCover} disabled={locked} activeOpacity={0.85}>
+        {coverPreview ? (
+          <Image source={{ uri: coverPreview }} style={styles.coverImg} />
+        ) : (
+          <View style={styles.coverEmpty}>
+            <ImagePlus size={20} color={COLORS.gold} />
+          </View>
+        )}
+        <View style={{ flex: 1 }}>
+          <Text style={styles.coverTitle}>
+            {coverPreview ? 'Cover selected — tap to change' : 'Add cover image'}
+          </Text>
+          <Text style={styles.coverSub}>Required before mark final · shows on EP list</Text>
+        </View>
+      </TouchableOpacity>
+
       <Text style={styles.label}>Probe (width × height × duration)</Text>
       <Text style={styles.hint}>
         Filled from your file when available. Adjust only if the probe is wrong.
@@ -199,6 +301,7 @@ const StudioEpisodeUploadScreen = () => {
           <Text style={styles.resultText}>
             EP {result.episode_number} · {(result.transcode_status || 'ready').toUpperCase()}
             {result.is_final ? ' · FINAL' : ' · draft ready'}
+            {result.has_cover || coverPreview ? ' · COVER' : ''}
           </Text>
         </View>
       ) : null}
@@ -258,6 +361,19 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.navyCard, borderWidth: 1, borderColor: COLORS.navyLine,
     borderRadius: 12, padding: 13, color: COLORS.text, marginBottom: 12, fontFamily: FONTS.regular,
   },
+  coverPick: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: COLORS.navyCard, borderWidth: 1, borderColor: COLORS.navyLine,
+    borderRadius: 14, padding: 12, marginBottom: 16,
+  },
+  coverImg: { width: 52, height: 74, borderRadius: 8, backgroundColor: '#000' },
+  coverEmpty: {
+    width: 52, height: 74, borderRadius: 8, borderWidth: 1, borderStyle: 'dashed',
+    borderColor: COLORS.navyLine, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: COLORS.navySoft,
+  },
+  coverTitle: { fontFamily: FONTS.bold, color: '#fff', fontSize: 13, marginBottom: 3 },
+  coverSub: { fontFamily: FONTS.regular, color: COLORS.textFaint, fontSize: 11 },
   row: { flexDirection: 'row', gap: 10 },
   resultCard: {
     marginTop: 4, padding: 12, borderRadius: 12,

@@ -1,8 +1,12 @@
 /**
  * Shared shell for Episio HTML-matched screens — navy + gold, back + title + scroll.
+ * KeyboardAvoidingView keeps footer CTAs reachable when inputs are focused.
  */
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import {
+  View, Text, StyleSheet, ScrollView, TouchableOpacity,
+  KeyboardAvoidingView, Platform,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { ChevronLeft } from 'lucide-react-native';
@@ -15,16 +19,25 @@ const EpisioScreenShell = ({
   footer,
   scroll = true,
   onBack,
+  right,
 }) => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const Body = scroll ? ScrollView : View;
   const bodyProps = scroll
-    ? { contentContainerStyle: { paddingHorizontal: 20, paddingBottom: footer ? 120 : 40 } }
+    ? {
+      contentContainerStyle: { paddingHorizontal: 20, paddingBottom: footer ? 28 : 40 },
+      keyboardShouldPersistTaps: 'handled',
+      keyboardDismissMode: 'on-drag',
+    }
     : { style: { flex: 1, paddingHorizontal: 20 } };
 
   return (
-    <View style={[styles.root, { paddingTop: insets.top }]}>
+    <KeyboardAvoidingView
+      style={[styles.root, { paddingTop: insets.top }]}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
+    >
       <View style={styles.topbar}>
         <TouchableOpacity style={styles.iconBtn} onPress={onBack || (() => navigation.goBack())}>
           <ChevronLeft size={15} color="#fff" />
@@ -33,12 +46,13 @@ const EpisioScreenShell = ({
           <Text style={styles.h1}>{title}</Text>
           {subtitle ? <Text style={styles.sub}>{subtitle}</Text> : null}
         </View>
+        {right || null}
       </View>
-      <Body {...bodyProps}>{children}</Body>
+      <Body style={scroll ? { flex: 1 } : undefined} {...bodyProps}>{children}</Body>
       {footer ? (
         <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 16) }]}>{footer}</View>
       ) : null}
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 

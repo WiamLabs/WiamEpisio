@@ -157,7 +157,7 @@ const StudioEpisodeListScreen = () => {
           )}
           renderItem={({ item: ep }) => {
             const st = statusMeta(ep);
-            const thumb = resolveUrl(ep.poster_frame_url || ep.thumbnail_url);
+            const thumb = resolveUrl(ep.poster_url || ep.poster_frame_url || ep.thumbnail_url);
             return (
               <TouchableOpacity
                 style={[styles.row, ep.slot && styles.rowSlot, ep.rejected && styles.rowReject]}
