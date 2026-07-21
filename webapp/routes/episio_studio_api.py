@@ -18,6 +18,7 @@ from ..models import (
     Content, Episode, EpisioCreatorApplication, SeriesReminder, User,
     CreatorVideoUploadJob, EpisioCreatorInvite, EpisioCreatorInviteRedemption,
     EpisioCreatorPublicProfile, CreatorProfile, CreatorPayoutSettings,
+    Feedback,
 )
 from .api_v1 import jwt_required, jwt_optional, _abs_url, _creator_api_forbidden
 from ..services.video_service import get_video_service
@@ -1021,7 +1022,14 @@ def studio_series_list_or_create():
     return jsonify({'ok': True, 'series': _series_card(c, user)}), 201
 
 
-@episio_studio_api.route('/creator/studio/series/<int:series_id>', methods=['GET', 'PATCH'])
+def _unit_is_live(c: Content) -> bool:
+    st = (c.status or '').lower()
+    if st in Content.PUBLISHED_STATUSES or st in ('live', 'upcoming', 'coming_soon', 'scheduled'):
+        return True
+    return False
+
+
+@episio_studio_api.route('/creator/studio/series/<int:series_id>', methods=['GET', 'PATCH', 'DELETE'])
 @jwt_required
 def studio_series_detail(series_id):
     forbid = _creator_api_forbidden()
@@ -1033,6 +1041,25 @@ def studio_series_detail(series_id):
         return jsonify({'error': 'not_found'}), 404
     if not _owns(user, c):
         return jsonify({'error': 'forbidden'}), 403
+
+    if request.method == 'DELETE':
+        if _unit_is_live(c):
+            return jsonify({
+                'error': 'live_locked',
+                'message': (
+                    'This series/season is live (or listed for viewers). '
+                    'You cannot delete it yourself. Send a removal request to the WiamEpisio team.'
+                ),
+                'can_request_removal': True,
+            }), 403
+        # Soft-delete draft / building / in-review / needs-changes units completely from creator view
+        c.deleted_at = datetime.utcnow()
+        c.status = 'deleted'
+        for ep in Episode.query.filter_by(content_id=c.id).all():
+            ep.published = False
+        db.session.commit()
+        log.info('Creator soft-deleted series id=%s by user=%s', series_id, user.id)
+        return jsonify({'ok': True, 'deleted': True, 'series_id': series_id})
 
     if request.method == 'PATCH':
         # Metadata edits blocked when locked unless pre-live fix window (assets only)
@@ -1734,6 +1761,52 @@ def studio_submit_review(series_id):
             'you cannot publish yourself.'
         ),
         'series': _series_card(c, user),
+    })
+
+
+@episio_studio_api.route('/creator/studio/series/<int:series_id>/removal-request', methods=['POST'])
+@jwt_required
+def studio_series_removal_request(series_id):
+    """Live series cannot be self-deleted — creator messages the team instead."""
+    forbid = _creator_api_forbidden()
+    if forbid:
+        return forbid
+    user = request.api_user
+    c = Content.query.get(series_id)
+    if not c or c.is_deleted:
+        return jsonify({'error': 'not_found'}), 404
+    if not _owns(user, c):
+        return jsonify({'error': 'forbidden'}), 403
+    if not _unit_is_live(c):
+        return jsonify({
+            'error': 'not_live',
+            'message': 'This unit is not live — use Delete in workspace to remove it completely.',
+        }), 400
+    data = request.get_json(silent=True) or {}
+    message = (data.get('message') or data.get('reason') or '').strip()
+    if len(message) < 10:
+        return jsonify({'error': 'message_required', 'message': 'Tell the team why you need this removed (min 10 characters).'}), 400
+    unit = 'season' if (getattr(c, 'structure_mode', None) or 'series') == 'season' else 'series'
+    fb = Feedback(
+        user_id=user.wiam_id or user.id,
+        user_name=(user.display_name or user.username or '')[:120],
+        user_email=(user.email or '')[:200],
+        category='series_removal_request',
+        message=(
+            f'[Episio {unit} removal request]\n'
+            f'Series ID: {c.id}\n'
+            f'Title: {c.title}\n'
+            f'Status: {c.status}\n\n'
+            f'{message}'
+        )[:4000],
+        status='new',
+    )
+    db.session.add(fb)
+    db.session.commit()
+    return jsonify({
+        'ok': True,
+        'message': 'Request sent to the WiamEpisio team. They will review take-down from the founder dashboard.',
+        'feedback_id': fb.id,
     })
 
 

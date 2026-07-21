@@ -48,6 +48,28 @@
         <input type="hidden" name="action" value="unpublish">
         <button class="btn-dash" type="submit">Unpublish whole unit</button>
       </form>
+
+      <hr style="border-color:rgba(255,255,255,0.08);margin:1.2rem 0;">
+      <h3 style="font-size:1rem;margin-bottom:8px;">Founder control</h3>
+      <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:10px;">
+        Status: <strong style="color:var(--gold);">{{ series.status }}</strong>
+        {% if series.deleted_at %} · soft-deleted{% endif %}
+      </p>
+      <label class="d-block mb-2" style="font-size:0.8rem;color:var(--text-muted);">Reason (optional, saved on unit)</label>
+      <form method="post" id="founder-control-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="action" id="founder-control-action" value="take_down">
+        <textarea name="reason" rows="2" class="form-control mb-3" placeholder="Why take down / suspend / delete…"
+          style="background:var(--bg);color:var(--text);border-color:var(--border-subtle);"></textarea>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          <button class="btn-dash" type="submit" onclick="document.getElementById('founder-control-action').value='take_down';return confirm('Take down from all viewers now?');">Take down</button>
+          <button class="btn-dash" type="submit" onclick="document.getElementById('founder-control-action').value='suspend';return confirm('Suspend this series/season?');">Suspend</button>
+          <button class="btn-dash" type="submit" onclick="document.getElementById('founder-control-action').value='restore';return confirm('Restore to draft (not live)?');">Restore</button>
+          <button class="btn-dash" type="submit" style="border-color:#c44;color:#f88;"
+            onclick="document.getElementById('founder-control-action').value='delete';return confirm('SOFT DELETE this entire series/season? Creators and catalog will not see it.');">Delete unit</button>
+        </div>
+      </form>
+
       {% if qc_job %}
       <p style="margin-top:14px;"><a href="{{ url_for('founder_dash.episio_quality_job', job_id=qc_job.id) }}" style="color:var(--gold);">Open Season QC job #{{ qc_job.id }} ({{ qc_job.status }}) →</a></p>
       {% else %}

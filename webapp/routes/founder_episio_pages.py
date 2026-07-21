@@ -64,6 +64,19 @@ def register_episio_founder_pages(bp, founder_required):
                 elif action == 'unpublish':
                     ef.publish_whole_unit(series, publish=False)
                     flash('Whole unit unpublished.', 'success')
+                elif action == 'take_down':
+                    ef.take_down_unit(series, reason=request.form.get('reason') or '')
+                    flash('Series/season taken down from viewers.', 'success')
+                elif action == 'suspend':
+                    ef.suspend_unit(series, reason=request.form.get('reason') or '')
+                    flash('Series/season suspended.', 'success')
+                elif action == 'delete':
+                    ef.soft_delete_unit(series, reason=request.form.get('reason') or '')
+                    flash('Series/season deleted (soft). Hidden from creators and catalog.', 'success')
+                    return redirect(url_for('founder_dash.episio_series'))
+                elif action == 'restore':
+                    ef.restore_unit(series)
+                    flash('Series/season restored to draft (not live).', 'success')
                 else:
                     flash('Unknown action.', 'error')
             except Exception as e:

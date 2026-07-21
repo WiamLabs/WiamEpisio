@@ -1,6 +1,7 @@
 """Shared helpers for Episio founder HTML + JSON control surfaces."""
 from __future__ import annotations
 
+import json
 import logging
 import uuid
 from datetime import datetime, timedelta
@@ -129,6 +130,72 @@ def publish_whole_unit(content: Content, publish=True):
         content.status = 'draft'
         for ep in eps:
             ep.published = False
+    db.session.commit()
+    return content
+
+
+def _append_control_note(content: Content, action: str, reason: str):
+    """Append founder control note into review_change_items JSON (audit trail)."""
+    note = (reason or '').strip()[:400]
+    if not note:
+        return
+    try:
+        raw = getattr(content, 'review_change_items', None) or '[]'
+        items = json.loads(raw) if isinstance(raw, str) else (raw or [])
+        if not isinstance(items, list):
+            items = []
+    except Exception:
+        items = []
+    items.append({
+        'type': 'founder_control',
+        'action': action,
+        'note': note,
+        'at': datetime.utcnow().isoformat() + 'Z',
+    })
+    content.review_change_items = json.dumps(items[-40:])
+
+
+def take_down_unit(content: Content, *, reason=''):
+    """Remove from public catalog immediately (founder control)."""
+    eps = series_episodes(content.id)
+    content.status = 'taken_down'
+    for ep in eps:
+        ep.published = False
+    _append_control_note(content, 'take_down', reason)
+    db.session.commit()
+    return content
+
+
+def suspend_unit(content: Content, *, reason=''):
+    """Hide series/season temporarily (founder control)."""
+    eps = series_episodes(content.id)
+    content.status = 'suspended'
+    for ep in eps:
+        ep.published = False
+    _append_control_note(content, 'suspend', reason)
+    db.session.commit()
+    return content
+
+
+def soft_delete_unit(content: Content, *, reason=''):
+    """Soft-delete entire unit — hidden from creators/catalog; data kept for audit."""
+    eps = series_episodes(content.id)
+    content.deleted_at = datetime.utcnow()
+    content.status = 'deleted'
+    for ep in eps:
+        ep.published = False
+    _append_control_note(content, 'delete', reason)
+    db.session.commit()
+    return content
+
+
+def restore_unit(content: Content):
+    """Undo soft-delete / take-down / suspend → back to draft (not auto-live)."""
+    content.deleted_at = None
+    if (content.status or '') in ('deleted', 'taken_down', 'suspended'):
+        content.status = 'draft'
+    for ep in series_episodes(content.id):
+        ep.published = False
     db.session.commit()
     return content
 

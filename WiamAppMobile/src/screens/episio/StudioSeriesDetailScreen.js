@@ -5,7 +5,7 @@
  */
 import React, { useCallback, useState } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert, Image,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert, Image, Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
@@ -98,6 +98,69 @@ const StudioSeriesDetailScreen = () => {
     );
   };
 
+  const isLive = state === 'live'
+    || ['published', 'ongoing', 'complete', 'approved', 'upcoming', 'coming_soon', 'scheduled'].includes(
+      String(series?.status || '').toLowerCase(),
+    );
+
+  const sendRemovalRequest = (text) => {
+    const msg = String(text || '').trim();
+    if (msg.length < 10) {
+      Alert.alert('Message needed', 'Write at least 10 characters so the team understands.');
+      return;
+    }
+    run('delete', async () => {
+      await studioEpisioApi.requestSeriesRemoval(seriesId, msg);
+      Alert.alert('Sent', 'Your removal request went to the WiamEpisio team.');
+    });
+  };
+
+  const onDeleteOrRequest = () => {
+    if (isLive) {
+      if (Platform.OS === 'ios' && typeof Alert.prompt === 'function') {
+        Alert.prompt(
+          'Request removal',
+          'This series/season is live. Tell the WiamEpisio team why it should be taken down.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Send', onPress: sendRemovalRequest },
+          ],
+          'plain-text',
+        );
+      } else {
+        Alert.alert(
+          'Live — cannot delete',
+          'Send a take-down request to the WiamEpisio team? They control live removals from the founder dashboard.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'Send request',
+              onPress: () => sendRemovalRequest(
+                `Please take down ${series?.title || 'this series'} (id ${seriesId}). Creator requests removal.`,
+              ),
+            },
+          ],
+        );
+      }
+      return;
+    }
+    Alert.alert(
+      `Delete this ${unit}?`,
+      'This permanently removes the workspace unit from your Studio (episodes, trailer, cover). You cannot undo this.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete everything',
+          style: 'destructive',
+          onPress: () => run('delete', async () => {
+            await studioEpisioApi.deleteSeries(seriesId);
+            navigation.goBack();
+          }),
+        },
+      ],
+    );
+  };
+
   const hubActions = [
     { key: 'episodes', label: 'Episodes', detail: `${series?.ready_episodes || 0}/${series?.planned_episode_count || 0} ready · ${series?.final_episodes || 0} final`, onPress: () => navigation.navigate('StudioEpisodeList', { seriesId }) },
     { key: 'trailer', label: 'Trailer + QA', detail: `Status: ${series?.trailer_qa_status || 'none'}`, onPress: () => navigation.navigate('StudioTrailer', { seriesId }) },
@@ -114,6 +177,15 @@ const StudioSeriesDetailScreen = () => {
     { key: 'dashboard', label: 'Series dashboard', detail: state === 'live' ? 'Live stats' : 'Opens when live', onPress: () => navigation.navigate('StudioDashboard', { seriesId }) },
     { key: 'earnings', label: 'Earnings', detail: 'Empty until live', onPress: () => navigation.navigate('StudioEarnings', { seriesId }) },
     { key: 'help', label: 'Quality & review help', detail: 'Series vs Season · what our team checks', onPress: () => navigation.navigate('StudioHelpQuality') },
+    {
+      key: 'delete',
+      label: isLive ? 'Request take-down (live)' : `Delete this ${unit}`,
+      detail: isLive
+        ? 'Live content cannot be self-deleted — message the WiamEpisio team'
+        : 'Removes this draft/workspace completely from Studio',
+      onPress: onDeleteOrRequest,
+      busyKey: 'delete',
+    },
   ];
 
   return (
@@ -163,12 +235,16 @@ const StudioSeriesDetailScreen = () => {
           {hubActions.map((a) => (
             <TouchableOpacity
               key={a.key}
-              style={[styles.action, a.disabled && styles.actionDisabled]}
+              style={[
+                styles.action,
+                a.disabled && styles.actionDisabled,
+                a.key === 'delete' && styles.deleteAction,
+              ]}
               onPress={a.onPress}
               disabled={!!busy || a.disabled}
             >
               <View style={{ flex: 1 }}>
-                <Text style={styles.actionText}>{a.label}</Text>
+                <Text style={[styles.actionText, a.key === 'delete' && styles.deleteText]}>{a.label}</Text>
                 <Text style={styles.actionDetail}>{a.detail}</Text>
               </View>
               {busy === a.busyKey ? <ActivityIndicator color={COLORS.navy} /> : null}
@@ -206,6 +282,8 @@ const styles = StyleSheet.create({
   actionText: { fontFamily: FONTS.bold, color: COLORS.text, fontSize: 14 },
   actionDetail: { marginTop: 3, fontFamily: FONTS.regular, color: COLORS.textFaint, fontSize: 11.5 },
   error: { marginTop: 14, color: COLORS.error, fontFamily: FONTS.medium },
+  deleteAction: { borderColor: 'rgba(220,80,80,0.45)' },
+  deleteText: { color: '#E88' },
 });
 
 export default StudioSeriesDetailScreen;

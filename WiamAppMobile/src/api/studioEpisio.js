@@ -128,6 +128,15 @@ const studioEpisioApi = {
     try { return (await apiClient.patch(`/creator/studio/series/${id}`, payload)).data; }
     catch (e) { throw fmt(e, 'Failed to update series'); }
   },
+  deleteSeries: async (id) => {
+    try { return (await apiClient.delete(`/creator/studio/series/${id}`)).data; }
+    catch (e) { throw fmt(e, 'Could not delete series'); }
+  },
+  requestSeriesRemoval: async (id, message) => {
+    try {
+      return (await apiClient.post(`/creator/studio/series/${id}/removal-request`, { message })).data;
+    } catch (e) { throw fmt(e, 'Could not send removal request'); }
+  },
   completeness: async (seriesId) => {
     try { return (await apiClient.get(`/creator/studio/series/${seriesId}/completeness`)).data; }
     catch (e) { throw fmt(e, 'Failed to load completeness'); }
