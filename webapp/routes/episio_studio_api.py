@@ -185,6 +185,13 @@ def _locked_blocks_write(c: Content, user) -> bool:
 
 def _ep_json(e: Episode):
     poster = _abs_url(e.poster_url) if getattr(e, 'poster_url', None) else None
+    # Studio preview: only expose http(s) playable URLs (R2 public / real CDN)
+    raw_play = getattr(e, 'hls_manifest_url', None) or getattr(e, 'video_url', None)
+    preview = _abs_url(raw_play) if raw_play else None
+    if preview and not str(preview).startswith('http'):
+        preview = None
+    if preview and 'stub.local' in str(preview):
+        preview = None
     return {
         'id': e.id,
         'episode_number': e.episode_number,
@@ -196,6 +203,7 @@ def _ep_json(e: Episode):
         'poster_url': poster,
         'thumbnail_url': poster,
         'poster_frame_url': poster,
+        'preview_url': preview,
         'has_cover': bool(getattr(e, 'poster_url', None)),
         'is_final': bool(getattr(e, 'is_final', False)),
         'asset_qc_status': getattr(e, 'asset_qc_status', None) or 'none',
@@ -1457,6 +1465,41 @@ def studio_create_episode(series_id):
         'upload': upload,
         'specs': MEDIA_SPECS['episode'],
     }), 201
+
+
+@episio_studio_api.route('/creator/studio/episodes/<int:episode_id>/upload-ticket', methods=['POST'])
+@jwt_required
+def studio_episode_upload_ticket(episode_id):
+    """Fresh R2/stub upload ticket for replacing an episode file."""
+    forbid = _creator_api_forbidden()
+    if forbid:
+        return forbid
+    user = request.api_user
+    ep = Episode.query.get(episode_id)
+    if not ep:
+        return jsonify({'error': 'not_found'}), 404
+    c = Content.query.get(ep.content_id)
+    if not c or not _owns(user, c):
+        return jsonify({'error': 'forbidden'}), 403
+    if _locked_blocks_write(c, user):
+        return jsonify({
+            'error': 'season_locked',
+            'message': 'Season locked — episode files cannot be replaced.',
+        }), 400
+    vs = get_video_service()
+    upload = vs.create_upload(
+        episode_id=ep.id,
+        creator_id=user.wiam_id or user.id,
+        content_id=c.id,
+        asset_kind='episode',
+        meta={},
+    )
+    ep.video_url = upload.get('storage_key') or ep.video_url
+    if upload.get('hls_manifest_url'):
+        ep.hls_manifest_url = upload.get('hls_manifest_url')
+    ep.transcode_status = 'uploading'
+    db.session.commit()
+    return jsonify({'ok': True, 'upload': upload, 'episode': _ep_json(ep)})
 
 
 @episio_studio_api.route('/creator/studio/episodes/<int:episode_id>/complete-upload', methods=['POST'])

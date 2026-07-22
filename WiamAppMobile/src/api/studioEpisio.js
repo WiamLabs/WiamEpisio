@@ -196,6 +196,11 @@ const studioEpisioApi = {
     try { return (await apiClient.post(`/creator/studio/series/${seriesId}/episodes`, payload)).data; }
     catch (e) { throw fmt(e, 'Failed to create episode'); }
   },
+  episodeUploadTicket: async (episodeId) => {
+    try {
+      return (await apiClient.post(`/creator/studio/episodes/${episodeId}/upload-ticket`)).data;
+    } catch (e) { throw fmt(e, 'Could not start video upload'); }
+  },
   completeUpload: async (episodeId, meta) => {
     try { return (await apiClient.post(`/creator/studio/episodes/${episodeId}/complete-upload`, meta)).data; }
     catch (e) { throw fmt(e, 'Upload validation failed'); }
@@ -234,21 +239,41 @@ const studioEpisioApi = {
   },
   uploadTrailer: async (seriesId, meta = {}) => {
     try {
-      return (await apiClient.post(`/creator/series/${seriesId}/trailer/upload`, {
+      const body = {
         meta: {
-          duration_seconds: meta.duration_seconds || 45,
-          width: meta.width || 1080,
-          height: meta.height || 1920,
+          duration_seconds: meta.duration_seconds || 0,
+          width: meta.width || 0,
+          height: meta.height || 0,
           bitrate_kbps: meta.bitrate_kbps || 2500,
           mood_label: 'serious',
           black_frame_ratio: 0.02,
           ...meta,
         },
-        duration_seconds: meta.duration_seconds || 45,
-        width: meta.width || 1080,
-        height: meta.height || 1920,
-      })).data;
-    } catch (e) { throw fmt(e, 'Trailer upload failed'); }
+        duration_seconds: meta.duration_seconds || 0,
+        width: meta.width || 0,
+        height: meta.height || 0,
+      };
+      const data = (await apiClient.post(`/creator/series/${seriesId}/trailer/upload`, body)).data;
+      const uploadUrl = data?.upload?.upload_url;
+      const method = (data?.upload?.upload_method || 'PUT').toUpperCase();
+      if (uploadUrl && meta.local_uri && !String(uploadUrl).includes('stub.local')) {
+        const blob = await (await fetch(meta.local_uri)).blob();
+        const putRes = await fetch(uploadUrl, {
+          method,
+          headers: { 'Content-Type': 'video/mp4' },
+          body: blob,
+        });
+        if (!putRes.ok) {
+          const err = new Error(`Could not upload trailer bytes (${putRes.status})`);
+          err.data = { error: 'upload_put_failed' };
+          throw err;
+        }
+      }
+      return data;
+    } catch (e) {
+      if (e?.data?.error) throw e;
+      throw fmt(e, 'Trailer upload failed');
+    }
   },
 };
 

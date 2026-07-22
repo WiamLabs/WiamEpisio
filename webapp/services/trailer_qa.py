@@ -17,7 +17,7 @@ from ..models import Content, PlatformConfig, TrailerQualityReport
 
 log = logging.getLogger(__name__)
 
-# Serious short-drama trailer bands (Specs Guide: 15–60s)
+# Serious short-drama trailer bands (Specs Guide: 15–60s inclusive)
 MIN_DURATION_SEC = 15
 MAX_DURATION_SEC = 60
 MIN_SCORE_PASS = 0.72
@@ -28,44 +28,86 @@ def gate_enabled() -> bool:
     return bool(getattr(cfg, 'ff_trailer_quality_gate', False))
 
 
-def _score_trailer_meta(meta: Optional[dict]) -> Tuple[float, Dict[str, Any], list]:
-    """Score from metadata. Real media probe plugs in here later."""
+def validate_trailer_placement(meta: Optional[dict]) -> Tuple[bool, str, Dict[str, Any]]:
+    """
+    Hard checks for every surface trailers appear on (home, series, soft-interest).
+    Returns (ok, message, checks).
+    """
     meta = meta or {}
-    checks = {}
+    checks: Dict[str, Any] = {}
+    try:
+        duration = float(meta.get('duration_seconds') or 0)
+    except (TypeError, ValueError):
+        duration = 0.0
+    try:
+        width = int(meta.get('width') or 0)
+        height = int(meta.get('height') or 0)
+    except (TypeError, ValueError):
+        width, height = 0, 0
+
+    if duration <= 0:
+        checks['duration'] = {'ok': False, 'value': duration, 'reason': 'missing_duration'}
+        return False, f'Trailer duration unknown. Export {MIN_DURATION_SEC}–{MAX_DURATION_SEC} seconds.', checks
+
+    # Strict band — anything over 60.0s (e.g. 1:00.1 / rounded phone probes) fails
+    if duration < MIN_DURATION_SEC or duration > MAX_DURATION_SEC:
+        checks['duration'] = {'ok': False, 'value': duration, 'reason': 'out_of_band'}
+        return (
+            False,
+            f'Trailer must be {MIN_DURATION_SEC}–{MAX_DURATION_SEC} seconds for every placement. '
+            f'Yours is {duration:.1f}s — re-export shorter/longer and try again.',
+            checks,
+        )
+    checks['duration'] = {'ok': True, 'value': int(round(duration))}
+
+    if width < 1 or height < 1:
+        checks['aspect'] = {'ok': False, 'reason': 'missing_size'}
+        return False, 'Trailer width/height missing. Export 9:16 or 16:9.', checks
+
+    ratio = width / float(height)
+    vertical = abs(ratio - 9 / 16) <= 0.06
+    landscape = abs(ratio - 16 / 9) <= 0.06
+    if not vertical and not landscape:
+        checks['aspect'] = {'ok': False, 'width': width, 'height': height, 'reason': 'bad_aspect'}
+        return (
+            False,
+            f'Trailer must be 9:16 vertical or 16:9 landscape so it fits every trailer place. '
+            f'Got {width}×{height}.',
+            checks,
+        )
+    if vertical and (width < 720 or height < 1280):
+        checks['resolution'] = {'ok': False, 'width': width, 'height': height}
+        return False, f'Resolution too low ({width}×{height}). Vertical min 720×1280.', checks
+    if landscape and (width < 1280 or height < 720):
+        checks['resolution'] = {'ok': False, 'width': width, 'height': height}
+        return False, f'Resolution too low ({width}×{height}). Landscape min 1280×720.', checks
+
+    checks['aspect'] = {
+        'ok': True,
+        'width': width,
+        'height': height,
+        'mode': '9:16' if vertical else '16:9',
+    }
+    checks['resolution'] = {'ok': True, 'width': width, 'height': height}
+    return True, 'ok', checks
+
+
+def _score_trailer_meta(meta: Optional[dict]) -> Tuple[float, Dict[str, Any], list]:
+    """Score from metadata. Placement hard-fails always force failed status."""
+    meta = meta or {}
+    ok_place, place_msg, place_checks = validate_trailer_placement(meta)
+    checks = dict(place_checks)
     fails = []
     score = 1.0
 
-    duration = int(meta.get('duration_seconds') or 0)
-    width = int(meta.get('width') or 0)
-    height = int(meta.get('height') or 0)
+    if not ok_place:
+        fails.append(place_msg)
+        score -= 0.45
+
     bitrate = int(meta.get('bitrate_kbps') or 0)
     audio_lufs = meta.get('audio_lufs')
     black_ratio = float(meta.get('black_frame_ratio') or 0)
     mood = (meta.get('mood_label') or 'serious').lower()
-
-    # Duration
-    if duration <= 0:
-        checks['duration'] = {'ok': False, 'value': duration, 'reason': 'missing_duration'}
-        fails.append('Trailer duration unknown')
-        score -= 0.25
-    elif duration < MIN_DURATION_SEC or duration > MAX_DURATION_SEC:
-        checks['duration'] = {'ok': False, 'value': duration, 'reason': 'out_of_band'}
-        fails.append(f'Trailer must be {MIN_DURATION_SEC}-{MAX_DURATION_SEC}s')
-        score -= 0.2
-    else:
-        checks['duration'] = {'ok': True, 'value': duration}
-
-    # Resolution — prefer 720p+
-    if width and height:
-        ok = height >= 720
-        checks['resolution'] = {'ok': ok, 'width': width, 'height': height}
-        if not ok:
-            fails.append('Trailer must be at least 720p')
-            score -= 0.25
-    else:
-        checks['resolution'] = {'ok': None, 'reason': 'not_probed'}
-        # soft penalty when gate ON and no probe yet
-        score -= 0.05
 
     if bitrate and bitrate < 1200:
         checks['bitrate'] = {'ok': False, 'bitrate_kbps': bitrate}
@@ -89,7 +131,6 @@ def _score_trailer_meta(meta: Optional[dict]) -> Tuple[float, Dict[str, Any], li
         checks['mood'] = {'ok': True, 'label': mood}
 
     if audio_lufs is not None:
-        # target roughly -16 to -9 LUFS for dialogue-forward trailers
         try:
             lufs = float(audio_lufs)
             ok = -20.0 <= lufs <= -6.0
@@ -101,6 +142,8 @@ def _score_trailer_meta(meta: Optional[dict]) -> Tuple[float, Dict[str, Any], li
             checks['audio'] = {'ok': None}
 
     score = max(0.0, min(1.0, score))
+    # Tag hard placement failure for callers
+    checks['placement_ok'] = ok_place
     return score, checks, fails
 
 
@@ -113,7 +156,8 @@ def run_trailer_qa(content: Content, meta: Optional[dict] = None) -> TrailerQual
     else:
         checks['present'] = {'ok': True}
 
-    if fails and score < MIN_SCORE_PASS:
+    placement_failed = checks.get('placement_ok') is False
+    if placement_failed or (fails and score < MIN_SCORE_PASS):
         status = 'failed'
     elif score >= MIN_SCORE_PASS and not fails:
         status = 'passed'
@@ -135,7 +179,10 @@ def run_trailer_qa(content: Content, meta: Optional[dict] = None) -> TrailerQual
     content.trailer_qa_score = score
     content.trailer_qa_checked_at = datetime.utcnow()
     if meta and meta.get('duration_seconds'):
-        content.trailer_duration_seconds = int(meta['duration_seconds'])
+        try:
+            content.trailer_duration_seconds = int(round(float(meta['duration_seconds'])))
+        except (TypeError, ValueError):
+            pass
     return report
 
 

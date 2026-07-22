@@ -11,6 +11,7 @@ import { Check, Play, Trash2 } from 'lucide-react-native';
 import { TouchableOpacity } from 'react-native';
 import EpisioScreenShell from '../../components/episio/EpisioScreenShell';
 import EpisioGoldButton from '../../components/episio/EpisioGoldButton';
+import StudioVideoPreview from '../../components/episio/StudioVideoPreview';
 import { COLORS, FONTS } from '../../constants/theme';
 import studioEpisioApi from '../../api/studioEpisio';
 import resolveUrl from '../../utils/resolveUrl';
@@ -70,6 +71,11 @@ const StudioEpisodeDetailScreen = () => {
   const epNum = episode?.episode_number || episodeNumber;
   const freePreview = (epNum || 0) <= 5;
   const thumb = resolveUrl(episode?.poster_url || episode?.thumbnail_url);
+  const previewUrl = resolveUrl(episode?.preview_url);
+  const playablePreview = previewUrl && previewUrl.startsWith('http') && !previewUrl.includes('stub.local')
+    ? previewUrl
+    : null;
+  const landscape = Number(probe.width) > Number(probe.height);
 
   const save = async () => {
     if (!episode?.id) {
@@ -207,13 +213,23 @@ const StudioEpisodeDetailScreen = () => {
       ) : null}
 
       <View style={styles.previewBlock}>
-        <View style={styles.thumb}>
-          {thumb ? (
-            <Image source={{ uri: thumb }} style={StyleSheet.absoluteFillObject} resizeMode="cover" />
-          ) : (
-            <Play size={22} color="rgba(255,255,255,0.5)" fill="rgba(255,255,255,0.5)" />
-          )}
-        </View>
+        {playablePreview ? (
+          <StudioVideoPreview
+            uri={playablePreview}
+            badge="EPISODE"
+            aspectRatio={landscape ? 16 / 9 : 9 / 16}
+            maxHeight={300}
+            style={{ width: '100%' }}
+          />
+        ) : (
+          <View style={styles.thumb}>
+            {thumb ? (
+              <Image source={{ uri: thumb }} style={StyleSheet.absoluteFillObject} resizeMode="cover" />
+            ) : (
+              <Play size={22} color="rgba(255,255,255,0.5)" fill="rgba(255,255,255,0.5)" />
+            )}
+          </View>
+        )}
         {ready ? (
           <View style={styles.statusPill}>
             <Check size={10} color="#3BB273" />
@@ -225,6 +241,15 @@ const StudioEpisodeDetailScreen = () => {
               {(episode.transcode_status || 'draft').toUpperCase()}
             </Text>
           </View>
+        )}
+        {!playablePreview ? (
+          <Text style={styles.previewHint}>
+            Open Replace Video to preview with real sound. Tap the speaker to mute.
+          </Text>
+        ) : (
+          <Text style={styles.previewHint}>
+            Preview plays with real sound — tap the speaker to mute.
+          </Text>
         )}
         <EpisioGoldButton
           label="Replace Video"
@@ -329,9 +354,13 @@ const styles = StyleSheet.create({
     width: 34, height: 34, borderRadius: 17, backgroundColor: COLORS.navyCard,
     alignItems: 'center', justifyContent: 'center',
   },
-  previewBlock: { alignItems: 'center', marginBottom: 18 },
+  previewBlock: { alignItems: 'stretch', marginBottom: 18 },
+  previewHint: {
+    fontFamily: FONTS.regular, color: COLORS.textDim, fontSize: 11.5, lineHeight: 16,
+    textAlign: 'center', marginBottom: 8,
+  },
   thumb: {
-    width: 120, height: 174, borderRadius: 14,
+    width: 120, height: 174, borderRadius: 14, alignSelf: 'center',
     backgroundColor: '#241a3a', borderWidth: 1, borderColor: COLORS.navyLine,
     alignItems: 'center', justifyContent: 'center', marginBottom: 10, overflow: 'hidden',
   },

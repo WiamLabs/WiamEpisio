@@ -18,7 +18,7 @@ from ..models import (
 from .api_v1 import jwt_required, jwt_optional, _abs_url, _creator_api_forbidden
 from ..services.coin_pricing import list_bands, resolve_unlock_coins, ensure_default_bands, apply_band_to_unpublished_episodes
 from ..services.currency_display import ensure_default_fx
-from ..services.trailer_qa import run_trailer_qa, gate_enabled
+from ..services.trailer_qa import run_trailer_qa, gate_enabled, validate_trailer_placement
 from ..services.series_publish_gate import can_go_live, refresh_completeness
 from ..services.rankings import list_rankings, recompute_rankings
 from ..services.video_service import get_video_service
@@ -283,20 +283,60 @@ def creator_trailer_upload(series_id):
             }), 400
 
     data = request.get_json(silent=True) or {}
+    meta = data.get('meta') or {
+        'duration_seconds': data.get('duration_seconds') or 0,
+        'width': data.get('width') or 0,
+        'height': data.get('height') or 0,
+        'bitrate_kbps': data.get('bitrate_kbps') or 2500,
+        'mood_label': data.get('mood_label') or 'serious',
+        'black_frame_ratio': data.get('black_frame_ratio') or 0.02,
+    }
+    # Merge top-level probe fields into meta for placement checks
+    for k in ('duration_seconds', 'width', 'height', 'bitrate_kbps', 'mood_label', 'black_frame_ratio'):
+        if data.get(k) is not None and meta.get(k) in (None, '', 0):
+            meta[k] = data[k]
+        elif data.get(k) is not None and k in ('duration_seconds', 'width', 'height'):
+            meta[k] = data[k]
+
+    ok_place, place_msg, _place_checks = validate_trailer_placement(meta)
+    if not ok_place:
+        c.trailer_qa_status = 'failed'
+        if meta.get('duration_seconds'):
+            try:
+                c.trailer_duration_seconds = int(round(float(meta['duration_seconds'])))
+            except (TypeError, ValueError):
+                pass
+        db.session.commit()
+        return jsonify({
+            'ok': False,
+            'error': 'trailer_rejected',
+            'message': place_msg,
+            'trailer_qa': {'status': 'failed', 'failure_reasons': place_msg},
+            'series': _series_card(c, user),
+        }), 400
+
     vs = get_video_service()
     upload = vs.create_upload(
         creator_id=user.wiam_id or user.id,
         content_id=c.id,
         asset_kind='trailer',
-        meta=data.get('meta') or {},
+        meta=meta,
     )
     c.trailer_storage_key = upload.get('storage_key')
     c.trailer_hls_url = upload.get('hls_manifest_url') or c.trailer_hls_url
-    c.trailer_url = upload.get('storage_key') or c.trailer_url
+    # Prefer playable public URL when R2 returns one; else keep storage key
+    playable = upload.get('hls_manifest_url')
+    if playable and str(playable).startswith('http'):
+        c.trailer_url = playable
+    else:
+        c.trailer_url = upload.get('storage_key') or c.trailer_url
     if data.get('poster_url'):
         c.trailer_poster_url = data['poster_url']
-    if data.get('duration_seconds'):
-        c.trailer_duration_seconds = int(data['duration_seconds'])
+    if meta.get('duration_seconds'):
+        try:
+            c.trailer_duration_seconds = int(round(float(meta['duration_seconds'])))
+        except (TypeError, ValueError):
+            pass
     c.trailer_qa_status = 'pending'
 
     job = CreatorVideoUploadJob(
@@ -309,15 +349,7 @@ def creator_trailer_upload(series_id):
     db.session.add(job)
     db.session.commit()
 
-    # Auto-run QA with provided meta (stub-friendly)
-    report = run_trailer_qa(c, meta=data.get('meta') or {
-        'duration_seconds': c.trailer_duration_seconds or 45,
-        'width': data.get('width') or 1080,
-        'height': data.get('height') or 1920,
-        'bitrate_kbps': data.get('bitrate_kbps') or 2500,
-        'mood_label': data.get('mood_label') or 'serious',
-        'black_frame_ratio': data.get('black_frame_ratio') or 0.02,
-    })
+    report = run_trailer_qa(c, meta=meta)
     db.session.commit()
 
     return jsonify({

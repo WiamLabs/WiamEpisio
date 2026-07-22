@@ -1,16 +1,16 @@
 /**
  * Layout: WiamStudio-Episode-Upload.html
- * Vertical 9:16 preview + required episode cover + keyboard-safe Validate CTAs.
+ * Preview with real sound + mute · required episode cover + keyboard-safe Validate CTAs.
  */
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View, Text, StyleSheet, TextInput, Alert, TouchableOpacity, Image,
 } from 'react-native';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
-import { useVideoPlayer, VideoView } from 'expo-video';
-import { Upload, Film, ImagePlus } from 'lucide-react-native';
+import { Upload, ImagePlus } from 'lucide-react-native';
 import EpisioScreenShell from '../../components/episio/EpisioScreenShell';
 import EpisioGoldButton from '../../components/episio/EpisioGoldButton';
+import StudioVideoPreview from '../../components/episio/StudioVideoPreview';
 import { COLORS, FONTS } from '../../constants/theme';
 import studioEpisioApi from '../../api/studioEpisio';
 import { pickVideo, pickImageAsIs } from '../../utils/pickMedia';
@@ -32,30 +32,6 @@ const StudioEpisodeUploadScreen = () => {
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState(null);
   const [episodeId, setEpisodeId] = useState(existingId || null);
-
-  const player = useVideoPlayer(videoUri || '', (p) => {
-    p.loop = true;
-    p.muted = true;
-    if (videoUri) {
-      try { p.play(); } catch { /* ignore */ }
-    }
-  });
-
-  useEffect(() => {
-    if (!videoUri) return undefined;
-    const run = async () => {
-      try {
-        if (typeof player.replaceAsync === 'function') {
-          await player.replaceAsync(videoUri);
-        } else {
-          player.replace(videoUri);
-        }
-        player.play();
-      } catch { /* ignore */ }
-    };
-    run();
-    return undefined;
-  }, [videoUri, player]);
 
   useFocusEffect(useCallback(() => {
     let alive = true;
@@ -141,12 +117,14 @@ const StudioEpisodeUploadScreen = () => {
     setResult(null);
     try {
       let epId = episodeId || existingId;
+      let uploadTicket = null;
       if (!epId) {
         const created = await studioEpisioApi.createEpisode(seriesId, {
           episode_number: episodeNumber || undefined,
           title: title.trim() || undefined,
         });
         epId = created?.episode?.id;
+        uploadTicket = created?.upload || null;
         if (!epId) throw new Error('No episode id');
         setEpisodeId(epId);
       } else if (title.trim()) {
@@ -164,15 +142,41 @@ const StudioEpisodeUploadScreen = () => {
       const w = Number(width) || 1080;
       const h = Number(height) || 1920;
       const dur = Number(duration) || 270;
+      if (videoUri && (dur < 240 || dur > 300)) {
+        Alert.alert(
+          'Episode rejected',
+          `Episodes must be 4–5 minutes (240–300s). Yours is ${dur}s.`,
+        );
+        return;
+      }
       let done = { episode: result };
       if (videoUri) {
+        if (!uploadTicket) {
+          try {
+            const ticket = await studioEpisioApi.episodeUploadTicket(epId);
+            uploadTicket = ticket?.upload || null;
+          } catch { /* stub path below */ }
+        }
+        let storageKey = uploadTicket?.storage_key || `stub/ep_${epId}`;
+        let playUrl = uploadTicket?.hls_manifest_url
+          || `https://stub.local/hls/ep_${epId}/master.m3u8`;
+        const putUrl = uploadTicket?.upload_url;
+        if (putUrl && !String(putUrl).includes('stub.local')) {
+          const blob = await (await fetch(videoUri)).blob();
+          const putRes = await fetch(putUrl, {
+            method: (uploadTicket.upload_method || 'PUT').toUpperCase(),
+            headers: { 'Content-Type': 'video/mp4' },
+            body: blob,
+          });
+          if (!putRes.ok) throw new Error(`Could not upload video bytes (${putRes.status})`);
+        }
         done = await studioEpisioApi.completeUpload(epId, {
           width: w,
           height: h,
           duration_seconds: dur,
           is_final: !!markFinal,
-          storage_key: `stub/ep_${epId}`,
-          hls_manifest_url: `https://stub.local/hls/ep_${epId}/master.m3u8`,
+          storage_key: storageKey,
+          hls_manifest_url: playUrl,
           source_filename: pickedName || undefined,
           local_uri: videoUri || undefined,
         });
@@ -243,18 +247,13 @@ const StudioEpisodeUploadScreen = () => {
 
       <TouchableOpacity style={styles.dropZone} onPress={onPickVideo} disabled={locked} activeOpacity={0.85}>
         {videoUri ? (
-          <View style={styles.previewWrap}>
-            <VideoView
-              style={styles.preview}
-              player={player}
-              contentFit="contain"
-              nativeControls={false}
-            />
-            <View style={styles.previewBadge}>
-              <Film size={12} color={COLORS.navy} />
-              <Text style={styles.previewBadgeText}>Preview</Text>
-            </View>
-          </View>
+          <StudioVideoPreview
+            uri={videoUri}
+            badge="EPISODE"
+            aspectRatio={Number(width) > Number(height) ? 16 / 9 : 9 / 16}
+            maxHeight={300}
+            style={{ marginBottom: 8 }}
+          />
         ) : (
           <View style={styles.dropIcon}>
             <Upload size={22} color={COLORS.gold} />
@@ -264,7 +263,9 @@ const StudioEpisodeUploadScreen = () => {
           {pickedName ? 'Video selected — tap to change' : 'Choose episode video'}
         </Text>
         <Text style={styles.dropSub}>
-          {pickedName || 'Upload 9:16 vertical or 16:9 landscape'}
+          {pickedName
+            ? 'Preview plays with real sound — tap the speaker to mute'
+            : 'Upload 9:16 vertical or 16:9 landscape'}
         </Text>
       </TouchableOpacity>
 
@@ -365,22 +366,6 @@ const styles = StyleSheet.create({
     marginBottom: 18,
     overflow: 'hidden',
   },
-  previewWrap: {
-    width: '100%',
-    aspectRatio: 9 / 16,
-    maxHeight: 280,
-    borderRadius: 14,
-    overflow: 'hidden',
-    backgroundColor: '#000',
-    marginBottom: 12,
-  },
-  preview: { width: '100%', height: '100%' },
-  previewBadge: {
-    position: 'absolute', top: 10, left: 10,
-    flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: COLORS.gold, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8,
-  },
-  previewBadgeText: { fontFamily: FONTS.bold, fontSize: 10, color: COLORS.navy },
   dropIcon: {
     width: 48, height: 48, borderRadius: 24,
     backgroundColor: 'rgba(212,160,23,0.14)',

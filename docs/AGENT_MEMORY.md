@@ -2,7 +2,9 @@
 
 Living journal the AI agent reads at the start of every session and updates as work progresses. Mutable — overwrite freely. Durable project facts live in `.cursor/rules/project-context.mdc` instead.
 
-**Last updated:** 2026-07-22 — **Arrange: empty slots + Remove.** Empty plan slots (post-delete gaps) show in Arrange; trash shrinks `planned_episode_count`. Hint = “Swap positions” (no playlist). Failed eps still deletable in Arrange.
+**Last updated:** 2026-07-22 — **Trailer/Episode preview + sound + hard trailer reject.** Shared `StudioVideoPreview` (real audio + mute). Trailer screen plays local/remote preview; rejects if duration not 15–60s or aspect not 9:16/16:9 (client + `validate_trailer_placement`). Episode upload/detail same sound preview; R2 PUT via upload-ticket. Trailer bytes PUT when upload_url present.
+
+**Previous — Arrange: empty slots + Remove.** Empty plan slots (post-delete gaps) show in Arrange; trash shrinks `planned_episode_count`. Hint = “Swap positions” (no playlist). Failed eps still deletable in Arrange.
 
 **Previous — LayoutAnimation New Arch warning silenced** (`585d8aa`). Removed `UIManager.setLayoutAnimationEnabledExperimental` (no-op that warns on Fabric) from Episode List + Help Center; kept `configureNext` in try/catch. Help FAQ aspect copy = 9:16 or 16:9.
 
